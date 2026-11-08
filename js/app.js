@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=8';
-import { TuneEditor } from './editor.js?v=8';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=8';
-import { exportVideo, exportType } from './export.js?v=8';
+import * as cover from './pipeline.js?v=9';
+import { TuneEditor } from './editor.js?v=9';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=9';
+import { exportVideo, exportType } from './export.js?v=9';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -121,7 +121,20 @@ function openStudio() {
   refreshRef(); refreshChips();
   go(2);
   requestAnimationFrame(loop);
+  $('quick').hidden = false;
 }
+
+// Caminho rápido: um toque e o vídeo sai pronto (o cantor quer postar logo)
+$('quickStep').onclick = () => ($('quick').hidden = true);
+$('quickAll').onclick = async () => {
+  $('quick').hidden = true;
+  await doTune();
+  if (!tuned) return;
+  busy(true, 'Mixando e masterizando…'); await doMaster(false);
+  busy(true, 'Colorista ajustando a cor…'); try { auto = await autoGrade(video); } catch (e) { console.warn(e); }
+  look = { id: 'auto', name: 'Auto · Colorista' }; busy(false);
+  go(5); toast('Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.', 6000);
+};
 
 // Etapas
 function go(n) {
@@ -195,7 +208,7 @@ function seek(t) {
   $('seek').value = t; $('tNow').textContent = fmt(t);
   editor?.setTime(t);
 }
-function pause() { Object.values(players).forEach((p) => p.pause()); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; }
+function pause() { Object.values(players).forEach((p) => p.pause()); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
 function play() {
   if (playing()) return pause();
   const t = +$('seek').value;
@@ -225,8 +238,9 @@ function loop(now) {
     if (step === 2 && now - lastEd > 80) { editor.setTime(t); lastEd = now; }
     if (step >= 4 && video.currentTime !== lastVT) { grab(); loop.dirty = true; }
   }
-  if (step >= 4 && lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
-  if (loop.dirty && step >= 4) { grader.draw(frame); loop.dirty = false; }
+  if (lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
+  if (loop.dirty && (step >= 4 || !playing())) { grader.draw(frame); loop.dirty = false; }
+  $('viewer').classList.toggle('playing', playing());
   requestAnimationFrame(loop);
 }
 
@@ -291,6 +305,7 @@ $('q').oninput = () => ($('qOut').textContent = pct(+$('q').value));
 $('s').oninput = () => ($('sOut').textContent = pct(+$('s').value));
 $('q').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { quantize: +$('q').value, bypass: false }); else { pushUndo(); $('q').dataset.global = $('q').value; setPending(); } };
 $('s').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { straighten: +$('s').value, bypass: false }); else { pushUndo(); $('s').dataset.global = $('s').value; setPending(); } };
+$('expandBtn').onclick = () => { const on = !$('studio').classList.contains('expand'); $('studio').classList.toggle('expand', on); $('expandBtn').classList.toggle('on', on); $('expandTxt').textContent = on ? '⤡ Diminuir painel' : '⤢ Expandir painel'; };
 $('moreBtn').onclick = () => { $('more').hidden = !$('more').hidden; $('moreBtn').classList.toggle('on', !$('more').hidden); requestAnimationFrame(() => editor.resize()); };
 $('zIn').onclick = () => editor.zoom(1.5);
 $('zOut').onclick = () => editor.zoom(1 / 1.5);
@@ -408,25 +423,17 @@ $('dlWav').onclick = () => { const a = document.createElement('a'); a.href = url
 
 window.studio = { get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
 
-// ---------- Ajuda: um "?" em cada botão explica o que ele faz ----------
-const HELP_KEY = 'sc-help';
-let helpOn = true;
-try { helpOn = localStorage.getItem(HELP_KEY) !== '0'; } catch {}
-app.classList.toggle('helpon', helpOn);
-document.querySelectorAll('[data-help]').forEach((el) => {
-  el.title = el.dataset.help;
-  const q = document.createElement('i');
-  q.className = 'qh'; q.textContent = '?'; q.setAttribute('role', 'button'); q.setAttribute('aria-label', 'O que é isto?');
-  el.appendChild(q);
-});
+// ---------- Ajuda: com o "?" do topo ligado, tocar em qualquer botão mostra o que ele faz (em vez de executar) ----------
+let helpOn = false;
+document.querySelectorAll('[data-help]').forEach((el) => (el.title = el.dataset.help));
 document.addEventListener('click', (e) => {
-  const q = e.target.closest('.qh'); if (!q) return;
+  if (!helpOn) return;
+  const el = e.target.closest('[data-help]'); if (!el || e.target.closest('#tip')) return;
   e.preventDefault(); e.stopPropagation();
-  $('tipTxt').textContent = q.parentElement.dataset.help; $('tip').hidden = false;
+  $('tipTxt').textContent = el.dataset.help; $('tip').hidden = false;
 }, true);
 $('tipOk').onclick = () => ($('tip').hidden = true);
 $('helpBtn').onclick = () => {
   helpOn = !helpOn; app.classList.toggle('helpon', helpOn);
-  try { localStorage.setItem(HELP_KEY, helpOn ? '1' : '0'); } catch {}
-  toast(helpOn ? 'Ajuda ligada: toque no "?" de qualquer botão para ver o que ele faz.' : 'Ajuda desligada. Toque no ? lá em cima para ligar de novo.');
+  toast(helpOn ? 'Modo ajuda ligado: toque em qualquer botão com borda tracejada para saber o que ele faz. Toque no ? de novo para usar o app.' : 'Modo ajuda desligado.', 5000);
 };

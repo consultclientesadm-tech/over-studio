@@ -270,7 +270,7 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 
 /* celular em pé: na afinação o vídeo fica menor e o painel de notas ganha espaço */
 @media (max-width: 899px), (max-aspect-ratio: 1/1) {
-  #studio[data-step="2"] { grid-template-rows: auto minmax(0, 26%) minmax(0, 1fr); }
+  #studio.expand[data-step="2"] { grid-template-rows: auto minmax(0, 24%) minmax(0, 1fr); }
   #studio[data-step="2"] .ab small { display: none; }
   .hidesm { display: none; }
   .step[data-step="2"] .head h3 { display: none; }
@@ -292,7 +292,7 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .app.theater .stage { position: fixed; inset: 0; z-index: 25; background: #000; padding: calc(10px + env(safe-area-inset-top)) 10px calc(10px + var(--safe-b)); }
 .app.theater .fsbtn { top: 10px; bottom: auto; right: 10px; }
 .pill.big { width: 100%; min-height: 48px; font-size: 14px; margin: 10px 0 8px; border-color: var(--y); color: var(--y); }
-.step[data-step="2"].on { grid-template-rows: auto minmax(220px, 1fr) auto auto auto auto; }
+.step[data-step="2"].on { grid-template-rows: auto minmax(170px, 1fr) auto auto auto auto; }
 .step[data-step="2"] .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 .step[data-step="2"] .chips::-webkit-scrollbar { display: none; }
 .step[data-step="2"] .chip { white-space: nowrap; }
@@ -319,3 +319,49 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .fsbtn { right: auto; left: 50%; transform: translateX(-50%); bottom: 12px; }
 .fsbtn:active { transform: translateX(-50%) scale(.95); }
 .app.theater .fsbtn { left: auto; right: 10px; transform: none; top: 10px; bottom: auto; }
+/* afinação e mix: tocando = player do aparelho (leve); pausado = quadro desenhado (o iPhone mostra preto no vídeo pausado) */
+.viewer.live:not(.playing) #video { position: absolute; width: 1px !important; height: 1px !important; opacity: 0; }
+.viewer.live:not(.playing) canvas { display: block; }
+
+/* ===== Ajuda por toque (sem "?" em cima dos nomes) ===== */
+.app.helpon [data-help] { outline: 1.5px dashed var(--y); outline-offset: 2px; }
+.qh { display: none !important; }
+
+/* ===== Botão principal: mesmo padrão em Afinar, Mixar, Gerar vídeo e Baixar ===== */
+.prime { position: relative; overflow: hidden; display: inline-grid; place-items: center; gap: 2px; min-height: 52px; padding: 8px 20px; border: 0; border-radius: 16px; cursor: pointer;
+  background: linear-gradient(135deg, #ffe14d, var(--y) 45%, var(--y2)); color: #000; font: 800 14px Orbitron, sans-serif; letter-spacing: .05em; text-decoration: none; text-align: center;
+  box-shadow: 0 0 0 1px rgba(255, 212, 0, .6), 0 0 18px rgba(255, 212, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .5); animation: primepulse 2.2s ease-in-out infinite; }
+.prime::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .55) 50%, transparent 65%); transform: translateX(-120%); animation: primeshine 3.2s ease-in-out infinite; pointer-events: none; }
+.prime:active { transform: scale(.97); }
+.prime:disabled { opacity: .5; animation: none; filter: grayscale(.6); }
+.prime:disabled::after { display: none; }
+.prime small { font: 600 11px 'Space Grotesk', sans-serif; letter-spacing: 0; opacity: .75; }
+.prime.big { display: flex; width: 100%; min-height: 60px; font-size: 15px; gap: 10px; }
+.prime.big svg { width: 24px; height: 24px; fill: #000; }
+@keyframes primepulse { 0%, 100% { box-shadow: 0 0 0 1px rgba(255, 212, 0, .6), 0 0 14px rgba(255, 212, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .5); }
+  50% { box-shadow: 0 0 0 1px rgba(255, 212, 0, .9), 0 0 30px rgba(255, 212, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .5); } }
+@keyframes primeshine { 0%, 55% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+#exportBtn { width: 100%; margin-top: 4px; }
+.actions .prime { min-height: 46px; }
+.step .head { margin-bottom: 4px; }
+.step[data-step="3"] .actions, .step[data-step="3"] .head > div:first-child { width: 100%; }
+.step[data-step="3"] .actions .prime, .step[data-step="3"] .actions .pill { flex: 1; min-height: 48px; }
+.row { margin: 8px 0; }
+
+/* ===== Escolha depois de separar a voz ===== */
+.quick { position: absolute; inset: 0; z-index: 22; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .72); backdrop-filter: blur(6px); }
+.qcard { width: min(420px, 100%); text-align: center; padding: 22px 18px; border-radius: 20px; border: 1px solid var(--y); background: #0e0e12; box-shadow: var(--glow), 0 20px 60px #000; display: grid; gap: 12px; justify-items: center; }
+.qcard h4 { margin: 0; font: 800 16px Orbitron, sans-serif; letter-spacing: .03em; }
+.qcard .prime { width: 100%; min-height: 70px; }
+.qcard .pill.big { margin: 0; }
+.qcard p { margin: 0; color: var(--mut); font-size: 12px; }
+/* afinação: botões grandes logo abaixo do título, painel de notas ocupa o resto */
+.step[data-step="2"].on { grid-template-rows: auto auto minmax(140px, 1fr) auto auto auto; }
+.step[data-step="2"] .head { order: 0; } .step[data-step="2"] .toolbar { order: 1; } .step[data-step="2"] .editor { order: 2; }
+.step[data-step="2"] .toolrow { order: 3; } .step[data-step="2"] .more { order: 4; } .step[data-step="2"] .selinfo { order: 5; }
+.toolrow { grid-template-columns: 44px 44px repeat(3, minmax(0, 1fr)); }
+.tb.sm span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 899px), (max-aspect-ratio: 1/1) {
+  #studio:not(.expand) .selinfo { display: none; }
+  .toolbar .tb { min-height: 50px; }
+}

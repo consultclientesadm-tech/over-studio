@@ -28,14 +28,34 @@ try {
     check(noScroll, `${name}: tela fixa, sem rolar`);
     const busyDone = () => page.waitForFunction(() => document.getElementById('busy').hidden, null, { timeout: 600000 });
     const tagIs = async (t) => (await page.textContent('#tag')).trim() === t;
+    check(!(await page.isHidden('#quick')), `${name}: aparece a escolha "Deixar tudo pronto" ou passo a passo`);
+    await page.screenshot({ path: `${dir}/${name}-2b-escolha.png` });
+    if (name === 'celular') {
+      await page.click('#quickAll'); await page.waitForTimeout(500);
+      await page.waitForFunction(() => document.getElementById('busy').hidden && document.querySelector('.step.on')?.dataset.step === '5', null, { timeout: 600000 });
+      const st = await page.evaluate(() => ({ t: window.studio.tuned, m: !!window.studio.mastered, band: window.studio.state.after.band }));
+      check(st.t && st.m && st.band >= 97, `celular: "Deixar tudo pronto" afinou (${st.band}%), mixou e foi para Exportar`);
+      await page.waitForTimeout(800);
+      await page.screenshot({ path: `${dir}/${name}-2c-tudo-pronto.png` });
+      await page.click('#watchBtn'); await page.waitForTimeout(1200);
+      await page.screenshot({ path: `${dir}/${name}-8-telacheia.png` });
+      await page.click('#fsBtn'); await page.click('#stepper button[data-step="2"]'); await page.waitForTimeout(600);
+      await page.screenshot({ path: `${dir}/${name}-3-afinacao.png` });
+      await page.click('#expandBtn'); await page.waitForTimeout(500);
+      await page.screenshot({ path: `${dir}/${name}-3e-expandido.png` });
+      await page.click('#stepper button[data-step="3"]'); await page.waitForTimeout(500);
+      await page.screenshot({ path: `${dir}/${name}-5-mix.png` });
+      await ctx.close(); continue;
+    }
+    await page.click('#quickStep'); await page.waitForTimeout(200);
     // etapa 2: ainda sem afinar
     check(!(await page.isHidden('#tuneAuto')), `${name}: botão Afinar automático aparece`);
     await page.screenshot({ path: `${dir}/${name}-3a-antes-de-afinar.png` });
     // ajuda: toca no "?" do Afinar automático
-    await page.click('#tuneAuto .qh'); await page.waitForTimeout(200);
-    check(!(await page.isHidden('#tip')), `${name}: "?" abre a explicação do botão`);
+    await page.click('#helpBtn'); await page.click('#tuneAuto'); await page.waitForTimeout(200);
+    check(!(await page.isHidden('#tip')) && (await page.evaluate(() => !window.studio.tuned)), `${name}: no modo ajuda, tocar no botão explica (e não executa)`);
     await page.screenshot({ path: `${dir}/${name}-3b-ajuda.png` });
-    await page.click('#tipOk');
+    await page.click('#tipOk'); await page.click('#helpBtn'); await page.waitForTimeout(200);
     await page.click('#tuneAuto'); await page.waitForTimeout(300); await busyDone();
     const band = await page.evaluate(() => window.studio.state.after.band);
     check(band >= 97, `${name}: faixa verde depois = ${band}%`);
