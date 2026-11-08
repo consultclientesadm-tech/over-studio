@@ -226,7 +226,10 @@ const makeIR = (ctx, sr, len, decay) => {
 export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1 } = {}) {
   const rv = Math.max(0, Math.min(1, reverb));
   const len = voice[0].length;
-  const ctx = new OfflineAudioContext(2, len, sr);
+  // Cada compressor do navegador atrasa o som 6 ms (ele "olha à frente"); são dois, então o áudio sai
+  // 12 ms atrasado. Renderiza um pouco a mais e corta esse atraso, senão a voz fica atrás da boca.
+  const D = Math.round(0.012 * sr);
+  const ctx = new OfflineAudioContext(2, len + D, sr);
   const buf = (chs) => { const b = ctx.createBuffer(2, len, sr); b.copyToChannel(chs[0], 0); b.copyToChannel(chs[1] || chs[0], 1); return b; };
   const f = (type, freq, gain = 0, Q = 0.7) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = freq; b.gain.value = gain; b.Q.value = Q; return b; };
   const bus = ctx.createGain();
@@ -250,7 +253,7 @@ export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1 
   node.connect(ctx.destination);
   vs.start();
   const out = await ctx.startRendering();
-  const res = [0, 1].map((c) => out.getChannelData(c).slice());
+  const res = [0, 1].map((c) => out.getChannelData(c).slice(D, D + len));
   let peak = 0;
   for (const c of res) for (let i = 0; i < c.length; i++) peak = Math.max(peak, Math.abs(c[i]));
   const g = peak > 0 ? 0.89 / peak : 1; // pico em −1 dB

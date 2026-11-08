@@ -209,13 +209,16 @@ export async function tuneVoice(channels, sr, notes, onProgress = () => {}) {
   const ptr = m._setBuffers(nc, B);
   // Curva de correção (semitons) amostra a amostra, por blocos
   const RAMP = 0.06;
+  // Notas vizinhas se sobrepõem nas rampas: a correção é a média pesada das notas que valem naquele
+  // instante (antes pegava só a primeira e a correção pulava de uma vez na troca de nota)
   const corrAt = (t) => {
+    let sw = 0, sv = 0;
     for (const n of todo) {
       if (t < n.start - RAMP || t > n.end + RAMP) continue;
       const w = Math.max(0, Math.min(1, (t - (n.start - RAMP)) / RAMP, ((n.end + RAMP) - t) / RAMP));
-      return (n.curve ? curveAt(n.curve, Math.max(n.start, Math.min(n.end, t))) : shiftOf(n)) * w;
+      sw += w; sv += w * (n.curve ? curveAt(n.curve, Math.max(n.start, Math.min(n.end, t))) : shiftOf(n));
     }
-    return 0;
+    return sw > 1 ? sv / sw : sv;
   };
   const inLat = m._inputLatency() / sr;
   const out = channels.map(() => new Float32Array(len + lat + B));
@@ -235,15 +238,21 @@ export async function tuneVoice(channels, sr, notes, onProgress = () => {}) {
     for (let c = 0; c < nc; c++) out[c].set(new Float32Array(mem2, ptr + B * 4 * (c + nc), B), i);
     if (k % 400 === 0) { onProgress(i / (len + lat)); await tick(); }
   }
-  // Usa o áudio processado só nas notas corrigidas (com emenda suave); o resto fica idêntico ao original
-  const res = channels.map((c) => c.slice());
+  // Usa o áudio processado só nas notas corrigidas (com emenda suave); o resto fica idêntico ao original.
+  // Primeiro monta UMA curva de mistura para a música toda (a maior entre as notas) e só depois mistura:
+  // antes cada nota regravava o trecho dela e, onde duas notas se sobrepunham, o começo da segunda
+  // cortava de uma vez o áudio afinado da primeira — era o "tic" entre as palavras.
   const F = Math.round(0.03 * sr);
+  const W = new Float32Array(len);
   for (const n of todo) {
     const a = Math.max(0, Math.round((n.start - RAMP - 0.04) * sr)), b = Math.min(len, Math.round((n.end + RAMP + 0.04) * sr));
-    for (let i = a; i < b; i++) {
-      const w = Math.min(1, (i - a) / F, (b - 1 - i) / F);
-      for (let c = 0; c < nc; c++) res[c][i] = channels[c][i] * (1 - w) + out[c][i + lat] * w;
-    }
+    for (let i = a; i < b; i++) { const w = Math.min(1, (i - a) / F, (b - 1 - i) / F); if (w > W[i]) W[i] = w; }
+  }
+  const res = channels.map((c) => c.slice());
+  for (let i = 0; i < len; i++) {
+    const w = W[i];
+    if (w <= 0) continue;
+    for (let c = 0; c < nc; c++) res[c][i] = channels[c][i] * (1 - w) + out[c][i + lat] * w;
   }
   return res;
 }
