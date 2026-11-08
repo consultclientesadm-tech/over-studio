@@ -1,0 +1,9 @@
+# Cover Studio: tipos certos para a IA (WebAssembly) e cache longo para os modelos
+AddType application/wasm .wasm
+AddType text/javascript .mjs
+AddType application/octet-stream .bin
+<IfModule mod_headers.c>
+  <FilesMatch "\.(bin|wasm)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>

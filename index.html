@@ -55,9 +55,19 @@
     </div>
     <table id="report" style="margin-top:14px"></table>
   </div>
+
+  <div class="card" id="tuneCard" hidden>
+    <strong>Tela da afinação</strong>
+    <p class="sub" style="margin:4px 0 10px">Faixa verde = onde a nota tem que ficar. <span style="color:#f87171">Vermelho</span> = onde a voz original saiu da faixa. <span style="color:#34d399">Verde</span> = a voz depois de afinada.</p>
+    <div id="tuneScroll" style="overflow-x:auto; position:relative; border-radius:10px">
+      <canvas id="tune"></canvas>
+      <div id="head" style="position:absolute; top:0; bottom:0; width:2px; background:#f472b6; left:0; pointer-events:none"></div>
+    </div>
+  </div>
 </main>
 <script type="module">
 import * as cover from './js/pipeline.js';
+import { drawTuning } from './js/tuneview.js';
 window.cover = cover; // usado pelos testes automáticos
 
 const $ = (id) => document.getElementById(id);
@@ -68,7 +78,7 @@ document.querySelectorAll('input[type=range]').forEach((r) => {
 const STEP = { audio: 'Lendo o áudio do vídeo', download: 'Baixando a IA (só na primeira vez)', separate: 'Separando a voz', notes: 'Achando as notas', tune: 'Afinando' };
 const status = (s) => ($('status').textContent = s);
 
-let state = null, result = null, origUrl = null, mixUrl = null, playingOrig = false;
+let view = null, state = null, result = null, origUrl = null, mixUrl = null, playingOrig = false;
 $('file').onchange = () => { $('go').disabled = !$('file').files[0]; };
 
 $('go').onclick = async () => {
@@ -83,7 +93,7 @@ $('go').onclick = async () => {
     if (origUrl) URL.revokeObjectURL(origUrl);
     origUrl = URL.createObjectURL(f); $('video').src = origUrl;
     await remix();
-    $('mixCard').hidden = false;
+    $('mixCard').hidden = false; $('tuneCard').hidden = false; view = drawTuning($('tune'), state);
     status(`Pronto em ${((performance.now() - t0) / 1000).toFixed(1)} s.`);
   } catch (e) { console.error(e); status('Deu erro: ' + e.message); }
   $('go').disabled = false;
@@ -106,7 +116,7 @@ async function remix() {
   ].map(([x, y]) => `<tr><td>${x}</td><td>${y}</td></tr>`).join('');
 }
 ['trim', 'fadeIn', 'fadeOut', 'reverb'].forEach((id) => $(id).addEventListener('change', () => state && remix()));
-$('strength').addEventListener('change', async () => { if (!state) return; status('Afinando de novo…'); await cover.retune(state, { strength: val('strength'), scaleSnap: val('scaleSnap') }); await cover.verify(state); await remix(); status('Pronto.'); });
+$('strength').addEventListener('change', async () => { if (!state) return; status('Afinando de novo…'); await cover.retune(state, { strength: val('strength'), scaleSnap: val('scaleSnap') }); await cover.verify(state); await remix(); view = drawTuning($('tune'), state); status('Pronto.'); });
 
 // Prévia: vídeo mudo + áudio novo, presos no mesmo relógio (vídeo = corte + tempo do áudio)
 const v = $('video'), au = $('audio');
@@ -114,6 +124,9 @@ $('play').onclick = () => {
   if (!au.paused) { au.pause(); v.pause(); return; }
   playingOrig = false; v.muted = true; v.currentTime = result.start + au.currentTime; au.play(); v.play();
 };
+const moveHead = (t) => { if (!view) return; const x = view.x(t); $('head').style.left = x + 'px'; const sc = $('tuneScroll'); if (x < sc.scrollLeft + 40 || x > sc.scrollLeft + sc.clientWidth - 40) sc.scrollLeft = x - sc.clientWidth / 3; };
+au.addEventListener('timeupdate', () => moveHead(result.start + au.currentTime));
+v.addEventListener('timeupdate', () => playingOrig && moveHead(v.currentTime));
 au.ontimeupdate = () => { if (!playingOrig && Math.abs(v.currentTime - (result.start + au.currentTime)) > 0.08) v.currentTime = result.start + au.currentTime; };
 au.onended = () => v.pause();
 $('ab').onclick = () => { au.pause(); playingOrig = true; v.muted = false; v.currentTime = 0; v.play(); };

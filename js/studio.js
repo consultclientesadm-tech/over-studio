@@ -57,8 +57,12 @@ export async function modelCached() {
 }
 
 async function loadOrt() {
-  const ort = await import('./vendor/ort/ort.webgpu.min.mjs');
-  ort.env.wasm.wasmPaths = new URL('./vendor/ort/', import.meta.url).href;
+  // Arquivos com extensão .js (e não .mjs): qualquer servidor manda o tipo certo, inclusive o nginx do Plesk
+  const ort = await import('./vendor/ort/ort.webgpu.min.js');
+  ort.env.wasm.wasmPaths = {
+    mjs: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.js', import.meta.url).href,
+    wasm: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.wasm', import.meta.url).href,
+  };
   ort.env.wasm.numThreads = 1; // o site não usa isolamento entre origens (pixel e checkout continuam funcionando)
   return ort;
 }
@@ -180,7 +184,7 @@ export async function separate(channels, { onDownload = () => {}, onProgress = (
 let stretchMod = null;
 async function loadStretch() {
   if (stretchMod) return stretchMod;
-  const { default: Factory } = await import('./vendor/stretch.mjs');
+  const { default: Factory } = await import('./vendor/stretch.js');
   stretchMod = Factory;
   return Factory;
 }
