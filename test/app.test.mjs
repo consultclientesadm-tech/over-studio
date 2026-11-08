@@ -91,6 +91,11 @@ try {
       await page.waitForTimeout(600);
     }
     await page.screenshot({ path: `${dir}/${name}-7-exportar.png` });
+    await page.click('#watchBtn'); await page.waitForTimeout(1500);
+    const th = await page.evaluate(() => { const r = document.getElementById('screen').getBoundingClientRect(); return [document.getElementById('app').classList.contains('theater'), Math.round(r.height), innerHeight]; });
+    check(th[0] && th[1] > th[2] * 0.6, `${name}: prévia em tela cheia (${th[1]}px de ${th[2]}px)`);
+    await page.screenshot({ path: `${dir}/${name}-8-telacheia.png` });
+    await page.click('#fsBtn');
     await ctx.close();
   }
 } finally { await browser.close(); srv.kill(); }

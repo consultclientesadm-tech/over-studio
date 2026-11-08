@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=6';
-import { TuneEditor } from './editor.js?v=6';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=6';
-import { exportVideo, exportType } from './export.js?v=6';
+import * as cover from './pipeline.js?v=8';
+import { TuneEditor } from './editor.js?v=8';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=8';
+import { exportVideo, exportType } from './export.js?v=8';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -111,7 +111,7 @@ function openStudio() {
     const r = $('viewer').getBoundingClientRect(), ar = portrait ? 9 / 16 : 16 / 9;
     let h = r.height, w = h * ar;
     if (w > r.width) { w = r.width; h = w / ar; }
-    cv.style.width = Math.floor(w) + 'px'; cv.style.height = Math.floor(h) + 'px';
+    cv.style.width = video.style.width = Math.floor(w) + 'px'; cv.style.height = video.style.height = Math.floor(h) + 'px';
   };
   new ResizeObserver(fit).observe($('viewer')); fit();
   grader = new Grader(cv);
@@ -128,6 +128,9 @@ function go(n) {
   const wasPlaying = playing();
   pause();
   step = n;
+  $('studio').dataset.step = n;
+  // afinação e mix: o próprio player do aparelho mostra o vídeo (leve). Cor e exportar: a prévia com o filtro.
+  $('viewer').classList.toggle('live', n < 4);
   document.querySelectorAll('.step').forEach((s) => s.classList.toggle('on', +s.dataset.step === n));
   document.querySelectorAll('#stepper button').forEach((b) => { const k = +b.dataset.step; b.classList.toggle('on', k === n); b.classList.toggle('done', k < n); });
   $('prev').style.visibility = n > 2 ? 'visible' : 'hidden';
@@ -201,6 +204,11 @@ function play() {
   $('play').textContent = '❚❚';
 }
 $('play').onclick = play;
+// Prévia em tela cheia (a mesma prévia, só que grande; o arquivo final sai em 1080p)
+function theater(on) { app.classList.toggle('theater', on); $('fsTxt').textContent = on ? '✕ Fechar' : '⛶ Tela cheia'; loop.dirty = true; }
+$('fsBtn').onclick = () => theater(!app.classList.contains('theater'));
+$('watchBtn').onclick = () => { theater(true); seek(mastered ? mastered.start : 0); if (!playing()) play(); };
+addEventListener('keydown', (e) => { if (e.key === 'Escape') theater(false); });
 $('back5').onclick = () => seek(clipT() - 5);
 $('fwd5').onclick = () => seek(clipT() + 5);
 $('seek').oninput = () => seek(+$('seek').value);
@@ -215,10 +223,10 @@ function loop(now) {
     else video.playbackRate = Math.abs(drift) > 0.04 ? 1 - Math.max(-0.08, Math.min(0.08, drift)) : 1;
     $('seek').value = t; $('tNow').textContent = fmt(t);
     if (step === 2 && now - lastEd > 80) { editor.setTime(t); lastEd = now; }
-    if (video.currentTime !== lastVT) { grab(); loop.dirty = true; }
+    if (step >= 4 && video.currentTime !== lastVT) { grab(); loop.dirty = true; }
   }
-  if (lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
-  if (loop.dirty) { grader.draw(frame); loop.dirty = false; }
+  if (step >= 4 && lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
+  if (loop.dirty && step >= 4) { grader.draw(frame); loop.dirty = false; }
   requestAnimationFrame(loop);
 }
 
@@ -257,6 +265,8 @@ $('tuneUndo').onclick = async () => {
   editor.load(state); refreshChips(); refreshAB(); toast('Afinação desfeita: a voz voltou a ser a original.');
 };
 function onSelect(i) {
+  $('selInfo').innerHTML = i >= 0 ? `Nota <b>${i + 1}</b> escolhida: use Subir, Descer, Original ou Auto, e depois <b>Aplicar</b>.` : 'Toque numa nota no painel para editar só ela. Arraste para os lados para andar na música.';
+  $('selInfo').classList.toggle('on', i >= 0);
   const n = state.plan[i], ed = (state.edits || {})[i] || {};
   $('qLabel').textContent = i >= 0 ? 'Quantizar nota' : 'Quantizar tudo';
   $('sLabel').textContent = i >= 0 ? 'Endireitar nota' : 'Endireitar tudo';
@@ -281,6 +291,7 @@ $('q').oninput = () => ($('qOut').textContent = pct(+$('q').value));
 $('s').oninput = () => ($('sOut').textContent = pct(+$('s').value));
 $('q').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { quantize: +$('q').value, bypass: false }); else { pushUndo(); $('q').dataset.global = $('q').value; setPending(); } };
 $('s').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { straighten: +$('s').value, bypass: false }); else { pushUndo(); $('s').dataset.global = $('s').value; setPending(); } };
+$('moreBtn').onclick = () => { $('more').hidden = !$('more').hidden; $('moreBtn').classList.toggle('on', !$('more').hidden); requestAnimationFrame(() => editor.resize()); };
 $('zIn').onclick = () => editor.zoom(1.5);
 $('zOut').onclick = () => editor.zoom(1 / 1.5);
 $('showOrig').onclick = () => { editor.showOrig = !editor.showOrig; $('showOrig').classList.toggle('on', editor.showOrig); editor.draw(); };
