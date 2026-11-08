@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cover Studio · laboratório do motor</title>
+<style>
+  :root { color-scheme: dark; --bg:#0d0f14; --card:#161a22; --line:#262c38; --txt:#e8ecf3; --mut:#8a93a6; --acc:#f472b6; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { color: var(--mut); margin: 0 0 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  label { display:flex; align-items:center; gap:10px; margin: 8px 0; }
+  label span { min-width: 170px; }
+  input[type=range] { flex:1; }
+  output { min-width: 48px; text-align:right; color: var(--mut); font-variant-numeric: tabular-nums; }
+  button { background: var(--acc); color:#1a0b14; border:0; border-radius: 10px; padding: 10px 18px; font-weight: 700; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:default; }
+  button.ghost { background: transparent; color: var(--txt); border: 1px solid var(--line); }
+  #status { color: var(--mut); margin-top: 10px; min-height: 1.5em; }
+  video { width: 100%; max-height: 60vh; background:#000; border-radius: 10px; }
+  .row { display:flex; gap:10px; flex-wrap: wrap; margin-top: 10px; }
+  table { width:100%; border-collapse: collapse; }
+  td { padding: 4px 0; border-bottom: 1px solid var(--line); }
+  td:last-child { text-align:right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cover Studio · laboratório do motor</h1>
+  <p class="sub">Passo 1: sobe o vídeo do celular e o motor devolve o áudio afinado, mixado e masterizado, no tempo do vídeo.</p>
+
+  <div class="card">
+    <input type="file" id="file" accept="video/*,audio/*">
+    <label><input type="checkbox" id="separate" checked> Separar a voz do instrumental (desligue se for só voz)</label>
+    <label><input type="checkbox" id="scaleSnap" checked> Prender as notas no tom da música</label>
+    <label><span>Força da afinação</span><input type="range" id="strength" min="0" max="1" step="0.05" value="1"><output></output></label>
+    <div class="row"><button id="go" disabled>Processar</button></div>
+    <div id="status"></div>
+  </div>
+
+  <div class="card" id="mixCard" hidden>
+    <label><input type="checkbox" id="trim" checked> Cortar o silêncio do começo e do fim</label>
+    <label><span>Fade-in (s)</span><input type="range" id="fadeIn" min="0" max="3" step="0.1" value="0.4"><output></output></label>
+    <label><span>Fade-out (s)</span><input type="range" id="fadeOut" min="0" max="5" step="0.1" value="1.5"><output></output></label>
+    <label><span>Reverb</span><input type="range" id="reverb" min="0" max="1" step="0.05" value="0.2"><output></output></label>
+    <video id="video" playsinline muted></video>
+    <audio id="audio" hidden></audio>
+    <div class="row">
+      <button id="play" class="ghost">▶ Ouvir com o vídeo</button>
+      <button id="ab" class="ghost">Ouvir o original</button>
+      <a id="dl" download="cover-master.wav"><button class="ghost">Baixar o áudio (WAV)</button></a>
+    </div>
+    <table id="report" style="margin-top:14px"></table>
+  </div>
+</main>
+<script type="module">
+import * as cover from './js/pipeline.js';
+window.cover = cover; // usado pelos testes automáticos
+
+const $ = (id) => document.getElementById(id);
+const val = (id) => ($(id).type === 'checkbox' ? $(id).checked : Number($(id).value));
+document.querySelectorAll('input[type=range]').forEach((r) => {
+  const o = r.nextElementSibling; const upd = () => (o.textContent = r.value); r.addEventListener('input', upd); upd();
+});
+const STEP = { audio: 'Lendo o áudio do vídeo', download: 'Baixando a IA (só na primeira vez)', separate: 'Separando a voz', notes: 'Achando as notas', tune: 'Afinando' };
+const status = (s) => ($('status').textContent = s);
+
+let state = null, result = null, origUrl = null, mixUrl = null, playingOrig = false;
+$('file').onchange = () => { $('go').disabled = !$('file').files[0]; };
+
+$('go').onclick = async () => {
+  const f = $('file').files[0]; if (!f) return;
+  $('go').disabled = true;
+  const t0 = performance.now();
+  try {
+    state = await cover.analyze(f, { separate: val('separate'), strength: val('strength'), scaleSnap: val('scaleSnap') },
+      (s, p) => status(`${STEP[s] || s}… ${Math.round(p * 100)}%`));
+    status('Conferindo a afinação…');
+    await cover.verify(state);
+    if (origUrl) URL.revokeObjectURL(origUrl);
+    origUrl = URL.createObjectURL(f); $('video').src = origUrl;
+    await remix();
+    $('mixCard').hidden = false;
+    status(`Pronto em ${((performance.now() - t0) / 1000).toFixed(1)} s.`);
+  } catch (e) { console.error(e); status('Deu erro: ' + e.message); }
+  $('go').disabled = false;
+};
+
+async function remix() {
+  result = await cover.render(state, { reverb: val('reverb'), trim: val('trim'), fadeIn: val('fadeIn'), fadeOut: val('fadeOut') });
+  if (mixUrl) URL.revokeObjectURL(mixUrl);
+  mixUrl = URL.createObjectURL(cover.toWav(result.channels, result.sr));
+  $('audio').src = mixUrl; $('dl').href = mixUrl;
+  const k = state.key, b = state.before, a = state.after;
+  $('report').innerHTML = [
+    ['Tom da música', k.name],
+    ['Notas cantadas', b.count],
+    ['Desvio médio antes', `${b.avgCents} cents`],
+    ['Desvio médio depois', `${a.avgCents} cents`],
+    ['Notas afinadas (±20 cents) antes', `${b.inTune}%`],
+    ['Notas afinadas (±20 cents) depois', `${a.inTune}%`],
+    ['Corte', `${result.start.toFixed(2)} s até ${result.end.toFixed(2)} s`],
+  ].map(([x, y]) => `<tr><td>${x}</td><td>${y}</td></tr>`).join('');
+}
+['trim', 'fadeIn', 'fadeOut', 'reverb'].forEach((id) => $(id).addEventListener('change', () => state && remix()));
+$('strength').addEventListener('change', async () => { if (!state) return; status('Afinando de novo…'); await cover.retune(state, { strength: val('strength'), scaleSnap: val('scaleSnap') }); await cover.verify(state); await remix(); status('Pronto.'); });
+
+// Prévia: vídeo mudo + áudio novo, presos no mesmo relógio (vídeo = corte + tempo do áudio)
+const v = $('video'), au = $('audio');
+$('play').onclick = () => {
+  if (!au.paused) { au.pause(); v.pause(); return; }
+  playingOrig = false; v.muted = true; v.currentTime = result.start + au.currentTime; au.play(); v.play();
+};
+au.ontimeupdate = () => { if (!playingOrig && Math.abs(v.currentTime - (result.start + au.currentTime)) > 0.08) v.currentTime = result.start + au.currentTime; };
+au.onended = () => v.pause();
+$('ab').onclick = () => { au.pause(); playingOrig = true; v.muted = false; v.currentTime = 0; v.play(); };
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "cover-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vídeo de cover gravado no celular vira vídeo profissional: voz afinada, mixada, masterizada e filtro de cinema.",
+  "scripts": {
+    "start": "node server.js",
+    "sample": "node test/make-sample.mjs test/out/voz.wav && node test/make-sample.mjs test/out/bed.wav --bed && ffmpeg -loglevel error -y -f lavfi -i testsrc=size=720x1280:rate=30 -i test/out/bed.wav -shortest -c:v libx264 -pix_fmt yuv420p -c:a aac test/out/cover.mp4",
+    "test": "node test/engine.test.mjs test/out/voz.wav test/out/cover.mp4"
+  },
+  "engines": { "node": ">=18" }
+}
