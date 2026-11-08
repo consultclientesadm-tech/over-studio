@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js';
-import { TuneEditor } from './editor.js';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js';
-import { exportVideo, exportType } from './export.js';
+import * as cover from './pipeline.js?v=5';
+import { TuneEditor } from './editor.js?v=5';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=5';
+import { exportVideo, exportType } from './export.js?v=5';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
