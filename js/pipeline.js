@@ -8,7 +8,7 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, mixMaster, STUDIO_SR } from './studio.js';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js';
 import { pitchTrack, detectKey, chromaOf } from './analysis.js';
 
 export const SR = STUDIO_SR;
@@ -207,6 +207,55 @@ export async function verify(state) {
   const after = notesFrom(state.afterTrack);
   state.after = { ...tuningStats(after), band: inBand(after, state.opts?.band ?? DEFAULTS.band) };
   return state.after;
+}
+
+// ---------- Mix e master sem estalos ----------
+// A IA nunca separa 100%: a voz separada e o instrumental carregam "chiados" iguais e de sinal contrário,
+// que se anulam quando os dois voltam a ser somados por igual. Se a voz ganha EQ, compressor e volume
+// diferentes do instrumental, eles param de se anular e aparecem como estalos de TV fora de sintonia.
+// Por isso: soma a voz afinada com o instrumental quase por igual (voz só 10% mais alta), e todo o
+// tratamento de estúdio (EQ, compressor, limitador) vai na música inteira. O reverb vem só da voz.
+const makeIR = (ctx, sr, len, decay) => {
+  const ir = ctx.createBuffer(2, Math.round(sr * len), sr);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3) * Math.exp(-i / (sr * decay));
+  }
+  return ir;
+};
+export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1 } = {}) {
+  const rv = Math.max(0, Math.min(1, reverb));
+  const len = voice[0].length;
+  const ctx = new OfflineAudioContext(2, len, sr);
+  const buf = (chs) => { const b = ctx.createBuffer(2, len, sr); b.copyToChannel(chs[0], 0); b.copyToChannel(chs[1] || chs[0], 1); return b; };
+  const f = (type, freq, gain = 0, Q = 0.7) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = freq; b.gain.value = gain; b.Q.value = Q; return b; };
+  const bus = ctx.createGain();
+  const vs = ctx.createBufferSource(); vs.buffer = buf(voice);
+  const vg = ctx.createGain(); vg.gain.value = bed ? voiceLift : 1;
+  vs.connect(vg).connect(bus);
+  if (bed) { const bs = ctx.createBufferSource(); bs.buffer = buf(bed); bs.connect(bus); bs.start(); }
+  // Reverb só da voz (sala gerada; quanto mais reverb, maior a sala)
+  if (rv > 0) {
+    const conv = ctx.createConvolver(); conv.buffer = makeIR(ctx, sr, 0.8 + 2 * rv, 0.16 + 0.55 * rv);
+    const wet = ctx.createGain(); wet.gain.value = 0.45 * rv;
+    vs.connect(f('highpass', 250)).connect(conv).connect(f('lowpass', 7000)).connect(wet).connect(bus);
+  }
+  // Master da música inteira: limpa o grave sujo, tira o embolado, presença e brilho, cola e limita
+  const glue = ctx.createDynamicsCompressor();
+  glue.threshold.value = -18; glue.knee.value = 12; glue.ratio.value = 2; glue.attack.value = 0.025; glue.release.value = 0.3;
+  const lim = ctx.createDynamicsCompressor();
+  lim.threshold.value = -6; lim.knee.value = 3; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.12;
+  let node = bus;
+  for (const n of [f('highpass', 35), f('peaking', 300, -1.5, 0.9), f('peaking', 3000, 1.5, 0.8), f('highshelf', 11000, 1.5), glue, lim]) node = node.connect(n);
+  node.connect(ctx.destination);
+  vs.start();
+  const out = await ctx.startRendering();
+  const res = [0, 1].map((c) => out.getChannelData(c).slice());
+  let peak = 0;
+  for (const c of res) for (let i = 0; i < c.length; i++) peak = Math.max(peak, Math.abs(c[i]));
+  const g = peak > 0 ? 0.89 / peak : 1; // pico em −1 dB
+  for (const c of res) for (let i = 0; i < c.length; i++) c[i] *= g;
+  return res;
 }
 
 // ---------- Etapa leve: mixar, masterizar, cortar e fazer os fades (roda a cada ajuste) ----------
