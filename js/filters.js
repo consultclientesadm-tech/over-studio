@@ -79,3 +79,60 @@ export class Grader {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }
+
+// ===== Colorista automático =====
+// Faz o que um colorista faz na "correção primária", medindo quadros do próprio vídeo:
+//  1) exposição pelo meio do histograma, 2) contraste pelo preto e branco reais, 3) balanço de branco
+//  pelos tons neutros (tira o amarelo de lâmpada ou o azul de sombra), e depois um look de cinema
+//  suave (sombras um pouco frias, luzes um pouco quentes, que deixa a pele bonita), vinheta e nitidez.
+// Os mesmos números valem para o vídeo todo, então a cor não "pisca".
+export async function autoGrade(video, samples = 8) {
+  const w = 96, h = Math.round((96 * video.videoHeight) / video.videoWidth) || 170;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  const lum = [], was = video.currentTime, paused = video.paused;
+  let sr = 0, sg = 0, sb = 0, n = 0;
+  for (let k = 0; k < samples; k++) {
+    video.currentTime = (video.duration * (k + 0.5)) / samples;
+    await new Promise((r) => video.addEventListener('seeked', r, { once: true }));
+    g.drawImage(video, 0, 0, w, h);
+    const d = g.getImageData(0, 0, w, h).data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i] / 255, gg = d[i + 1] / 255, b = d[i + 2] / 255;
+      const l = 0.2126 * r + 0.7152 * gg + 0.0722 * b;
+      lum.push(l);
+      const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+      if (l > 0.15 && l < 0.85 && mx - mn < 0.25) { sr += r; sg += gg; sb += b; n++; } // tons quase neutros
+    }
+  }
+  video.currentTime = was; if (!paused) video.play();
+  lum.sort((a, b) => a - b);
+  const q = (p) => lum[Math.floor(p * (lum.length - 1))];
+  const lo = q(0.01), mid = q(0.5), hi = q(0.99);
+  const cl = (v, a, b) => Math.max(a, Math.min(b, v));
+  const exposure = cl(Math.log2(0.45 / Math.max(0.05, mid)) / 2, -0.35, 0.35);
+  const contrast = cl(0.92 / Math.max(0.2, hi - lo), 0.95, 1.3);
+  let temp = 0, tint = 0;
+  if (n > 200) {
+    const r = sr / n, gg = sg / n, b = sb / n;
+    temp = cl((-(r - b) / 0.5) * 0.7, -0.25, 0.25);
+    tint = cl(((gg - (r + b) / 2) / 0.3) * 0.7, -0.15, 0.15);
+  }
+  return {
+    id: 'auto', name: 'Auto · Colorista', exposure, contrast: contrast * 1.04, saturation: 1.08, temp, tint,
+    shadows: [-0.015, 0.005, 0.025], highlights: [0.03, 0.015, -0.01], fade: 0.02, vignette: 0.18, grain: 0.012, sharpen: 0.35,
+  };
+}
+
+// Um filtro aplicado por cima do Colorista: soma as correções e multiplica contraste e saturação
+export function compose(base, look) {
+  if (!base) return look;
+  if (!look || look.id === 'original') return base;
+  const add3 = (a, b) => a.map((x, i) => x + b[i]);
+  return {
+    id: look.id, name: look.name, exposure: base.exposure + look.exposure, contrast: base.contrast * look.contrast,
+    saturation: base.saturation * look.saturation, temp: base.temp + look.temp, tint: base.tint + look.tint,
+    shadows: add3(base.shadows, look.shadows), highlights: add3(base.highlights, look.highlights),
+    fade: Math.max(base.fade, look.fade), vignette: Math.max(base.vignette, look.vignette), grain: Math.max(base.grain, look.grain), sharpen: Math.max(base.sharpen, look.sharpen),
+  };
+}

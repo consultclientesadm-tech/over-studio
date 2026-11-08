@@ -1,80 +1,79 @@
-// ===== Studio Cover · app =====
-// Fluxo: escolhe o vídeo → o motor separa, afina e mixa → estúdio com prévia, editor de notas,
-// mix, filtros de cinema e exportação. Tudo no aparelho do artista.
+// ===== Studio Cover · app em 5 etapas =====
+// 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
+// Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
+// DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
 import * as cover from './pipeline.js';
 import { TuneEditor } from './editor.js';
-import { Grader, FILTERS, ORIGINAL } from './filters.js';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js';
 import { exportVideo, exportType } from './export.js';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
 const fmt = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s) % 60)).padStart(2, '0')}`;
-const screen = (s) => (app.dataset.screen = s);
+const pct = (v) => Math.round(v * 100) + '%';
 let toastT = 0;
 const toast = (msg, ms = 3500) => { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), ms); };
 
-let file = null, refFile = null, state = null, result = null, wavUrl = null, videoUrl = null;
-let filter = FILTERS[0], amount = 1, ab = false, pending = false;
+let file = null, refFile = null, state = null;
+let tuned = false, mastered = null; // mastered = resultado do render (ou null)
+let step = 2, side = 'B', pending = false;
+let look = null, auto = null, amount = 1; // look = filtro escolhido; auto = Colorista
 const undo = [];
-const video = $('video'), audio = new Audio();
-audio.preload = 'auto';
+const video = $('video');
+const players = { A: new Audio(), B: new Audio(), C: new Audio() };
+Object.values(players).forEach((a) => (a.preload = 'auto'));
+const urls = {};
+const wav = (key, ch) => { if (urls[key]) URL.revokeObjectURL(urls[key]); urls[key] = URL.createObjectURL(cover.toWav(ch, cover.SR)); return urls[key]; };
+const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('q').dataset.global || 1, scaleSnap: $('mSnap').checked,
+  straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked });
 const mixOpts = () => ({ reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').value, fadeOut: +$('mFadeOut').value, trim: $('mTrim').checked });
-const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('mStrength').value, scaleSnap: $('mSnap').checked, straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked });
 
-// ---------- 1) Escolher o vídeo ----------
+// ---------- 1) Vídeo ----------
 const drop = $('drop');
 $('file').onchange = () => $('file').files[0] && start($('file').files[0]);
 ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, () => drop.classList.remove('over')));
 drop.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) start(f); });
 $('newBtn').onclick = () => location.reload();
-$('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refName').textContent = refFile ? refFile.name : 'opcional'; $('refPick').classList.toggle('on', !!refFile); };
+$('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refName').textContent = refFile ? '✓ ' + refFile.name + ' (vamos afinar pela melodia dela)' : 'Opcional: a gente pega a melodia do cantor original no seu tom e afina você por ela.'; $('refPick').classList.toggle('on', !!refFile); };
 
-// ---------- 2) Processar ----------
-const W = { audio: [0, 3], download: [3, 15], separate: [18, 45], notes: [63, 5], ref: [68, 1], refsep: [68, 12], refnotes: [80, 3], tune: [83, 13], mix: [96, 4] };
-const LABEL = { ref: 'Lendo a música original', refsep: 'Lendo a melodia da original', refnotes: 'Lendo a melodia da original', audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'Separando a voz', notes: 'Achando as notas', tune: 'Afinando nota por nota', mix: 'Mixando e masterizando' };
-function progress(step, p) {
-  const [a, w] = W[step] || [0, 0];
-  const pct = Math.min(100, Math.round(a + w * p));
-  $('ringBar').style.strokeDashoffset = 327 * (1 - pct / 100);
-  $('ringPct').textContent = pct + '%';
-  $('workStep').textContent = LABEL[step] || '';
-  const order = Object.keys(W);
-  const alias = { ref: 'refsep', refnotes: 'refsep' };
-  document.querySelectorAll('#steps li').forEach((li) => {
-    const i = order.indexOf(li.dataset.s), cur = order.indexOf(alias[step] || step);
-    li.className = i < cur ? 'done' : i === cur ? 'on' : '';
-  });
+const W = { audio: [0, 4], download: [4, 16], separate: [20, 62], notes: [82, 6], ref: [88, 1], refsep: [88, 9], refnotes: [97, 3] };
+const LABEL = { audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'Separando a voz', notes: 'Achando as notas', ref: 'Lendo a original', refsep: 'Lendo a melodia da original', refnotes: 'Lendo a melodia da original' };
+function progress(st, p) {
+  const [a, w] = W[st] || [0, 0];
+  const v = Math.min(100, Math.round(a + w * p));
+  $('ringBar').style.strokeDashoffset = 327 * (1 - v / 100);
+  $('ringPct').textContent = v + '%';
+  $('workStep').textContent = LABEL[st] || '';
+  const order = Object.keys(W), alias = { ref: 'refsep', refnotes: 'refsep' };
+  document.querySelectorAll('#steps li').forEach((li) => { const i = order.indexOf(li.dataset.s), c = order.indexOf(alias[st] || st); li.className = (li.classList.contains('refstep') ? 'refstep ' : '') + (i < c ? 'done' : i === c ? 'on' : ''); });
 }
 async function start(f) {
   file = f;
-  screen('work'); progress('audio', 0);
+  app.dataset.screen = 'work'; progress('audio', 0);
   $('topinfo').textContent = f.name;
+  $('steps').classList.toggle('ref', !!refFile);
   try {
-    videoUrl = URL.createObjectURL(f);
-    video.src = videoUrl;
-    $('steps').classList.toggle('ref', !!refFile);
-    state = await cover.analyze(f, { ...tuneOpts(), reference: refFile }, progress);
-    await cover.verify(state);
-    progress('mix', 0);
-    await remix();
-    progress('mix', 1);
+    video.src = URL.createObjectURL(f);
+    state = await cover.analyze(f, { ...tuneOpts(), reference: refFile, autoTune: false }, progress);
     await new Promise((r) => (video.readyState >= 2 ? r() : video.addEventListener('loadeddata', r, { once: true })));
+    wav('orig', state.orig);
+    wav('raw', cover.rawMix(state));
     openStudio();
   } catch (e) {
     console.error(e);
-    screen('home');
-    toast(/decode|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo ou o Chrome atualizado.' : 'Deu erro: ' + e.message, 7000);
+    app.dataset.screen = 'home';
+    toast(/decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 7000);
   }
 }
 
-// ---------- 3) Estúdio ----------
+// ---------- Estúdio ----------
 let grader = null, editor = null;
 function openStudio() {
-  screen('studio');
+  app.dataset.screen = 'studio';
   $('newBtn').hidden = false;
   const cv = $('screen'), portrait = video.videoHeight >= video.videoWidth;
-  // A tela do vídeo cabe inteira no espaço que sobrar, sem distorcer (conta feita a cada mudança de tamanho)
+  cv.width = portrait ? 720 : 1280; cv.height = portrait ? 1280 : 720;
   const fit = () => {
     const r = $('viewer').getBoundingClientRect(), ar = portrait ? 9 / 16 : 16 / 9;
     let h = r.height, w = h * ar;
@@ -82,98 +81,152 @@ function openStudio() {
     cv.style.width = Math.floor(w) + 'px'; cv.style.height = Math.floor(h) + 'px';
   };
   new ResizeObserver(fit).observe($('viewer')); fit();
-  cv.width = portrait ? 720 : 1280; cv.height = portrait ? 1280 : 720;
-  if (!grader) grader = new Grader(cv);
-  grader.set(filter, amount);
-  if (!editor) editor = new TuneEditor($('editor'), { onSelect, onEdit, onSeek: (t) => seek(t - result.start) });
+  grader = new Grader(cv);
+  editor = new TuneEditor($('editor'), { onSelect, onEdit, onSeek: (t) => seek(t) });
   editor.load(state);
-  refreshChips(); refreshRef();
-  seek(0);
-  buildFilters();
+  $('seek').max = state.duration.toFixed(2); $('tEnd').textContent = fmt(state.duration);
+  refreshRef(); refreshChips();
+  go(2);
   requestAnimationFrame(loop);
 }
-async function remix() {
-  result = await cover.render(state, mixOpts());
-  if (wavUrl) URL.revokeObjectURL(wavUrl);
-  wavUrl = URL.createObjectURL(cover.toWav(result.channels, result.sr));
-  const t = audio.currentTime;
-  audio.src = wavUrl;
-  audio.currentTime = Math.min(t, result.end - result.start);
-  $('seek').max = (result.end - result.start).toFixed(2);
-  $('tEnd').textContent = fmt(result.end - result.start);
-  refreshSummary();
-}
 
-// Player: vídeo mudo + áudio novo no mesmo relógio. No A/B, toca o som original do vídeo.
-const clipT = () => (ab ? video.currentTime - result.start : audio.currentTime);
-const playing = () => (ab ? !video.paused : !audio.paused);
-function seek(t) {
-  t = Math.max(0, Math.min(t, result.end - result.start));
-  audio.currentTime = t; video.currentTime = result.start + t;
-  $('seek').value = t; $('tNow').textContent = fmt(t);
-  editor?.setTime(result.start + t);
+// Etapas
+function go(n) {
+  const wasPlaying = playing();
+  pause();
+  step = n;
+  document.querySelectorAll('.step').forEach((s) => s.classList.toggle('on', +s.dataset.step === n));
+  document.querySelectorAll('#stepper button').forEach((b) => { const k = +b.dataset.step; b.classList.toggle('on', k === n); b.classList.toggle('done', k < n); });
+  $('prev').style.visibility = n > 2 ? 'visible' : 'hidden';
+  $('next').hidden = n === 5;
+  if (n === 2) editor.resize();
+  if (n === 4) buildFilters();
+  if (n === 5) refreshSummary();
+  refreshAB();
+  seek(+$('seek').value);
+  if (wasPlaying) play();
 }
+$('stepper').onclick = (e) => { const b = e.target.closest('button'); if (b && +b.dataset.step >= 2) go(+b.dataset.step); };
+$('prev').onclick = () => go(Math.max(2, step - 1));
+let warned = {};
+$('next').onclick = () => {
+  if (step === 2 && !tuned && !warned[2]) { warned[2] = 1; return toast('A voz ainda não foi afinada. Toque em "Afinar automático", ou em Próximo de novo para seguir sem afinar.', 5000); }
+  if (step === 3 && !mastered && !warned[3]) { warned[3] = 1; return toast('Ainda sem mix e master. Toque em "Mixar e masterizar", ou em Próximo de novo para seguir assim.', 5000); }
+  go(Math.min(5, step + 1));
+};
+
+// O que cada lado do botão mostra em cada etapa (na mix são três: original, afinada, mixada)
+function sources() {
+  const finalAudio = mastered ? 'master' : 'raw';
+  const filt = currentFilter();
+  if (step === 2) return { A: { name: 'ANTES', audio: 'orig', label: 'voz como foi cantada' }, B: { name: 'DEPOIS', audio: 'raw', label: tuned ? 'voz afinada' : 'ainda sem afinar' } };
+  if (step === 3) return { A: { name: 'ORIGINAL', audio: 'orig', label: 'sem afinar' }, B: { name: 'AFINADA', audio: 'raw', label: tuned ? 'sem mix' : 'ainda sem afinar' },
+    C: { name: 'MIXADA', audio: finalAudio, label: mastered ? 'afinada + mix e master' : 'toque em Mixar' } };
+  return { A: { name: 'ANTES', audio: finalAudio, label: 'sem cor', filter: ORIGINAL }, B: { name: 'DEPOIS', audio: finalAudio, label: filt.name, filter: filt } };
+}
+function refreshAB() {
+  const src = sources();
+  if (!src[side]) side = 'B';
+  if (step === 3 && side === 'B' && mastered && refreshAB.lastStep !== 3) side = 'C';
+  refreshAB.lastStep = step;
+  $('abC').hidden = !src.C;
+  $('ab').classList.toggle('three', !!src.C);
+  for (const k of ['A', 'B', 'C']) {
+    if (!src[k]) continue;
+    $('ab' + k + 'n').textContent = src[k].name; $('ab' + k + 'txt').textContent = src[k].label;
+    const url = urls[src[k].audio];
+    if (url && players[k].src !== url) { const t = clipT(); players[k].src = url; players[k].currentTime = t; }
+    $('ab' + k).classList.toggle('on', side === k);
+  }
+  $('tag').textContent = src[side].name; $('tag').classList.toggle('before', side === 'A');
+  grader.set(src[side].filter || ORIGINAL, amount);
+  loop.dirty = true;
+}
+$('ab').onclick = (e) => {
+  const b = e.target.closest('button'); if (!b || b.dataset.v === side) return;
+  const was = playing(), t = clipT();
+  pause(); side = b.dataset.v; refreshAB(); seek(t); if (was) play();
+};
+
+// Player: um áudio de cada vez (o do lado escolhido), preso no relógio do vídeo
+const cur = () => players[side];
+const clipT = () => (cur() && !isNaN(cur().currentTime) ? cur().currentTime : +$('seek').value || 0);
+const playing = () => !!cur() && !cur().paused;
+function seek(t) {
+  t = Math.max(0, Math.min(t, state.duration - 0.05));
+  for (const p of Object.values(players)) if (p.src) p.currentTime = t;
+  video.currentTime = t;
+  $('seek').value = t; $('tNow').textContent = fmt(t);
+  editor?.setTime(t);
+}
+function pause() { Object.values(players).forEach((p) => p.pause()); video.pause(); $('play').textContent = '▶'; }
 function play() {
-  if (playing()) { audio.pause(); video.pause(); $('play').textContent = '▶'; return; }
-  const t = Math.min(+$('seek').value, result.end - result.start - 0.05);
-  video.currentTime = result.start + t;
-  if (ab) { video.muted = false; video.play(); } else { video.muted = true; audio.currentTime = t; audio.play(); video.play(); }
+  if (playing()) return pause();
+  const t = +$('seek').value;
+  video.currentTime = t; cur().currentTime = t;
+  cur().play(); video.play();
   $('play').textContent = '❚❚';
 }
 $('play').onclick = play;
 $('back5').onclick = () => seek(clipT() - 5);
 $('fwd5').onclick = () => seek(clipT() + 5);
 $('seek').oninput = () => seek(+$('seek').value);
-$('ab').onclick = () => {
-  const was = playing(), t = clipT();
-  audio.pause(); video.pause();
-  ab = !ab; $('ab').classList.toggle('on', ab); $('abtag').hidden = !ab;
-  seek(t); if (was) { $('play').textContent = '▶'; play(); }
-};
-audio.onended = () => { video.pause(); $('play').textContent = '▶'; };
-video.onseeked = () => grader && grader.draw(video);
+Object.values(players).forEach((p) => (p.onended = () => pause()));
+video.onseeked = () => (loop.dirty = true);
 function loop() {
   if (app.dataset.screen !== 'studio') return;
-  if (result) {
-    if (!ab && !audio.paused) {
-      const want = result.start + audio.currentTime;
-      if (Math.abs(video.currentTime - want) > 0.08) video.currentTime = want;
-    }
-    if (ab && !video.paused && video.currentTime >= result.end) { video.pause(); $('play').textContent = '▶'; }
-    if (playing()) { const t = clipT(); $('seek').value = t; $('tNow').textContent = fmt(t); editor.setTime(result.start + t); }
-    if (playing() || loop.dirty) { grader.draw(video); loop.dirty = false; }
+  if (playing()) {
+    const t = cur().currentTime;
+    if (Math.abs(video.currentTime - t) > 0.08) video.currentTime = t;
+    $('seek').value = t; $('tNow').textContent = fmt(t); editor.setTime(t);
   }
+  if (playing() || loop.dirty) { grader.draw(video); loop.dirty = false; }
   requestAnimationFrame(loop);
 }
 
-// Abas
-$('tabs').onclick = (e) => {
-  const b = e.target.closest('button'); if (!b) return;
-  document.querySelectorAll('.tabs button, .tab').forEach((x) => x.classList.toggle('on', x.dataset.tab === b.dataset.tab));
-  if (b.dataset.tab === 'tune') editor.resize();
-  if (b.dataset.tab === 'look') drawThumbs();
-};
+function busy(on, txt) { $('busy').hidden = !on; if (txt) $('busyTxt').textContent = txt; busyPct(0); }
+function busyPct(p) { $('busyBar').style.strokeDashoffset = 327 * (1 - Math.max(0, Math.min(1, p))); }
 
-// ---------- Editor de notas ----------
+// ---------- 2) Afinação ----------
 function refreshChips() {
   const b = state.before, a = state.after, edited = Object.keys(state.edits || {}).length;
   $('chips').innerHTML = `<span class="chip">Tom <b>${state.key.name}</b></span>
-    <span class="chip">Faixa verde antes <b>${b.band}%</b></span>
-    <span class="chip ${a.band >= 99 ? 'good' : 'bad'}">depois <b>${a.band}%</b></span>
-    <span class="chip">Desvio <b>${b.avgCents}→${a.avgCents} cents</b></span>
+    <span class="chip ${tuned ? '' : 'bad'}">Faixa verde antes <b>${b.band}%</b></span>
+    ${tuned ? `<span class="chip ${a.band >= 99 ? 'good' : 'bad'}">depois <b>${a.band}%</b></span>` : ''}
     ${edited ? `<span class="chip">Editadas <b>${edited}</b></span>` : ''}
-    ${state.ref ? `<span class="chip">Original <b>${state.ref.shift >= 0 ? '+' : ''}${state.ref.shift} semitons · ${state.plan.filter((n) => n.viaRef).length} notas pela referência</b></span>` : ''}`;
+    ${state.ref ? `<span class="chip">Original <b>${state.ref.shift >= 0 ? '+' : ''}${state.ref.shift} semitons</b></span>` : ''}`;
+  $('tuneAuto').hidden = tuned; $('tuneUndo').hidden = !tuned; $('tuneAgain').hidden = !tuned;
 }
-const pct = (v) => Math.round(v * 100) + '%';
+async function doTune() {
+  pause(); busy(true, 'Afinando e conferindo cada nota…');
+  try {
+    await cover.retune(state, tuneOpts(), (s, p) => busyPct(p));
+    await cover.verify(state);
+    tuned = true; setPending(false);
+    wav('raw', cover.rawMix(state));
+    if (mastered) await doMaster(false);
+    editor.load(state); refreshChips(); side = 'B'; refreshAB();
+    toast(`Afinado: ${state.after.band}% da voz na faixa verde. Compare no ANTES | DEPOIS.`);
+  } catch (e) { console.error(e); toast('Deu erro: ' + e.message, 6000); }
+  busy(false);
+}
+$('tuneAuto').onclick = doTune;
+$('tuneAgain').onclick = () => { pushUndo(); doTune(); };
+$('tuneUndo').onclick = async () => {
+  pause(); cover.untune(state, tuneOpts()); tuned = false;
+  wav('raw', cover.rawMix(state));
+  if (mastered) { busy(true, 'Refazendo a mix…'); await doMaster(false); busy(false); }
+  editor.load(state); refreshChips(); refreshAB(); toast('Afinação desfeita: a voz voltou a ser a original.');
+};
 function onSelect(i) {
   const n = state.plan[i], ed = (state.edits || {})[i] || {};
   $('qLabel').textContent = i >= 0 ? 'Quantizar nota' : 'Quantizar tudo';
   $('sLabel').textContent = i >= 0 ? 'Endireitar nota' : 'Endireitar tudo';
-  $('q').value = i >= 0 ? ed.quantize ?? n.q : $('mStrength').value;
-  $('s').value = i >= 0 ? ed.straighten ?? n.st : $('s').dataset.global || 1;
+  $('q').value = i >= 0 ? ed.quantize ?? n.q : $('q').dataset.global || 1;
+  $('s').value = i >= 0 ? ed.straighten ?? n.st : $('s').dataset.global ?? 1;
   $('qOut').textContent = pct(+$('q').value); $('sOut').textContent = pct(+$('s').value);
 }
-function pushUndo() { undo.push(JSON.stringify({ edits: state.edits, strength: $('mStrength').value, st: $('s').dataset.global })); }
+function pushUndo() { undo.push(JSON.stringify({ edits: state.edits, q: $('q').dataset.global, s: $('s').dataset.global })); }
 function setPending(v = true) { pending = v; $('apply').disabled = !v; }
 function onEdit(i, patch) {
   pushUndo();
@@ -181,114 +234,115 @@ function onEdit(i, patch) {
   if (patch.target != null) { state.plan[i].target = patch.target; state.plan[i].manual = true; }
   setPending(); editor.draw(); refreshChips();
 }
-$('nUp').onclick = () => editor.sel >= 0 && onEdit(editor.sel, { target: state.plan[editor.sel].target + 1, bypass: false });
-$('nDown').onclick = () => editor.sel >= 0 && onEdit(editor.sel, { target: state.plan[editor.sel].target - 1, bypass: false });
-$('nOrig').onclick = () => { if (editor.sel < 0) return toast('Toque numa nota primeiro'); onEdit(editor.sel, { bypass: true }); state.plan[editor.sel].q = 0; state.plan[editor.sel].st = 0; editor.draw(); };
-$('nAuto').onclick = () => { if (editor.sel < 0) return toast('Toque numa nota primeiro'); pushUndo(); delete state.edits[editor.sel]; setPending(); refreshChips(); };
-$('q').oninput = () => { $('qOut').textContent = pct(+$('q').value); };
-$('s').oninput = () => { $('sOut').textContent = pct(+$('s').value); };
-$('q').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { quantize: +$('q').value, bypass: false }); else { pushUndo(); $('mStrength').value = $('q').value; setPending(); } };
+const needSel = () => (editor.sel < 0 ? (toast('Toque numa nota primeiro'), false) : true);
+$('nUp').onclick = () => needSel() && onEdit(editor.sel, { target: state.plan[editor.sel].target + 1, bypass: false });
+$('nDown').onclick = () => needSel() && onEdit(editor.sel, { target: state.plan[editor.sel].target - 1, bypass: false });
+$('nOrig').onclick = () => { if (!needSel()) return; onEdit(editor.sel, { bypass: true }); state.plan[editor.sel].q = 0; state.plan[editor.sel].st = 0; editor.draw(); };
+$('nAuto').onclick = () => { if (!needSel()) return; pushUndo(); delete state.edits[editor.sel]; setPending(); refreshChips(); };
+$('q').oninput = () => ($('qOut').textContent = pct(+$('q').value));
+$('s').oninput = () => ($('sOut').textContent = pct(+$('s').value));
+$('q').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { quantize: +$('q').value, bypass: false }); else { pushUndo(); $('q').dataset.global = $('q').value; setPending(); } };
 $('s').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { straighten: +$('s').value, bypass: false }); else { pushUndo(); $('s').dataset.global = $('s').value; setPending(); } };
 $('zIn').onclick = () => editor.zoom(1.5);
 $('zOut').onclick = () => editor.zoom(1 / 1.5);
-$('showOrig').classList.add('on');
 $('showOrig').onclick = () => { editor.showOrig = !editor.showOrig; $('showOrig').classList.toggle('on', editor.showOrig); editor.draw(); };
 $('undo').onclick = () => {
   const u = undo.pop(); if (!u) return toast('Nada para desfazer');
-  const o = JSON.parse(u);
-  state.edits = o.edits; $('mStrength').value = o.strength; if (o.st) $('s').dataset.global = o.st;
-  setPending(); refreshChips(); toast('Desfeito. Toque em "Aplicar afinação" para ouvir.');
+  const o = JSON.parse(u); state.edits = o.edits;
+  if (o.q != null) $('q').dataset.global = o.q; else delete $('q').dataset.global;
+  if (o.s != null) $('s').dataset.global = o.s; else delete $('s').dataset.global;
+  setPending(); refreshChips(); toast('Desfeito. Toque em "Aplicar edições" para ouvir.');
 };
-async function applyTuning() {
-  audio.pause(); video.pause(); $('play').textContent = '▶';
-  busy(true, 'Afinando e conferindo…');
-  try {
-    await cover.retune(state, tuneOpts(), (s, p) => busyPct(p));
-    await cover.verify(state);
-    busy(true, 'Mixando…');
-    await remix();
-    editor.load(state); refreshChips(); setPending(false);
-    toast(state.after.band >= 99 ? `Pronto: ${state.after.band}% da voz na faixa verde.` : `Pronto: ${state.after.band}% na faixa verde.`);
-  } catch (e) { console.error(e); toast('Deu erro: ' + e.message, 6000); }
-  busy(false);
-}
-$('apply').onclick = applyTuning;
-$('mRetune').onclick = () => { pushUndo(); applyTuning(); };
-
-function busy(on, txt) { $('busy').hidden = !on; if (txt) $('busyTxt').textContent = txt; busyPct(0); }
-function busyPct(p) { $('busyBar').style.strokeDashoffset = 327 * (1 - Math.max(0, Math.min(1, p))); }
-
-// ---------- Música original (modo referência) ----------
-function refreshRef() {
-  $('mUseRef').disabled = !state.ref;
-  $('mRefTxt').textContent = state.ref ? 'Trocar a música original' : 'Subir a música original';
-}
-$('mUseRef').addEventListener('change', () => { pushUndo(); applyTuning(); });
+$('apply').onclick = doTune;
+$('mSnap').onchange = () => { pushUndo(); setPending(); };
+$('mUseRef').onchange = () => { pushUndo(); setPending(); };
+function refreshRef() { $('mUseRef').disabled = !state.ref; $('mRefTxt').textContent = state.ref ? 'Trocar música original' : 'Subir música original'; }
 $('mRefFile').onchange = async () => {
   const f = $('mRefFile').files[0]; if (!f) return;
-  audio.pause(); video.pause(); $('play').textContent = '▶';
-  busy(true, 'Lendo a melodia da original…');
+  pause(); busy(true, 'Lendo a melodia da original…');
   try {
     const r = await cover.setReference(state, f, (s, p) => busyPct(p));
     $('mUseRef').checked = true; refreshRef();
-    toast(`Original lida: diferença de ${r.shift} semitons. Afinando…`);
-    await applyTuning();
+    toast(`Original lida: diferença de ${r.shift} semitons.`);
+    busy(false); await doTune();
   } catch (e) { console.error(e); toast('Não consegui ler a música original: ' + e.message, 6000); busy(false); }
 };
 
-// ---------- Mix ----------
+// ---------- 3) Mix e master ----------
+async function doMaster(show = true) {
+  if (show) { pause(); busy(true, 'Mixando e masterizando…'); }
+  mastered = await cover.render(state, mixOpts());
+  wav('master', mastered.full);
+  $('mixApply').hidden = true; $('mixUndo').hidden = false;
+  if (show) { busy(false); side = 'C'; refreshAB(); toast('Mix e master prontos. Alterne entre ORIGINAL, AFINADA e MIXADA.'); }
+}
+$('mixApply').onclick = () => doMaster();
+$('mixUndo').onclick = () => { pause(); mastered = null; side = 'B'; $('mixApply').hidden = false; $('mixUndo').hidden = true; refreshAB(); toast('Mix e master desfeitos.'); };
 document.querySelectorAll('.row input[type=range]').forEach((r) => {
   const o = r.nextElementSibling;
-  const upd = () => (o.textContent = r.id === 'mStrength' || r.id === 'fAmount' || r.id === 'mReverb' ? pct(+r.value) : (+r.value).toFixed(1) + ' s');
+  const upd = () => (o.textContent = r.id === 'mReverb' || r.id === 'fAmount' ? pct(+r.value) : (+r.value).toFixed(1) + ' s');
   r.addEventListener('input', upd); upd();
 });
-let remixT = 0;
-const remixSoon = () => { clearTimeout(remixT); remixT = setTimeout(async () => { const was = playing(); audio.pause(); video.pause(); busy(true, 'Mixando…'); await remix(); busy(false); seek(+$('seek').value); if (was) { $('play').textContent = '▶'; play(); } }, 250); };
-['mReverb', 'mFadeIn', 'mFadeOut', 'mTrim'].forEach((id) => $(id).addEventListener('change', remixSoon));
-['mStrength', 'mSnap'].forEach((id) => $(id).addEventListener('change', () => { pushUndo(); setPending(); toast('Toque em "Afinar tudo de novo" para aplicar.'); }));
+['mReverb', 'mFadeIn', 'mFadeOut', 'mTrim'].forEach((id) => $(id).addEventListener('change', async () => {
+  if (!mastered) return;
+  const was = playing(), t = clipT(); pause(); busy(true, 'Mixando…'); await doMaster(false); busy(false); refreshAB(); seek(t); if (was) play();
+}));
 
-// ---------- Filtros ----------
-let thumbGr = null;
-function buildFilters() {
+// ---------- 4) Cor ----------
+const currentFilter = () => {
+  if (!look || look.id === 'original') return look || ORIGINAL;
+  if (look.id === 'auto') return auto || ORIGINAL;
+  return compose(auto, look);
+};
+async function buildFilters() {
+  if (!auto) { busy(true, 'Colorista analisando a luz do vídeo…'); try { auto = await autoGrade(video); } catch (e) { console.warn(e); } busy(false); seek(+$('seek').value); }
+  if (!look) look = { id: 'auto', name: 'Auto · Colorista' };
   const box = $('filters'); box.innerHTML = '';
-  [ORIGINAL, ...FILTERS].forEach((f) => {
+  const list = [ORIGINAL, { id: 'auto', name: 'Auto · Colorista' }, ...FILTERS];
+  list.forEach((f) => {
     const b = document.createElement('button');
     b.innerHTML = `<canvas width="90" height="160"></canvas>${f.name}`;
-    b.classList.toggle('on', f === filter);
-    b.onclick = () => { filter = f; grader.set(filter, amount); loop.dirty = true; box.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); refreshSummary(); };
-    b.dataset.id = f.id;
+    b.classList.toggle('on', f.id === look.id);
+    b.onclick = () => { look = f; box.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); side = 'B'; refreshAB(); refreshSummary(); };
     box.appendChild(b);
   });
+  refreshAB();
+  setTimeout(drawThumbs, 50);
 }
+let thumbGr = null;
 function drawThumbs() {
   if (!video.videoWidth) return;
-  if (!thumbGr) { const c = document.createElement('canvas'); c.width = 180; c.height = 320; thumbGr = new Grader(c); }
   const portrait = video.videoHeight >= video.videoWidth;
+  if (!thumbGr) { const c = document.createElement('canvas'); thumbGr = new Grader(c); }
   thumbGr.c.width = portrait ? 180 : 320; thumbGr.c.height = portrait ? 320 : 180;
-  [ORIGINAL, ...FILTERS].forEach((f, i) => {
-    thumbGr.set(f, 1); thumbGr.draw(video);
-    const cv = $('filters').children[i]?.querySelector('canvas');
-    if (!cv) return;
+  const list = [ORIGINAL, { id: 'auto' }, ...FILTERS];
+  list.forEach((f, i) => {
+    const real = f.id === 'original' ? ORIGINAL : f.id === 'auto' ? auto || ORIGINAL : compose(auto, f);
+    thumbGr.set(real, 1); thumbGr.draw(video);
+    const cv = $('filters').children[i]?.querySelector('canvas'); if (!cv) return;
     cv.width = thumbGr.c.width; cv.height = thumbGr.c.height; cv.style.aspectRatio = portrait ? '9 / 16' : '16 / 9';
     cv.getContext('2d').drawImage(thumbGr.c, 0, 0);
   });
 }
-$('fAmount').addEventListener('input', () => { amount = +$('fAmount').value; grader.set(filter, amount); loop.dirty = true; });
+$('fAmount').addEventListener('input', () => { amount = +$('fAmount').value; refreshAB(); });
 
-// ---------- Exportar ----------
+// ---------- 5) Exportar ----------
 function refreshSummary() {
-  if (!result || !state) return;
-  const portrait = video.videoHeight >= video.videoWidth;
-  const type = exportType();
-  $('summary').innerHTML = `<div>Duração<b>${fmt(result.end - result.start)}</b></div><div>Resolução<b>${portrait ? '1080 × 1920' : '1920 × 1080'}</b></div>
-    <div>Filtro<b>${filter.name}</b></div><div>Formato<b>${type.startsWith('video/mp4') ? 'MP4' : type ? 'WebM' : '—'}</b></div>`;
+  if (!state) return;
+  const portrait = video.videoHeight >= video.videoWidth, type = exportType();
+  const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
+  $('summary').innerHTML = `<div>Afinação<b>${tuned ? `sim · ${state.after.band}% na faixa` : 'não'}</b></div><div>Mix e master<b>${mastered ? 'sim' : 'não'}</b></div>
+    <div>Cor<b>${currentFilter().name}</b></div><div>Duração<b>${fmt(e - s)}</b></div>
+    <div>Resolução<b>${portrait ? '1080 × 1920' : '1920 × 1080'}</b></div><div>Formato<b>${type.startsWith('video/mp4') ? 'MP4' : type ? 'WebM' : '—'}</b></div>`;
 }
 $('exportBtn').onclick = async () => {
-  audio.pause(); video.pause(); $('play').textContent = '▶';
-  if (pending) toast('Você tem ajustes de afinação que ainda não foram aplicados.');
+  pause();
+  if (pending) toast('Você tem edições de afinação que ainda não foram aplicadas.');
   $('exportBtn').disabled = true; $('exportBar').hidden = false; $('download').hidden = true;
   try {
-    const out = await exportVideo({ video, filter, amount, channels: result.channels, sr: result.sr, start: result.start, end: result.end,
+    const ch = mastered ? mastered.channels : cover.rawMix(state);
+    const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
+    const out = await exportVideo({ video, filter: currentFilter(), amount, channels: ch, sr: cover.SR, start: s, end: e,
       onProgress: (p) => { $('exportBar').firstElementChild.style.width = Math.round(p * 100) + '%'; } });
     const a = $('download');
     a.href = URL.createObjectURL(out.blob);
@@ -299,6 +353,29 @@ $('exportBtn').onclick = async () => {
   $('exportBtn').disabled = false;
   seek(0);
 };
-$('dlWav').onclick = () => { const a = document.createElement('a'); a.href = wavUrl; a.download = 'studio-cover-audio.wav'; a.click(); };
+$('dlWav').onclick = () => { const a = document.createElement('a'); a.href = urls[mastered ? 'master' : 'raw']; a.download = 'studio-cover-audio.wav'; a.click(); };
 
-window.studio = { get state() { return state; }, get result() { return result; }, cover, start, select: (i) => editor.select(i) }; // para testes
+window.studio = { get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
+
+// ---------- Ajuda: um "?" em cada botão explica o que ele faz ----------
+const HELP_KEY = 'sc-help';
+let helpOn = true;
+try { helpOn = localStorage.getItem(HELP_KEY) !== '0'; } catch {}
+app.classList.toggle('helpon', helpOn);
+document.querySelectorAll('[data-help]').forEach((el) => {
+  el.title = el.dataset.help;
+  const q = document.createElement('i');
+  q.className = 'qh'; q.textContent = '?'; q.setAttribute('role', 'button'); q.setAttribute('aria-label', 'O que é isto?');
+  el.appendChild(q);
+});
+document.addEventListener('click', (e) => {
+  const q = e.target.closest('.qh'); if (!q) return;
+  e.preventDefault(); e.stopPropagation();
+  $('tipTxt').textContent = q.parentElement.dataset.help; $('tip').hidden = false;
+}, true);
+$('tipOk').onclick = () => ($('tip').hidden = true);
+$('helpBtn').onclick = () => {
+  helpOn = !helpOn; app.classList.toggle('helpon', helpOn);
+  try { localStorage.setItem(HELP_KEY, helpOn ? '1' : '0'); } catch {}
+  toast(helpOn ? 'Ajuda ligada: toque no "?" de qualquer botão para ver o que ele faz.' : 'Ajuda desligada. Toque no ? lá em cima para ligar de novo.');
+};

@@ -224,8 +224,34 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   const key = detectKey(raw, chroma);
   const state = { orig, voice, bed, key, track, rawNotes: raw, duration: orig[0].length / SR };
   if (o.reference) await setReference(state, o.reference, onStep);
-  await retune(state, o, onStep);
+  if (o.autoTune === false) untune(state, o); else await retune(state, o, onStep);
   return state;
+}
+
+// Volta a voz para como o artista cantou (desfaz a afinação). O plano continua calculado, para a tela
+// mostrar onde a voz original sai da faixa.
+export function untune(state, opts = {}) {
+  const o = { ...DEFAULTS, ...opts };
+  state.edits = state.edits || {};
+  state.plan = planTuning(state.rawNotes, state.key, o, state.edits);
+  state.tuned = null;
+  state.afterTrack = state.track;
+  state.check = bandCheck(state.track, state.plan, o.band);
+  state.beforeCheck = state.check;
+  state.before = { ...tuningStats(state.plan, (n) => n.target), band: state.check.pct };
+  state.after = { ...state.before };
+  state.opts = o;
+  return state;
+}
+
+// Prévia da afinação, antes da mix: voz (afinada ou não) + instrumental, somados sem tratamento
+export function rawMix(state) {
+  const v = state.tuned || state.voice, b = state.bed;
+  const len = v[0].length;
+  const out = [0, 1].map((c) => { const o = new Float32Array(len), vc = v[c] || v[0]; for (let i = 0; i < len; i++) o[i] = vc[i] + (b ? (b[c] || b[0])[i] : 0); return o; });
+  let peak = 0; for (const c of out) for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(c[i]));
+  if (peak > 0.99) for (const c of out) for (let i = 0; i < len; i++) c[i] *= 0.99 / peak;
+  return out;
 }
 
 // Modo referência: lê a música original (arquivo de áudio ou canais prontos) e liga nas notas do cover.
@@ -280,6 +306,7 @@ export async function retune(state, opts = {}, onStep = () => {}) {
 
 // Resumo do antes e depois (a medição da voz afinada já foi feita no retune)
 export async function verify(state) {
+  if (!state.tuned) return state.after;
   const after = notesFrom(state.afterTrack);
   state.after = { ...tuningStats(after), band: state.check.pct };
   return state.after;
@@ -343,13 +370,15 @@ export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1 
 export async function render(state, opts = {}) {
   const o = { ...DEFAULTS, ...opts };
   const len = state.orig[0].length;
-  let mix = await mixMaster(state.tuned, state.bed, SR, o.reverb);
+  let mix = await mixMaster(state.tuned || state.voice, state.bed, SR, o.reverb);
   mix = mix.map((c) => c.subarray(0, len)); // mesma duração do vídeo (a cauda do reverb fica no fade)
   const { start, end } = o.trim ? findTrim(state.orig, SR) : { start: 0, end: len / SR };
   const a = Math.round(start * SR), b = Math.round(end * SR);
   const out = mix.map((c) => c.slice(a, b));
   applyFades(out, SR, o.fadeIn, o.fadeOut);
-  return { channels: out, sr: SR, start, end };
+  // full: mesma linha do tempo do vídeo inteiro (silêncio fora do corte), para comparar lado a lado
+  const full = out.map((c) => { const f = new Float32Array(len); f.set(c, a); return f; });
+  return { channels: out, full, sr: SR, start, end };
 }
 
 // WAV 16 bits (para ouvir no player e para mandar ao servidor montar o vídeo)

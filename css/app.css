@@ -156,3 +156,78 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .refpick.on { border-color: var(--y); box-shadow: var(--glow); }
 .refbtn { display: inline-grid; place-items: center; }
 .steps li.refstep { display: none; } .steps.ref li.refstep { display: list-item; }
+
+/* ===== Versão em etapas ===== */
+.studio { grid-template-rows: auto minmax(0, 46%) minmax(0, 1fr); }
+.stepper { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 8px 10px 0; }
+.stepper button { background: none; border: 0; color: #55555f; display: grid; justify-items: center; gap: 2px; font-size: 11px; cursor: pointer; padding: 2px 0; position: relative; }
+.stepper button b { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid #33333d; font-family: Orbitron, sans-serif; font-size: 11px; }
+.stepper button.done { color: var(--mut); } .stepper button.done b { border-color: var(--green); color: var(--green); }
+.stepper button.on { color: var(--y); } .stepper button.on b { border-color: var(--y); background: var(--y); color: #000; box-shadow: var(--glow); }
+.stepper button:disabled { cursor: default; }
+.stage { grid-template-rows: minmax(0, 1fr) auto auto; }
+.viewer canvas { display: block; border-radius: 12px; background: #000; box-shadow: 0 0 0 1px var(--line), 0 10px 40px rgba(0, 0, 0, .6); }
+.tag { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font: 700 11px Orbitron, sans-serif; letter-spacing: .12em; padding: 4px 12px; border-radius: 99px; background: var(--y); color: #000; box-shadow: var(--glow); pointer-events: none; }
+.tag.before { background: #2a2a33; color: #fff; box-shadow: none; }
+.ab { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ab button { background: #111116; border: 0; padding: 8px 6px; cursor: pointer; display: grid; gap: 1px; color: var(--mut); }
+.ab button b { font-family: Orbitron, sans-serif; letter-spacing: .12em; font-size: 13px; }
+.ab button small { font-size: 11px; }
+.ab button.on { background: var(--y); color: #000; }
+.ab button[data-v=A].on { background: #e9e9ef; color: #000; }
+.panel { grid-template-rows: minmax(0, 1fr) auto; }
+.step { display: none; min-height: 0; overflow: auto; padding: 12px; }
+.step.on { display: block; }
+.step[data-step="2"].on { display: grid; grid-template-rows: auto minmax(110px, 1fr) auto; gap: 8px; overflow: hidden; padding: 10px; }
+.head { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.head h3 { margin: 0 0 4px; font-family: Orbitron, sans-serif; font-size: 14px; letter-spacing: .06em; color: var(--y); }
+.head .sub { margin: 0; color: var(--mut); font-size: 12px; max-width: 520px; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.nav { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-top: 1px solid var(--line); }
+.navhint { flex: 1; color: var(--mut); font-size: 12px; text-align: center; }
+.switch.mini { font-size: 12px; margin: 0; }
+.switch.mini span { width: 32px; height: 18px; } .switch.mini span::after { width: 12px; height: 12px; }
+.switch.mini input:checked + span::after { left: 17px; }
+.switch input:disabled + span { opacity: .35; }
+@media (min-width: 900px) and (min-aspect-ratio: 1/1) {
+  .studio { grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(300px, 36%) minmax(0, 1fr); }
+  .stepper { grid-column: 1 / -1; max-width: 760px; margin: 0 auto; width: 100%; }
+}
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  .studio { grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(200px, 32%) minmax(0, 1fr); }
+  .stepper { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) { .ab button { padding: 6px; } .ab button small { display: none; } .head h3 { font-size: 13px; } }
+
+/* ===== Música original em destaque + ajuda nos botões ===== */
+.refpick { display: none; }
+.refcard { display: flex; align-items: center; gap: 12px; margin: 10px auto 0; padding: 12px 14px; max-width: 520px; cursor: pointer; text-align: left;
+  border: 1.5px dashed var(--y); border-radius: 14px; background: linear-gradient(135deg, rgba(255, 212, 0, .12), rgba(255, 212, 0, .03)); box-shadow: 0 0 18px rgba(255, 212, 0, .12); position: relative; }
+.refcard:hover { background: rgba(255, 212, 0, .18); }
+.refcard.on { border-style: solid; }
+.refcard .upic { flex: none; width: 40px; height: 40px; padding: 8px; border-radius: 50%; background: var(--y); fill: #000; box-shadow: var(--glow); }
+.refcard b { display: block; color: var(--y); font-family: Orbitron, sans-serif; font-size: 13px; letter-spacing: .04em; }
+.refcard small { display: block; color: var(--ink); opacity: .8; font-size: 12px; }
+.refcard.mini { display: inline-flex; margin: 0; padding: 6px 10px; gap: 8px; max-width: none; }
+.refcard.mini .upic { width: 28px; height: 28px; padding: 5px; }
+.refcard.mini b { font-size: 11px; }
+.refcard.mini small { font-size: 10px; }
+[data-help] { position: relative; }
+.qh { position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; border-radius: 50%; background: #000; border: 1px solid var(--y); color: var(--y);
+  font: 700 11px/16px 'Space Grotesk', sans-serif; text-align: center; cursor: help; z-index: 3; box-shadow: 0 0 6px rgba(255, 212, 0, .5); }
+.cta .qh, .ab .qh { clip-path: none; }
+.app:not(.helpon) .qh { display: none; }
+.helpbtn { width: 34px; padding: 0; font-weight: 800; color: var(--y); border-color: var(--y) !important; }
+.app.helpon .helpbtn { background: var(--y); color: #000; }
+.tip { position: absolute; z-index: 30; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(360px, calc(100% - 32px)); background: #121218; border: 1px solid var(--y);
+  border-radius: 14px; padding: 16px; box-shadow: var(--glow), 0 20px 60px #000; }
+.tip p { margin: 0 0 12px; font-size: 14px; }
+.tip .pill { float: right; }
+.ab.three button b { font-size: 11px; }
+.ab.three button small { font-size: 10px; }
+.ab.three { grid-template-columns: 1fr 1fr 1fr; }
+.app.helpon .ab { overflow: visible; }
+.app.helpon .ab button:first-child { border-radius: 13px 0 0 13px; } .app.helpon .ab button:last-child { border-radius: 0 13px 13px 0; }
+.qh { font-style: normal; }
+.cta .qh { top: 3px; right: 3px; }
+.row .qh, .switch .qh, .knob .qh { right: auto; left: -8px; top: -8px; }
