@@ -9,8 +9,8 @@ opcional, 10 filtros de cinema e saída em 1080p. Tudo com IAs grátis e de cód
 | Passo | O que é | Situação |
 | --- | --- | --- |
 | 1 | Motor de áudio a partir do vídeo | pronto, testado com áudio de teste |
-| 2 | Vídeo 1080p e os 10 filtros de cinema | a fazer |
-| 3 | Tela do artista (subir, prévia, opções, baixar) | a fazer (hoje há uma página de laboratório) |
+| 2 | Vídeo 1080p e os 10 filtros de cinema | protótipo pronto (`js/filters.js`, `js/export.js`) |
+| 3 | App do artista: player, editor estilo VariAudio, mix, filtros, exportar | protótipo pronto (`index.html`, `js/app.js`, `js/editor.js`); o laboratório antigo está em `lab.html` |
 | 4 | Publicar no Plesk | a fazer |
 
 ## Como o motor funciona (`js/pipeline.js`)
@@ -39,6 +39,7 @@ Veio do Afina.ai (repositório `treino-vocal`, arquivos `js/studio.js` e `js/mys
 node server.js        # http://localhost:8080 (página de laboratório)
 npm run sample        # gera voz e vídeo de teste em test/out (precisa de ffmpeg)
 npm test              # testa o motor no Chromium (precisa do pacote playwright)
+node test/app.test.mjs video.mp4 pasta   # testa o app inteiro e tira fotos no celular e no computador
 ```
 
 ## Limites conhecidos

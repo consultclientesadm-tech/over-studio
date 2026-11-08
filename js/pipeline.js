@@ -84,7 +84,7 @@ export function planTuning(notes, key, { strength = 1, scaleSnap = true, straigh
     const manual = ed.target != null;
     if (manual) target = ed.target;
     const q = ed.bypass ? 0 : ed.quantize ?? strength;
-    const st = ed.bypass ? 0 : ed.straighten ?? (straighten ? 1 : 0);
+    const st = ed.bypass ? 0 : ed.straighten ?? (straighten === true ? 1 : +straighten || 0);
     const cents = Math.round((n.m - target) * 100);
     // 1) Centro da nota vai para a nota certa. Automático: no máximo 1 semitom (mais que isso é escolha do
     //    cantor). Na mão, o artista pode mover a nota até uma oitava.

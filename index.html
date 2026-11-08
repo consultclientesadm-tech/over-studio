@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#050506">
+<title>Studio Cover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=1">
+</head>
+<body>
+<div class="app" id="app" data-screen="home">
+  <header class="top">
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i></div>
+    <div class="topinfo" id="topinfo"></div>
+    <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
+  </header>
+
+  <!-- 1) Subir o vídeo -->
+  <section class="screen home" id="home">
+    <div class="hero">
+      <h1>Seu cover com <em>som de estúdio</em><br>e cara de cinema.</h1>
+      <p>Grave no celular, suba aqui. A gente separa a voz, afina nota por nota sem deixar robótica, mixa, masteriza e entrega o vídeo pronto para postar.</p>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="video/*" hidden>
+        <span class="dropicon"></span>
+        <strong>Escolher o vídeo</strong>
+        <small>ou arraste aqui · MP4 ou MOV do celular</small>
+      </label>
+      <div class="opts">
+        <label class="switch"><input type="checkbox" id="optSeparate" checked><span></span> Tem instrumental ou playback (separar a voz)</label>
+      </div>
+      <ul class="feats">
+        <li><b>01</b> Separa a voz com IA</li>
+        <li><b>02</b> Afina nota por nota</li>
+        <li><b>03</b> Mix e master</li>
+        <li><b>04</b> 10 filtros de cinema</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 2) Processando -->
+  <section class="screen work" id="work">
+    <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="ringBar" cx="60" cy="60" r="52"/></svg><span id="ringPct">0%</span></div>
+    <h2 id="workStep">Preparando…</h2>
+    <ol class="steps" id="steps">
+      <li data-s="audio">Lendo o áudio do vídeo</li>
+      <li data-s="download">Baixando a IA (só na primeira vez)</li>
+      <li data-s="separate">Separando a voz do instrumental</li>
+      <li data-s="notes">Achando as notas e o tom</li>
+      <li data-s="tune">Afinando e conferindo cada nota</li>
+      <li data-s="mix">Mixando e masterizando</li>
+    </ol>
+    <p class="hint">Tudo roda no seu aparelho. Deixe esta tela aberta.</p>
+  </section>
+
+  <!-- 3) Estúdio -->
+  <section class="screen studio" id="studio">
+    <div class="stage">
+      <div class="viewer" id="viewer">
+        <canvas id="screen"></canvas>
+        <video id="video" playsinline muted preload="auto"></video>
+        <div class="abtag" id="abtag" hidden>ORIGINAL</div>
+      </div>
+      <div class="player">
+        <button class="icon" id="back5" title="Voltar 5 s">↺5</button>
+        <button class="icon play" id="play" title="Tocar">▶</button>
+        <button class="icon" id="fwd5" title="Avançar 5 s">5↻</button>
+        <span class="time" id="tNow">0:00</span>
+        <input type="range" id="seek" min="0" max="1" step="0.01" value="0">
+        <span class="time" id="tEnd">0:00</span>
+        <button class="pill" id="ab" title="Comparar com o original">A/B</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <nav class="tabs" id="tabs">
+        <button data-tab="tune" class="on">Afinação</button>
+        <button data-tab="mix">Mix</button>
+        <button data-tab="look">Filtros</button>
+        <button data-tab="out">Exportar</button>
+      </nav>
+
+      <div class="tab tune on" data-tab="tune">
+        <div class="chips" id="chips"></div>
+        <div class="editor"><canvas id="editor"></canvas></div>
+        <div class="tools">
+          <div class="group">
+            <button class="icon" id="nUp" title="Subir meio tom">▲</button>
+            <button class="icon" id="nDown" title="Descer meio tom">▼</button>
+            <button class="pill" id="nOrig" title="Deixar esta nota como foi cantada">Original</button>
+            <button class="pill" id="nAuto" title="Voltar esta nota para o automático">Auto</button>
+          </div>
+          <label class="knob"><span id="qLabel">Quantizar</span><input type="range" id="q" min="0" max="1" step="0.05" value="1"><output id="qOut">100%</output></label>
+          <label class="knob"><span id="sLabel">Endireitar</span><input type="range" id="s" min="0" max="1" step="0.05" value="1"><output id="sOut">100%</output></label>
+          <div class="group">
+            <button class="icon" id="zOut" title="Menos zoom">−</button>
+            <button class="icon" id="zIn" title="Mais zoom">+</button>
+            <button class="pill" id="showOrig" title="Mostrar a voz original em cinza">Ver original</button>
+            <button class="pill" id="undo" title="Desfazer">Desfazer</button>
+            <button class="cta sm" id="apply" disabled>Aplicar afinação</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab mix" data-tab="mix">
+        <label class="row"><span>Reverb</span><input type="range" id="mReverb" min="0" max="1" step="0.05" value="0.2"><output></output></label>
+        <label class="row"><span>Fade-in</span><input type="range" id="mFadeIn" min="0" max="3" step="0.1" value="0.4"><output></output></label>
+        <label class="row"><span>Fade-out</span><input type="range" id="mFadeOut" min="0" max="5" step="0.1" value="1.5"><output></output></label>
+        <label class="switch"><input type="checkbox" id="mTrim" checked><span></span> Cortar o silêncio do começo e do fim</label>
+        <hr>
+        <label class="row"><span>Força da afinação</span><input type="range" id="mStrength" min="0" max="1" step="0.05" value="1"><output></output></label>
+        <label class="switch"><input type="checkbox" id="mSnap" checked><span></span> Prender as notas no tom da música</label>
+        <button class="pill" id="mRetune">Afinar tudo de novo com estes ajustes</button>
+      </div>
+
+      <div class="tab look" data-tab="look">
+        <div class="filters" id="filters"></div>
+        <label class="row"><span>Intensidade</span><input type="range" id="fAmount" min="0" max="1" step="0.05" value="1"><output></output></label>
+      </div>
+
+      <div class="tab out" data-tab="out">
+        <div class="summary" id="summary"></div>
+        <button class="cta" id="exportBtn">Gerar vídeo final</button>
+        <div class="bar" id="exportBar" hidden><i></i></div>
+        <p class="hint" id="exportHint">O vídeo toca uma vez enquanto é gravado. Deixe a tela aberta até terminar.</p>
+        <a class="cta alt" id="download" hidden>Baixar o vídeo</a>
+        <button class="pill" id="dlWav">Baixar só o áudio (WAV)</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="busy" id="busy" hidden><div class="ring sm"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="busyBar" cx="60" cy="60" r="52"/></svg></div><span id="busyTxt">Aplicando…</span></div>
+  <div class="toast" id="toast" hidden></div>
+</div>
+<script type="module" src="js/app.js?v=1"></script>
+</body>
+</html>
