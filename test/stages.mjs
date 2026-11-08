@@ -9,7 +9,7 @@ await new Promise((r) => setTimeout(r, 600));
 const browser = await chromium.launch();
 const page = await browser.newPage();
 try {
-  await page.goto('http://localhost:8094/');
+  await page.goto('http://localhost:8094/lab.html');
   await page.waitForFunction(() => window.cover);
   const r = await page.evaluate(async (b64) => {
     const C = window.cover;

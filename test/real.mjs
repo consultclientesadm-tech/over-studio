@@ -10,7 +10,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 page.on('console', (m) => m.type() === 'error' && console.log('[console]', m.text()));
 try {
-  await page.goto('http://localhost:8092/');
+  await page.goto('http://localhost:8092/lab.html');
   await page.waitForFunction(() => window.cover);
   const t0 = Date.now();
   const r = await page.evaluate(async (b64) => {

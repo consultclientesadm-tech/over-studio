@@ -9,7 +9,7 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 900, height: 1400 }, deviceScaleFactor: 2 });
 page.on('pageerror', (e) => console.log('[erro]', e.message));
 try {
-  await page.goto('http://localhost:8093/');
+  await page.goto('http://localhost:8093/lab.html');
   await page.setInputFiles('#file', inp);
   await page.click('#go');
   await page.waitForSelector('#tuneCard:not([hidden])', { timeout: 900000 });

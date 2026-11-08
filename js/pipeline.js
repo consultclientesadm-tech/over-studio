@@ -47,7 +47,7 @@ export function notesFrom(track) {
   const notes = [];
   let cur = null;
   const close = () => {
-    if (cur && cur.ms.length * dt >= 0.12) {
+    if (cur && cur.ms.length * dt >= 0.09) {
       const k = Math.floor(cur.ms.length * 0.2);
       const core = cur.ms.slice(k, cur.ms.length - k);
       const m = median(core.length ? core : cur.ms);
@@ -70,37 +70,69 @@ const pc = (m) => ((Math.round(m) % 12) + 12) % 12;
 
 // Para onde cada nota vai. Com scaleSnap, uma nota que caiu num semitom fora do tom (cantou muito baixo
 // ou muito alto) vai para a nota do tom mais próxima, desde que esteja a menos de 3/4 de semitom dela.
-export function planTuning(notes, key, { strength = 1, scaleSnap = true, straighten = true, band = 0.15 } = {}) {
+// edits[i] = ajuste feito à mão na nota i (editor estilo VariAudio):
+//   { target: nota MIDI escolhida, quantize: 0–1 (força só desta nota), straighten: 0–1, bypass: true }
+export function planTuning(notes, key, { strength = 1, scaleSnap = true, straighten = true, band = 0.15 } = {}, edits = {}) {
   const scale = scaleOf(key);
-  return notes.map((n) => {
+  return notes.map((n, i) => {
+    const ed = edits[i] || {};
     let target = Math.round(n.m);
     if (scaleSnap && !scale.includes(pc(target))) {
       const opts = [target - 1, target + 1].filter((t) => scale.includes(pc(t)) && Math.abs(t - n.m) < 0.75);
       if (opts.length) target = opts.sort((a, b) => Math.abs(a - n.m) - Math.abs(b - n.m))[0];
     }
+    const manual = ed.target != null;
+    if (manual) target = ed.target;
+    const q = ed.bypass ? 0 : ed.quantize ?? strength;
+    const st = ed.bypass ? 0 : ed.straighten ?? (straighten ? 1 : 0);
     const cents = Math.round((n.m - target) * 100);
-    // 1) Centro da nota vai para a nota certa (nunca mais que 1 semitom: mais que isso é escolha do cantor)
-    const base = Math.max(-1, Math.min(1, target - n.m));
-    const plan = { ...n, target, cents, shift: Math.abs(cents) >= 6 ? base * strength : 0 };
-    if (!straighten || !n.fr || n.fr.length < 4) return plan;
-    // 2) Escorregadas: a linha "lenta" da nota (média de ~0,22 s, que some com o vibrato) não pode sair
-    //    da faixa em volta do centro. O que vazar é puxado de volta só o quanto vazou; o vibrato e o
-    //    ataque (primeiros 0,08 s, onde a voz entra deslizando) ficam como a pessoa cantou.
+    // 1) Centro da nota vai para a nota certa. Automático: no máximo 1 semitom (mais que isso é escolha do
+    //    cantor). Na mão, o artista pode mover a nota até uma oitava.
+    const lim = manual ? 12 : 1;
+    const base = Math.max(-lim, Math.min(lim, target - n.m)) * q;
+    const plan = { ...n, i, target, cents, manual, q, st, shift: Math.abs(target - n.m) * q >= 0.03 ? base : 0 };
+    if (!n.fr || n.fr.length < 3) return plan;
+    // 2) Endireitar: a linha "lenta" da nota (média de ~0,22 s, que some com o vibrato) não pode sair da
+    //    faixa em volta da nota certa. O que vazar é puxado de volta só o quanto vazou; o vibrato fica.
     const dt = n.fr.length > 1 ? n.fr[1].t - n.fr[0].t : 0.032;
     const p = n.fr.map((f) => f.midi);
-    const H = 3, v = new Float32Array(p.length);
+    const v = new Float32Array(p.length);
     for (let k = 0; k < p.length; k++) {
-      let s = 0, c = 0;
-      for (let j = Math.max(0, k - H); j <= Math.min(p.length - 1, k + H); j++) { s += p[j]; c++; }
-      const r = s / c - n.m; // quanto a linha lenta saiu do centro
-      const t = n.fr[k].t - n.start;
-      const onset = Math.max(0, Math.min(1, (t - 0.08) / 0.07));
-      const leak = Math.abs(r) > band ? -Math.sign(r) * (Math.abs(r) - band) : 0;
-      v[k] = Math.max(-1.5, Math.min(1.5, (base + leak * onset) * strength));
+      const r = slow(p, k) + base - target; // onde a linha lenta fica depois do passo 1
+      const leak = Math.abs(r) > band * 0.5 ? -Math.sign(r) * (Math.abs(r) - band * 0.5) : 0;
+      v[k] = Math.max(-lim - 0.5, Math.min(lim + 0.5, base + leak * st));
     }
     plan.curve = { t0: n.fr[0].t + 0.032, dt, v }; // +0,032 s: centro da janela de análise
     return plan;
   });
+}
+
+// Linha lenta da voz: média de 7 quadros (~0,22 s), ignorando quadros sem nota. É a altura que o ouvido
+// entende como "a nota"; o vibrato oscila em volta dela.
+function slow(p, k, H = 3, lo = 0, hi = p.length - 1) {
+  let s = 0, c = 0;
+  for (let j = Math.max(lo, k - H); j <= Math.min(hi, k + H); j++) if (p[j] != null) { s += p[j]; c++; }
+  return c ? s / c : p[k];
+}
+
+// Mede uma melodia (quadros de pitchTrack) contra as notas certas do plano: para cada quadro dentro de
+// uma nota, a linha lenta está dentro da faixa? Devolve a % de tempo dentro e, por quadro, o resultado.
+export function bandCheck(track, plan, band = 0.15) {
+  const dt = track.length > 1 ? track[1].t - track[0].t : 0.032;
+  const marks = new Int8Array(track.length); // 0 = fora de nota, 1 = dentro da faixa, -1 = fora
+  let tot = 0, ok = 0;
+  const p = track.map((f) => f.midi);
+  for (const n of plan) {
+    const a = Math.max(0, Math.ceil(n.start / dt)), b = Math.min(track.length - 1, Math.floor((n.end - dt) / dt));
+    for (let k = a; k <= b; k++) {
+      if (p[k] == null) continue;
+      const r = slow(p, k, 3, a, b) - n.target; // só quadros da própria nota (a vizinha não conta)
+      if (Math.abs(r) > 1.5) continue; // erro do medidor (pulo de oitava, consoante), não é nota
+      const inside = Math.abs(r) <= band + 0.02; // 2 cents de folga da medição
+      marks[k] = inside ? 1 : -1; tot++; if (inside) ok++;
+    }
+  }
+  return { pct: tot ? Math.round((ok * 1000) / tot) / 10 : 100, marks, dt };
 }
 
 // Quanto do tempo cantado ficou dentro da faixa verde (linha lenta a menos de `band` da nota certa)
@@ -109,11 +141,7 @@ export function inBand(notes, band = 0.15, ref = (n) => Math.round(n.m)) {
   for (const n of notes) {
     if (!n.fr) continue;
     const p = n.fr.map((f) => f.midi), T = ref(n);
-    for (let k = 0; k < p.length; k++) {
-      let s = 0, c = 0;
-      for (let j = Math.max(0, k - 3); j <= Math.min(p.length - 1, k + 3); j++) { s += p[j]; c++; }
-      tot++; if (Math.abs(s / c - T) <= band + 0.05) ok++; // +5 cents de folga da medição
-    }
+    for (let k = 0; k < p.length; k++) { tot++; if (Math.abs(slow(p, k) - T) <= band + 0.05) ok++; }
   }
   return tot ? Math.round((ok * 100) / tot) : 100;
 }
@@ -188,24 +216,51 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   return state;
 }
 
-// Refaz só a afinação (quando o artista muda a força ou o "prender no tom")
+// Afina e confere: depois de afinar, mede a voz afinada de verdade (não o desenho) e, onde a linha lenta
+// ainda saiu da faixa verde, aumenta a correção daquele trecho e afina de novo, sempre a partir da voz
+// original (o áudio passa uma vez só pelo afinador, então não perde qualidade). Até 4 rodadas.
 export async function retune(state, opts = {}, onStep = () => {}) {
   const o = { ...DEFAULTS, ...opts };
-  const plan = planTuning(state.rawNotes, state.key, o);
-  onStep('tune', 0);
-  state.tuned = await tuneVoice(state.voice.map((c) => c.slice()), SR, plan, (p) => onStep('tune', p));
+  state.edits = state.edits || {};
+  const plan = planTuning(state.rawNotes, state.key, o, state.edits);
+  const target = 99;
+  let check = null;
+  for (let pass = 0; pass < 4; pass++) {
+    onStep('tune', pass / 4);
+    state.tuned = await tuneVoice(state.voice.map((c) => c.slice()), SR, plan, (p) => onStep('tune', (pass + p) / 4));
+    state.afterTrack = await pitchTrack(state.tuned, SR);
+    check = bandCheck(state.afterTrack, plan.filter((n) => n.st > 0), o.band);
+    if (check.pct >= target) break;
+    // Reforça a curva onde ainda vazou
+    const tr = state.afterTrack.map((f) => f.midi);
+    for (const n of plan) {
+      if (!n.curve || !(n.st > 0)) continue;
+      const { t0, dt, v } = n.curve;
+      const ja = Math.max(0, Math.ceil(n.start / check.dt)), jb = Math.min(tr.length - 1, Math.floor((n.end - check.dt) / check.dt));
+      const lim = n.manual ? 12.5 : 1.5;
+      for (let k = 0; k < v.length; k++) {
+        const j = Math.round((t0 + k * dt - 0.032) / check.dt);
+        if (j < ja || j > jb || tr[j] == null) continue;
+        const r = slow(tr, j, 3, ja, jb) - n.target;
+        if (Math.abs(r) > 1.5 || Math.abs(r) <= o.band * 0.5) continue; // erro do medidor, ou já está dentro
+        const step = Math.max(-0.5, Math.min(0.5, r - Math.sign(r) * o.band * 0.4));
+        v[k] = Math.max(-lim, Math.min(lim, v[k] - step));
+      }
+    }
+  }
   onStep('tune', 1);
   state.plan = plan;
-  state.before = { ...tuningStats(plan, (n) => n.target), band: inBand(plan, o.band, (n) => n.target) };
   state.opts = o;
+  state.check = check;
+  state.beforeCheck = bandCheck(state.track, plan, o.band);
+  state.before = { ...tuningStats(plan, (n) => n.target), band: state.beforeCheck.pct };
   return state;
 }
 
-// Mede de novo a voz já afinada (para mostrar o antes e depois)
+// Resumo do antes e depois (a medição da voz afinada já foi feita no retune)
 export async function verify(state) {
-  state.afterTrack = await pitchTrack(state.tuned, SR);
   const after = notesFrom(state.afterTrack);
-  state.after = { ...tuningStats(after), band: inBand(after, state.opts?.band ?? DEFAULTS.band) };
+  state.after = { ...tuningStats(after), band: state.check.pct };
   return state.after;
 }
 

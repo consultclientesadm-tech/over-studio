@@ -13,7 +13,7 @@ page.on('console', (m) => m.type() === 'error' && console.log('[console]', m.tex
 let fail = 0;
 const check = (ok, msg) => { console.log(ok ? '  ok ' : '  FALHOU', msg); if (!ok) fail++; };
 try {
-  await page.goto('http://localhost:8091/');
+  await page.goto('http://localhost:8091/lab.html');
   await page.waitForFunction(() => window.cover);
   // 1) Só voz (sem separar): afinação
   const b64 = fs.readFileSync(voiceWav).toString('base64');
