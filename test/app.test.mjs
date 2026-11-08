@@ -72,15 +72,23 @@ try {
     // etapa 4: cor
     await page.click('#next'); await page.waitForTimeout(500); await busyDone();
     check(await page.isHidden('#abC'), `${name}: na cor volta a ANTES | DEPOIS`);
+    const px = () => page.evaluate(() => { const c = document.getElementById('screen'), g = document.createElement('canvas'); g.width = 32; g.height = 56; const x = g.getContext('2d'); x.drawImage(c, 0, 0, 32, 56); return Array.from(x.getImageData(0, 0, 32, 56).data); });
+    const diff = (a, b) => a.reduce((s, v, i) => s + Math.abs(v - b[i]), 0) / a.length;
+    await page.click('#filters button:nth-child(1)'); await page.waitForTimeout(300); const p0 = await px();
+    await page.click('#filters button:nth-child(6)'); await page.waitForTimeout(300); const p1 = await px();
+    check(diff(p0, p1) > 3, `${name}: tocar no filtro muda a prévia (diferença ${diff(p0, p1).toFixed(1)})`);
+    const clip = p1.filter((v, i) => i % 4 < 3 && v >= 254).length / (p1.length * 0.75);
+    check(clip < 0.05, `${name}: filtro sem estourar (${(clip * 100).toFixed(1)}% de pixels no branco)`);
     await page.click('#filters button:nth-child(4)'); await page.waitForTimeout(300);
     await page.screenshot({ path: `${dir}/${name}-6-cor.png` });
     // etapa 5
     await page.click('#next'); await page.waitForTimeout(300);
     if (name === 'computador') {
       await page.click('#exportBtn');
-      await page.waitForSelector('#download:not([hidden])', { timeout: 180000 });
-      const dl = await page.evaluate(() => document.getElementById('download').textContent);
-      check(/Baixar o vídeo/.test(dl), `exportou: ${dl}`);
+      await page.waitForSelector('#ready:not([hidden])', { timeout: 180000 });
+      const dl = await page.evaluate(() => document.getElementById('readyInfo').textContent);
+      check(/MB/.test(dl), `exportou: ${dl}`);
+      await page.waitForTimeout(600);
     }
     await page.screenshot({ path: `${dir}/${name}-7-exportar.png` });
     await ctx.close();

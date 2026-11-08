@@ -231,3 +231,18 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .qh { font-style: normal; }
 .cta .qh { top: 3px; right: 3px; }
 .row .qh, .switch .qh, .knob .qh { right: auto; left: -8px; top: -8px; }
+
+/* ===== Vídeo pronto: botão grande de baixar ===== */
+.ready { margin: 18px 0 14px; padding: 22px 16px 18px; text-align: center; border-radius: 18px; border: 1px solid var(--green);
+  background: radial-gradient(120% 90% at 50% 0%, rgba(46, 229, 157, .16), rgba(46, 229, 157, .02) 70%), #0d0f0e; box-shadow: 0 0 30px rgba(46, 229, 157, .15); }
+.readyok { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--green); color: #000; font-size: 24px; font-weight: 800; box-shadow: 0 0 20px rgba(46, 229, 157, .6); }
+.ready h4 { margin: 10px 0 4px; font: 800 16px Orbitron, sans-serif; letter-spacing: .04em; }
+.ready p { margin: 0 0 16px; color: var(--mut); font-size: 12px; }
+.dlbig { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 60px; border-radius: 16px; text-decoration: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--y), var(--y2)); color: #000; font: 800 15px Orbitron, sans-serif; letter-spacing: .05em; box-shadow: var(--glow), 0 8px 24px rgba(255, 212, 0, .25);
+  animation: dlpulse 2s ease-in-out infinite; }
+.dlbig svg { width: 26px; height: 26px; fill: #000; }
+.dlbig:active { transform: scale(.98); }
+@keyframes dlpulse { 50% { box-shadow: var(--glow), 0 8px 36px rgba(255, 212, 0, .5); } }
+#dlWav { margin-top: 8px; }
+.eta { margin: -6px 0 6px; color: var(--y); font-family: Orbitron, sans-serif; font-size: 13px; min-height: 18px; }

@@ -32,7 +32,7 @@ async function fetchPart(url, onBytes) {
   let o = 0;
   for (const c of chunks) { out.set(c, o); o += c.length; }
   // O service worker já guarda; sem ele (navegador comum), guarda aqui
-  if (!navigator.serviceWorker?.controller) try { await cache?.put(url, new Response(out.slice().buffer)); } catch { /* sem espaço: baixa de novo da próxima vez */ }
+  try { await cache?.put(url, new Response(out.slice().buffer)); } catch { /* sem espaço: baixa de novo da próxima vez */ }
   return out.buffer;
 }
 
@@ -63,7 +63,8 @@ async function loadOrt() {
     mjs: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.js', import.meta.url).href,
     wasm: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.wasm', import.meta.url).href,
   };
-  ort.env.wasm.numThreads = 1; // o site não usa isolamento entre origens (pixel e checkout continuam funcionando)
+  // Com o service worker desta pasta (coi-sw.js) a página fica isolada e a IA usa vários núcleos
+  ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1)) : 1;
   return ort;
 }
 

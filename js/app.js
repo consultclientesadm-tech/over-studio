@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=5';
-import { TuneEditor } from './editor.js?v=5';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=5';
-import { exportVideo, exportType } from './export.js?v=5';
+import * as cover from './pipeline.js?v=6';
+import { TuneEditor } from './editor.js?v=6';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=6';
+import { exportVideo, exportType } from './export.js?v=6';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -39,14 +39,34 @@ $('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refN
 
 const W = { audio: [0, 4], download: [4, 16], separate: [20, 62], notes: [82, 6], ref: [88, 1], refsep: [88, 9], refnotes: [97, 3] };
 const LABEL = { audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'Separando a voz', notes: 'Achando as notas', ref: 'Lendo a original', refsep: 'Lendo a melodia da original', refnotes: 'Lendo a melodia da original' };
+const MAX_SEC = 180; // limite de duração (3 minutos)
+let t0 = 0, lastEta = 0;
 function progress(st, p) {
   const [a, w] = W[st] || [0, 0];
   const v = Math.min(100, Math.round(a + w * p));
+  // tempo que falta, pela velocidade da separação (a parte que demora)
+  const el = (performance.now() - t0) / 1000;
+  if (st === 'separate' && p > 0.04 && performance.now() - lastEta > 1000) {
+    lastEta = performance.now();
+    const sepEl = el - (progress.sepStart ?? el), left = Math.max(1, (sepEl / p) * (1 - p) + 2);
+    $('eta').textContent = left > 90 ? `Falta uns ${Math.round(left / 60)} min` : `Falta uns ${Math.max(5, Math.round(left / 5) * 5)} s`;
+  }
+  if (st === 'separate' && progress.sepStart == null) progress.sepStart = el;
+  if (st !== 'separate' && st !== 'download') $('eta').textContent = '';
   $('ringBar').style.strokeDashoffset = 327 * (1 - v / 100);
   $('ringPct').textContent = v + '%';
   $('workStep').textContent = LABEL[st] || '';
   const order = Object.keys(W), alias = { ref: 'refsep', refnotes: 'refsep' };
   document.querySelectorAll('#steps li').forEach((li) => { const i = order.indexOf(li.dataset.s), c = order.indexOf(alias[st] || st); li.className = (li.classList.contains('refstep') ? 'refstep ' : '') + (i < c ? 'done' : i === c ? 'on' : ''); });
+}
+// O iPhone ignora o "preload" e não entrega o vídeo até alguém dar play. Um play mudo e pausa resolve.
+function kick() { try { const p = video.play(); if (p) p.then(() => video.pause()).catch(() => {}); } catch {} }
+// Espera o vídeo ter um quadro, mas nunca para sempre: no máximo uns segundos, tentando de novo no meio
+async function videoReady() {
+  const ok = () => video.readyState >= 2 || (video.readyState >= 1 && video.videoWidth > 0);
+  for (let i = 0; i < 40 && !ok(); i++) { if (i === 10 || i === 25) kick(); await new Promise((r) => setTimeout(r, 200)); }
+  if (!video.videoWidth) throw new Error('Não consegui abrir a imagem desse vídeo. Tente MP4 ou MOV do celular.');
+  video.pause();
 }
 async function start(f) {
   file = f;
@@ -54,26 +74,39 @@ async function start(f) {
   $('topinfo').textContent = f.name;
   $('steps').classList.toggle('ref', !!refFile);
   try {
-    video.src = URL.createObjectURL(f);
+    video.src = URL.createObjectURL(f); video.load();
+    kick(); // o iPhone só carrega o vídeo depois de um play: toca mudo um instante, já no toque do usuário
+    await videoReady();
+    if (video.duration > MAX_SEC + 15) throw new Error(`LIMITE`);
+    t0 = performance.now(); lastEta = 0; progress.sepStart = null; $('eta').textContent = '';
     state = await cover.analyze(f, { ...tuneOpts(), reference: refFile, autoTune: false }, progress);
-    await new Promise((r) => (video.readyState >= 2 ? r() : video.addEventListener('loadeddata', r, { once: true })));
     wav('orig', state.orig);
     wav('raw', cover.rawMix(state));
     openStudio();
   } catch (e) {
     console.error(e);
     app.dataset.screen = 'home';
-    toast(/decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 7000);
+    toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
+      : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);
   }
 }
 
 // ---------- Estúdio ----------
 let grader = null, editor = null;
+const frame = document.createElement('canvas'), fctx = frame.getContext('2d');
+let lastVT = -1, lastEd = 0;
+function grab() { if (video.readyState >= 2) { fctx.drawImage(video, 0, 0, frame.width, frame.height); lastVT = video.currentTime; } }
 function openStudio() {
   app.dataset.screen = 'studio';
   $('newBtn').hidden = false;
   const cv = $('screen'), portrait = video.videoHeight >= video.videoWidth;
-  cv.width = portrait ? 720 : 1280; cv.height = portrait ? 1280 : 720;
+  // prévia mais leve no celular (o vídeo final continua em 1080p)
+  const big = Math.min(innerWidth, innerHeight) >= 700 ? 1280 : 960, small = Math.round((big * 9) / 16);
+  cv.width = portrait ? small : big; cv.height = portrait ? big : small;
+  // o quadro do vídeo passa antes por um canvas 2D no tamanho da prévia: a placa de vídeo recebe
+  // uma imagem pequena (não o 4K do iPhone) e o iPhone sempre entrega o quadro, mesmo pausado
+  const sc = Math.min(1, big / Math.max(video.videoWidth, video.videoHeight));
+  frame.width = Math.round(video.videoWidth * sc); frame.height = Math.round(video.videoHeight * sc);
   const fit = () => {
     const r = $('viewer').getBoundingClientRect(), ar = portrait ? 9 / 16 : 16 / 9;
     let h = r.height, w = h * ar;
@@ -159,7 +192,7 @@ function seek(t) {
   $('seek').value = t; $('tNow').textContent = fmt(t);
   editor?.setTime(t);
 }
-function pause() { Object.values(players).forEach((p) => p.pause()); video.pause(); $('play').textContent = '▶'; }
+function pause() { Object.values(players).forEach((p) => p.pause()); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; }
 function play() {
   if (playing()) return pause();
   const t = +$('seek').value;
@@ -172,15 +205,20 @@ $('back5').onclick = () => seek(clipT() - 5);
 $('fwd5').onclick = () => seek(clipT() + 5);
 $('seek').oninput = () => seek(+$('seek').value);
 Object.values(players).forEach((p) => (p.onended = () => pause()));
-video.onseeked = () => (loop.dirty = true);
-function loop() {
+video.onseeked = () => { grab(); loop.dirty = true; };
+function loop(now) {
   if (app.dataset.screen !== 'studio') return;
   if (playing()) {
-    const t = cur().currentTime;
-    if (Math.abs(video.currentTime - t) > 0.08) video.currentTime = t;
-    $('seek').value = t; $('tNow').textContent = fmt(t); editor.setTime(t);
+    const t = cur().currentTime, drift = video.currentTime - t;
+    // o áudio manda; o vídeo acompanha acelerando ou freando um pouco, sem ficar pulando (pular trava o celular)
+    if (Math.abs(drift) > 0.3) { video.currentTime = t; video.playbackRate = 1; }
+    else video.playbackRate = Math.abs(drift) > 0.04 ? 1 - Math.max(-0.08, Math.min(0.08, drift)) : 1;
+    $('seek').value = t; $('tNow').textContent = fmt(t);
+    if (step === 2 && now - lastEd > 80) { editor.setTime(t); lastEd = now; }
+    if (video.currentTime !== lastVT) { grab(); loop.dirty = true; }
   }
-  if (playing() || loop.dirty) { grader.draw(video); loop.dirty = false; }
+  if (lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
+  if (loop.dirty) { grader.draw(frame); loop.dirty = false; }
   requestAnimationFrame(loop);
 }
 
@@ -312,13 +350,14 @@ async function buildFilters() {
 let thumbGr = null;
 function drawThumbs() {
   if (!video.videoWidth) return;
+  grab();
   const portrait = video.videoHeight >= video.videoWidth;
   if (!thumbGr) { const c = document.createElement('canvas'); thumbGr = new Grader(c); }
   thumbGr.c.width = portrait ? 180 : 320; thumbGr.c.height = portrait ? 320 : 180;
   const list = [ORIGINAL, { id: 'auto' }, ...FILTERS];
   list.forEach((f, i) => {
     const real = f.id === 'original' ? ORIGINAL : f.id === 'auto' ? auto || ORIGINAL : compose(auto, f);
-    thumbGr.set(real, 1); thumbGr.draw(video);
+    thumbGr.set(real, 1); thumbGr.draw(frame);
     const cv = $('filters').children[i]?.querySelector('canvas'); if (!cv) return;
     cv.width = thumbGr.c.width; cv.height = thumbGr.c.height; cv.style.aspectRatio = portrait ? '9 / 16' : '16 / 9';
     cv.getContext('2d').drawImage(thumbGr.c, 0, 0);
@@ -338,7 +377,7 @@ function refreshSummary() {
 $('exportBtn').onclick = async () => {
   pause();
   if (pending) toast('Você tem edições de afinação que ainda não foram aplicadas.');
-  $('exportBtn').disabled = true; $('exportBar').hidden = false; $('download').hidden = true;
+  $('exportBtn').disabled = true; $('exportBar').hidden = false; $('ready').hidden = true;
   try {
     const ch = mastered ? mastered.channels : cover.rawMix(state);
     const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
@@ -347,7 +386,8 @@ $('exportBtn').onclick = async () => {
     const a = $('download');
     a.href = URL.createObjectURL(out.blob);
     a.download = `${(file.name || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.${out.ext}`;
-    a.hidden = false; a.textContent = `Baixar o vídeo (${(out.blob.size / 1048576).toFixed(0)} MB)`;
+    $('readyInfo').textContent = `${out.width} × ${out.height} · ${out.ext.toUpperCase()} · ${Math.max(1, Math.round(out.blob.size / 1048576))} MB, com o som e a cor que você escolheu.`;
+    $('ready').hidden = false; $('ready').scrollIntoView({ behavior: 'smooth', block: 'center' });
     toast('Vídeo pronto!');
   } catch (e) { console.error(e); toast('Deu erro: ' + e.message, 7000); }
   $('exportBtn').disabled = false;

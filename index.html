@@ -8,8 +8,17 @@
 <title>Studio Cover</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=5">
+<link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=6">
+<script>
+// Liga os vários núcleos do processador para a IA (precisa do service worker desta pasta). Recarrega uma vez só.
+if ('serviceWorker' in navigator && !self.crossOriginIsolated) {
+  navigator.serviceWorker.register('coi-sw.js', { scope: './' }).then(function (reg) {
+    var go = function () { try { if (!sessionStorage.getItem('coi')) { sessionStorage.setItem('coi', '1'); location.reload(); } } catch (e) {} };
+    if (navigator.serviceWorker.controller) go(); else navigator.serviceWorker.addEventListener('controllerchange', go);
+  }).catch(function () {});
+}
+</script>
 </head>
 <body>
 <div class="app" id="app" data-screen="home">
@@ -29,7 +38,7 @@
         <input type="file" id="file" accept="video/*" hidden>
         <span class="dropicon"></span>
         <strong>Escolher o vídeo</strong>
-        <small>ou arraste aqui · MP4 ou MOV do celular</small>
+        <small>ou arraste aqui · MP4 ou MOV do celular · até 3 minutos</small>
       </label>
       <div class="opts">
         <label class="switch" data-help="Deixe ligado se no vídeo tem violão, banda ou playback junto com a voz. A IA separa a voz do instrumental para afinar só a voz. Desligue se você cantou à capela."><input type="checkbox" id="optSeparate" checked><span></span> Tem instrumental ou playback (separar a voz)</label>
@@ -46,6 +55,7 @@
   <section class="screen work" id="work">
     <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="ringBar" cx="60" cy="60" r="52"/></svg><span id="ringPct">0%</span></div>
     <h2 id="workStep">Preparando…</h2>
+    <p class="eta" id="eta"></p>
     <ol class="steps" id="steps">
       <li data-s="audio">Lendo o áudio do vídeo</li>
       <li data-s="download">Baixando a IA (só na primeira vez)</li>
@@ -53,7 +63,7 @@
       <li data-s="notes">Achando as notas e o tom</li>
       <li data-s="refsep" class="refstep">Lendo a melodia da música original</li>
     </ol>
-    <p class="hint">Tudo roda no seu aparelho. Deixe esta tela aberta.</p>
+    <p class="hint">A IA roda no seu aparelho, sem mandar seu vídeo para ninguém. Leva mais ou menos 1 minuto para cada minuto de vídeo no computador, um pouco mais no celular. Deixe esta tela aberta.</p>
   </section>
 
   <!-- Estúdio em etapas -->
@@ -146,7 +156,12 @@
         <div class="summary" id="summary"></div>
         <button class="cta" id="exportBtn" data-help="Grava o vídeo final em 1080p com o som e a cor escolhidos. O vídeo toca uma vez enquanto grava.">Gerar vídeo final</button>
         <div class="bar" id="exportBar" hidden><i></i></div>
-        <a class="cta alt" id="download" hidden>Baixar o vídeo</a>
+        <div class="ready" id="ready" hidden>
+          <span class="readyok">✓</span>
+          <h4>Seu vídeo está pronto!</h4>
+          <p id="readyInfo">1080p, com o som e a cor que você escolheu.</p>
+          <a class="dlbig" id="download"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zM5 18h14v3H5z"/></svg><span>Baixar meu vídeo pronto</span></a>
+        </div>
         <button class="pill" id="dlWav" data-help="Baixa só o áudio final em WAV, sem o vídeo, para usar no Spotify ou num editor.">Baixar só o áudio (WAV)</button>
       </div>
 
@@ -162,7 +177,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=5"></script>
+<script type="module" src="js/app.js?v=6"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
