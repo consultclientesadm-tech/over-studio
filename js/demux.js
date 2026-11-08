@@ -1,0 +1,157 @@
+// ===== Tirar o áudio de dentro de um MP4/MOV sem depender do navegador =====
+// O Safari do iPhone não lê o áudio de um .MOV direto ("Decoding failed"), mas lê AAC solto (ADTS).
+// Aqui lemos o "índice" do arquivo (caixa moov), achamos a trilha de áudio AAC, juntamos os pedaços de
+// áudio (lidos aos poucos do arquivo, sem carregar o vídeo inteiro na memória) e montamos um AAC solto.
+// Também lemos a lista de edição (elst) para saber quantas amostras de "aquecimento" do AAC pular,
+// senão a voz sairia uns milissegundos atrasada em relação à boca.
+
+const u32 = (v, o) => v.getUint32(o);
+const fourcc = (v, o) => String.fromCharCode(v.getUint8(o), v.getUint8(o + 1), v.getUint8(o + 2), v.getUint8(o + 3));
+const read = async (file, a, b) => new DataView(await file.slice(a, b).arrayBuffer());
+
+// Caixas de um trecho: [{ type, start (do conteúdo), end }]
+function boxes(v, start = 0, end = v.byteLength) {
+  const out = [];
+  for (let o = start; o + 8 <= end; ) {
+    let size = u32(v, o), head = 8;
+    const type = fourcc(v, o + 4);
+    if (size === 1) { size = Number(v.getBigUint64(o + 8)); head = 16; } else if (size === 0) size = end - o;
+    if (size < head) break;
+    out.push({ type, start: o + head, end: Math.min(end, o + size) });
+    o += size;
+  }
+  return out;
+}
+const child = (v, box, type) => boxes(v, box.start, box.end).find((b) => b.type === type);
+const path = (v, box, ...types) => types.reduce((b, t) => b && child(v, b, t), box);
+
+// Acha a caixa moov no arquivo (pode estar no começo ou no fim)
+async function findMoov(file) {
+  for (let o = 0; o + 8 <= file.size; ) {
+    const h = await read(file, o, o + 16);
+    let size = u32(h, 0);
+    const type = fourcc(h, 4);
+    if (size === 1) size = Number(h.getBigUint64(8)); else if (size === 0) size = file.size - o;
+    if (type === 'moov') return read(file, o, o + size);
+    if (size < 8) break;
+    o += size;
+  }
+  throw new Error('não achei o índice do vídeo (moov)');
+}
+
+// Lê o tamanho variável dos descritores do esds
+function descLen(v, o) { let n = 0, k = 0, b; do { b = v.getUint8(o + k++); n = (n << 7) | (b & 0x7f); } while (b & 0x80 && k < 4); return [n, k]; }
+
+function audioConfig(v, entry) {
+  // procura a caixa esds dentro da descrição do áudio (no MOV ela pode estar dentro de "wave")
+  let e = -1;
+  for (let o = entry.start; o < entry.end - 4; o++) if (fourcc(v, o) === 'esds') { e = o + 4; break; }
+  if (e < 0) throw new Error('o áudio deste vídeo não é AAC');
+  let o = e + 4; // versão e flags
+  if (v.getUint8(o++) !== 0x03) throw new Error('esds inesperado');
+  let [, k] = descLen(v, o); o += k;
+  o += 2; const fl = v.getUint8(o++);
+  if (fl & 0x80) o += 2;
+  if (fl & 0x40) o += 1 + v.getUint8(o);
+  if (fl & 0x20) o += 2;
+  if (v.getUint8(o++) !== 0x04) throw new Error('esds sem configuração');
+  [, k] = descLen(v, o); o += k + 13;
+  if (v.getUint8(o++) !== 0x05) throw new Error('esds sem configuração do AAC');
+  [, k] = descLen(v, o); o += k;
+  const b0 = v.getUint8(o), b1 = v.getUint8(o + 1);
+  const aot = b0 >> 3, sfi = ((b0 & 7) << 1) | (b1 >> 7), ch = (b1 >> 3) & 15;
+  if (aot < 1 || aot > 4 || sfi > 12) throw new Error(`tipo de AAC não suportado (${aot})`);
+  return { aot, sfi, ch: ch || 2 };
+}
+
+export async function extractAac(file) {
+  const v = await findMoov(file);
+  const moov = { start: 8, end: v.byteLength };
+  const mvhd = child(v, moov, 'mvhd');
+  const movieScale = v.getUint8(mvhd.start) === 1 ? u32(v, mvhd.start + 20) : u32(v, mvhd.start + 12);
+  for (const trak of boxes(v, moov.start, moov.end).filter((b) => b.type === 'trak')) {
+    const hdlr = path(v, trak, 'mdia', 'hdlr');
+    if (!hdlr || fourcc(v, hdlr.start + 8) !== 'soun') continue;
+    const mdhd = path(v, trak, 'mdia', 'mdhd');
+    const scale = v.getUint8(mdhd.start) === 1 ? u32(v, mdhd.start + 20) : u32(v, mdhd.start + 12);
+    const stbl = path(v, trak, 'mdia', 'minf', 'stbl');
+    const stsd = child(v, stbl, 'stsd');
+    const entry = boxes(v, stsd.start + 8, stsd.end)[0];
+    if (!entry || entry.type !== 'mp4a') throw new Error(`o áudio deste vídeo não é AAC (${entry?.type})`);
+    const cfg = audioConfig(v, entry);
+    // tamanhos das amostras
+    const stsz = child(v, stbl, 'stsz');
+    const fixed = u32(v, stsz.start + 4), count = u32(v, stsz.start + 8);
+    const size = (i) => (fixed || u32(v, stsz.start + 12 + 4 * i));
+    // onde começa cada pedaço (chunk)
+    const stco = child(v, stbl, 'stco'), co64 = child(v, stbl, 'co64');
+    const nch = u32(v, (stco || co64).start + 4);
+    const chunkOff = (c) => (stco ? u32(v, stco.start + 8 + 4 * c) : Number(v.getBigUint64(co64.start + 8 + 8 * c)));
+    // quantas amostras em cada pedaço
+    const stsc = child(v, stbl, 'stsc');
+    const ns = u32(v, stsc.start + 4);
+    const runs = [];
+    for (let i = 0; i < ns; i++) runs.push({ first: u32(v, stsc.start + 8 + 12 * i) - 1, per: u32(v, stsc.start + 12 + 12 * i) });
+    // monta a lista (pedaço → amostras) e lê o arquivo pedaço a pedaço
+    const frames = [];
+    let s = 0;
+    for (let c = 0, r = 0; c < nch && s < count; c++) {
+      while (r + 1 < runs.length && runs[r + 1].first <= c) r++;
+      let off = chunkOff(c), len = 0;
+      const sizes = [];
+      for (let k = 0; k < runs[r].per && s < count; k++, s++) { sizes.push(size(s)); len += size(s); }
+      frames.push({ off, len, sizes });
+    }
+    const total = frames.reduce((a, f) => a + f.len + 7 * f.sizes.length, 0);
+    const out = new Uint8Array(total);
+    let p = 0;
+    for (let i = 0; i < frames.length; i += 64) { // lê 64 pedaços por vez
+      const group = frames.slice(i, i + 64);
+      const datas = await Promise.all(group.map((f) => file.slice(f.off, f.off + f.len).arrayBuffer()));
+      group.forEach((f, gi) => {
+        const d = new Uint8Array(datas[gi]);
+        let q = 0;
+        for (const sz of f.sizes) {
+          const L = sz + 7; // cabeçalho ADTS de 7 bytes + o quadro AAC
+          out[p] = 0xff; out[p + 1] = 0xf1;
+          out[p + 2] = ((cfg.aot - 1) << 6) | (cfg.sfi << 2) | (cfg.ch >> 2);
+          out[p + 3] = ((cfg.ch & 3) << 6) | (L >> 11);
+          out[p + 4] = (L >> 3) & 0xff;
+          out[p + 5] = ((L & 7) << 5) | 0x1f;
+          out[p + 6] = 0xfc;
+          out.set(d.subarray(q, q + sz), p + 7);
+          p += L; q += sz;
+        }
+      });
+    }
+    // lista de edição: atraso inicial (edição vazia) e amostras de aquecimento a pular
+    let delay = 0, skip = 0;
+    const elst = path(v, trak, 'edts', 'elst');
+    if (elst) {
+      const ver = v.getUint8(elst.start), n = u32(v, elst.start + 4);
+      let o = elst.start + 8;
+      for (let i = 0; i < n; i++) {
+        const dur = ver === 1 ? Number(v.getBigUint64(o)) : u32(v, o);
+        const mt = ver === 1 ? Number(v.getBigInt64(o + 8)) : v.getInt32(o + 4);
+        o += ver === 1 ? 20 : 12;
+        if (mt === -1) { delay += dur / movieScale; continue; }
+        skip = mt / scale; break;
+      }
+    }
+    return { adts: out.subarray(0, p), delay, skip };
+  }
+  throw new Error('este vídeo não tem áudio');
+}
+
+// Decodifica o AAC solto no tamanho de amostra pedido, já aplicando o atraso e o pulo do aquecimento
+export async function decodeVideoAudio(file, sr) {
+  const { adts, delay, skip } = await extractAac(file);
+  const ctx = new OfflineAudioContext(2, 1, sr);
+  const ab = await ctx.decodeAudioData(adts.buffer.slice(adts.byteOffset, adts.byteOffset + adts.byteLength));
+  const cut = Math.round(skip * sr), pad = Math.round(delay * sr);
+  const take = (c) => {
+    const src = ab.getChannelData(Math.min(c, ab.numberOfChannels - 1)).subarray(cut);
+    const o = new Float32Array(src.length + pad); o.set(src, pad); return o;
+  };
+  return [take(0), take(1)];
+}

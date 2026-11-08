@@ -5,7 +5,8 @@ const out = process.argv[2] || 'sample.wav', withBed = process.argv.includes('--
 const sr = 44100;
 // [midi, cents de erro, duração]
 // [midi, cents de erro, duração, escorregada em cents no fim da nota]
-export const NOTES = [[60, 35, 0.9, 0], [64, -40, 0.9, 0], [67, 0, 1.4, 70], [65, 60, 0.9, 0], [62, -30, 0.9, 0], [60, 0, 1.2, 0]];
+const ni = process.argv.indexOf('--notes');
+export const NOTES = ni > 0 ? JSON.parse(process.argv[ni + 1]) : [[60, 35, 0.9, 0], [64, -40, 0.9, 0], [67, 0, 1.4, 70], [65, 60, 0.9, 0], [62, -30, 0.9, 0], [60, 0, 1.2, 0]];
 const lead = 2, tail = 2;
 const dur = lead + tail + NOTES.reduce((a, n) => a + n[2] + 0.15, 0);
 const len = Math.round(dur * sr);

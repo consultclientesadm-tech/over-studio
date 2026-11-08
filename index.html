@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=1">
+<link rel="stylesheet" href="css/app.css?v=2">
 </head>
 <body>
 <div class="app" id="app" data-screen="home">
@@ -33,6 +33,10 @@
       <div class="opts">
         <label class="switch"><input type="checkbox" id="optSeparate" checked><span></span> Tem instrumental ou playback (separar a voz)</label>
       </div>
+      <label class="refpick" id="refPick">
+        <input type="file" id="refFile" accept="audio/*,video/*" hidden>
+        <b>+ Música original</b> <span id="refName">opcional: afina pela melodia do cantor original, no seu tom</span>
+      </label>
       <ul class="feats">
         <li><b>01</b> Separa a voz com IA</li>
         <li><b>02</b> Afina nota por nota</li>
@@ -51,6 +55,7 @@
       <li data-s="download">Baixando a IA (só na primeira vez)</li>
       <li data-s="separate">Separando a voz do instrumental</li>
       <li data-s="notes">Achando as notas e o tom</li>
+      <li data-s="refsep" class="refstep">Lendo a melodia da música original</li>
       <li data-s="tune">Afinando e conferindo cada nota</li>
       <li data-s="mix">Mixando e masterizando</li>
     </ol>
@@ -114,6 +119,8 @@
         <hr>
         <label class="row"><span>Força da afinação</span><input type="range" id="mStrength" min="0" max="1" step="0.05" value="1"><output></output></label>
         <label class="switch"><input type="checkbox" id="mSnap" checked><span></span> Prender as notas no tom da música</label>
+        <label class="switch"><input type="checkbox" id="mUseRef" checked disabled><span></span> Afinar pela melodia da música original</label>
+        <div class="group"><label class="pill refbtn"><input type="file" id="mRefFile" accept="audio/*,video/*" hidden><span id="mRefTxt">Subir a música original</span></label></div>
         <button class="pill" id="mRetune">Afinar tudo de novo com estes ajustes</button>
       </div>
 
@@ -136,6 +143,6 @@
   <div class="busy" id="busy" hidden><div class="ring sm"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="busyBar" cx="60" cy="60" r="52"/></svg></div><span id="busyTxt">Aplicando…</span></div>
   <div class="toast" id="toast" hidden></div>
 </div>
-<script type="module" src="js/app.js?v=1"></script>
+<script type="module" src="js/app.js?v=2"></script>
 </body>
 </html>

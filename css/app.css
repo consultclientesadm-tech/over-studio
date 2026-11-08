@@ -149,3 +149,10 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
   .studio { grid-template-rows: none; grid-template-columns: minmax(200px, 32%) minmax(0, 1fr); }
   .top { padding: 6px 12px; }
 }
+
+/* Música original (modo referência) */
+.refpick { display: block; margin: 4px auto 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); cursor: pointer; font-size: 12px; color: var(--mut); max-width: 520px; }
+.refpick b { color: var(--y); margin-right: 6px; }
+.refpick.on { border-color: var(--y); box-shadow: var(--glow); }
+.refbtn { display: inline-grid; place-items: center; }
+.steps li.refstep { display: none; } .steps.ref li.refstep { display: list-item; }

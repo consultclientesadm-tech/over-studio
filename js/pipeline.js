@@ -10,6 +10,8 @@
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
 import { separate, tuneVoice, STUDIO_SR } from './studio.js';
 import { pitchTrack, detectKey, chromaOf } from './analysis.js';
+import { referenceNotes, applyReference } from './reference.js';
+import { decodeVideoAudio } from './demux.js';
 
 export const SR = STUDIO_SR;
 
@@ -31,6 +33,11 @@ const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) =>
 // ---------- 1) Áudio do vídeo ----------
 // O navegador lê o áudio de MP4/MOV (AAC) direto, sem descompactar nada antes.
 export async function audioFromVideo(file, sr = SR) {
+  // Vídeo MP4/MOV: tira o AAC de dentro do arquivo (funciona no iPhone e não carrega o vídeo inteiro
+  // na memória). Se não der (outro formato), deixa o navegador ler o arquivo todo.
+  if (/\.(mov|mp4|m4v|m4a)$/i.test(file.name || '') || /video\/(mp4|quicktime)|audio\/mp4/.test(file.type || '')) {
+    try { return await decodeVideoAudio(file, sr); } catch (e) { console.warn('leitura direta do AAC falhou:', e.message); }
+  }
   const buf = await file.arrayBuffer();
   const ctx = new OfflineAudioContext(2, 1, sr);
   const ab = await ctx.decodeAudioData(buf);
@@ -72,7 +79,7 @@ const pc = (m) => ((Math.round(m) % 12) + 12) % 12;
 // ou muito alto) vai para a nota do tom mais próxima, desde que esteja a menos de 3/4 de semitom dela.
 // edits[i] = ajuste feito à mão na nota i (editor estilo VariAudio):
 //   { target: nota MIDI escolhida, quantize: 0–1 (força só desta nota), straighten: 0–1, bypass: true }
-export function planTuning(notes, key, { strength = 1, scaleSnap = true, straighten = true, band = 0.15 } = {}, edits = {}) {
+export function planTuning(notes, key, { strength = 1, scaleSnap = true, straighten = true, band = 0.15, useRef = true } = {}, edits = {}) {
   const scale = scaleOf(key);
   return notes.map((n, i) => {
     const ed = edits[i] || {};
@@ -81,6 +88,10 @@ export function planTuning(notes, key, { strength = 1, scaleSnap = true, straigh
       const opts = [target - 1, target + 1].filter((t) => scale.includes(pc(t)) && Math.abs(t - n.m) < 0.75);
       if (opts.length) target = opts.sort((a, b) => Math.abs(a - n.m) - Math.abs(b - n.m))[0];
     }
+    // Modo referência: a nota da música original (no tom do artista) manda, se estiver a até 2,5 semitons
+    // do que ele cantou (mais longe que isso é casamento errado ou escolha dele, e fica a regra do tom)
+    const viaRef = useRef && n.refTarget != null && Math.abs(n.refTarget - n.m) <= 2.5;
+    if (viaRef) target = n.refTarget;
     const manual = ed.target != null;
     if (manual) target = ed.target;
     const q = ed.bypass ? 0 : ed.quantize ?? strength;
@@ -88,9 +99,9 @@ export function planTuning(notes, key, { strength = 1, scaleSnap = true, straigh
     const cents = Math.round((n.m - target) * 100);
     // 1) Centro da nota vai para a nota certa. Automático: no máximo 1 semitom (mais que isso é escolha do
     //    cantor). Na mão, o artista pode mover a nota até uma oitava.
-    const lim = manual ? 12 : 1;
+    const lim = manual ? 12 : viaRef ? 2.5 : 1;
     const base = Math.max(-lim, Math.min(lim, target - n.m)) * q;
-    const plan = { ...n, i, target, cents, manual, q, st, shift: Math.abs(target - n.m) * q >= 0.03 ? base : 0 };
+    const plan = { ...n, i, target, cents, manual, viaRef, q, st, shift: Math.abs(target - n.m) * q >= 0.03 ? base : 0 };
     if (!n.fr || n.fr.length < 3) return plan;
     // 2) Endireitar: a linha "lenta" da nota (média de ~0,22 s, que some com o vibrato) não pode sair da
     //    faixa em volta da nota certa. O que vazar é puxado de volta só o quanto vazou; o vibrato fica.
@@ -212,8 +223,18 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   const chroma = bed ? await chromaOf(bed, SR) : null;
   const key = detectKey(raw, chroma);
   const state = { orig, voice, bed, key, track, rawNotes: raw, duration: orig[0].length / SR };
+  if (o.reference) await setReference(state, o.reference, onStep);
   await retune(state, o, onStep);
   return state;
+}
+
+// Modo referência: lê a música original (arquivo de áudio ou canais prontos) e liga nas notas do cover.
+// Depois disso, chame retune() para afinar pela referência.
+export async function setReference(state, file, onStep = () => {}) {
+  onStep('ref', 0);
+  const ch = file instanceof Blob ? await audioFromVideo(file) : file;
+  const notes = await referenceNotes(ch, SR, notesFrom, onStep);
+  return applyReference(state, notes);
 }
 
 // Afina e confere: depois de afinar, mede a voz afinada de verdade (não o desenho) e, onde a linha lenta
@@ -237,7 +258,7 @@ export async function retune(state, opts = {}, onStep = () => {}) {
       if (!n.curve || !(n.st > 0)) continue;
       const { t0, dt, v } = n.curve;
       const ja = Math.max(0, Math.ceil(n.start / check.dt)), jb = Math.min(tr.length - 1, Math.floor((n.end - check.dt) / check.dt));
-      const lim = n.manual ? 12.5 : 1.5;
+      const lim = n.manual ? 12.5 : n.viaRef ? 3 : 1.5;
       for (let k = 0; k < v.length; k++) {
         const j = Math.round((t0 + k * dt - 0.032) / check.dt);
         if (j < ja || j > jb || tr[j] == null) continue;

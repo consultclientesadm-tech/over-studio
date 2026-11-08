@@ -4,7 +4,7 @@ import { createRequire } from 'module';
 const { chromium } = createRequire(import.meta.url)('playwright');
 import { spawn } from 'child_process';
 import fs from 'fs';
-const [voiceWav, coverMp4] = process.argv.slice(2);
+const [voiceWav, coverMp4, refWav] = process.argv.slice(2);
 const srv = spawn('node', ['server.js'], { env: { ...process.env, PORT: '8091' }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const browser = await chromium.launch();
@@ -34,6 +34,20 @@ try {
   check(r.start > 1.5 && r.start < 2, `corte do começo em ${r.start.toFixed(2)} s (voz entra em 2 s)`);
   check(r.end > r.dur - 2 && r.end < r.dur - 1, `corte do fim em ${r.end.toFixed(2)} s`);
   check(Math.abs(r.len - (r.end - r.start)) < 0.01, 'áudio final tem exatamente a duração do corte (sincronia)');
+  // 1b) Modo referência: a original está em Ré (2 semitons acima), tem notas antes e depois do trecho
+  //     do cover, e a 4ª nota da melodia é Sol (o cover cantou Fá + 60 cents, que sem referência vira Fá)
+  if (refWav) {
+    const rb = fs.readFileSync(refWav).toString('base64');
+    const rr = await page.evaluate(async ([b64, r64]) => {
+      const f = (x, n) => new File([Uint8Array.from(atob(x), (c) => c.charCodeAt(0))], n, { type: 'audio/wav' });
+      const st = await window.cover.analyze(f(b64, 'voz.wav'), { separate: false, reference: f(r64, 'original.wav') });
+      return { ref: { shift: st.ref.shift, quality: st.ref.quality, changed: st.ref.changed }, plan: st.plan.map((n) => [n.midi, n.target, n.viaRef]) };
+    }, [b64, rb]);
+    console.log('Referência:', JSON.stringify(rr));
+    check(rr.ref.shift === -2, `achou a diferença de tom (original 2 semitons acima): ${rr.ref.shift}`);
+    check(rr.plan.some(([m, t]) => m === 66 && t === 67), 'nota de melodia errada foi para a nota da original (Sol)');
+    check(rr.plan.filter(([m, t]) => m !== 66).every(([m, t]) => t === m), 'as outras notas continuam nas notas certas');
+  }
   // 2) Vídeo com instrumental: o fluxo completo, com separação
   if (coverMp4) {
     const v64 = fs.readFileSync(coverMp4).toString('base64');

@@ -13,13 +13,13 @@ const screen = (s) => (app.dataset.screen = s);
 let toastT = 0;
 const toast = (msg, ms = 3500) => { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), ms); };
 
-let file = null, state = null, result = null, wavUrl = null, videoUrl = null;
+let file = null, refFile = null, state = null, result = null, wavUrl = null, videoUrl = null;
 let filter = FILTERS[0], amount = 1, ab = false, pending = false;
 const undo = [];
 const video = $('video'), audio = new Audio();
 audio.preload = 'auto';
 const mixOpts = () => ({ reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').value, fadeOut: +$('mFadeOut').value, trim: $('mTrim').checked });
-const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('mStrength').value, scaleSnap: $('mSnap').checked, straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1 });
+const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('mStrength').value, scaleSnap: $('mSnap').checked, straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked });
 
 // ---------- 1) Escolher o vídeo ----------
 const drop = $('drop');
@@ -28,10 +28,11 @@ $('file').onchange = () => $('file').files[0] && start($('file').files[0]);
 ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, () => drop.classList.remove('over')));
 drop.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) start(f); });
 $('newBtn').onclick = () => location.reload();
+$('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refName').textContent = refFile ? refFile.name : 'opcional'; $('refPick').classList.toggle('on', !!refFile); };
 
 // ---------- 2) Processar ----------
-const W = { audio: [0, 3], download: [3, 15], separate: [18, 45], notes: [63, 7], tune: [70, 25], mix: [95, 5] };
-const LABEL = { audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'Separando a voz', notes: 'Achando as notas', tune: 'Afinando nota por nota', mix: 'Mixando e masterizando' };
+const W = { audio: [0, 3], download: [3, 15], separate: [18, 45], notes: [63, 5], ref: [68, 1], refsep: [68, 12], refnotes: [80, 3], tune: [83, 13], mix: [96, 4] };
+const LABEL = { ref: 'Lendo a música original', refsep: 'Lendo a melodia da original', refnotes: 'Lendo a melodia da original', audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'Separando a voz', notes: 'Achando as notas', tune: 'Afinando nota por nota', mix: 'Mixando e masterizando' };
 function progress(step, p) {
   const [a, w] = W[step] || [0, 0];
   const pct = Math.min(100, Math.round(a + w * p));
@@ -39,8 +40,9 @@ function progress(step, p) {
   $('ringPct').textContent = pct + '%';
   $('workStep').textContent = LABEL[step] || '';
   const order = Object.keys(W);
+  const alias = { ref: 'refsep', refnotes: 'refsep' };
   document.querySelectorAll('#steps li').forEach((li) => {
-    const i = order.indexOf(li.dataset.s), cur = order.indexOf(step);
+    const i = order.indexOf(li.dataset.s), cur = order.indexOf(alias[step] || step);
     li.className = i < cur ? 'done' : i === cur ? 'on' : '';
   });
 }
@@ -51,7 +53,8 @@ async function start(f) {
   try {
     videoUrl = URL.createObjectURL(f);
     video.src = videoUrl;
-    state = await cover.analyze(f, tuneOpts(), progress);
+    $('steps').classList.toggle('ref', !!refFile);
+    state = await cover.analyze(f, { ...tuneOpts(), reference: refFile }, progress);
     await cover.verify(state);
     progress('mix', 0);
     await remix();
@@ -84,7 +87,7 @@ function openStudio() {
   grader.set(filter, amount);
   if (!editor) editor = new TuneEditor($('editor'), { onSelect, onEdit, onSeek: (t) => seek(t - result.start) });
   editor.load(state);
-  refreshChips();
+  refreshChips(); refreshRef();
   seek(0);
   buildFilters();
   requestAnimationFrame(loop);
@@ -158,7 +161,8 @@ function refreshChips() {
     <span class="chip">Faixa verde antes <b>${b.band}%</b></span>
     <span class="chip ${a.band >= 99 ? 'good' : 'bad'}">depois <b>${a.band}%</b></span>
     <span class="chip">Desvio <b>${b.avgCents}→${a.avgCents} cents</b></span>
-    ${edited ? `<span class="chip">Editadas <b>${edited}</b></span>` : ''}`;
+    ${edited ? `<span class="chip">Editadas <b>${edited}</b></span>` : ''}
+    ${state.ref ? `<span class="chip">Original <b>${state.ref.shift >= 0 ? '+' : ''}${state.ref.shift} semitons · ${state.plan.filter((n) => n.viaRef).length} notas pela referência</b></span>` : ''}`;
 }
 const pct = (v) => Math.round(v * 100) + '%';
 function onSelect(i) {
@@ -213,6 +217,24 @@ $('mRetune').onclick = () => { pushUndo(); applyTuning(); };
 
 function busy(on, txt) { $('busy').hidden = !on; if (txt) $('busyTxt').textContent = txt; busyPct(0); }
 function busyPct(p) { $('busyBar').style.strokeDashoffset = 327 * (1 - Math.max(0, Math.min(1, p))); }
+
+// ---------- Música original (modo referência) ----------
+function refreshRef() {
+  $('mUseRef').disabled = !state.ref;
+  $('mRefTxt').textContent = state.ref ? 'Trocar a música original' : 'Subir a música original';
+}
+$('mUseRef').addEventListener('change', () => { pushUndo(); applyTuning(); });
+$('mRefFile').onchange = async () => {
+  const f = $('mRefFile').files[0]; if (!f) return;
+  audio.pause(); video.pause(); $('play').textContent = '▶';
+  busy(true, 'Lendo a melodia da original…');
+  try {
+    const r = await cover.setReference(state, f, (s, p) => busyPct(p));
+    $('mUseRef').checked = true; refreshRef();
+    toast(`Original lida: diferença de ${r.shift} semitons. Afinando…`);
+    await applyTuning();
+  } catch (e) { console.error(e); toast('Não consegui ler a música original: ' + e.message, 6000); busy(false); }
+};
 
 // ---------- Mix ----------
 document.querySelectorAll('.row input[type=range]').forEach((r) => {
