@@ -4,19 +4,21 @@ import fs from 'fs';
 const out = process.argv[2] || 'sample.wav', withBed = process.argv.includes('--bed');
 const sr = 44100;
 // [midi, cents de erro, duração]
-export const NOTES = [[60, 35, 0.9], [64, -40, 0.9], [67, 25, 0.9], [65, 60, 0.9], [62, -30, 0.9], [60, 0, 1.2]];
+// [midi, cents de erro, duração, escorregada em cents no fim da nota]
+export const NOTES = [[60, 35, 0.9, 0], [64, -40, 0.9, 0], [67, 0, 1.4, 70], [65, 60, 0.9, 0], [62, -30, 0.9, 0], [60, 0, 1.2, 0]];
 const lead = 2, tail = 2;
 const dur = lead + tail + NOTES.reduce((a, n) => a + n[2] + 0.15, 0);
 const len = Math.round(dur * sr);
 const L = new Float32Array(len), R = new Float32Array(len);
 let phase = 0, t0 = lead;
-for (const [m, c, d] of NOTES) {
+for (const [m, c, d, dr] of NOTES) {
   const a = Math.round(t0 * sr), b = Math.round((t0 + d) * sr);
   for (let i = a; i < b; i++) {
     const t = (i - a) / sr;
     const vib = t > 0.3 ? 0.2 * Math.sin(2 * Math.PI * 5.5 * t) : 0; // ±20 cents depois de 0,3 s
     const glide = t < 0.06 ? -0.5 * (1 - t / 0.06) : 0; // entra deslizando de baixo
-    const f = 440 * Math.pow(2, (m + c / 100 + vib + glide - 69) / 12);
+    const slip = t > d / 2 ? (dr / 100) * ((t - d / 2) / (d / 2)) : 0; // sobe devagar na segunda metade
+    const f = 440 * Math.pow(2, (m + c / 100 + vib + glide + slip - 69) / 12);
     phase += (2 * Math.PI * f) / sr;
     let s = 0;
     for (let h = 1; h <= 12; h++) s += Math.sin(h * phase) / (h * (h < 4 ? 1 : 1.6));

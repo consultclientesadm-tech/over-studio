@@ -188,9 +188,12 @@ async function loadStretch() {
 // notes: [{start, end, cents}] — cada nota vai para o centro certo (−cents), com entrada e saída suaves;
 // deslizes e vibrato ficam como a pessoa cantou. Fora das notas o áudio original fica intacto.
 // n.shift (semitons) = ajuste feito na mão no editor; n.strength (0–1) = força da correção automática.
+// n.curve = { t0, dt, v } (semitons por quadro): correção que varia dentro da nota (puxa de volta as escorregadas)
+const curveAt = (c, t) => { const x = (t - c.t0) / c.dt, i = Math.floor(x), f = x - i, v = c.v; if (!v.length) return 0; const a = v[Math.max(0, Math.min(v.length - 1, i))], b = v[Math.max(0, Math.min(v.length - 1, i + 1))]; return a * (1 - f) + b * f; };
+const curveMax = (c) => c.v.reduce((m, x) => Math.max(m, Math.abs(x)), 0);
 const shiftOf = (n) => (n.shift != null ? Math.max(-12.5, Math.min(12.5, n.shift)) : Math.max(-1, Math.min(1, -n.cents / 100)) * (n.strength ?? 1));
 export async function tuneVoice(channels, sr, notes, onProgress = () => {}) {
-  const todo = notes.filter((n) => (n.shift != null ? Math.abs(n.shift) >= 0.02 : Math.abs(n.cents) >= 6));
+  const todo = notes.filter((n) => (n.curve ? curveMax(n.curve) >= 0.02 : n.shift != null ? Math.abs(n.shift) >= 0.02 : Math.abs(n.cents) >= 6));
   if (!todo.length) return channels;
   const Factory = await loadStretch();
   const m = await Factory();
@@ -206,7 +209,7 @@ export async function tuneVoice(channels, sr, notes, onProgress = () => {}) {
     for (const n of todo) {
       if (t < n.start - RAMP || t > n.end + RAMP) continue;
       const w = Math.max(0, Math.min(1, (t - (n.start - RAMP)) / RAMP, ((n.end + RAMP) - t) / RAMP));
-      return shiftOf(n) * w;
+      return (n.curve ? curveAt(n.curve, Math.max(n.start, Math.min(n.end, t))) : shiftOf(n)) * w;
     }
     return 0;
   };

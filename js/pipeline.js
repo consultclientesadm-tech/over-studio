@@ -17,6 +17,8 @@ export const DEFAULTS = {
   separate: true, // false = gravação só de voz (a cappella): o áudio inteiro é tratado como voz
   strength: 1, // força da afinação, 0 a 1 (1 = cada nota no centro)
   scaleSnap: true, // nota que caiu fora do tom vai para a nota do tom mais próxima
+  straighten: true, // dentro da nota, puxa de volta as escorregadas que saem da faixa (vibrato fica)
+  band: 0.15, // largura da faixa "verde" para cada lado, em semitons (0,15 = 15 cents)
   reverb: 0.2, // 0 a 1
   trim: true, // corta o silêncio do começo e do fim
   fadeIn: 0.4, // segundos (0 = sem fade)
@@ -49,15 +51,15 @@ export function notesFrom(track) {
       const k = Math.floor(cur.ms.length * 0.2);
       const core = cur.ms.slice(k, cur.ms.length - k);
       const m = median(core.length ? core : cur.ms);
-      notes.push({ start: cur.start, end: cur.end, m, midi: Math.round(m) });
+      notes.push({ start: cur.start, end: cur.end, m, midi: Math.round(m), fr: cur.fr });
     }
     cur = null;
   };
   for (const f of track) {
     if (f.midi == null) { close(); continue; }
-    if (cur && Math.abs(f.midi - median(cur.ms.slice(-6))) < 0.6) { cur.ms.push(f.midi); cur.end = f.t + dt; continue; }
+    if (cur && Math.abs(f.midi - median(cur.ms.slice(-6))) < 0.6) { cur.ms.push(f.midi); cur.fr.push(f); cur.end = f.t + dt; continue; }
     close();
-    cur = { ms: [f.midi], start: f.t, end: f.t + dt };
+    cur = { ms: [f.midi], fr: [f], start: f.t, end: f.t + dt };
   }
   close();
   return notes;
@@ -68,7 +70,7 @@ const pc = (m) => ((Math.round(m) % 12) + 12) % 12;
 
 // Para onde cada nota vai. Com scaleSnap, uma nota que caiu num semitom fora do tom (cantou muito baixo
 // ou muito alto) vai para a nota do tom mais próxima, desde que esteja a menos de 3/4 de semitom dela.
-export function planTuning(notes, key, { strength = 1, scaleSnap = true } = {}) {
+export function planTuning(notes, key, { strength = 1, scaleSnap = true, straighten = true, band = 0.15 } = {}) {
   const scale = scaleOf(key);
   return notes.map((n) => {
     let target = Math.round(n.m);
@@ -77,10 +79,43 @@ export function planTuning(notes, key, { strength = 1, scaleSnap = true } = {}) 
       if (opts.length) target = opts.sort((a, b) => Math.abs(a - n.m) - Math.abs(b - n.m))[0];
     }
     const cents = Math.round((n.m - target) * 100);
-    // A correção nunca passa de 1 semitom: mais que isso é escolha do cantor, não desafinação
-    const shift = Math.max(-1, Math.min(1, (target - n.m) * strength));
-    return { ...n, target, cents, shift: Math.abs(cents) >= 6 ? shift : 0 };
+    // 1) Centro da nota vai para a nota certa (nunca mais que 1 semitom: mais que isso é escolha do cantor)
+    const base = Math.max(-1, Math.min(1, target - n.m));
+    const plan = { ...n, target, cents, shift: Math.abs(cents) >= 6 ? base * strength : 0 };
+    if (!straighten || !n.fr || n.fr.length < 4) return plan;
+    // 2) Escorregadas: a linha "lenta" da nota (média de ~0,22 s, que some com o vibrato) não pode sair
+    //    da faixa em volta do centro. O que vazar é puxado de volta só o quanto vazou; o vibrato e o
+    //    ataque (primeiros 0,08 s, onde a voz entra deslizando) ficam como a pessoa cantou.
+    const dt = n.fr.length > 1 ? n.fr[1].t - n.fr[0].t : 0.032;
+    const p = n.fr.map((f) => f.midi);
+    const H = 3, v = new Float32Array(p.length);
+    for (let k = 0; k < p.length; k++) {
+      let s = 0, c = 0;
+      for (let j = Math.max(0, k - H); j <= Math.min(p.length - 1, k + H); j++) { s += p[j]; c++; }
+      const r = s / c - n.m; // quanto a linha lenta saiu do centro
+      const t = n.fr[k].t - n.start;
+      const onset = Math.max(0, Math.min(1, (t - 0.08) / 0.07));
+      const leak = Math.abs(r) > band ? -Math.sign(r) * (Math.abs(r) - band) : 0;
+      v[k] = Math.max(-1.5, Math.min(1.5, (base + leak * onset) * strength));
+    }
+    plan.curve = { t0: n.fr[0].t + 0.032, dt, v }; // +0,032 s: centro da janela de análise
+    return plan;
   });
+}
+
+// Quanto do tempo cantado ficou dentro da faixa verde (linha lenta a menos de `band` da nota certa)
+export function inBand(notes, band = 0.15, ref = (n) => Math.round(n.m)) {
+  let tot = 0, ok = 0;
+  for (const n of notes) {
+    if (!n.fr) continue;
+    const p = n.fr.map((f) => f.midi), T = ref(n);
+    for (let k = 0; k < p.length; k++) {
+      let s = 0, c = 0;
+      for (let j = Math.max(0, k - 3); j <= Math.min(p.length - 1, k + 3); j++) { s += p[j]; c++; }
+      tot++; if (Math.abs(s / c - T) <= band + 0.05) ok++; // +5 cents de folga da medição
+    }
+  }
+  return tot ? Math.round((ok * 100) / tot) : 100;
 }
 
 // Resumo da afinação: média do desvio (em cents, ponderada pela duração) e % de notas dentro de ±20 cents
@@ -148,7 +183,7 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   const raw = notesFrom(track);
   const chroma = bed ? await chromaOf(bed, SR) : null;
   const key = detectKey(raw, chroma);
-  const state = { orig, voice, bed, key, rawNotes: raw, duration: orig[0].length / SR };
+  const state = { orig, voice, bed, key, track, rawNotes: raw, duration: orig[0].length / SR };
   await retune(state, o, onStep);
   return state;
 }
@@ -161,14 +196,16 @@ export async function retune(state, opts = {}, onStep = () => {}) {
   state.tuned = await tuneVoice(state.voice.map((c) => c.slice()), SR, plan, (p) => onStep('tune', p));
   onStep('tune', 1);
   state.plan = plan;
-  state.before = tuningStats(plan, (n) => n.target);
+  state.before = { ...tuningStats(plan, (n) => n.target), band: inBand(plan, o.band, (n) => n.target) };
+  state.opts = o;
   return state;
 }
 
 // Mede de novo a voz já afinada (para mostrar o antes e depois)
 export async function verify(state) {
-  const after = notesFrom(await pitchTrack(state.tuned, SR));
-  state.after = tuningStats(after);
+  state.afterTrack = await pitchTrack(state.tuned, SR);
+  const after = notesFrom(state.afterTrack);
+  state.after = { ...tuningStats(after), band: inBand(after, state.opts?.band ?? DEFAULTS.band) };
   return state.after;
 }
 

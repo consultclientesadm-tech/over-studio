@@ -29,6 +29,7 @@ try {
   check(r.key === 'Dó maior', 'achou o tom Dó maior');
   check(r.before.avgCents >= 25, `desvio antes ${r.before.avgCents} cents`);
   check(r.after.avgCents <= 10, `desvio depois ${r.after.avgCents} cents`);
+  check(r.after.band >= 90 && r.after.band > r.before.band + 10, `tempo na faixa verde: ${r.before.band}% antes, ${r.after.band}% depois (escorregada corrigida)`);
   check(r.plan.some(([m, t]) => m === 66 && t === 65), 'nota fora do tom (Fá + 60 cents) foi para Fá, não Fá#');
   check(r.start > 1.5 && r.start < 2, `corte do começo em ${r.start.toFixed(2)} s (voz entra em 2 s)`);
   check(r.end > r.dur - 2 && r.end < r.dur - 1, `corte do fim em ${r.end.toFixed(2)} s`);
