@@ -379,3 +379,5 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 #viewer.live:not(.playing) #screen { display: block; }
 
 .lastrun { margin: 14px auto 0; max-width: 520px; padding: 8px 12px; border: 1px dashed var(--y); border-radius: 10px; color: var(--y); font: 600 12px/1.4 'Space Grotesk', sans-serif; text-align: center; }
+.hint.req { margin-top: 6px; opacity: .8; font-size: 12px; }
+.hint.req.warn { opacity: 1; color: var(--y); border: 1px dashed var(--y); border-radius: 10px; padding: 8px 12px; }

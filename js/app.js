@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=25';
-import { prefetchModel } from './studio.js?v=25';
-import { TuneEditor } from './editor.js?v=25';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=25';
-import { exportVideo, exportType } from './export.js?v=25';
+import * as cover from './pipeline.js?v=26';
+import { prefetchModel } from './studio.js?v=26';
+import { TuneEditor } from './editor.js?v=26';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=26';
+import { exportVideo, exportType } from './export.js?v=26';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -144,7 +144,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v25`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v26`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -167,6 +167,12 @@ try {
   if (last && (last.tries || 1) < 2) resumeInfo = last;
 } catch {}
 // registro fixo na tela inicial (o aviso some; este fica até a próxima tentativa dar certo)
+// Aparelho abaixo do mínimo: avisa antes de a pessoa gastar tempo
+try {
+  const ua = navigator.userAgent, ios = ua.match(/OS (\d+)_\d+.* like Mac OS X/), mem = navigator.deviceMemory;
+  const old = (ios && +ios[1] < 15) || (/Android/.test(ua) && mem && mem < 4);
+  if (old) { const r = $('req'); r.classList.add('warn'); r.textContent = 'Este aparelho parece abaixo do mínimo (iPhone 13 ou Android com 4 GB). Pode fechar no meio. Se puder, use um celular mais novo ou o computador.'; }
+} catch {}
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});

@@ -54,7 +54,10 @@ export const useLite = () => {
   try {
     const ua = navigator.userAgent || '';
     const mobile = /iPhone|iPad|iPod|Android|Mobile/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua));
-    return mobile || (navigator.deviceMemory && navigator.deviceMemory < 8) || !matchMedia('(pointer: fine)').matches;
+    // A IA grande só em computador com placa de vídeo acessível pelo navegador (WebGPU) e memória de sobra.
+    // Qualquer outro computador (Firefox, Mac antigo, notebook de 4 GB) usa a leve, que roda em qualquer um.
+    let weak = false; try { weak = localStorage.getItem('sc-lite') === '1'; } catch {}
+    return mobile || weak || !navigator.gpu || (navigator.deviceMemory && navigator.deviceMemory < 8) || !matchMedia('(pointer: fine)').matches;
   } catch { return true; }
 };
 export const modelSizeMB = () => (useLite() ? 40 : 170);
@@ -67,7 +70,9 @@ export async function modelCached() {
   } catch { return false; }
 }
 
-async function loadOrt() {
+let ortP = null;
+function loadOrt() { return (ortP ||= loadOrt1()); }
+async function loadOrt1() {
   // Arquivos com extensão .js (e não .mjs): qualquer servidor manda o tipo certo, inclusive o nginx do Plesk
   // Celular: versão só-CPU do motor (12 MB em vez de 27 MB): compilar o motor grande sozinho já gastava
   // centenas de MB de memória no iPhone. Computador: versão com placa de vídeo (WebGPU).
@@ -85,24 +90,16 @@ async function loadOrt() {
   return ort;
 }
 
-let spleeter = null;
-async function loadSpleeter(onProgress) {
-  if (spleeter) return spleeter;
-  const ort = await loadOrt();
-  let got = 0;
-  const sessions = [];
-  for (const u of SP_PARTS) {
-    const buf = await fetchPart(u, (b) => { got += b; onProgress(Math.min(1, got / SP_TOTAL)); });
-    sessions.push(await ort.InferenceSession.create(new Uint8Array(buf), { executionProviders: ['wasm'], graphOptimizationLevel: 'all', enableCpuMemArena: false, enableMemPattern: false }));
-  }
-  spleeter = { ort, vocals: sessions[0], accomp: sessions[1] };
-  return spleeter;
+// Uma rede por vez: carrega a da voz, passa a música toda, libera; depois a do acompanhamento.
+// Assim o pico de memória é o de uma rede só (no iPhone isso decide se o Safari fecha a página).
+async function loadPart(ort, i, onBytes) {
+  const buf = await fetchPart(SP_PARTS[i], onBytes);
+  return ort.InferenceSession.create(new Uint8Array(buf), { executionProviders: ['wasm'], graphOptimizationLevel: 'basic', enableCpuMemArena: false, enableMemPattern: false });
 }
 
-// Separação leve (Spleeter 2 faixas, Deezer, MIT): trabalha em blocos de 512 quadros (~12 s),
-// então a memória fica pequena mesmo em música de 5 minutos.
+// Separação leve (Spleeter 2 faixas, Deezer, MIT): trabalha em blocos de 512 quadros (~12 s).
 async function separateLite(channels, { onDownload, onProgress }) {
-  const { ort, vocals, accomp } = await loadSpleeter(onDownload);
+  const ort = await loadOrt();
   const { fft, ifft, getHannWindow } = await import('./vendor/demucs/fft.js');
   const N = 4096, H = 1024, BINS = 1024, FULL = N / 2 + 1, F = 512;
   const L = channels[0].length, P = N;
@@ -110,51 +107,72 @@ async function separateLite(channels, { onDownload, onProgress }) {
   const Lp = L + 2 * P;
   const nf = Math.floor((Lp - N) / H) + 1;
   const win = getHannWindow(N);
-  const out = [new Float32Array(Lp), new Float32Array(Lp)];
   const frIn = new Float32Array(N), re = new Float32Array(N), im = new Float32Array(N), oRe = new Float32Array(N), oIm = new Float32Array(N);
   const chunks = Math.ceil(nf / F);
+  let got = 0;
+  const dl = (b) => { got += b; onDownload(Math.min(1, got / SP_TOTAL)); };
+  const frame = (c, fi) => {
+    const st = fi * H - P;
+    for (let i = 0; i < N; i++) { const t = st + i; frIn[i] = t >= 0 && t < L ? src[c][t] * win[i] : 0; }
+    fft(re, im, frIn, N);
+  };
+  const feed = (k) => {
+    const f0 = k * F, n = Math.min(F, nf - f0), x = new Float32Array(2 * F * BINS);
+    for (let c = 0; c < 2; c++) for (let j = 0; j < n; j++) {
+      frame(c, f0 + j);
+      const xo = (c * F + j) * BINS;
+      for (let b = 0; b < BINS; b++) x[xo + b] = Math.hypot(re[b], im[b]);
+    }
+    return new ort.Tensor('float32', x, [2, 1, F, BINS]);
+  };
+  // Passo 1: rede da voz. Guarda só a energia da voz, comprimida em 16 bits (log), 2 bytes por ponto.
+  const Q = 1500, lo = -24;
+  const V = new Uint16Array(2 * nf * BINS);
+  let net = await loadPart(ort, 0, dl);
   for (let k = 0; k < chunks; k++) {
     const f0 = k * F, n = Math.min(F, nf - f0);
-    const specRe = [new Float32Array(n * FULL), new Float32Array(n * FULL)];
-    const specIm = [new Float32Array(n * FULL), new Float32Array(n * FULL)];
-    const x = new Float32Array(2 * F * BINS);
-    for (let c = 0; c < 2; c++) {
-      for (let j = 0; j < n; j++) {
-        const st = (f0 + j) * H - P;
-        for (let i = 0; i < N; i++) { const t = st + i; frIn[i] = t >= 0 && t < L ? src[c][t] * win[i] : 0; }
-        fft(re, im, frIn, N);
-        specRe[c].set(re.subarray(0, FULL), j * FULL);
-        specIm[c].set(im.subarray(0, FULL), j * FULL);
-        const xo = (c * F + j) * BINS;
-        for (let b = 0; b < BINS; b++) x[xo + b] = Math.hypot(re[b], im[b]);
-      }
+    const out = await net.run({ x: feed(k) });
+    const v = out.y.data;
+    for (let c = 0; c < 2; c++) for (let j = 0; j < n; j++) {
+      const xo = (c * F + j) * BINS, vo = (c * nf + f0 + j) * BINS;
+      for (let b = 0; b < BINS; b++) { const e = Math.log(v[xo + b] * v[xo + b] + 1e-11) - lo; V[vo + b] = e <= 0 ? 0 : Math.min(65535, Math.round(e * Q)); }
     }
-    const feeds = { x: new ort.Tensor('float32', x, [2, 1, F, BINS]) };
-    const v = (await vocals.run(feeds)).y.data;
-    const a = (await accomp.run(feeds)).y.data;
-    for (let c = 0; c < 2; c++) {
-      for (let j = 0; j < n; j++) {
-        const xo = (c * F + j) * BINS, so = j * FULL;
-        let hi = 0;
-        for (let b = 0; b < BINS; b++) {
-          const vv = v[xo + b] * v[xo + b], aa = a[xo + b] * a[xo + b];
-          const m = (vv + 5e-11) / (vv + aa + 1e-10);
-          if (b >= 960) hi += m;
-          re[b] = specRe[c][so + b] * m; im[b] = specIm[c][so + b] * m;
-        }
-        hi /= BINS - 960; // acima de 11 kHz: usa a média do topo (mantém o brilho da voz)
-        for (let b = BINS; b < FULL; b++) { re[b] = specRe[c][so + b] * hi; im[b] = specIm[c][so + b] * hi; }
-        for (let b = 1; b < N / 2; b++) { re[N - b] = re[b]; im[N - b] = -im[b]; }
-        ifft(oRe, oIm, re, im, N);
-        const st = (f0 + j) * H, o = out[c];
-        for (let i = 0; i < N; i++) o[st + i] += oRe[i] * win[i];
-      }
-    }
-    onProgress((k + 1) / chunks);
+    out.y.dispose?.();
+    onProgress(0.5 * (k + 1) / chunks);
     await tick();
   }
+  await net.release(); net = null;
+  // Passo 2: rede do acompanhamento, máscara e volta para o som.
+  net = await loadPart(ort, 1, dl);
+  const outS = [new Float32Array(Lp), new Float32Array(Lp)];
+  for (let k = 0; k < chunks; k++) {
+    const f0 = k * F, n = Math.min(F, nf - f0);
+    const out = await net.run({ x: feed(k) });
+    const a = out.y.data;
+    for (let c = 0; c < 2; c++) for (let j = 0; j < n; j++) {
+      frame(c, f0 + j);
+      const xo = (c * F + j) * BINS, vo = (c * nf + f0 + j) * BINS;
+      let hi = 0;
+      for (let b = 0; b < BINS; b++) {
+        const q = V[vo + b], vv = q ? Math.exp(q / Q + lo) : 0, aa = a[xo + b] * a[xo + b];
+        const m = (vv + 5e-11) / (vv + aa + 1e-10);
+        if (b >= 960) hi += m;
+        re[b] *= m; im[b] *= m;
+      }
+      hi /= BINS - 960; // acima de 11 kHz: usa a média do topo (mantém o brilho da voz)
+      for (let b = BINS; b < FULL; b++) { re[b] *= hi; im[b] *= hi; }
+      for (let b = 1; b < N / 2; b++) { re[N - b] = re[b]; im[N - b] = -im[b]; }
+      ifft(oRe, oIm, re, im, N);
+      const st = (f0 + j) * H, o = outS[c];
+      for (let i = 0; i < N; i++) o[st + i] += oRe[i] * win[i];
+    }
+    out.y.dispose?.();
+    onProgress(0.5 + 0.5 * (k + 1) / chunks);
+    await tick();
+  }
+  await net.release(); net = null;
   // Janela de Hann com passo de 1/4: a soma das janelas ao quadrado é 1,5 em todo o trecho útil
-  const voice = out.map((o) => o.subarray(P, P + L));
+  const voice = outS.map((o) => o.subarray(P, P + L));
   for (const v of voice) for (let i = 0; i < L; i++) v[i] /= 1.5;
   if (separateLite.noBed) return { voice }; // no ajudante: o playback é feito no app, fora do pico de memória da IA
   return { voice, bed: bedOf(src, voice) };
@@ -187,7 +205,7 @@ const bedOf = (src, voice) => voice.map((v, c) => { const s = src[c] || src[0], 
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=25', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=26', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now(), sent = false;
     const send = () => {
       if (sent) return; sent = true;
@@ -225,10 +243,19 @@ export async function separate(channels, { onDownload = () => {}, onProgress = (
     }
     return separateLite(channels, { onDownload, onProgress });
   }
-  const proc = await loadDemucs(onDownload);
   const L = channels[0], R = channels[1] || channels[0];
-  proc.onProgress = (p) => onProgress(p.progress);
-  const res = await proc.separate(L, R);
+  let res;
+  try {
+    const proc = await loadDemucs(onDownload);
+    proc.onProgress = (p) => onProgress(p.progress);
+    res = await proc.separate(L, R);
+  } catch (e) {
+    // Computador sem força para a IA grande: termina com a leve e lembra disso nas próximas vezes
+    console.warn('IA grande falhou, usando a leve:', e.message);
+    try { localStorage.setItem('sc-lite', '1'); } catch {}
+    demucs = null;
+    return separateLite(channels, { onDownload, onProgress });
+  }
   const voice = [res.vocals.left, res.vocals.right];
   const bed = [new Float32Array(L.length), new Float32Array(L.length)];
   for (let i = 0; i < L.length; i++) { bed[0][i] = L[i] - voice[0][i]; bed[1][i] = R[i] - voice[1][i]; }
