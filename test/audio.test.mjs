@@ -28,6 +28,11 @@ try {
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#dlWav')]);
   const p = await dl.path(); const fs = await import('fs'); const n = fs.statSync(p).size;
   check(n > 100000 && /studio-cover\.wav$/.test(dl.suggestedFilename()), `baixou ${dl.suggestedFilename()} (${(n / 1048576).toFixed(1)} MB)`);
+  for (const [id, nome] of [['#dlVoice', 'so-voz'], ['#dlBed', 'so-musica']]) {
+    const [d] = await Promise.all([page.waitForEvent('download'), page.click(id)]);
+    const sz = fs.statSync(await d.path()).size;
+    check(sz > 100000 && d.suggestedFilename().endsWith(nome + '.wav'), `baixou ${d.suggestedFilename()} (${(sz / 1048576).toFixed(1)} MB)`);
+  }
   await page.click('#play'); await page.waitForTimeout(1500);
   const t = await page.evaluate(() => +document.getElementById('seek').value);
   check(t > 0.5, `prévia do som anda (${t.toFixed(1)} s)`);

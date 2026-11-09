@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=27';
-import { prefetchModel } from './studio.js?v=27';
-import { TuneEditor } from './editor.js?v=27';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=27';
-import { exportVideo, exportType } from './export.js?v=27';
+import * as cover from './pipeline.js?v=28';
+import { prefetchModel } from './studio.js?v=28';
+import { TuneEditor } from './editor.js?v=28';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=28';
+import { exportVideo, exportType } from './export.js?v=28';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -147,7 +147,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v27`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v28`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -580,6 +580,7 @@ function refreshSummary() {
   if (!state) return;
   const portrait = video.videoHeight >= video.videoWidth, type = exportType();
   const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
+  $('dlBed').hidden = !state.bed;
   $('dlWav').textContent = audioOnly ? 'Baixar o áudio pronto (WAV)' : 'Baixar só o áudio (WAV)';
   $('exportSub').textContent = audioOnly ? 'Baixe o áudio pronto e junte de volta no seu vídeo no editor (CapCut, InShot etc.), alinhando pelo começo.' : 'O vídeo sai na mesma resolução, quadros por segundo e qualidade do original. Deixe a tela aberta até terminar.';
   if (audioOnly) {
@@ -631,3 +632,14 @@ $('helpBtn').onclick = () => {
 // Qualquer erro aparece na tela (e fica no diário), para a gente saber exatamente o que houve num aparelho real
 addEventListener('error', (e) => { note({ erro: String(e.message).slice(0, 120) }); toast('Erro: ' + e.message, 9000); });
 addEventListener('unhandledrejection', (e) => { const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); toast('Erro: ' + m, 9000); });
+
+// Só a voz / só a música (WAV), no mesmo trecho do vídeo final
+function dlStem(ch, nome) {
+  const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
+  const a = Math.round(s * cover.SR), b = Math.min(ch[0].length, Math.round(e * cover.SR));
+  const cut = [0, 1].map((c) => (ch[c] || ch[0]).slice(a, b));
+  const el = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(cut, cover.SR));
+  el.href = u; el.download = `${((file && file.name) || 'cover').replace(/\.[^.]+$/, '')}-${nome}.wav`; el.click(); setTimeout(() => URL.revokeObjectURL(u), 30000);
+}
+$('dlVoice').onclick = () => dlStem(state.tuned || state.voice, 'so-voz');
+$('dlBed').onclick = () => dlStem(state.bed, 'so-musica');
