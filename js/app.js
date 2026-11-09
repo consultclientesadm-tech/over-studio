@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=21';
-import { TuneEditor } from './editor.js?v=21';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=21';
-import { exportVideo, exportType } from './export.js?v=21';
+import * as cover from './pipeline.js?v=22';
+import { TuneEditor } from './editor.js?v=22';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=22';
+import { exportVideo, exportType } from './export.js?v=22';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -54,6 +54,17 @@ const clk = { t0: 0, at: 0, run: false };
 function clkSet(t) { clk.t0 = Math.max(0, t); clk.at = performance.now(); }
 const ct = () => (clk.run ? clk.t0 + (performance.now() - clk.at) / 1000 : clk.t0);
 player.addEventListener('playing', () => { if (want && Math.abs(player.currentTime - ct()) < 1.5) clkSet(player.currentTime); });
+// atraso de saída do som do aparelho (alto-falante, fone com fio ou Bluetooth), medido pelo próprio sistema
+let latCtx = null, latVal = 0, latAt = 0;
+function outLat() {
+  const now = performance.now(); if (now - latAt < 2000) return latVal; latAt = now;
+  try {
+    latCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const v = (latCtx.outputLatency || 0) + (latCtx.baseLatency || 0);
+    latVal = Math.max(0, Math.min(0.4, isFinite(v) ? v : 0));
+  } catch { latVal = 0; }
+  return latVal;
+}
 function aStop() { aTime(); player.pause(); }
 function aKey(key) {
   if (key === curKey && srcKey === key) return;
@@ -117,7 +128,7 @@ try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
   if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v21`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v22`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -350,12 +361,14 @@ function loop(now) {
     // o som manda (a posição dele é confiável, os números do iPhone mostraram); o relógio só cobre enquanto o som carrega
     const aOk = !player.paused && player.readyState >= 2 && pendingT == null;
     if (aOk) clkSet(player.currentTime);
-    const t = ct(), drift = video.currentTime - t, ad = Math.abs(drift);
-    if (!video.seeking && ad > 0.35 && now - (loop.jump || 0) > 2500) { video.currentTime = t + 0.08; loop.jump = now; video.playbackRate = 1; }
+    // o som sai pela caixa ou fone com um pequeno atraso (fone Bluetooth chega a 0,2 s): a imagem espera por ele
+    const t = ct(), drift = video.currentTime - (t - outLat()), ad = Math.abs(drift);
+    if (!video.seeking && ad > 0.25 && now - (loop.jump || 0) > 2000) { video.currentTime = t - outLat() + 0.06; loop.jump = now; video.playbackRate = 1; }
     else if (!video.seeking) {
       const r = video.playbackRate;
-      if (ad > 0.12 && r === 1) video.playbackRate = drift > 0 ? 0.94 : 1.06;
-      else if (r !== 1 && (ad < 0.04 || (drift > 0) !== (r < 1))) video.playbackRate = 1;
+      // passou de 0,05 s: acelera ou segura a imagem de leve até encostar no som (bem abaixo do que o olho percebe)
+      if (ad > 0.05 && r === 1) video.playbackRate = drift > 0 ? 0.95 : 1.05;
+      else if (r !== 1 && (ad < 0.015 || (drift > 0) !== (r < 1))) video.playbackRate = 1;
     }
     if (video.paused && !video.ended && now - (loop.kick || 0) > 1000) { loop.kick = now; vplay(); }
     $('seek').value = t; $('tNow').textContent = fmt(t);

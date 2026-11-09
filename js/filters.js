@@ -34,8 +34,14 @@ vec3 shoulder(vec3 c){ const float k = .78; vec3 t = max(c - k, 0.) / (1. - k); 
 void main(){
   vec2 st = crop.xy + uv * crop.zw;
   vec3 c0 = texture2D(img, st).rgb;
-  vec3 blur = (texture2D(img, st + vec2(px.x,0.)).rgb + texture2D(img, st - vec2(px.x,0.)).rgb + texture2D(img, st + vec2(0.,px.y)).rgb + texture2D(img, st - vec2(0.,px.y)).rgb) * .25;
-  vec3 c = clamp(c0 + (c0 - blur) * sharpen, 0., 1.);
+  // nitidez adaptativa (AMD FidelityFX CAS, MIT): realça só onde há pouco contraste, sem halo nem "cara de filtro".
+  // É o mesmo realce usado no upscale de jogos: deixa a imagem mais definida de forma natural.
+  vec3 nb = texture2D(img, st - vec2(0.,px.y)).rgb, nd = texture2D(img, st - vec2(px.x,0.)).rgb;
+  vec3 nf = texture2D(img, st + vec2(px.x,0.)).rgb, nh = texture2D(img, st + vec2(0.,px.y)).rgb;
+  vec3 mnC = min(min(min(nd, c0), min(nf, nb)), nh), mxC = max(max(max(nd, c0), max(nf, nb)), nh);
+  vec3 amp = sqrt(clamp(min(mnC, 2. - mxC) / max(mxC, vec3(1e-4)), 0., 1.));
+  vec3 w = amp * (-1. / mix(8., 5., clamp(sharpen, 0., 1.)));
+  vec3 c = clamp((nb * w + nd * w + nf * w + nh * w + c0) / (1. + 4. * w), 0., 1.);
   // brilho de lente/película: anel de 8 amostras largas em volta do ponto
   vec2 r = px * 7.;
   vec3 wide = (texture2D(img, st + vec2(r.x,0.)).rgb + texture2D(img, st - vec2(r.x,0.)).rgb + texture2D(img, st + vec2(0.,r.y)).rgb + texture2D(img, st - vec2(0.,r.y)).rgb
@@ -112,7 +118,7 @@ export class Grader {
 //  pelos tons neutros (tira o amarelo de lâmpada ou o azul de sombra), e depois um look de cinema
 //  suave (sombras um pouco frias, luzes um pouco quentes, que deixa a pele bonita), vinheta e nitidez.
 // Os mesmos números valem para o vídeo todo, então a cor não "pisca".
-export async function autoGrade(video, samples = 8) {
+export async function autoGrade(video, samples = 5) {
   const w = 96, h = Math.round((96 * video.videoHeight) / video.videoWidth) || 170;
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const g = c.getContext('2d', { willReadFrequently: true });
@@ -121,7 +127,7 @@ export async function autoGrade(video, samples = 8) {
   for (let k = 0; k < samples; k++) {
     video.currentTime = (video.duration * (k + 0.5)) / samples;
     // nunca espera para sempre: no iPhone o vídeo às vezes não avisa que chegou no ponto
-    await new Promise((r) => { video.addEventListener('seeked', r, { once: true }); setTimeout(r, 1500); });
+    await new Promise((r) => { video.addEventListener('seeked', r, { once: true }); setTimeout(r, 800); });
     if (video.readyState < 2) continue;
     g.drawImage(video, 0, 0, w, h);
     const d = g.getImageData(0, 0, w, h).data;

@@ -4,7 +4,7 @@
 // a voz original em cinza. Toque/clique seleciona; arrastar o bloco para cima ou para baixo muda a nota
 // (de semitom em semitom); arrastar o fundo anda pela música; pinça ou Ctrl+roda dá zoom;
 // tocar na régua de cima leva o vídeo para aquele ponto.
-import { noteName } from './music.js?v=21';
+import { noteName } from './music.js?v=22';
 
 const SCALE = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10] };
 const C = { bg: '#0a0a0d', row: '#101015', rowKey: '#16161d', line: '#202029', txt: '#8b8b99', yel: '#ffd400', green: '#2ee59d', red: '#ff4d5e', orig: 'rgba(170,170,190,.45)', band: 'rgba(46,229,157,.13)' };
