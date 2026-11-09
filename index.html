@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=26">
+<link rel="stylesheet" href="css/app.css?v=27">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -32,7 +32,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v26</small></div>
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v27</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda">?</button>
     <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
@@ -48,6 +48,10 @@
         <span class="dropicon"></span>
         <strong>Escolher o vídeo</strong>
         <small>ou arraste aqui · MP4 ou MOV do celular · até 3 minutos</small>
+      </label>
+      <label class="audioonly" id="audioPick" data-help="Vídeo muito pesado? Tire o áudio do vídeo no celular ou no editor e suba só ele. O app afina, mixa e masteriza, e você baixa o áudio pronto para juntar de volta no seu vídeo no editor (CapCut, InShot etc.).">
+        <input type="file" id="audioFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden>
+        <b>Ou suba só o áudio</b><small>MP3, M4A ou WAV · você baixa o áudio pronto e junta no seu vídeo</small>
       </label>
       <div class="opts">
         <label class="switch" data-help="Deixe ligado se no vídeo tem violão, banda ou playback junto com a voz. A IA separa a voz do instrumental para afinar só a voz. Desligue se você cantou à capela."><input type="checkbox" id="optSeparate" checked><span></span> Tem instrumental ou playback (separar a voz)</label>
@@ -82,7 +86,7 @@
       <button data-step="1" class="done"><b>1</b><span>Vídeo</span></button>
       <button data-step="2"><b>2</b><span>Afinação</span></button>
       <button data-step="3"><b>3</b><span>Mix e master</span></button>
-      <button data-step="4"><b>4</b><span>Cor</span></button>
+      <button data-step="4" id="stepCor"><b>4</b><span>Cor</span></button>
       <button data-step="5"><b>5</b><span>Exportar</span></button>
     </nav>
 
@@ -164,10 +168,10 @@
 
       <!-- 5) Exportar -->
       <div class="step" data-step="5">
-        <div class="head"><div><h3>Exportar</h3><p class="sub">O vídeo toca uma vez enquanto é gravado. Deixe a tela aberta até terminar.</p></div></div>
+        <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai na mesma resolução, quadros por segundo e qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
         <div class="summary" id="summary"></div>
         <button class="pill big" id="watchBtn">▶ Assistir a prévia em tela cheia</button>
-        <button class="prime" id="exportBtn" data-help="Grava o vídeo final em 1080p com o som e a cor escolhidos. O vídeo toca uma vez enquanto grava.">Gerar vídeo final</button>
+        <button class="prime" id="exportBtn" data-help="Grava o vídeo final na qualidade do original, com o som e a cor escolhidos.">Gerar vídeo final</button>
         <div class="bar" id="exportBar" hidden><i></i></div>
         <div class="ready" id="ready" hidden>
           <span class="readyok">✓</span>
@@ -199,7 +203,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=26"></script>
+<script type="module" src="js/app.js?v=27"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

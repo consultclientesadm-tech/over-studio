@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=26';
-import { prefetchModel } from './studio.js?v=26';
-import { TuneEditor } from './editor.js?v=26';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=26';
-import { exportVideo, exportType } from './export.js?v=26';
+import * as cover from './pipeline.js?v=27';
+import { prefetchModel } from './studio.js?v=27';
+import { TuneEditor } from './editor.js?v=27';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=27';
+import { exportVideo, exportType } from './export.js?v=27';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -15,7 +15,7 @@ const pct = (v) => Math.round(v * 100) + '%';
 let toastT = 0;
 const toast = (msg, ms = 3500) => { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), ms); };
 
-let file = null, refFile = null, state = null;
+let file = null, refFile = null, state = null, audioOnly = false;
 let tuned = false, mastered = null; // mastered = resultado do render (ou null)
 let step = 2, side = 'B', pending = false;
 let look = null, auto = null, amount = 1; // look = filtro escolhido; auto = Colorista
@@ -83,6 +83,9 @@ const mixOpts = () => ({ reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').valu
 // ---------- 1) Vídeo ----------
 const drop = $('drop');
 $('file').onchange = () => $('file').files[0] && start($('file').files[0]);
+$('audioFile').onchange = () => $('audioFile').files[0] && start($('audioFile').files[0]);
+// Só o áudio: a pessoa tirou o som do vídeo e sobe ele; no fim baixa o áudio pronto e junta no editor
+const isAudio = (f) => /^audio\//.test(f.type) || (!/^video\//.test(f.type) && /\.(mp3|m4a|aac|wav|ogg|flac|opus)$/i.test(f.name || ''));
 // o celular recarregou a página no meio? continua o mesmo vídeo, sem a pessoa precisar subir de novo
 setTimeout(async () => {
   if (!resumeInfo) return;
@@ -144,7 +147,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v26`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v27`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -178,6 +181,9 @@ async function start(f, tries = 1) {
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
   if (tries === 1) await Promise.race([keep(f, refFile), new Promise((r) => setTimeout(r, 5000))]);
   file = f;
+  audioOnly = isAudio(f); app.classList.toggle('audio', audioOnly);
+  if (!audioOnly && tries === 1 && f.size > 300 * 1048576 && /iPhone|iPad|Android/i.test(navigator.userAgent))
+    toast(`Vídeo grande (${Math.round(f.size / 1048576)} MB): pode demorar mais no celular. Se o celular fechar o app, use "Ou suba só o áudio" ou o computador.`, 9000);
   app.dataset.screen = 'work'; progress('audio', 0);
   $('topinfo').textContent = f.name;
   $('steps').classList.toggle('ref', !!refFile);
@@ -189,7 +195,7 @@ async function start(f, tries = 1) {
     tracks.orig = state.orig; tracks.raw = cover.rawMix(state);
     video.src = URL.createObjectURL(f); video.load();
     kick();
-    await videoReady();
+    if (!audioOnly) await videoReady();
     note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
     endRun();
@@ -214,7 +220,7 @@ function cssLook(f, k = 1) {
   return `brightness(${m(1 + f.exposure * 1.4 - f.fade * 0.3, 1).toFixed(3)}) contrast(${m(f.contrast - f.fade * 0.6, 1).toFixed(3)}) saturate(${m(f.saturation, 1).toFixed(3)})`
     + (warm ? ` sepia(${(warm * k).toFixed(3)})` : '') + (cool ? ` hue-rotate(${(cool * k).toFixed(1)}deg)` : '');
 }
-function grab() { if (video.readyState >= 2) { fctx.drawImage(video, 0, 0, frame.width, frame.height); lastVT = video.currentTime; } }
+function grab() { if (!audioOnly && video.readyState >= 2 && frame.width) { fctx.drawImage(video, 0, 0, frame.width, frame.height); lastVT = video.currentTime; } }
 function openStudio() {
   app.dataset.screen = 'studio';
   $('newBtn').hidden = false;
@@ -224,7 +230,7 @@ function openStudio() {
   cv.width = portrait ? small : big; cv.height = portrait ? big : small;
   // o quadro do vídeo passa antes por um canvas 2D no tamanho da prévia: a placa de vídeo recebe
   // uma imagem pequena (não o 4K do iPhone) e o iPhone sempre entrega o quadro, mesmo pausado
-  const sc = Math.min(1, big / Math.max(video.videoWidth, video.videoHeight));
+  const sc = Math.min(1, big / Math.max(video.videoWidth || 1, video.videoHeight || 1));
   frame.width = Math.round(video.videoWidth * sc); frame.height = Math.round(video.videoHeight * sc);
   const fit = () => {
     const r = $('viewer').getBoundingClientRect(), ar = portrait ? 9 / 16 : 16 / 9;
@@ -250,13 +256,14 @@ $('quickAll').onclick = async () => {
   await doTune();
   if (!tuned) return;
   busy(true, 'Mixando e masterizando…'); await doMaster(false);
-  busy(true, 'Colorista ajustando a cor…'); try { auto = await autoGrade(video); } catch (e) { console.warn(e); }
+  if (!audioOnly) { busy(true, 'Colorista ajustando a cor…'); try { auto = await autoGrade(video); } catch (e) { console.warn(e); } }
   look = FILTERS[0]; busy(false); // pronto já sai com o visual de câmera de cinema
   go(5); toast('Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.', 6000);
 };
 
 // Etapas
 function go(n) {
+  if (audioOnly && n === 4) n = step > 4 ? 3 : 5; // só áudio: não tem etapa de cor
   const wasPlaying = playing();
   pause();
   step = n;
@@ -573,9 +580,15 @@ function refreshSummary() {
   if (!state) return;
   const portrait = video.videoHeight >= video.videoWidth, type = exportType();
   const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
+  $('dlWav').textContent = audioOnly ? 'Baixar o áudio pronto (WAV)' : 'Baixar só o áudio (WAV)';
+  $('exportSub').textContent = audioOnly ? 'Baixe o áudio pronto e junte de volta no seu vídeo no editor (CapCut, InShot etc.), alinhando pelo começo.' : 'O vídeo sai na mesma resolução, quadros por segundo e qualidade do original. Deixe a tela aberta até terminar.';
+  if (audioOnly) {
+    $('summary').innerHTML = `<div>Afinação<b>${tuned ? `sim · ${state.after.band}% na faixa` : 'não'}</b></div><div>Mix e master<b>${mastered ? 'sim' : 'não'}</b></div><div>Duração<b>${fmt(e - s)}</b></div><div>Formato<b>WAV</b></div>`;
+    return;
+  }
   $('summary').innerHTML = `<div>Afinação<b>${tuned ? `sim · ${state.after.band}% na faixa` : 'não'}</b></div><div>Mix e master<b>${mastered ? 'sim' : 'não'}</b></div>
     <div>Cor<b>${currentFilter().name}</b></div><div>Duração<b>${fmt(e - s)}</b></div>
-    <div>Resolução<b>${portrait ? '1080 × 1920' : '1920 × 1080'}</b></div><div>Formato<b>${type.startsWith('video/mp4') ? 'MP4' : type ? 'WebM' : '—'}</b></div>`;
+    <div>Resolução<b>${Math.max(1080, Math.min(video.videoWidth, video.videoHeight)) === 1080 && !(portrait ? video.videoWidth > 1080 : video.videoHeight > 1080) ? (portrait ? '1080 × 1920' : '1920 × 1080') : `${video.videoWidth} × ${video.videoHeight}`} (como o original)</b></div><div>Formato<b>${window.VideoEncoder || type.startsWith('video/mp4') ? 'MP4' : type ? 'WebM' : '—'}</b></div>`;
 }
 $('exportBtn').onclick = async () => {
   pause();
@@ -584,7 +597,7 @@ $('exportBtn').onclick = async () => {
   try {
     const ch = mastered ? mastered.channels : cover.rawMix(state);
     const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
-    const out = await exportVideo({ video, filter: currentFilter(), amount, channels: ch, sr: cover.SR, start: s, end: e,
+    const out = await exportVideo({ file, video, filter: currentFilter(), amount, channels: ch, sr: cover.SR, start: s, end: e,
       onProgress: (p) => { $('exportBar').firstElementChild.style.width = Math.round(p * 100) + '%'; } });
     const a = $('download');
     a.href = URL.createObjectURL(out.blob);
@@ -596,7 +609,7 @@ $('exportBtn').onclick = async () => {
   $('exportBtn').disabled = false;
   seek(0);
 };
-$('dlWav').onclick = () => { const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = 'studio-cover-audio.wav'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
+$('dlWav').onclick = () => { const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = `${((file && file.name) || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.wav`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
 
 window.studio = { audio: () => ({ currentTime: aTime() }), get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
 
