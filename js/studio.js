@@ -168,9 +168,37 @@ async function loadDemucs(onProgress) {
   return proc;
 }
 
+export { separateLite };
+function separateInWorker(channels, { onDownload, onProgress }) {
+  return new Promise((resolve, reject) => {
+    let w;
+    try { w = new Worker(new URL('./sep-worker.js?v=19', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    let started = false, last = Date.now();
+    const guard = setInterval(() => { if (Date.now() - last > 120000) done(reject, new Error('ajudante parou de responder')); }, 5000);
+    const done = (fn, v) => { clearInterval(guard); w.terminate(); fn(v); };
+    w.onmessage = (e) => {
+      const m = e.data; started = true; last = Date.now();
+      if (m.t === 'd') onDownload(m.p);
+      else if (m.t === 'p') onProgress(m.p);
+      else if (m.t === 'done') done(resolve, { voice: m.voice, bed: m.bed });
+      else if (m.t === 'err') done(reject, new Error(m.m));
+    };
+    w.onerror = (e) => { e.preventDefault?.(); done(reject, new Error(e.message || (started ? 'ajudante caiu' : 'ajudante não abriu'))); };
+    const L = channels[0].slice(), R = (channels[1] || channels[0]).slice();
+    w.postMessage({ L, R }, [L.buffer, R.buffer]);
+  });
+}
+
 // Separa: devolve a voz e o playback (playback = música − voz, então somar os dois dá a música original)
 export async function separate(channels, { onDownload = () => {}, onProgress = () => {} } = {}) {
-  if (useLite()) return separateLite(channels, { onDownload, onProgress });
+  if (useLite()) {
+    // No celular a IA roda num "ajudante" separado que é desligado no fim: assim toda a memória dela volta
+    // para o aparelho antes de abrir a imagem do vídeo (sem isso o iPhone fechava o app nessa hora).
+    if (typeof window !== 'undefined' && window.Worker && !separate.noWorker) {
+      try { return await separateInWorker(channels, { onDownload, onProgress }); } catch (e) { console.warn('ajudante da IA falhou, rodando direto:', e.message); separate.noWorker = true; }
+    }
+    return separateLite(channels, { onDownload, onProgress });
+  }
   const proc = await loadDemucs(onDownload);
   const L = channels[0], R = channels[1] || channels[0];
   proc.onProgress = (p) => onProgress(p.progress);
