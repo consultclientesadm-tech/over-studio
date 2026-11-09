@@ -76,7 +76,7 @@ async function loadSpleeter(onProgress) {
   const sessions = [];
   for (const u of SP_PARTS) {
     const buf = await fetchPart(u, (b) => { got += b; onProgress(Math.min(1, got / SP_TOTAL)); });
-    sessions.push(await ort.InferenceSession.create(new Uint8Array(buf), { executionProviders: ['wasm'], graphOptimizationLevel: 'all' }));
+    sessions.push(await ort.InferenceSession.create(new Uint8Array(buf), { executionProviders: ['wasm'], graphOptimizationLevel: 'all', enableCpuMemArena: false, enableMemPattern: false }));
   }
   spleeter = { ort, vocals: sessions[0], accomp: sessions[1] };
   return spleeter;
@@ -172,7 +172,7 @@ export { separateLite };
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=19', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=20', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now();
     const guard = setInterval(() => { if (Date.now() - last > 120000) done(reject, new Error('ajudante parou de responder')); }, 5000);
     const done = (fn, v) => { clearInterval(guard); w.terminate(); fn(v); };
@@ -180,7 +180,7 @@ function separateInWorker(channels, { onDownload, onProgress }) {
       const m = e.data; started = true; last = Date.now();
       if (m.t === 'd') onDownload(m.p);
       else if (m.t === 'p') onProgress(m.p);
-      else if (m.t === 'done') done(resolve, { voice: m.voice, bed: m.bed });
+      else if (m.t === 'done') done(resolve, { voice: m.voice.map((v) => new Float32Array(v.b, v.o, v.n)), bed: m.bed });
       else if (m.t === 'err') done(reject, new Error(m.m));
     };
     w.onerror = (e) => { e.preventDefault?.(); done(reject, new Error(e.message || (started ? 'ajudante caiu' : 'ajudante não abriu'))); };

@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=19';
-import { TuneEditor } from './editor.js?v=19';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=19';
-import { exportVideo, exportType } from './export.js?v=19';
+import * as cover from './pipeline.js?v=20';
+import { TuneEditor } from './editor.js?v=20';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=20';
+import { exportVideo, exportType } from './export.js?v=20';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -112,14 +112,18 @@ async function videoReady() {
 const RUN = 'sc-run';
 let runInfo = null;
 function note(patch) { if (!runInfo) return; Object.assign(runInfo, patch); try { localStorage.setItem(RUN, JSON.stringify(runInfo)); } catch {} }
-function endRun() { runInfo = null; try { localStorage.removeItem(RUN); } catch {} }
+function endRun() { runInfo = null; try { localStorage.removeItem(RUN); localStorage.removeItem('sc-last'); } catch {} }
 try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
   if (last) {
     localStorage.removeItem(RUN);
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v20`;
+    try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
 } catch {}
+// registro fixo na tela inicial (o aviso some; este fica até a próxima tentativa dar certo)
+try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f) {
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80) }; note({});
   file = f;
