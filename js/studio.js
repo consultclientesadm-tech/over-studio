@@ -18,22 +18,33 @@ async function fetchPart(url, onBytes) {
   if (hit) { const b = await hit.arrayBuffer(); onBytes(b.byteLength); return b; }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`modelo ${res.status}`);
+  if (cache) {
+    // Grava direto no armazenamento do aparelho enquanto baixa (sem juntar pedaços na memória: no iPhone,
+    // juntar e copiar o modelo no primeiro uso estourava a memória e o app voltava para o início).
+    const put = cache.put(url, res.clone());
+    const reader = res.body.getReader();
+    for (;;) { const { done, value } = await reader.read(); if (done) break; onBytes(value.length); }
+    try { await put; const again = await cache.match(url); if (again) return again.arrayBuffer(); } catch { /* sem espaço */ }
+    const r2 = await fetch(url); return r2.arrayBuffer();
+  }
   const reader = res.body.getReader();
   const chunks = [];
   let n = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    n += value.length;
-    onBytes(value.length);
-  }
+  for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); n += value.length; onBytes(value.length); }
   const out = new Uint8Array(n);
   let o = 0;
   for (const c of chunks) { out.set(c, o); o += c.length; }
-  // O service worker já guarda; sem ele (navegador comum), guarda aqui
-  try { await cache?.put(url, new Response(out.slice().buffer)); } catch { /* sem espaço: baixa de novo da próxima vez */ }
   return out.buffer;
+}
+
+// Baixa o modelo em segundo plano assim que o app abre (vai direto para o armazenamento, sem ocupar memória):
+// quando a pessoa subir o vídeo, a IA já está no aparelho.
+export async function prefetchModel() {
+  try {
+    const cache = await caches.open(MODEL_CACHE);
+    for (const u of useLite() ? SP_PARTS : MODEL_PARTS) if (!(await cache.match(u))) await cache.add(u);
+    return true;
+  } catch { return false; }
 }
 
 // Celular usa a IA leve (Spleeter, ~40 MB, pouca memória). Computador usa a HTDemucs (mais fina, ~170 MB, ~2,5 GB de memória).
@@ -172,7 +183,7 @@ export { separateLite };
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=22', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=24', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now();
     const guard = setInterval(() => { if (Date.now() - last > 120000) done(reject, new Error('ajudante parou de responder')); }, 5000);
     const done = (fn, v) => { clearInterval(guard); w.terminate(); fn(v); };

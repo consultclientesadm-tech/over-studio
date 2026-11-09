@@ -2,10 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=22';
-import { TuneEditor } from './editor.js?v=22';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=22';
-import { exportVideo, exportType } from './export.js?v=22';
+import * as cover from './pipeline.js?v=24';
+import { prefetchModel } from './studio.js?v=24';
+import { TuneEditor } from './editor.js?v=24';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=24';
+import { exportVideo, exportType } from './export.js?v=24';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -82,10 +83,24 @@ const mixOpts = () => ({ reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').valu
 // ---------- 1) Vídeo ----------
 const drop = $('drop');
 $('file').onchange = () => $('file').files[0] && start($('file').files[0]);
+// o celular recarregou a página no meio? continua o mesmo vídeo, sem a pessoa precisar subir de novo
+setTimeout(async () => {
+  if (!resumeInfo) return;
+  let f = null, ref = null;
+  try { f = await idb('readonly', (st) => st.get('video')); ref = await idb('readonly', (st) => st.get('ref')); } catch {}
+  if (!f) return;
+  try { localStorage.removeItem('sc-last'); } catch {}
+  document.querySelector('.lastrun')?.remove();
+  if (ref) { refFile = ref; }
+  toast('O celular precisou recarregar a página. Continuando o seu vídeo de onde parou…', 6000);
+  start(f, (resumeInfo.tries || 1) + 1);
+}, 300);
 ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, () => drop.classList.remove('over')));
 drop.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) start(f); });
 $('newBtn').onclick = () => location.reload();
+// IA já vai para o aparelho enquanto a pessoa escolhe o vídeo (direto para o armazenamento, sem pesar na memória)
+setTimeout(() => { prefetchModel(); }, 1500);
 $('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refName').textContent = refFile ? '✓ ' + refFile.name + ' (vamos afinar pela melodia dela)' : 'Opcional: a gente pega a melodia do cantor original no seu tom e afina você por ela.'; $('refPick').classList.toggle('on', !!refFile); };
 
 const W = { audio: [0, 4], download: [4, 16], separate: [20, 62], notes: [82, 6], ref: [88, 1], refsep: [88, 9], refnotes: [97, 3] };
@@ -123,20 +138,39 @@ async function videoReady() {
 const RUN = 'sc-run';
 let runInfo = null;
 function note(patch) { if (!runInfo) return; Object.assign(runInfo, patch); try { localStorage.setItem(RUN, JSON.stringify(runInfo)); } catch {} }
-function endRun() { runInfo = null; try { localStorage.removeItem(RUN); localStorage.removeItem('sc-last'); } catch {} }
+function endRun() { runInfo = null; forget(); try { localStorage.removeItem(RUN); localStorage.removeItem('sc-last'); } catch {} }
 try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
-  if (last) {
+  if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
+  else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v22`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v24`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
 } catch {}
+// ---- Guarda o vídeo no aparelho enquanto processa: se o celular recarregar a página no meio, o app continua sozinho ----
+function idb(mode, fn) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('studio-cover', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('f');
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => { const db = r.result, t = db.transaction('f', mode), st = t.objectStore('f'); let out; const q = fn(st); if (q) q.onsuccess = () => (out = q.result); t.oncomplete = () => { db.close(); res(out); }; t.onerror = () => { db.close(); rej(t.error); }; };
+  });
+}
+const keep = (f, ref) => idb('readwrite', (st) => { st.put(f, 'video'); if (ref) st.put(ref, 'ref'); else st.delete('ref'); }).catch(() => {});
+const forget = () => idb('readwrite', (st) => st.clear()).catch(() => {});
+let resumeInfo = null;
+try {
+  const last = JSON.parse(localStorage.getItem(RUN + '-resume') || 'null');
+  localStorage.removeItem(RUN + '-resume');
+  if (last && (last.tries || 1) < 2) resumeInfo = last;
+} catch {}
 // registro fixo na tela inicial (o aviso some; este fica até a próxima tentativa dar certo)
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
-async function start(f) {
-  runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80) }; note({});
+async function start(f, tries = 1) {
+  runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
+  if (tries === 1) await Promise.race([keep(f, refFile), new Promise((r) => setTimeout(r, 5000))]);
   file = f;
   app.dataset.screen = 'work'; progress('audio', 0);
   $('topinfo').textContent = f.name;

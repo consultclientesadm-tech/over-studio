@@ -1,5 +1,5 @@
 // Ajudante da IA leve (celular): separa a voz aqui e depois é desligado, devolvendo toda a memória.
-import { separateLite } from './studio.js?v=22';
+import { separateLite } from './studio.js?v=24';
 onmessage = async (e) => {
   try {
     const { L, R } = e.data;
