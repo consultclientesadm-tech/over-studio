@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=11';
-import { TuneEditor } from './editor.js?v=11';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=11';
-import { exportVideo, exportType } from './export.js?v=11';
+import * as cover from './pipeline.js?v=12';
+import { TuneEditor } from './editor.js?v=12';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=12';
+import { exportVideo, exportType } from './export.js?v=12';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -20,10 +20,33 @@ let step = 2, side = 'B', pending = false;
 let look = null, auto = null, amount = 1; // look = filtro escolhido; auto = Colorista
 const undo = [];
 const video = $('video');
-const players = { A: new Audio(), B: new Audio(), C: new Audio() };
-Object.values(players).forEach((a) => (a.preload = 'auto'));
-const urls = {};
-const wav = (key, ch) => { if (urls[key]) URL.revokeObjectURL(urls[key]); urls[key] = URL.createObjectURL(cover.toWav(ch, cover.SR)); return urls[key]; };
+// Som da prévia pelo Web Audio, direto da memória: sem 3 players <audio> e sem 3 arquivos WAV
+// (isso dobrava o uso de memória e derrubava o iPhone). Só um trecho tocando por vez.
+const tracks = { orig: null, raw: null, master: null };
+let actx = null, node = null, buf = null, bufKey = '', startAt = 0, offset = 0, curKey = 'raw';
+const AC = () => {
+  if (actx) return actx;
+  const C = window.AudioContext || window.webkitAudioContext;
+  try { actx = new C({ sampleRate: cover.SR }); } catch { actx = new C(); }
+  return actx;
+};
+function bufFor(key) {
+  if (bufKey === key && buf) return buf;
+  const ch = tracks[key] || tracks.raw; buf = null;
+  const b = AC().createBuffer(2, ch[0].length, cover.SR);
+  b.copyToChannel(ch[0], 0); b.copyToChannel(ch[1] || ch[0], 1);
+  buf = b; bufKey = key; return b;
+}
+const aTime = () => (node ? offset + AC().currentTime - startAt : offset);
+function aStart(t) {
+  aStop(); offset = Math.max(0, t);
+  const n = AC().createBufferSource(); n.buffer = bufFor(curKey); n.connect(AC().destination);
+  n.onended = () => { if (node === n) { offset = aTime(); node = null; if (offset >= n.buffer.duration - 0.05) pause(); } };
+  AC().resume?.(); startAt = AC().currentTime; n.start(0, offset); node = n;
+}
+function aStop() { if (node) { const n = node; offset = aTime(); node = null; try { n.stop(); } catch {} } }
+function aKey(key) { if (key === curKey && bufKey === key) return; const was = !!node, t = aTime(); aStop(); curKey = key; bufKey = ''; buf = null; offset = t; if (was) aStart(t); }
+const fresh = (key) => { if (bufKey === key) { const t = aTime(), was = !!node; aStop(); bufKey = ''; buf = null; offset = t; if (was && curKey === key) aStart(t); } };
 const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('q').dataset.global || 1, scaleSnap: $('mSnap').checked,
   straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked });
 const mixOpts = () => ({ reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').value, fadeOut: +$('mFadeOut').value, trim: $('mTrim').checked });
@@ -87,22 +110,21 @@ async function start(f) {
   $('topinfo').textContent = f.name;
   $('steps').classList.toggle('ref', !!refFile);
   try {
-    video.src = URL.createObjectURL(f); video.load();
-    kick(); // o iPhone só carrega o vídeo depois de um play: toca mudo um instante, já no toque do usuário
-    await videoReady();
-    if (isFinite(video.duration) && video.duration > MAX_SEC + 15) throw new Error(`LIMITE`);
-    note({ dur: isFinite(video.duration) ? fmt(video.duration) : '' });
+    // primeiro só o áudio (o vídeo 4K aberto ao mesmo tempo que a IA estourava a memória do iPhone)
     t0 = performance.now(); lastEta = 0; progress.sepStart = null; $('eta').textContent = '';
-    state = await cover.analyze(f, { ...tuneOpts(), reference: refFile, autoTune: false }, progress);
-    wav('orig', state.orig);
-    wav('raw', cover.rawMix(state));
+    state = await cover.analyze(f, { ...tuneOpts(), reference: refFile, autoTune: false, maxSec: MAX_SEC + 15 }, progress);
+    note({ dur: fmt(state.duration), stage: 'Abrindo a imagem do vídeo', pct: 99 });
+    tracks.orig = state.orig; tracks.raw = cover.rawMix(state);
+    video.src = URL.createObjectURL(f); video.load();
+    kick();
+    await videoReady();
     note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
     endRun();
   } catch (e) {
     console.error(e); endRun();
     app.dataset.screen = 'home';
-    toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
+    toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(e.duration || video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
       : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);
   }
 }
@@ -199,10 +221,10 @@ function refreshAB() {
   for (const k of ['A', 'B', 'C']) {
     if (!src[k]) continue;
     $('ab' + k + 'n').textContent = src[k].name; $('ab' + k + 'txt').textContent = src[k].label;
-    const url = urls[src[k].audio];
-    if (url && players[k].src !== url) { const t = clipT(); players[k].src = url; players[k].currentTime = t; }
+
     $('ab' + k).classList.toggle('on', side === k);
   }
+  aKey(src[side].audio);
   $('tag').textContent = src[side].name; $('tag').classList.toggle('before', side === 'A');
   grader.set(src[side].filter || ORIGINAL, amount);
   loop.dirty = true;
@@ -214,25 +236,23 @@ $('ab').onclick = (e) => {
 };
 
 // Player: um áudio de cada vez (o do lado escolhido), preso no relógio do vídeo
-const cur = () => players[side];
-const clipT = () => (cur() && !isNaN(cur().currentTime) ? cur().currentTime : +$('seek').value || 0);
+const clipT = () => (node ? aTime() : +$('seek').value || 0);
 const playing = () => want;
 function seek(t) {
   t = Math.max(0, Math.min(t, state.duration - 0.05));
-  for (const p of Object.values(players)) if (p.src) p.currentTime = t;
+  if (node) aStart(t); else offset = t;
   video.currentTime = t;
   $('seek').value = t; $('tNow').textContent = fmt(t);
   editor?.setTime(t);
 }
-function pause() { want = false; Object.values(players).forEach((p) => p.pause()); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
+function pause() { want = false; aStop(); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
 let want = false; // a pessoa apertou play
 function play() {
   if (playing()) return pause();
   const t = +$('seek').value;
   want = true;
   if (Math.abs(video.currentTime - t) > 0.05) video.currentTime = t;
-  cur().currentTime = t;
-  video.play().catch(() => {}); cur().play().catch(() => {});
+  video.play().catch(() => {}); aStart(t);
   $('play').textContent = '❚❚';
 }
 
@@ -245,14 +265,13 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape') theater(false); });
 $('back5').onclick = () => seek(clipT() - 5);
 $('fwd5').onclick = () => seek(clipT() + 5);
 $('seek').oninput = () => seek(+$('seek').value);
-Object.values(players).forEach((p) => (p.onended = () => pause()));
 video.onseeked = () => { grab(); loop.dirty = true; };
 function loop(now) {
   if (app.dataset.screen !== 'studio') return;
   if (playing()) {
     // O som nunca para (é ele que a pessoa está avaliando). O vídeo roda solto e só é ajustado de leve
     // pela velocidade; pulo só se ficar mais de 1 s atrás, e no máximo um a cada 3 s (pular seguido congela).
-    const t = cur().currentTime, drift = video.currentTime - t;
+    const t = aTime(), drift = video.currentTime - t;
     if (!video.seeking && Math.abs(drift) > 1 && now - (loop.jump || 0) > 3000) { video.currentTime = t; loop.jump = now; }
     else if (!video.seeking) { const r = Math.abs(drift) < 0.05 ? 1 : 1 - Math.max(-0.1, Math.min(0.1, drift * 0.5)); if (Math.abs(video.playbackRate - r) > 0.01) video.playbackRate = r; }
     if (video.paused && !video.ended) video.play().catch(() => {});
@@ -285,7 +304,7 @@ async function doTune() {
     await cover.retune(state, tuneOpts(), (s, p) => busyPct(p));
     await cover.verify(state);
     tuned = true; setPending(false);
-    wav('raw', cover.rawMix(state));
+    tracks.raw = cover.rawMix(state); fresh('raw');
     if (mastered) await doMaster(false);
     editor.load(state); refreshChips(); side = 'B'; refreshAB();
     toast(`Afinado: ${state.after.band}% da voz na faixa verde. Compare no ANTES | DEPOIS.`);
@@ -296,7 +315,7 @@ $('tuneAuto').onclick = doTune;
 $('tuneAgain').onclick = () => { pushUndo(); doTune(); };
 $('tuneUndo').onclick = async () => {
   pause(); cover.untune(state, tuneOpts()); tuned = false;
-  wav('raw', cover.rawMix(state));
+  tracks.raw = cover.rawMix(state); fresh('raw');
   if (mastered) { busy(true, 'Refazendo a mix…'); await doMaster(false); busy(false); }
   editor.load(state); refreshChips(); refreshAB(); toast('Afinação desfeita: a voz voltou a ser a original.');
 };
@@ -358,7 +377,7 @@ $('mRefFile').onchange = async () => {
 async function doMaster(show = true) {
   if (show) { pause(); busy(true, 'Mixando e masterizando…'); }
   mastered = await cover.render(state, mixOpts());
-  wav('master', mastered.full);
+  tracks.master = mastered.full; fresh('master');
   $('mixApply').hidden = true; $('mixUndo').hidden = false;
   if (show) { busy(false); side = 'C'; refreshAB(); toast('Mix e master prontos. Alterne entre ORIGINAL, AFINADA e MIXADA.'); }
 }
@@ -441,9 +460,9 @@ $('exportBtn').onclick = async () => {
   $('exportBtn').disabled = false;
   seek(0);
 };
-$('dlWav').onclick = () => { const a = document.createElement('a'); a.href = urls[mastered ? 'master' : 'raw']; a.download = 'studio-cover-audio.wav'; a.click(); };
+$('dlWav').onclick = () => { const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = 'studio-cover-audio.wav'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
 
-window.studio = { audio: () => players[side], get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
+window.studio = { audio: () => ({ currentTime: aTime() }), get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
 
 // ---------- Ajuda: com o "?" do topo ligado, tocar em qualquer botão mostra o que ele faz (em vez de executar) ----------
 let helpOn = false;
