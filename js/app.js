@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=15';
-import { TuneEditor } from './editor.js?v=15';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=15';
-import { exportVideo, exportType } from './export.js?v=15';
+import * as cover from './pipeline.js?v=17';
+import { TuneEditor } from './editor.js?v=17';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=17';
+import { exportVideo, exportType } from './export.js?v=17';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -47,13 +47,20 @@ function aPlay() {
   if (p) p.catch((e) => { if (e.name === 'NotAllowedError' && !aWarned) { aWarned = true; toast('Toque no ▶ para ouvir o som.'); } });
 }
 function aStart(t) { loadKey(curKey); setT(t); aPlay(); }
+// Relógio da prévia: o tempo corre pelo relógio do aparelho, a partir do play. Som e imagem tocam soltos na
+// velocidade normal a partir do mesmo ponto; nada fica perguntando a posição um do outro (no iPhone essa
+// posição vem errada e fazia o vídeo pular sem parar, parecendo congelado).
+const clk = { t0: 0, at: 0, run: false };
+function clkSet(t) { clk.t0 = Math.max(0, t); clk.at = performance.now(); }
+const ct = () => (clk.run ? clk.t0 + (performance.now() - clk.at) / 1000 : clk.t0);
+player.addEventListener('playing', () => { if (want && Math.abs(player.currentTime - ct()) < 1.5) clkSet(player.currentTime); });
 function aStop() { aTime(); player.pause(); }
 function aKey(key) {
   if (key === curKey && srcKey === key) return;
-  const t = aTime(), was = want; player.pause(); curKey = key;
+  const t = ct(), was = want; player.pause(); curKey = key;
   if (tracks[key] || tracks.raw) { loadKey(key); setT(t); if (was) aPlay(); }
 }
-const fresh = (key) => { if (srcKey !== key) return; srcKey = ''; if (curKey === key) { const t = aTime(); player.pause(); loadKey(key); setT(t); if (want) aPlay(); } };
+const fresh = (key) => { if (srcKey !== key) return; srcKey = ''; if (curKey === key) { const t = ct(); player.pause(); loadKey(key); setT(t); if (want) aPlay(); } };
 player.onended = () => pause();
 // iPhone: libera o som no primeiro toque na tela, para os toques seguintes já tocarem
 addEventListener('touchend', function unlock() { if (player.src) return removeEventListener('touchend', unlock); player.muted = true; const p = player.play(); if (p) p.then(() => { player.pause(); player.muted = false; }).catch(() => { player.muted = false; }); removeEventListener('touchend', unlock); }, { passive: true });
@@ -257,39 +264,54 @@ $('ab').onclick = (e) => {
 };
 
 // Player: um áudio de cada vez (o do lado escolhido), preso no relógio do vídeo
-const clipT = () => (state ? aTime() : +$('seek').value || 0);
+const clipT = () => (state ? ct() : +$('seek').value || 0);
 const playing = () => want;
 function seek(t) {
   t = Math.max(0, Math.min(t, state.duration - 0.05));
-  setT(t);
+  setT(t); clkSet(t);
   video.currentTime = t;
   $('seek').value = t; $('tNow').textContent = fmt(t);
   editor?.setTime(t);
 }
 // ---- Vigia da imagem: se o vídeo parar enquanto o som toca, tenta destravar e mostra o motivo na tela ----
 let vErr = '';
-function vplay() { const p = video.play(); if (p) p.then(() => { vErr = ''; }).catch((e) => { vErr = e.name || 'erro'; }); }
+function vplay() { wd.fAt = performance.now(); const p = video.play(); if (p) p.then(() => { vErr = ''; }).catch((e) => { vErr = e.name || 'erro'; }); }
 const diag = document.createElement('div'); diag.id = 'diag'; diag.hidden = true; $('viewer').appendChild(diag);
-const wd = { ct: -1, at: 0, fix: 0, shown: false };
+const wd = { ct: -1, at: 0, fix: 0, shown: false, frames: 0, fAt: 0, fN: 0 };
+// conta os quadros que o aparelho realmente desenha na tela (o tempo do vídeo pode andar sem a imagem mudar)
+if (video.requestVideoFrameCallback) { const onF = () => { wd.frames++; video.requestVideoFrameCallback(onF); }; video.requestVideoFrameCallback(onF); }
 function watchdog(now) {
   if (!want || video.seeking) { wd.ct = video.currentTime; wd.at = now; return; }
-  if (video.currentTime !== wd.ct) { wd.ct = video.currentTime; wd.at = now; if (wd.shown) { diag.hidden = true; wd.shown = false; } return; }
-  const still = now - wd.at;
-  if (still > 1200 && now - wd.fix > 3000) { wd.fix = now; video.currentTime = aTime(); vplay(); } // 1ª tentativa: reposiciona e dá play
+  const moved = video.currentTime !== wd.ct;
+  if (moved) { wd.ct = video.currentTime; wd.at = now; }
+  // tempo andando mas nenhum quadro desenhado há 2,5 s: a imagem está parada mesmo
+  if (video.requestVideoFrameCallback) { if (wd.frames !== wd.fN) { wd.fN = wd.frames; wd.fAt = now; } }
+  const noPaint = video.requestVideoFrameCallback && wd.fAt && now - wd.fAt > 2500;
+  if (moved && !noPaint) { if (wd.shown) { diag.hidden = true; wd.shown = false; } return; }
+  const still = noPaint ? now - wd.fAt : now - wd.at;
+  if (still > 1200 && now - wd.fix > 3000) { wd.fix = now; video.currentTime = ct(); vplay(); } // 1ª tentativa: reposiciona e dá play
   if (still > 2500 && !wd.shown) {
     wd.shown = true;
-    const info = `imagem parada · estado ${video.readyState}/${video.networkState} · ${video.paused ? 'pausado' : 'tocando'}${vErr ? ' · ' + vErr : ''}${video.error ? ' · erro ' + video.error.code : ''} · ${video.videoWidth}×${video.videoHeight} · ${(file && Math.round(file.size / 1048576)) || '?'} MB`;
+    const info = `${noPaint ? 'tempo anda, imagem não desenha' : 'imagem parada'} · estado ${video.readyState}/${video.networkState} · ${video.paused ? 'pausado' : 'tocando'}${vErr ? ' · ' + vErr : ''}${video.error ? ' · erro ' + video.error.code : ''} · ${video.videoWidth}×${video.videoHeight} · ${(file && Math.round(file.size / 1048576)) || '?'} MB`;
     diag.textContent = vErr === 'NotAllowedError' ? 'Toque aqui para soltar a imagem' : info; diag.hidden = false;
     console.warn(info); try { localStorage.setItem('sc-diag', info); } catch {}
   }
 }
+// toque no número da versão (ao lado do logo): mostra os números da prévia ao vivo, para um print
+let diagLive = false;
+document.querySelector('.brand .ver')?.addEventListener('click', () => { diagLive = !diagLive; diag.hidden = !diagLive; });
+function diagTick(now) {
+  if (!diagLive || now - (diagTick.t || 0) < 250) return; diagTick.t = now;
+  diag.hidden = false;
+  diag.textContent = `imagem ${video.currentTime.toFixed(2)} · som ${player.currentTime.toFixed(2)} · relógio ${ct().toFixed(2)} · quadros ${wd.frames} · estado ${video.readyState}/${player.readyState} · vel ${video.playbackRate} · ${video.paused ? 'img pausada' : 'img tocando'}${vErr ? ' · ' + vErr : ''} · ${video.videoWidth}×${video.videoHeight}`;
+}
 diag.onclick = () => { vplay(); diag.hidden = true; wd.shown = false; };
-function pause() { want = false; aStop(); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
+function pause() { clk.t0 = ct(); clk.run = false; want = false; aStop(); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
 let want = false; // a pessoa apertou play
 function play() {
   if (playing()) return pause();
   const t = +$('seek').value;
-  want = true;
+  want = true; clkSet(t); clk.run = true;
   if (Math.abs(video.currentTime - t) > 0.05) video.currentTime = t;
   vplay(); aStart(t); wd.ct = -1;
   $('play').textContent = '❚❚';
@@ -318,8 +340,8 @@ function loop(now) {
     // pela velocidade; pulo só se ficar mais de 1 s atrás, e no máximo um a cada 3 s (pular seguido congela).
     // Ajuste raro: só muda a velocidade quando passa de 0,12 s e volta ao normal abaixo de 0,04 s
     // (mexer a cada quadro trava o vídeo no iPhone). Pulo só acima de 0,8 s, no máximo um a cada 4 s.
-    const t = aTime(), drift = video.currentTime - t, ad = Math.abs(drift);
-    if (!video.seeking && ad > 0.8 && now - (loop.jump || 0) > 4000) { video.currentTime = t + 0.05; loop.jump = now; video.playbackRate = 1; }
+    const t = ct(), drift = video.currentTime - t, ad = Math.abs(drift);
+    if (!video.seeking && ad > 1.5 && now - (loop.jump || 0) > 6000) { video.currentTime = t + 0.05; loop.jump = now; video.playbackRate = 1; }
     else if (!video.seeking) {
       const r = video.playbackRate;
       if (ad > 0.12 && r === 1) video.playbackRate = drift > 0 ? 0.94 : 1.06;
@@ -331,7 +353,7 @@ function loop(now) {
   }
   if (lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
   if (loop.dirty && !playing()) { grader.draw(frame); loop.dirty = false; }
-  watchdog(now);
+  watchdog(now); diagTick(now);
   $('viewer').classList.toggle('playing', playing());
   requestAnimationFrame(loop);
 }
