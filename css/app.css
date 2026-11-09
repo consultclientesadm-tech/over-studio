@@ -372,3 +372,8 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
   border-radius: 10px; padding: 6px 10px; font: 600 11px/1.35 'Space Grotesk', sans-serif; text-align: center; cursor: pointer; }
 
 .brand .ver { font: 600 10px 'Space Grotesk', sans-serif; opacity: .45; margin-left: 6px; letter-spacing: 0; }
+
+/* Tocando: some a foto parada (canvas) e aparece o vídeo do aparelho. Precisa do #id: a regra "#screen" lá em
+   cima ganhava das classes e deixava a foto por cima do vídeo o tempo todo (a "prévia congelada"). */
+#viewer.live.playing #screen { display: none; }
+#viewer.live:not(.playing) #screen { display: block; }

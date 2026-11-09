@@ -108,6 +108,13 @@ try {
     const stalls = sync.slice(4).filter((x, i, arr) => i > 0 && x[0] - arr[i - 1][0] < 0.1).length, drift = Math.max(...sync.slice(4).map((x) => Math.abs(x[0] - x[1])));
     check(stalls === 0 && drift < 0.2, `${name}: prévia rodando sem congelar (${stalls} travadas, maior diferença vídeo×áudio ${(drift * 1000).toFixed(0)} ms)`);
     await page.screenshot({ path: `${dir}/${name}-6-cor.png` });
+    // o que a pessoa VÊ tem que andar: duas fotos da prévia tocando, com 1 s de diferença, precisam ser diferentes
+    await page.click('#play'); await page.waitForTimeout(800);
+    const shot1 = await page.locator('#viewer').screenshot(); await page.waitForTimeout(1000);
+    const shot2 = await page.locator('#viewer').screenshot();
+    const vis = await page.evaluate(() => getComputedStyle(document.getElementById('screen')).display === 'none');
+    await page.click('#play');
+    check(vis && !shot1.equals(shot2), `${name}: a imagem da prévia anda na tela enquanto toca`);
     // etapa 5
     await page.click('#next'); await page.waitForTimeout(300);
     if (name === 'computador') {
@@ -119,7 +126,7 @@ try {
     }
     await page.screenshot({ path: `${dir}/${name}-7-exportar.png` });
     await page.click('#watchBtn'); await page.waitForTimeout(1500);
-    const th = await page.evaluate(() => { const r = document.getElementById('screen').getBoundingClientRect(); return [document.getElementById('app').classList.contains('theater'), Math.round(r.height), innerHeight]; });
+    const th = await page.evaluate(() => { const r = document.getElementById('video').getBoundingClientRect(); return [document.getElementById('app').classList.contains('theater'), Math.round(r.height), innerHeight]; });
     check(th[0] && th[1] > th[2] * 0.6, `${name}: prévia em tela cheia (${th[1]}px de ${th[2]}px)`);
     await page.screenshot({ path: `${dir}/${name}-8-telacheia.png` });
     await page.click('#fsBtn');
