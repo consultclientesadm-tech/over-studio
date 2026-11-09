@@ -1,6 +1,6 @@
 // Tela da afinação: mostra cada nota cantada, a faixa verde em volta da nota certa,
 // a voz original (vermelha onde saiu da faixa) e a voz afinada (verde).
-import { noteName } from './music.js?v=20';
+import { noteName } from './music.js?v=21';
 
 const PX_S = 90; // pixels por segundo
 const ROW = 16; // pixels por semitom

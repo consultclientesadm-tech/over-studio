@@ -172,7 +172,7 @@ export { separateLite };
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=20', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=21', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now();
     const guard = setInterval(() => { if (Date.now() - last > 120000) done(reject, new Error('ajudante parou de responder')); }, 5000);
     const done = (fn, v) => { clearInterval(guard); w.terminate(); fn(v); };

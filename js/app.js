@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=20';
-import { TuneEditor } from './editor.js?v=20';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=20';
-import { exportVideo, exportType } from './export.js?v=20';
+import * as cover from './pipeline.js?v=21';
+import { TuneEditor } from './editor.js?v=21';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=21';
+import { exportVideo, exportType } from './export.js?v=21';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -117,7 +117,7 @@ try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
   if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v20`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v21`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -200,7 +200,7 @@ $('quickAll').onclick = async () => {
   if (!tuned) return;
   busy(true, 'Mixando e masterizando…'); await doMaster(false);
   busy(true, 'Colorista ajustando a cor…'); try { auto = await autoGrade(video); } catch (e) { console.warn(e); }
-  look = { id: 'auto', name: 'Auto · Colorista' }; busy(false);
+  look = FILTERS[0]; busy(false); // pronto já sai com o visual de câmera de cinema
   go(5); toast('Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.', 6000);
 };
 
@@ -314,7 +314,10 @@ function pause() { clk.t0 = ct(); clk.run = false; want = false; aStop(); video.
 let want = false; // a pessoa apertou play
 function play() {
   if (playing()) return pause();
-  const t = +$('seek').value;
+  let t = +$('seek').value;
+  // terminou? o play recomeça do início
+  const s0 = mastered && step >= 3 ? mastered.start || 0 : 0, e0 = mastered && step >= 3 ? mastered.end || state.duration : state.duration;
+  if (t >= Math.min(e0, state.duration) - 0.3 || player.ended) { t = s0; seek(t); }
   want = true; clkSet(t); clk.run = true;
   if (Math.abs(video.currentTime - t) > 0.05) video.currentTime = t;
   vplay(); aStart(t); wd.ct = -1;
@@ -344,8 +347,11 @@ function loop(now) {
     // pela velocidade; pulo só se ficar mais de 1 s atrás, e no máximo um a cada 3 s (pular seguido congela).
     // Ajuste raro: só muda a velocidade quando passa de 0,12 s e volta ao normal abaixo de 0,04 s
     // (mexer a cada quadro trava o vídeo no iPhone). Pulo só acima de 0,8 s, no máximo um a cada 4 s.
+    // o som manda (a posição dele é confiável, os números do iPhone mostraram); o relógio só cobre enquanto o som carrega
+    const aOk = !player.paused && player.readyState >= 2 && pendingT == null;
+    if (aOk) clkSet(player.currentTime);
     const t = ct(), drift = video.currentTime - t, ad = Math.abs(drift);
-    if (!video.seeking && ad > 1.5 && now - (loop.jump || 0) > 6000) { video.currentTime = t + 0.05; loop.jump = now; video.playbackRate = 1; }
+    if (!video.seeking && ad > 0.35 && now - (loop.jump || 0) > 2500) { video.currentTime = t + 0.08; loop.jump = now; video.playbackRate = 1; }
     else if (!video.seeking) {
       const r = video.playbackRate;
       if (ad > 0.12 && r === 1) video.playbackRate = drift > 0 ? 0.94 : 1.06;
