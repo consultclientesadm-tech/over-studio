@@ -64,7 +64,7 @@ async function loadOrt() {
     wasm: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.wasm', import.meta.url).href,
   };
   // Com o service worker desta pasta (coi-sw.js) a página fica isolada e a IA usa vários núcleos
-  ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1)) : 1;
+  ort.env.wasm.numThreads = self.crossOriginIsolated && !useLite() ? Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1)) : 1;
   return ort;
 }
 

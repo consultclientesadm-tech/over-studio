@@ -3,7 +3,10 @@
 // O resto do site (pixel, checkout) não passa por aqui.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+const MOBILE = /iPhone|iPad|iPod|Android|Mobile/i.test(self.navigator.userAgent || '');
+if (MOBILE) self.addEventListener('activate', () => self.registration.unregister());
 self.addEventListener('fetch', (e) => {
+  if (MOBILE) return;
   const r = e.request;
   if (r.cache === 'only-if-cached' && r.mode !== 'same-origin') return;
   const sameOrigin = new URL(r.url).origin === self.location.origin;

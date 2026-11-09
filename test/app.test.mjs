@@ -12,7 +12,7 @@ let fail = 0;
 const check = (ok, msg) => { console.log(ok ? '  ok ' : '  FALHOU', msg); if (!ok) fail++; };
 try {
   for (const [name, vp] of [['celular', { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true }], ['computador', { width: 1440, height: 900, deviceScaleFactor: 1 }]]) {
-    const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor, isMobile: vp.isMobile, hasTouch: vp.hasTouch });
+    const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor, isMobile: vp.isMobile, hasTouch: vp.hasTouch, userAgent: vp.isMobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' : undefined });
     const page = await ctx.newPage();
     await page.route(/fonts\.(googleapis|gstatic)/, (r) => r.abort()); // sem internet no teste
     page.on('pageerror', (e) => console.log('[erro]', e.message));
@@ -100,6 +100,13 @@ try {
     const clip = p1.filter((v, i) => i % 4 < 3 && v >= 254).length / (p1.length * 0.75);
     check(clip < 0.05, `${name}: filtro sem estourar (${(clip * 100).toFixed(1)}% de pixels no branco)`);
     await page.click('#filters button:nth-child(4)'); await page.waitForTimeout(300);
+    const sync = await page.evaluate(async () => {
+      document.getElementById('play').click(); const v = document.getElementById('video'); const out = [];
+      for (let i = 0; i < 16; i++) { await new Promise((r) => setTimeout(r, 250)); const a = window.studio.audio(); out.push([v.currentTime, a.currentTime]); }
+      document.getElementById('play').click(); return out;
+    });
+    const stalls = sync.slice(4).filter((x, i, arr) => i > 0 && x[0] - arr[i - 1][0] < 0.1).length, drift = Math.max(...sync.slice(4).map((x) => Math.abs(x[0] - x[1])));
+    check(stalls === 0 && drift < 0.2, `${name}: prévia rodando sem congelar (${stalls} travadas, maior diferença vídeo×áudio ${(drift * 1000).toFixed(0)} ms)`);
     await page.screenshot({ path: `${dir}/${name}-6-cor.png` });
     // etapa 5
     await page.click('#next'); await page.waitForTimeout(300);

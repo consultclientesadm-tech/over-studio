@@ -8,10 +8,10 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=9';
-import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=9';
-import { referenceNotes, applyReference } from './reference.js?v=9';
-import { decodeVideoAudio } from './demux.js?v=9';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=10';
+import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=10';
+import { referenceNotes, applyReference } from './reference.js?v=10';
+import { decodeVideoAudio } from './demux.js?v=10';
 
 export const SR = STUDIO_SR;
 
@@ -38,6 +38,8 @@ export async function audioFromVideo(file, sr = SR) {
   if (/\.(mov|mp4|m4v|m4a)$/i.test(file.name || '') || /video\/(mp4|quicktime)|audio\/mp4/.test(file.type || '')) {
     try { return await decodeVideoAudio(file, sr); } catch (e) { console.warn('leitura direta do AAC falhou:', e.message); }
   }
+  // ler o arquivo inteiro na memória derruba o celular com vídeo grande
+  if (file.size > 250 * 1048576) throw new Error(`Não consegui tirar o áudio desse vídeo (${Math.round(file.size / 1048576)} MB). Tente exportar em MP4 1080p e subir de novo.`);
   const buf = await file.arrayBuffer();
   const ctx = new OfflineAudioContext(2, 1, sr);
   const ab = await ctx.decodeAudioData(buf);

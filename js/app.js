@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=9';
-import { TuneEditor } from './editor.js?v=9';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=9';
-import { exportVideo, exportType } from './export.js?v=9';
+import * as cover from './pipeline.js?v=10';
+import { TuneEditor } from './editor.js?v=10';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=10';
+import { exportVideo, exportType } from './export.js?v=10';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -42,6 +42,7 @@ const LABEL = { audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'S
 const MAX_SEC = 180; // limite de duração (3 minutos)
 let t0 = 0, lastEta = 0;
 function progress(st, p) {
+  note({ stage: LABEL[st] || st, pct: Math.round(((W[st] || [0, 0])[0]) + ((W[st] || [0, 0])[1]) * p) });
   const [a, w] = W[st] || [0, 0];
   const v = Math.min(100, Math.round(a + w * p));
   // tempo que falta, pela velocidade da separação (a parte que demora)
@@ -65,10 +66,22 @@ function kick() { try { const p = video.play(); if (p) p.then(() => video.pause(
 async function videoReady() {
   const ok = () => video.readyState >= 2 || (video.readyState >= 1 && video.videoWidth > 0);
   for (let i = 0; i < 40 && !ok(); i++) { if (i === 10 || i === 25) kick(); await new Promise((r) => setTimeout(r, 200)); }
-  if (!video.videoWidth) throw new Error('Não consegui abrir a imagem desse vídeo. Tente MP4 ou MOV do celular.');
-  video.pause();
+  video.pause(); // sem quadro ainda? segue mesmo assim: o iPhone entrega a imagem quando tocar
 }
+// Diário da última tentativa: se o celular fechar a página no meio, na volta o app conta em que ponto foi
+const RUN = 'sc-run';
+let runInfo = null;
+function note(patch) { if (!runInfo) return; Object.assign(runInfo, patch); try { localStorage.setItem(RUN, JSON.stringify(runInfo)); } catch {} }
+function endRun() { runInfo = null; try { localStorage.removeItem(RUN); } catch {} }
+try {
+  const last = JSON.parse(localStorage.getItem(RUN) || 'null');
+  if (last) {
+    localStorage.removeItem(RUN);
+    setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%). Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
+  }
+} catch {}
 async function start(f) {
+  runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80) }; note({});
   file = f;
   app.dataset.screen = 'work'; progress('audio', 0);
   $('topinfo').textContent = f.name;
@@ -77,14 +90,17 @@ async function start(f) {
     video.src = URL.createObjectURL(f); video.load();
     kick(); // o iPhone só carrega o vídeo depois de um play: toca mudo um instante, já no toque do usuário
     await videoReady();
-    if (video.duration > MAX_SEC + 15) throw new Error(`LIMITE`);
+    if (isFinite(video.duration) && video.duration > MAX_SEC + 15) throw new Error(`LIMITE`);
+    note({ dur: isFinite(video.duration) ? fmt(video.duration) : '' });
     t0 = performance.now(); lastEta = 0; progress.sepStart = null; $('eta').textContent = '';
     state = await cover.analyze(f, { ...tuneOpts(), reference: refFile, autoTune: false }, progress);
     wav('orig', state.orig);
     wav('raw', cover.rawMix(state));
+    note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
+    endRun();
   } catch (e) {
-    console.error(e);
+    console.error(e); endRun();
     app.dataset.screen = 'home';
     toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
       : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);
@@ -199,8 +215,8 @@ $('ab').onclick = (e) => {
 
 // Player: um áudio de cada vez (o do lado escolhido), preso no relógio do vídeo
 const cur = () => players[side];
-const clipT = () => (cur() && !isNaN(cur().currentTime) ? cur().currentTime : +$('seek').value || 0);
-const playing = () => !!cur() && !cur().paused;
+const clipT = () => (!isNaN(video.currentTime) && video.readyState >= 1 ? video.currentTime : +$('seek').value || 0);
+const playing = () => want;
 function seek(t) {
   t = Math.max(0, Math.min(t, state.duration - 0.05));
   for (const p of Object.values(players)) if (p.src) p.currentTime = t;
@@ -208,14 +224,21 @@ function seek(t) {
   $('seek').value = t; $('tNow').textContent = fmt(t);
   editor?.setTime(t);
 }
-function pause() { Object.values(players).forEach((p) => p.pause()); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
+function pause() { want = false; Object.values(players).forEach((p) => p.pause()); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
+let want = false; // a pessoa apertou play
 function play() {
   if (playing()) return pause();
   const t = +$('seek').value;
-  video.currentTime = t; cur().currentTime = t;
-  cur().play(); video.play();
+  want = true;
+  if (Math.abs(video.currentTime - t) > 0.05) video.currentTime = t;
+  cur().currentTime = t;
+  video.play().catch(() => {}); cur().play().catch(() => {});
   $('play').textContent = '❚❚';
 }
+// vídeo carregando um pedaço: o áudio espera junto, e volta no mesmo ponto
+video.addEventListener('waiting', () => { if (want) cur().pause(); });
+video.addEventListener('playing', () => { if (want) { cur().currentTime = video.currentTime; cur().play().catch(() => {}); } });
+video.addEventListener('ended', () => pause());
 $('play').onclick = play;
 // Prévia em tela cheia (a mesma prévia, só que grande; o arquivo final sai em 1080p)
 function theater(on) { app.classList.toggle('theater', on); $('fsTxt').textContent = on ? '✕ Fechar' : '⛶ Tela cheia'; loop.dirty = true; }
@@ -230,10 +253,10 @@ video.onseeked = () => { grab(); loop.dirty = true; };
 function loop(now) {
   if (app.dataset.screen !== 'studio') return;
   if (playing()) {
-    const t = cur().currentTime, drift = video.currentTime - t;
-    // o áudio manda; o vídeo acompanha acelerando ou freando um pouco, sem ficar pulando (pular trava o celular)
-    if (Math.abs(drift) > 0.3) { video.currentTime = t; video.playbackRate = 1; }
-    else video.playbackRate = Math.abs(drift) > 0.04 ? 1 - Math.max(-0.08, Math.min(0.08, drift)) : 1;
+    // o VÍDEO manda no relógio (como no CapCut): ele roda solto, sem pulos; o áudio é que acompanha.
+    // Pular o vídeo para acertar a sincronia era o que fazia a prévia congelar.
+    const t = video.currentTime;
+    if (!video.paused && !video.seeking && video.readyState >= 3 && Math.abs(cur().currentTime - t) > 0.12) cur().currentTime = t;
     $('seek').value = t; $('tNow').textContent = fmt(t);
     if (step === 2 && now - lastEd > 80) { editor.setTime(t); lastEd = now; }
     if (step >= 4 && video.currentTime !== lastVT) { grab(); loop.dirty = true; }
@@ -421,7 +444,7 @@ $('exportBtn').onclick = async () => {
 };
 $('dlWav').onclick = () => { const a = document.createElement('a'); a.href = urls[mastered ? 'master' : 'raw']; a.download = 'studio-cover-audio.wav'; a.click(); };
 
-window.studio = { get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
+window.studio = { audio: () => players[side], get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
 
 // ---------- Ajuda: com o "?" do topo ligado, tocar em qualquer botão mostra o que ele faz (em vez de executar) ----------
 let helpOn = false;
