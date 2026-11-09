@@ -2,7 +2,7 @@
 // Toca o vídeo cortado, desenha cada quadro com o filtro num quadro 1080p e grava junto com o áudio
 // masterizado. Usa o gravador do próprio navegador (MediaRecorder): MP4 onde o navegador grava MP4
 // (Chrome novo, Safari), WebM nos outros. Leva o tempo do próprio vídeo (1 minuto de vídeo = 1 minuto).
-import { Grader } from './filters.js?v=12';
+import { Grader } from './filters.js?v=13';
 
 const TYPES = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
 export const exportType = () => TYPES.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
@@ -16,7 +16,9 @@ export async function exportVideo({ video, filter, amount = 1, channels, sr, sta
   const gr = new Grader(canvas);
   gr.set(filter, amount);
   // Áudio pronto, tocado por um "toca-discos" interno ligado direto no gravador (não sai na caixa de som)
-  const ctx = new AudioContext({ sampleRate: sr });
+  const C = window.AudioContext || window.webkitAudioContext;
+  let ctx; try { ctx = new C({ sampleRate: sr }); } catch { ctx = new C(); }
+  ctx.resume(); // ainda dentro do toque no botão: o iPhone só libera o som assim
   const buf = ctx.createBuffer(2, channels[0].length, sr);
   buf.copyToChannel(channels[0], 0); buf.copyToChannel(channels[1] || channels[0], 1);
   const dest = ctx.createMediaStreamDestination();

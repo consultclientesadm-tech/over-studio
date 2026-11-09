@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=12';
-import { TuneEditor } from './editor.js?v=12';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=12';
-import { exportVideo, exportType } from './export.js?v=12';
+import * as cover from './pipeline.js?v=13';
+import { TuneEditor } from './editor.js?v=13';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=13';
+import { exportVideo, exportType } from './export.js?v=13';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -20,33 +20,43 @@ let step = 2, side = 'B', pending = false;
 let look = null, auto = null, amount = 1; // look = filtro escolhido; auto = Colorista
 const undo = [];
 const video = $('video');
-// Som da prévia pelo Web Audio, direto da memória: sem 3 players <audio> e sem 3 arquivos WAV
-// (isso dobrava o uso de memória e derrubava o iPhone). Só um trecho tocando por vez.
+video.muted = true; video.defaultMuted = true; video.playsInline = true; // o som vem do player; vídeo mudo toca sozinho no celular
+// Som da prévia: UM player de áudio comum (toca no iPhone mesmo com a chave do silencioso ligada,
+// o que o Web Audio não faz) com o arquivo só do lado escolhido. Antes eram 3 players e 3 arquivos.
 const tracks = { orig: null, raw: null, master: null };
-let actx = null, node = null, buf = null, bufKey = '', startAt = 0, offset = 0, curKey = 'raw';
-const AC = () => {
-  if (actx) return actx;
-  const C = window.AudioContext || window.webkitAudioContext;
-  try { actx = new C({ sampleRate: cover.SR }); } catch { actx = new C(); }
-  return actx;
-};
-function bufFor(key) {
-  if (bufKey === key && buf) return buf;
-  const ch = tracks[key] || tracks.raw; buf = null;
-  const b = AC().createBuffer(2, ch[0].length, cover.SR);
-  b.copyToChannel(ch[0], 0); b.copyToChannel(ch[1] || ch[0], 1);
-  buf = b; bufKey = key; return b;
+const player = new Audio();
+player.preload = 'auto'; player.setAttribute('playsinline', ''); player.playsInline = true;
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
+let curKey = 'raw', srcKey = '', srcUrl = '', offset = 0, pendingT = null;
+function loadKey(key) {
+  if (srcKey === key && srcUrl) return;
+  const ch = tracks[key] || tracks.raw; if (!ch) return;
+  if (srcUrl) URL.revokeObjectURL(srcUrl);
+  srcUrl = URL.createObjectURL(cover.toWav(ch, cover.SR)); srcKey = key;
+  player.src = srcUrl; player.load(); pendingT = offset;
 }
-const aTime = () => (node ? offset + AC().currentTime - startAt : offset);
-function aStart(t) {
-  aStop(); offset = Math.max(0, t);
-  const n = AC().createBufferSource(); n.buffer = bufFor(curKey); n.connect(AC().destination);
-  n.onended = () => { if (node === n) { offset = aTime(); node = null; if (offset >= n.buffer.duration - 0.05) pause(); } };
-  AC().resume?.(); startAt = AC().currentTime; n.start(0, offset); node = n;
+function setT(t) {
+  offset = Math.max(0, t);
+  if (player.readyState >= 1 && pendingT == null) { try { player.currentTime = offset; } catch { pendingT = offset; } } else pendingT = offset;
 }
-function aStop() { if (node) { const n = node; offset = aTime(); node = null; try { n.stop(); } catch {} } }
-function aKey(key) { if (key === curKey && bufKey === key) return; const was = !!node, t = aTime(); aStop(); curKey = key; bufKey = ''; buf = null; offset = t; if (was) aStart(t); }
-const fresh = (key) => { if (bufKey === key) { const t = aTime(), was = !!node; aStop(); bufKey = ''; buf = null; offset = t; if (was && curKey === key) aStart(t); } };
+player.addEventListener('loadedmetadata', () => { if (pendingT != null) { try { player.currentTime = pendingT; } catch {} pendingT = null; } });
+const aTime = () => (pendingT != null || player.readyState < 1 ? offset : (offset = player.currentTime));
+let aWarned = false;
+function aPlay() {
+  const p = player.play();
+  if (p) p.catch((e) => { if (e.name === 'NotAllowedError' && !aWarned) { aWarned = true; toast('Toque no ▶ para ouvir o som.'); } });
+}
+function aStart(t) { loadKey(curKey); setT(t); aPlay(); }
+function aStop() { aTime(); player.pause(); }
+function aKey(key) {
+  if (key === curKey && srcKey === key) return;
+  const t = aTime(), was = want; player.pause(); curKey = key;
+  if (tracks[key] || tracks.raw) { loadKey(key); setT(t); if (was) aPlay(); }
+}
+const fresh = (key) => { if (srcKey !== key) return; srcKey = ''; if (curKey === key) { const t = aTime(); player.pause(); loadKey(key); setT(t); if (want) aPlay(); } };
+player.onended = () => pause();
+// iPhone: libera o som no primeiro toque na tela, para os toques seguintes já tocarem
+addEventListener('touchend', function unlock() { if (player.src) return removeEventListener('touchend', unlock); player.muted = true; const p = player.play(); if (p) p.then(() => { player.pause(); player.muted = false; }).catch(() => { player.muted = false; }); removeEventListener('touchend', unlock); }, { passive: true });
 const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('q').dataset.global || 1, scaleSnap: $('mSnap').checked,
   straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked });
 const mixOpts = () => ({ reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').value, fadeOut: +$('mFadeOut').value, trim: $('mTrim').checked });
@@ -236,11 +246,11 @@ $('ab').onclick = (e) => {
 };
 
 // Player: um áudio de cada vez (o do lado escolhido), preso no relógio do vídeo
-const clipT = () => (node ? aTime() : +$('seek').value || 0);
+const clipT = () => (state ? aTime() : +$('seek').value || 0);
 const playing = () => want;
 function seek(t) {
   t = Math.max(0, Math.min(t, state.duration - 0.05));
-  if (node) aStart(t); else offset = t;
+  setT(t);
   video.currentTime = t;
   $('seek').value = t; $('tNow').textContent = fmt(t);
   editor?.setTime(t);
@@ -257,6 +267,12 @@ function play() {
 }
 
 $('play').onclick = play;
+// celular: app em segundo plano ou tela bloqueada → pausa (o sistema cortaria o som de qualquer jeito)
+document.addEventListener('visibilitychange', () => { if (document.hidden && want) pause(); });
+addEventListener('pagehide', () => { if (want) pause(); });
+// celular pode derrubar a placa de vídeo da página (pouca memória): recria a prévia em vez de ficar preta
+$('screen').addEventListener('webglcontextlost', (e) => e.preventDefault());
+$('screen').addEventListener('webglcontextrestored', () => { try { grader = new Grader($('screen')); refreshAB(); loop.dirty = true; } catch (e) { console.warn(e); } });
 // Prévia em tela cheia (a mesma prévia, só que grande; o arquivo final sai em 1080p)
 function theater(on) { app.classList.toggle('theater', on); $('fsTxt').textContent = on ? '✕ Fechar' : '⛶ Tela cheia'; loop.dirty = true; }
 $('fsBtn').onclick = () => theater(!app.classList.contains('theater'));
