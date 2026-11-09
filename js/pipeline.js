@@ -8,10 +8,10 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=24';
-import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=24';
-import { referenceNotes, applyReference } from './reference.js?v=24';
-import { decodeVideoAudio } from './demux.js?v=24';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=25';
+import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=25';
+import { referenceNotes, applyReference } from './reference.js?v=25';
+import { decodeVideoAudio } from './demux.js?v=25';
 
 export const SR = STUDIO_SR;
 
@@ -212,13 +212,13 @@ export function applyFades(channels, sr, fadeIn, fadeOut) {
 export async function analyze(file, opts = {}, onStep = () => {}) {
   const o = { ...DEFAULTS, ...opts };
   onStep('audio', 0);
-  const orig = file instanceof Blob ? await audioFromVideo(file) : file; // aceita canais prontos (testes)
+  let orig = file instanceof Blob ? await audioFromVideo(file) : file; // aceita canais prontos (testes)
   onStep('audio', 1);
   if (o.maxSec && orig[0].length / SR > o.maxSec) { const e = new Error('LIMITE'); e.duration = orig[0].length / SR; throw e; }
   let voice = orig, bed = null;
   if (o.separate) {
     const r = await separate(orig, { onDownload: (p) => onStep('download', p), onProgress: (p) => onStep('separate', p) });
-    voice = r.voice; bed = r.bed;
+    voice = r.voice; bed = r.bed; if (r.orig) orig = r.orig;
   }
   onStep('notes', 0);
   const track = await pitchTrack(voice, SR, (p) => onStep('notes', p));

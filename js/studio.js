@@ -69,8 +69,14 @@ export async function modelCached() {
 
 async function loadOrt() {
   // Arquivos com extensão .js (e não .mjs): qualquer servidor manda o tipo certo, inclusive o nginx do Plesk
-  const ort = await import('./vendor/ort/ort.webgpu.min.js');
-  ort.env.wasm.wasmPaths = {
+  // Celular: versão só-CPU do motor (12 MB em vez de 27 MB): compilar o motor grande sozinho já gastava
+  // centenas de MB de memória no iPhone. Computador: versão com placa de vídeo (WebGPU).
+  const lite = useLite();
+  const ort = lite ? await import('./vendor/ort/ort.wasm.min.js') : await import('./vendor/ort/ort.webgpu.min.js');
+  ort.env.wasm.wasmPaths = lite ? {
+    mjs: new URL('./vendor/ort/ort-wasm-simd-threaded.js', import.meta.url).href,
+    wasm: new URL('./vendor/ort/ort-wasm-simd-threaded.wasm', import.meta.url).href,
+  } : {
     mjs: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.js', import.meta.url).href,
     wasm: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.wasm', import.meta.url).href,
   };
@@ -149,12 +155,9 @@ async function separateLite(channels, { onDownload, onProgress }) {
   }
   // Janela de Hann com passo de 1/4: a soma das janelas ao quadrado é 1,5 em todo o trecho útil
   const voice = out.map((o) => o.subarray(P, P + L));
-  const bed = [new Float32Array(L), new Float32Array(L)];
-  for (let c = 0; c < 2; c++) {
-    const v = voice[c], s = src[c], b = bed[c];
-    for (let i = 0; i < L; i++) { v[i] /= 1.5; b[i] = s[i] - v[i]; }
-  }
-  return { voice, bed };
+  for (const v of voice) for (let i = 0; i < L; i++) v[i] /= 1.5;
+  if (separateLite.noBed) return { voice }; // no ajudante: o playback é feito no app, fora do pico de memória da IA
+  return { voice, bed: bedOf(src, voice) };
 }
 
 let demucs = null;
@@ -180,23 +183,32 @@ async function loadDemucs(onProgress) {
 }
 
 export { separateLite };
+const bedOf = (src, voice) => voice.map((v, c) => { const s = src[c] || src[0], b = new Float32Array(v.length); for (let i = 0; i < v.length; i++) b[i] = s[i] - v[i]; return b; });
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=24', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
-    let started = false, last = Date.now();
+    try { w = new Worker(new URL('./sep-worker.js?v=25', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    let started = false, last = Date.now(), sent = false;
+    const send = () => {
+      if (sent) return; sent = true;
+      // manda o próprio áudio (sem cópia); ele volta junto com a voz
+      const L = channels[0], R = channels[1] && channels[1] !== channels[0] ? channels[1] : channels[0].slice();
+      w.postMessage({ L, R }, [L.buffer, R.buffer]);
+    };
     const guard = setInterval(() => { if (Date.now() - last > 120000) done(reject, new Error('ajudante parou de responder')); }, 5000);
-    const done = (fn, v) => { clearInterval(guard); w.terminate(); fn(v); };
+    const done = (fn, v) => { clearInterval(guard); w.terminate(); if (v instanceof Error) v.lost = sent; fn(v); };
     w.onmessage = (e) => {
       const m = e.data; started = true; last = Date.now();
-      if (m.t === 'd') onDownload(m.p);
+      if (m.t === 'ready') send();
+      else if (m.t === 'd') onDownload(m.p);
       else if (m.t === 'p') onProgress(m.p);
-      else if (m.t === 'done') done(resolve, { voice: m.voice.map((v) => new Float32Array(v.b, v.o, v.n)), bed: m.bed });
+      else if (m.t === 'done') {
+        const voice = m.voice.map((v) => new Float32Array(v.b, v.o, v.n)), orig = [m.L, m.R];
+        done(resolve, { voice, bed: bedOf(orig, voice), orig });
+      }
       else if (m.t === 'err') done(reject, new Error(m.m));
     };
     w.onerror = (e) => { e.preventDefault?.(); done(reject, new Error(e.message || (started ? 'ajudante caiu' : 'ajudante não abriu'))); };
-    const L = channels[0].slice(), R = (channels[1] || channels[0]).slice();
-    w.postMessage({ L, R }, [L.buffer, R.buffer]);
   });
 }
 
@@ -206,7 +218,10 @@ export async function separate(channels, { onDownload = () => {}, onProgress = (
     // No celular a IA roda num "ajudante" separado que é desligado no fim: assim toda a memória dela volta
     // para o aparelho antes de abrir a imagem do vídeo (sem isso o iPhone fechava o app nessa hora).
     if (typeof window !== 'undefined' && window.Worker && !separate.noWorker) {
-      try { return await separateInWorker(channels, { onDownload, onProgress }); } catch (e) { console.warn('ajudante da IA falhou, rodando direto:', e.message); separate.noWorker = true; }
+      try { return await separateInWorker(channels, { onDownload, onProgress }); } catch (e) {
+        if (e.lost || channels[0].length === 0) throw new Error('A separação da voz parou no meio. Toque em Novo vídeo e tente de novo.');
+        console.warn('ajudante da IA falhou, rodando direto:', e.message); separate.noWorker = true;
+      }
     }
     return separateLite(channels, { onDownload, onProgress });
   }
