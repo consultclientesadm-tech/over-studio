@@ -5,8 +5,8 @@
 //   3) casa as notas do cover com as da original, na ordem (o cover pode ser só um trecho da música)
 //   4) cada nota do cover ganha a "nota certa" da original, usada como alvo da afinação
 // O ritmo não muda: mexer no tempo tiraria a voz da boca no vídeo.
-import { separate } from './studio.js?v=14';
-import { pitchTrack } from './analysis.js?v=14';
+import { separate } from './studio.js?v=15';
+import { pitchTrack } from './analysis.js?v=15';
 
 const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 const pc = (m) => ((Math.round(m) % 12) + 12) % 12;

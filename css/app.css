@@ -366,3 +366,7 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 /* o vídeo fica sempre visível por baixo (navegador não "economiza" vídeo escondido); o quadro com cor vai por cima */
 .viewer canvas { position: relative; z-index: 1; }
 
+
+/* aviso do vigia da imagem (aparece só se o vídeo parar com o som tocando) */
+#diag { position: absolute; left: 8px; right: 8px; top: 8px; z-index: 3; background: rgba(0, 0, 0, .78); color: var(--y); border: 1px solid var(--y);
+  border-radius: 10px; padding: 6px 10px; font: 600 11px/1.35 'Space Grotesk', sans-serif; text-align: center; cursor: pointer; }

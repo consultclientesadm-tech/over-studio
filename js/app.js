@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=14';
-import { TuneEditor } from './editor.js?v=14';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=14';
-import { exportVideo, exportType } from './export.js?v=14';
+import * as cover from './pipeline.js?v=15';
+import { TuneEditor } from './editor.js?v=15';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=15';
+import { exportVideo, exportType } from './export.js?v=15';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -266,6 +266,24 @@ function seek(t) {
   $('seek').value = t; $('tNow').textContent = fmt(t);
   editor?.setTime(t);
 }
+// ---- Vigia da imagem: se o vídeo parar enquanto o som toca, tenta destravar e mostra o motivo na tela ----
+let vErr = '';
+function vplay() { const p = video.play(); if (p) p.then(() => { vErr = ''; }).catch((e) => { vErr = e.name || 'erro'; }); }
+const diag = document.createElement('div'); diag.id = 'diag'; diag.hidden = true; $('viewer').appendChild(diag);
+const wd = { ct: -1, at: 0, fix: 0, shown: false };
+function watchdog(now) {
+  if (!want || video.seeking) { wd.ct = video.currentTime; wd.at = now; return; }
+  if (video.currentTime !== wd.ct) { wd.ct = video.currentTime; wd.at = now; if (wd.shown) { diag.hidden = true; wd.shown = false; } return; }
+  const still = now - wd.at;
+  if (still > 1200 && now - wd.fix > 3000) { wd.fix = now; video.currentTime = aTime(); vplay(); } // 1ª tentativa: reposiciona e dá play
+  if (still > 2500 && !wd.shown) {
+    wd.shown = true;
+    const info = `imagem parada · estado ${video.readyState}/${video.networkState} · ${video.paused ? 'pausado' : 'tocando'}${vErr ? ' · ' + vErr : ''}${video.error ? ' · erro ' + video.error.code : ''} · ${video.videoWidth}×${video.videoHeight} · ${(file && Math.round(file.size / 1048576)) || '?'} MB`;
+    diag.textContent = vErr === 'NotAllowedError' ? 'Toque aqui para soltar a imagem' : info; diag.hidden = false;
+    console.warn(info); try { localStorage.setItem('sc-diag', info); } catch {}
+  }
+}
+diag.onclick = () => { vplay(); diag.hidden = true; wd.shown = false; };
 function pause() { want = false; aStop(); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
 let want = false; // a pessoa apertou play
 function play() {
@@ -273,7 +291,7 @@ function play() {
   const t = +$('seek').value;
   want = true;
   if (Math.abs(video.currentTime - t) > 0.05) video.currentTime = t;
-  video.play().catch(() => {}); aStart(t);
+  vplay(); aStart(t); wd.ct = -1;
   $('play').textContent = '❚❚';
 }
 
@@ -307,12 +325,13 @@ function loop(now) {
       if (ad > 0.12 && r === 1) video.playbackRate = drift > 0 ? 0.94 : 1.06;
       else if (r !== 1 && (ad < 0.04 || (drift > 0) !== (r < 1))) video.playbackRate = 1;
     }
-    if (video.paused && !video.ended && now - (loop.kick || 0) > 1000) { loop.kick = now; video.play().catch(() => {}); }
+    if (video.paused && !video.ended && now - (loop.kick || 0) > 1000) { loop.kick = now; vplay(); }
     $('seek').value = t; $('tNow').textContent = fmt(t);
     if (step === 2 && now - lastEd > 80) { editor.setTime(t); lastEd = now; }
   }
   if (lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
   if (loop.dirty && !playing()) { grader.draw(frame); loop.dirty = false; }
+  watchdog(now);
   $('viewer').classList.toggle('playing', playing());
   requestAnimationFrame(loop);
 }
