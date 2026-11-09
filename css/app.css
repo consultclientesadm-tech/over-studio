@@ -365,3 +365,4 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 }
 /* o vídeo fica sempre visível por baixo (navegador não "economiza" vídeo escondido); o quadro com cor vai por cima */
 .viewer canvas { position: relative; z-index: 1; }
+

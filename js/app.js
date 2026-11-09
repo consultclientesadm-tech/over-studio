@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=13';
-import { TuneEditor } from './editor.js?v=13';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=13';
-import { exportVideo, exportType } from './export.js?v=13';
+import * as cover from './pipeline.js?v=14';
+import { TuneEditor } from './editor.js?v=14';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=14';
+import { exportVideo, exportType } from './export.js?v=14';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -143,6 +143,15 @@ async function start(f) {
 let grader = null, editor = null;
 const frame = document.createElement('canvas'), fctx = frame.getContext('2d');
 let lastVT = -1, lastEd = 0;
+// O filtro aproximado em CSS enquanto o vídeo toca (a placa de vídeo do celular aplica de graça, sem travar).
+// O arquivo final e o quadro pausado usam o filtro completo.
+function cssLook(f, k = 1) {
+  if (!f || f.id === 'original' || !k) return '';
+  const m = (v, base) => base + (v - base) * k;
+  const warm = f.temp > 0 ? f.temp * 2.2 : 0, cool = f.temp < 0 ? f.temp * 60 : 0;
+  return `brightness(${m(1 + f.exposure * 1.4 - f.fade * 0.3, 1).toFixed(3)}) contrast(${m(f.contrast - f.fade * 0.6, 1).toFixed(3)}) saturate(${m(f.saturation, 1).toFixed(3)})`
+    + (warm ? ` sepia(${(warm * k).toFixed(3)})` : '') + (cool ? ` hue-rotate(${(cool * k).toFixed(1)}deg)` : '');
+}
 function grab() { if (video.readyState >= 2) { fctx.drawImage(video, 0, 0, frame.width, frame.height); lastVT = video.currentTime; } }
 function openStudio() {
   app.dataset.screen = 'studio';
@@ -191,7 +200,8 @@ function go(n) {
   step = n;
   $('studio').dataset.step = n;
   // afinação e mix: o próprio player do aparelho mostra o vídeo (leve). Cor e exportar: a prévia com o filtro.
-  $('viewer').classList.toggle('live', n < 4);
+  // em todas as etapas, tocando = o próprio player do aparelho (liso no celular). Pausado = quadro com o filtro exato.
+  $('viewer').classList.add('live');
   document.querySelectorAll('.step').forEach((s) => s.classList.toggle('on', +s.dataset.step === n));
   document.querySelectorAll('#stepper button').forEach((b) => { const k = +b.dataset.step; b.classList.toggle('on', k === n); b.classList.toggle('done', k < n); });
   $('prev').style.visibility = n > 2 ? 'visible' : 'hidden';
@@ -235,6 +245,7 @@ function refreshAB() {
     $('ab' + k).classList.toggle('on', side === k);
   }
   aKey(src[side].audio);
+  video.style.filter = cssLook(src[side].filter, amount);
   $('tag').textContent = src[side].name; $('tag').classList.toggle('before', side === 'A');
   grader.set(src[side].filter || ORIGINAL, amount);
   loop.dirty = true;
@@ -287,16 +298,21 @@ function loop(now) {
   if (playing()) {
     // O som nunca para (é ele que a pessoa está avaliando). O vídeo roda solto e só é ajustado de leve
     // pela velocidade; pulo só se ficar mais de 1 s atrás, e no máximo um a cada 3 s (pular seguido congela).
-    const t = aTime(), drift = video.currentTime - t;
-    if (!video.seeking && Math.abs(drift) > 1 && now - (loop.jump || 0) > 3000) { video.currentTime = t; loop.jump = now; }
-    else if (!video.seeking) { const r = Math.abs(drift) < 0.05 ? 1 : 1 - Math.max(-0.1, Math.min(0.1, drift * 0.5)); if (Math.abs(video.playbackRate - r) > 0.01) video.playbackRate = r; }
-    if (video.paused && !video.ended) video.play().catch(() => {});
+    // Ajuste raro: só muda a velocidade quando passa de 0,12 s e volta ao normal abaixo de 0,04 s
+    // (mexer a cada quadro trava o vídeo no iPhone). Pulo só acima de 0,8 s, no máximo um a cada 4 s.
+    const t = aTime(), drift = video.currentTime - t, ad = Math.abs(drift);
+    if (!video.seeking && ad > 0.8 && now - (loop.jump || 0) > 4000) { video.currentTime = t + 0.05; loop.jump = now; video.playbackRate = 1; }
+    else if (!video.seeking) {
+      const r = video.playbackRate;
+      if (ad > 0.12 && r === 1) video.playbackRate = drift > 0 ? 0.94 : 1.06;
+      else if (r !== 1 && (ad < 0.04 || (drift > 0) !== (r < 1))) video.playbackRate = 1;
+    }
+    if (video.paused && !video.ended && now - (loop.kick || 0) > 1000) { loop.kick = now; video.play().catch(() => {}); }
     $('seek').value = t; $('tNow').textContent = fmt(t);
     if (step === 2 && now - lastEd > 80) { editor.setTime(t); lastEd = now; }
-    if (step >= 4 && video.currentTime !== lastVT) { grab(); loop.dirty = true; }
   }
   if (lastVT < 0 && video.readyState >= 2) { grab(); loop.dirty = true; } // primeiro quadro assim que existir
-  if (loop.dirty && (step >= 4 || !playing())) { grader.draw(frame); loop.dirty = false; }
+  if (loop.dirty && !playing()) { grader.draw(frame); loop.dirty = false; }
   $('viewer').classList.toggle('playing', playing());
   requestAnimationFrame(loop);
 }
