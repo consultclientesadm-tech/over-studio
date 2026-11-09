@@ -2,10 +2,10 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=10';
-import { TuneEditor } from './editor.js?v=10';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=10';
-import { exportVideo, exportType } from './export.js?v=10';
+import * as cover from './pipeline.js?v=11';
+import { TuneEditor } from './editor.js?v=11';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=11';
+import { exportVideo, exportType } from './export.js?v=11';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -77,7 +77,7 @@ try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
   if (last) {
     localStorage.removeItem(RUN);
-    setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%). Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
+    setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
 } catch {}
 async function start(f) {
@@ -215,7 +215,7 @@ $('ab').onclick = (e) => {
 
 // Player: um áudio de cada vez (o do lado escolhido), preso no relógio do vídeo
 const cur = () => players[side];
-const clipT = () => (!isNaN(video.currentTime) && video.readyState >= 1 ? video.currentTime : +$('seek').value || 0);
+const clipT = () => (cur() && !isNaN(cur().currentTime) ? cur().currentTime : +$('seek').value || 0);
 const playing = () => want;
 function seek(t) {
   t = Math.max(0, Math.min(t, state.duration - 0.05));
@@ -235,10 +235,7 @@ function play() {
   video.play().catch(() => {}); cur().play().catch(() => {});
   $('play').textContent = '❚❚';
 }
-// vídeo carregando um pedaço: o áudio espera junto, e volta no mesmo ponto
-video.addEventListener('waiting', () => { if (want) cur().pause(); });
-video.addEventListener('playing', () => { if (want) { cur().currentTime = video.currentTime; cur().play().catch(() => {}); } });
-video.addEventListener('ended', () => pause());
+
 $('play').onclick = play;
 // Prévia em tela cheia (a mesma prévia, só que grande; o arquivo final sai em 1080p)
 function theater(on) { app.classList.toggle('theater', on); $('fsTxt').textContent = on ? '✕ Fechar' : '⛶ Tela cheia'; loop.dirty = true; }
@@ -253,10 +250,12 @@ video.onseeked = () => { grab(); loop.dirty = true; };
 function loop(now) {
   if (app.dataset.screen !== 'studio') return;
   if (playing()) {
-    // o VÍDEO manda no relógio (como no CapCut): ele roda solto, sem pulos; o áudio é que acompanha.
-    // Pular o vídeo para acertar a sincronia era o que fazia a prévia congelar.
-    const t = video.currentTime;
-    if (!video.paused && !video.seeking && video.readyState >= 3 && Math.abs(cur().currentTime - t) > 0.12) cur().currentTime = t;
+    // O som nunca para (é ele que a pessoa está avaliando). O vídeo roda solto e só é ajustado de leve
+    // pela velocidade; pulo só se ficar mais de 1 s atrás, e no máximo um a cada 3 s (pular seguido congela).
+    const t = cur().currentTime, drift = video.currentTime - t;
+    if (!video.seeking && Math.abs(drift) > 1 && now - (loop.jump || 0) > 3000) { video.currentTime = t; loop.jump = now; }
+    else if (!video.seeking) { const r = Math.abs(drift) < 0.05 ? 1 : 1 - Math.max(-0.1, Math.min(0.1, drift * 0.5)); if (Math.abs(video.playbackRate - r) > 0.01) video.playbackRate = r; }
+    if (video.paused && !video.ended) video.play().catch(() => {});
     $('seek').value = t; $('tNow').textContent = fmt(t);
     if (step === 2 && now - lastEd > 80) { editor.setTime(t); lastEd = now; }
     if (step >= 4 && video.currentTime !== lastVT) { grab(); loop.dirty = true; }
@@ -460,3 +459,7 @@ $('helpBtn').onclick = () => {
   helpOn = !helpOn; app.classList.toggle('helpon', helpOn);
   toast(helpOn ? 'Modo ajuda ligado: toque em qualquer botão com borda tracejada para saber o que ele faz. Toque no ? de novo para usar o app.' : 'Modo ajuda desligado.', 5000);
 };
+
+// Qualquer erro aparece na tela (e fica no diário), para a gente saber exatamente o que houve num aparelho real
+addEventListener('error', (e) => { note({ erro: String(e.message).slice(0, 120) }); toast('Erro: ' + e.message, 9000); });
+addEventListener('unhandledrejection', (e) => { const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); toast('Erro: ' + m, 9000); });

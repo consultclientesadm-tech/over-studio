@@ -111,7 +111,9 @@ export async function autoGrade(video, samples = 8) {
   let sr = 0, sg = 0, sb = 0, n = 0;
   for (let k = 0; k < samples; k++) {
     video.currentTime = (video.duration * (k + 0.5)) / samples;
-    await new Promise((r) => video.addEventListener('seeked', r, { once: true }));
+    // nunca espera para sempre: no iPhone o vídeo às vezes não avisa que chegou no ponto
+    await new Promise((r) => { video.addEventListener('seeked', r, { once: true }); setTimeout(r, 1500); });
+    if (video.readyState < 2) continue;
     g.drawImage(video, 0, 0, w, h);
     const d = g.getImageData(0, 0, w, h).data;
     for (let i = 0; i < d.length; i += 4) {
@@ -123,6 +125,7 @@ export async function autoGrade(video, samples = 8) {
     }
   }
   video.currentTime = was; if (!paused) video.play();
+  if (lum.length < 500) return { ...ORIGINAL, id: 'auto', name: 'Auto · Colorista', contrast: 1.05, saturation: 1.05, vignette: 0.12, sharpen: 0.2 };
   lum.sort((a, b) => a - b);
   const q = (p) => lum[Math.floor(p * (lum.length - 1))];
   const lo = q(0.01), mid = q(0.5), hi = q(0.99);

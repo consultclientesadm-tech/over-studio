@@ -2,7 +2,7 @@
 // Toca o vídeo cortado, desenha cada quadro com o filtro num quadro 1080p e grava junto com o áudio
 // masterizado. Usa o gravador do próprio navegador (MediaRecorder): MP4 onde o navegador grava MP4
 // (Chrome novo, Safari), WebM nos outros. Leva o tempo do próprio vídeo (1 minuto de vídeo = 1 minuto).
-import { Grader } from './filters.js?v=10';
+import { Grader } from './filters.js?v=11';
 
 const TYPES = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
 export const exportType = () => TYPES.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
@@ -30,7 +30,7 @@ export async function exportVideo({ video, filter, amount = 1, channels, sr, sta
   const wasMuted = video.muted;
   video.pause(); video.muted = true;
   video.currentTime = start;
-  await new Promise((r) => video.addEventListener('seeked', r, { once: true }));
+  await new Promise((r) => { video.addEventListener('seeked', r, { once: true }); setTimeout(r, 2000); });
   gr.draw(video);
   rec.start(1000);
   await ctx.resume();
