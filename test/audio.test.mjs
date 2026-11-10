@@ -28,6 +28,13 @@ try {
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#dlWav')]);
   const p = await dl.path(); const fs = await import('fs'); const n = fs.statSync(p).size;
   check(n > 100000 && /studio-cover\.wav$/.test(dl.suggestedFilename()), `baixou ${dl.suggestedFilename()} (${(n / 1048576).toFixed(1)} MB)`);
+  const rms = () => page.evaluate(() => { const c = window.studio.mastered.channels[0]; let e = 0; for (let i = 0; i < c.length; i += 7) e += c[i] * c[i]; return e; });
+  const before = await rms();
+  await page.evaluate(() => { const r = document.getElementById('eVoice'); r.value = '9'; r.dispatchEvent(new Event('input')); r.dispatchEvent(new Event('change')); });
+  await page.waitForTimeout(300); await page.waitForFunction(() => document.getElementById('busy').hidden, null, { timeout: 120000 });
+  const after = await rms(), mv = await page.evaluate(() => document.getElementById('mVoice').value);
+  check(after !== before && mv === '9', `volume da voz +9 dB mixou de novo e a régua da Mix acompanhou (${mv})`);
+  await page.screenshot({ path: `${dir}/audio-2b-volumes.png` });
   for (const [id, nome] of [['#dlVoice', 'so-voz'], ['#dlBed', 'so-musica']]) {
     const [d] = await Promise.all([page.waitForEvent('download'), page.click(id)]);
     const sz = fs.statSync(await d.path()).size;

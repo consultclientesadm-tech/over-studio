@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=28';
-import { prefetchModel } from './studio.js?v=28';
-import { TuneEditor } from './editor.js?v=28';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=28';
-import { exportVideo, exportType } from './export.js?v=28';
+import * as cover from './pipeline.js?v=29';
+import { prefetchModel } from './studio.js?v=29';
+import { TuneEditor } from './editor.js?v=29';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=29';
+import { exportVideo, exportType } from './export.js?v=29';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -78,7 +78,7 @@ player.onended = () => pause();
 addEventListener('touchend', function unlock() { if (player.src) return removeEventListener('touchend', unlock); player.muted = true; const p = player.play(); if (p) p.then(() => { player.pause(); player.muted = false; }).catch(() => { player.muted = false; }); removeEventListener('touchend', unlock); }, { passive: true });
 const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('q').dataset.global || 1, scaleSnap: $('mSnap').checked,
   straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked });
-const mixOpts = () => ({ reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').value, fadeOut: +$('mFadeOut').value, trim: $('mTrim').checked });
+const mixOpts = () => ({ voiceDb: +$('mVoice').value, bedDb: +$('mBed').value, reverb: +$('mReverb').value, fadeIn: +$('mFadeIn').value, fadeOut: +$('mFadeOut').value, trim: $('mTrim').checked });
 
 // ---------- 1) Vídeo ----------
 const drop = $('drop');
@@ -147,7 +147,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v28`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v29`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -275,6 +275,7 @@ function go(n) {
   document.querySelectorAll('#stepper button').forEach((b) => { const k = +b.dataset.step; b.classList.toggle('on', k === n); b.classList.toggle('done', k < n); });
   $('prev').style.visibility = n > 2 ? 'visible' : 'hidden';
   $('next').hidden = n === 5;
+  document.querySelectorAll('.bedrow').forEach((r) => (r.hidden = !state.bed));
   if (n === 2) editor.resize();
   if (n === 4) buildFilters();
   if (n === 5) refreshSummary();
@@ -528,9 +529,21 @@ $('mixApply').onclick = () => doMaster();
 $('mixUndo').onclick = () => { pause(); mastered = null; side = 'B'; $('mixApply').hidden = false; $('mixUndo').hidden = true; refreshAB(); toast('Mix e master desfeitos.'); };
 document.querySelectorAll('.row input[type=range]').forEach((r) => {
   const o = r.nextElementSibling;
-  const upd = () => (o.textContent = r.id === 'mReverb' || r.id === 'fAmount' ? pct(+r.value) : (+r.value).toFixed(1) + ' s');
+  const upd = () => (o.textContent = r.id === 'mReverb' || r.id === 'fAmount' ? pct(+r.value) : /Voice|Bed/.test(r.id) ? (+r.value > 0 ? '+' : '') + (+r.value).toFixed(+r.value % 1 ? 1 : 0) + ' dB' : (+r.value).toFixed(1) + ' s');
   r.addEventListener('input', upd); upd();
 });
+// Volume da voz e da melodia: os controles da Mix e do Exportar andam juntos; mexer já mixa de novo
+for (const k of ['Voice', 'Bed']) for (const [a, b] of [['m', 'e'], ['e', 'm']]) {
+  $(a + k).addEventListener('input', () => { if ($(b + k).value !== $(a + k).value) { $(b + k).value = $(a + k).value; $(b + k).dispatchEvent(new Event('input')); } });
+}
+const syncing = new Set(); // as duas réguas disparam "change": mixa uma vez só
+['mVoice', 'mBed', 'eVoice', 'eBed'].forEach((id) => $(id).addEventListener('change', async () => {
+  if (syncing.size) return; syncing.add(id);
+  const was = playing(), t = clipT(); pause(); busy(true, 'Ajustando os volumes…');
+  await doMaster(false); busy(false);
+  if (step === 3) side = 'C'; refreshAB(); if (step === 5) refreshSummary(); seek(t); if (was) play();
+  syncing.delete(id);
+}));
 ['mReverb', 'mFadeIn', 'mFadeOut', 'mTrim'].forEach((id) => $(id).addEventListener('change', async () => {
   if (!mastered) return;
   const was = playing(), t = clipT(); pause(); busy(true, 'Mixando…'); await doMaster(false); busy(false); refreshAB(); seek(t); if (was) play();

@@ -390,3 +390,5 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .audio #dlWav { background: var(--y); color: #000; font-weight: 700; padding: 14px 18px; }
 .audio #tag, .audio #fsBtn { display: none !important; }
 .stems { display: flex; gap: 8px; } .stems .pill { flex: 1; }
+.row.vol[hidden] { display: none !important; }
+.row.vol output { white-space: nowrap; }

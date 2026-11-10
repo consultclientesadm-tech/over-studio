@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=28">
+<link rel="stylesheet" href="css/app.css?v=29">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -32,7 +32,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v28</small></div>
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v29</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda">?</button>
     <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
@@ -153,6 +153,8 @@
             <button class="pill" id="mixUndo" hidden data-help="Tira a mix e o master e volta para o som só afinado.">Desfazer mix e master</button>
           </div>
         </div>
+        <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="mVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        <label class="row vol bedrow" data-help="Aumenta ou diminui a melodia (violão, banda ou playback) em relação à voz."><span>Volume da melodia</span><input type="range" id="mBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <label class="row" data-help="Ambiência na voz, como cantar numa sala ou palco. 0% = seco."><span>Reverb</span><input type="range" id="mReverb" min="0" max="1" step="0.05" value="0.2"><output></output></label>
         <label class="row" data-help="Quanto tempo o som leva para subir no começo do vídeo."><span>Fade-in</span><input type="range" id="mFadeIn" min="0" max="3" step="0.1" value="0.4"><output></output></label>
         <label class="row" data-help="Quanto tempo o som leva para sumir no final do vídeo."><span>Fade-out</span><input type="range" id="mFadeOut" min="0" max="5" step="0.1" value="1.5"><output></output></label>
@@ -170,6 +172,8 @@
       <div class="step" data-step="5">
         <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai na mesma resolução, quadros por segundo e qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
         <div class="summary" id="summary"></div>
+        <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="eVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        <label class="row vol bedrow" data-help="Aumenta ou diminui a melodia (violão, banda ou playback) em relação à voz."><span>Volume da melodia</span><input type="range" id="eBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <button class="pill big" id="watchBtn">▶ Assistir a prévia em tela cheia</button>
         <button class="prime" id="exportBtn" data-help="Grava o vídeo final na qualidade do original, com o som e a cor escolhidos.">Gerar vídeo final</button>
         <div class="bar" id="exportBar" hidden><i></i></div>
@@ -204,7 +208,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=28"></script>
+<script type="module" src="js/app.js?v=29"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

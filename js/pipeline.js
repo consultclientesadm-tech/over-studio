@@ -8,10 +8,10 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=28';
-import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=28';
-import { referenceNotes, applyReference } from './reference.js?v=28';
-import { decodeVideoAudio } from './demux.js?v=28';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=29';
+import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=29';
+import { referenceNotes, applyReference } from './reference.js?v=29';
+import { decodeVideoAudio } from './demux.js?v=29';
 
 export const SR = STUDIO_SR;
 
@@ -329,7 +329,7 @@ const makeIR = (ctx, sr, len, decay) => {
   }
   return ir;
 };
-export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1 } = {}) {
+export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1, voiceDb = 0, bedDb = 0 } = {}) {
   const rv = Math.max(0, Math.min(1, reverb));
   const len = voice[0].length;
   // Cada compressor do navegador atrasa o som 6 ms (ele "olha à frente"); são dois, então o áudio sai
@@ -340,14 +340,14 @@ export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1 
   const f = (type, freq, gain = 0, Q = 0.7) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = freq; b.gain.value = gain; b.Q.value = Q; return b; };
   const bus = ctx.createGain();
   const vs = ctx.createBufferSource(); vs.buffer = buf(voice);
-  const vg = ctx.createGain(); vg.gain.value = bed ? voiceLift : 1;
+  const vg = ctx.createGain(); vg.gain.value = (bed ? voiceLift : 1) * 10 ** (voiceDb / 20); // volume da voz escolhido pela pessoa
   vs.connect(vg).connect(bus);
-  if (bed) { const bs = ctx.createBufferSource(); bs.buffer = buf(bed); bs.connect(bus); bs.start(); }
+  if (bed) { const bs = ctx.createBufferSource(), bg = ctx.createGain(); bg.gain.value = 10 ** (bedDb / 20); bs.buffer = buf(bed); bs.connect(bg).connect(bus); bs.start(); }
   // Reverb só da voz (sala gerada; quanto mais reverb, maior a sala)
   if (rv > 0) {
     const conv = ctx.createConvolver(); conv.buffer = makeIR(ctx, sr, 0.8 + 2 * rv, 0.16 + 0.55 * rv);
     const wet = ctx.createGain(); wet.gain.value = 0.45 * rv;
-    vs.connect(f('highpass', 250)).connect(conv).connect(f('lowpass', 7000)).connect(wet).connect(bus);
+    vg.connect(f('highpass', 250)).connect(conv).connect(f('lowpass', 7000)).connect(wet).connect(bus);
   }
   // Master da música inteira: limpa o grave sujo, tira o embolado, presença e brilho, cola e limita
   const glue = ctx.createDynamicsCompressor();
@@ -373,7 +373,7 @@ export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1 
 export async function render(state, opts = {}) {
   const o = { ...DEFAULTS, ...opts };
   const len = state.orig[0].length;
-  let mix = await mixMaster(state.tuned || state.voice, state.bed, SR, o.reverb);
+  let mix = await mixMaster(state.tuned || state.voice, state.bed, SR, o.reverb, { voiceDb: o.voiceDb || 0, bedDb: o.bedDb || 0 });
   mix = mix.map((c) => c.subarray(0, len)); // mesma duração do vídeo (a cauda do reverb fica no fade)
   const { start, end } = o.trim ? findTrim(state.orig, SR) : { start: 0, end: len / SR };
   const a = Math.round(start * SR), b = Math.round(end * SR);
