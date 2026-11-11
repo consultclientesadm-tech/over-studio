@@ -322,6 +322,25 @@ footer a { color: #888; }
 /* barra fixa no celular */
 .fixa { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px max(14px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); background: rgba(5,5,6,.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--line); transform: translateY(110%); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
 .fixa.on { transform: none; } .fixa .btn { width: 100%; min-height: 54px; font-size: 14px; }
+.fixa:has(.gift:not([hidden])) { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; } .fixa .btn { padding: 0 12px; }
+.fixa .btn.gift { background: transparent; color: var(--y); box-shadow: inset 0 0 0 2px var(--y), 0 0 18px rgba(255,212,0,.25); }
+/* Presente: teste grátis em destaque (capta o cadastro de quem ainda não vai comprar) */
+.presente { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px 14px; width: 100%; max-width: 520px; margin: 6px auto 0; padding: 16px 18px; border-radius: 20px; text-decoration: none; color: var(--ink); text-align: left;
+  background: linear-gradient(135deg, rgba(255,212,0,.16), rgba(255,179,0,.05) 60%, rgba(111,243,255,.08)); border: 2px solid var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.08), 0 0 34px rgba(255,212,0,.28); animation: presente 2.6s ease-in-out infinite; overflow: hidden; }
+.presente::before { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.18) 50%, transparent 70%); transform: translateX(-100%); animation: brilho2 3.4s ease-in-out infinite; pointer-events: none; }
+.presente .laco { grid-row: span 2; font-size: 42px; line-height: 1; filter: drop-shadow(0 0 12px rgba(255,212,0,.6)); animation: laco 2.6s ease-in-out infinite; }
+.presente .ptx { display: grid; gap: 2px; }
+.presente small { font: 700 11px/1 'Space Grotesk', system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--y); }
+.presente b { font-size: 20px; line-height: 1.15; color: #fff; }
+.presente i { font-style: normal; font-size: 13.5px; color: var(--mut); }
+.presente .pir { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; min-height: 50px; margin-top: 8px; border-radius: 40px; background: var(--y); color: #111; font-weight: 800; font-size: 15px; }
+.presente:active { transform: scale(.98); }
+.presente.em-oferta { margin-top: 22px; }
+@keyframes presente { 50% { box-shadow: 0 0 0 7px rgba(255,212,0,.12), 0 0 48px rgba(255,212,0,.42); } }
+@keyframes laco { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(-12deg) scale(1.08); } 86% { transform: rotate(10deg) scale(1.08); } 94% { transform: rotate(-4deg); } }
+@keyframes brilho2 { 0%, 50% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+[data-teste][hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .presente, .presente .laco, .presente::before { animation: none; } }
 @media (min-width: 900px) { .fixa { display: none; } }
 
 /* revelar ao rolar: sobe, entra em foco */
@@ -373,7 +392,7 @@ footer a { color: #888; }
   </div>
   <div class="hcta">
     <a class="btn" href="#oferta" data-cta>Quero o Studio Cover</a>
-    <a class="btn2" href="/entrar/?teste" data-teste hidden>ou teste grátis com <span data-tv>2</span> <span data-tvp>vídeos seus</span> →</a>
+    <a class="presente" href="/entrar/?teste" data-teste hidden><span class="laco" aria-hidden="true">🎁</span><span class="ptx"><small>Presente para você</small><b>Você ganhou um teste grátis!</b><i>Teste o Studio Cover com <span data-tv>2</span> <span data-tvp>vídeos seus</span>. Sem cartão.</i></span><span class="pir">Resgatar meu teste grátis →</span></a>
     <div class="postar"><span>Pronto para postar no</span><span class="rs"><i class="rede ig" title="Instagram"><svg><use href="#i-ig"/></svg></i><i class="rede tt" title="TikTok"><svg><use href="#i-tt"/></svg></i><i class="rede yt" title="YouTube Shorts"><svg><use href="#i-yt"/></svg></i></span></div>
     <div class="trust"><span>iPhone 13+ e Android</span><span>Sem instalar programa</span><span>Acesso na hora</span></div>
   </div>
@@ -504,7 +523,7 @@ footer a { color: #888; }
     <a class="btn full" href="#" id="comprar" style="margin-top:18px">Quero o Studio Cover</a>
     <p class="mini" style="margin:12px 0 0">🔒 Compra segura pela Eduzz · Pix, cartão ou boleto · Acesso chega no seu e-mail</p>
     <div class="garantia"><div class="selo">7<small>DIAS</small></div><p><b>Garantia incondicional de 7 dias.</b> Testou e não gostou? Devolvemos 100% do seu dinheiro. Sem perguntas.</p></div>
-    <p style="margin:18px 0 0" data-teste hidden><a class="btn2" href="/entrar/?teste">Prefere testar antes? Comece grátis com <span data-tv>2</span> <span data-tvp2>vídeos</span> →</a></p>
+    <a class="presente em-oferta" href="/entrar/?teste" data-teste hidden><span class="laco" aria-hidden="true">🎁</span><span class="ptx"><small>Presente para você</small><b>Você ganhou um teste grátis!</b><i>Teste o Studio Cover com <span data-tv>2</span> <span data-tvp>vídeos seus</span>. Sem cartão.</i></span><span class="pir">Resgatar meu teste grátis →</span></a>
   </div>
 </div></section>
 
@@ -526,12 +545,13 @@ footer a { color: #888; }
 <section class="fim"><div class="w rv">
   <h2 class="h">Seu próximo cover com <em>voz afinada</em> e som de estúdio.</h2>
   <p class="lead" style="margin-bottom:28px">Sem estúdio, sem programa, sem passar vergonha. Só você, o celular e o Studio Cover.</p>
-  <a class="btn" href="#oferta" data-cta>Quero o Studio Cover</a>
+  <a class="presente" href="/entrar/?teste" data-teste hidden><span class="laco" aria-hidden="true">🎁</span><span class="ptx"><small>Presente para você</small><b>Você ganhou um teste grátis!</b><i>Teste o Studio Cover com <span data-tv>2</span> <span data-tvp>vídeos seus</span>. Sem cartão.</i></span><span class="pir">Resgatar meu teste grátis →</span></a>
+  <a class="btn" href="#oferta" data-cta style="margin-top:18px">Quero o Studio Cover</a>
 </div></section>
 
 <footer><div class="w">Studio Cover · <a href="/entrar/">Área do aluno</a><br><span id="suporte"></span><p style="margin:14px auto 0;max-width:640px;font-size:11.5px;color:#4a4a55">Instagram, TikTok e YouTube são marcas de seus respectivos donos. O Studio Cover não é afiliado, patrocinado nem endossado por essas empresas.</p></div></footer>
 <div class="cookies" id="cookies" hidden>Usamos cookies e o Pixel da Meta para medir os anúncios. <button id="ckOk">Ok</button><button id="ckNao" class="nao">Não aceito</button></div>
-<div class="fixa" id="fixa"><a class="btn" href="#oferta">Quero o Studio Cover</a></div>
+<div class="fixa" id="fixa"><a class="btn gift" href="/entrar/?teste" data-teste hidden>🎁 Teste grátis</a><a class="btn" href="#oferta">Quero o Studio Cover</a></div>
 
 <script>
 (() => {
