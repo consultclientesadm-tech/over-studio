@@ -41,8 +41,16 @@ try {
       await page.screenshot({ path: `${dir}/${name}-8-telacheia.png` });
       await page.click('#fsBtn'); await page.click('#stepper button[data-step="2"]'); await page.waitForTimeout(600);
       await page.screenshot({ path: `${dir}/${name}-3-afinacao.png` });
-      await page.click('#expandBtn'); await page.waitForTimeout(500);
+      await page.click('#editor'); await page.waitForTimeout(500);
+      const pop = await page.evaluate(() => { const r = document.getElementById('editor').getBoundingClientRect(), st = document.querySelector('.step[data-step="2"]').getBoundingClientRect(); return { pop: document.getElementById('studio').classList.contains('pop'), h: Math.round(r.height), full: st.top <= 1 && st.height >= innerHeight - 2 }; });
+      check(pop.pop && pop.full && pop.h > 450, `celular: tocar no painel abre o painel de notas em tela cheia (${pop.h}px de altura)`);
+      await page.click('#popPlay'); await page.waitForTimeout(1200);
+      const tp = await page.evaluate(() => +document.getElementById('seek').value);
+      check(tp > 0.4, `celular: dá para ouvir dentro do painel grande (${tp.toFixed(1)} s)`);
+      await page.click('#popPlay');
       await page.screenshot({ path: `${dir}/${name}-3e-expandido.png` });
+      await page.click('#popClose'); await page.waitForTimeout(400);
+      check(!(await page.evaluate(() => document.getElementById('studio').classList.contains('pop'))), 'celular: Fechar volta para a tela normal');
       await page.click('#stepper button[data-step="3"]'); await page.waitForTimeout(500);
       await page.screenshot({ path: `${dir}/${name}-5-mix.png` });
       await ctx.close(); continue;

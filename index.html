@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=29">
+<link rel="stylesheet" href="css/app.css?v=30">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -32,7 +32,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v29</small></div>
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v30</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda">?</button>
     <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
@@ -110,6 +110,7 @@
     <div class="panel">
       <!-- 2) Afinação -->
       <div class="step" data-step="2">
+        <div class="popbar" id="popBar"><button class="icon play" id="popPlay" title="Tocar">▶</button><span class="time" id="popTime">0:00</span><b>Painel de notas</b><button class="pill" id="popClose">✕ Fechar</button></div>
         <div class="head">
           <div><h3>Afinação</h3><p class="sub hidesm">Toque em "Afinar automático". Depois compare no ANTES | DEPOIS. Se quiser, mexa nota por nota no painel.</p><div class="chips" id="chips"></div></div>
           <div class="actions">
@@ -133,7 +134,7 @@
           <button class="tb sm" id="zOut" title="Menos zoom"><i>−</i></button>
           <button class="tb sm" id="zIn" title="Mais zoom"><i>+</i></button>
           <button class="tb sm wide on" id="showOrig" data-help="Mostra no painel a linha cinza da sua voz original, para comparar com a afinada."><span>Voz original</span></button>
-          <button class="tb sm wide" id="expandBtn" data-help="Aumenta o painel de notas (o vídeo fica menor). Toque de novo para voltar."><span id="expandTxt">⤢ Expandir painel</span></button>
+          <button class="tb sm wide" id="expandBtn" data-help="Abre o painel de notas na tela toda para mexer com calma. Toque em Aplicar ou Fechar para voltar."><span id="expandTxt">⤢ Painel grande</span></button>
           <button class="tb sm wide" id="moreBtn" data-help="Ajustes finos: quanto puxar as notas, prender no tom e afinar pela música original."><span>⚙ Ajustes</span></button>
         </div>
         <div class="more" id="more" hidden>
@@ -208,7 +209,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=29"></script>
+<script type="module" src="js/app.js?v=30"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=29';
-import { prefetchModel } from './studio.js?v=29';
-import { TuneEditor } from './editor.js?v=29';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=29';
-import { exportVideo, exportType } from './export.js?v=29';
+import * as cover from './pipeline.js?v=30';
+import { prefetchModel } from './studio.js?v=30';
+import { TuneEditor } from './editor.js?v=30';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=30';
+import { exportVideo, exportType } from './export.js?v=30';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -147,7 +147,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v29`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v30`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -263,6 +263,7 @@ $('quickAll').onclick = async () => {
 
 // Etapas
 function go(n) {
+  if (n !== 2) closePop();
   if (audioOnly && n === 4) n = step > 4 ? 3 : 5; // só áudio: não tem etapa de cor
   const wasPlaying = playing();
   pause();
@@ -490,7 +491,34 @@ $('q').oninput = () => ($('qOut').textContent = pct(+$('q').value));
 $('s').oninput = () => ($('sOut').textContent = pct(+$('s').value));
 $('q').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { quantize: +$('q').value, bypass: false }); else { pushUndo(); $('q').dataset.global = $('q').value; setPending(); } };
 $('s').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { straighten: +$('s').value, bypass: false }); else { pushUndo(); $('s').dataset.global = $('s').value; setPending(); } };
-$('expandBtn').onclick = () => { const on = !$('studio').classList.contains('expand'); $('studio').classList.toggle('expand', on); $('expandBtn').classList.toggle('on', on); $('expandTxt').textContent = on ? '⤡ Diminuir painel' : '⤢ Expandir painel'; };
+// Painel de notas grande, como um pop-up na tela toda. O vídeo fica escondido atrás (o som continua),
+// então o celular não gasta força desenhando o vídeo enquanto a pessoa mexe nas notas.
+const isPop = () => $('studio').classList.contains('pop');
+function openPop() {
+  if (isPop()) return;
+  $('studio').classList.add('pop'); app.classList.add('popopen');
+  try { history.pushState({ pop: 1 }, ''); } catch {}
+  syncPop(); setTimeout(() => editor?.resize(), 30);
+}
+function closePop(fromBack) {
+  if (!isPop()) return;
+  $('studio').classList.remove('pop'); app.classList.remove('popopen');
+  if (!fromBack) try { if (history.state?.pop) history.back(); } catch {}
+  setTimeout(() => editor?.resize(), 30);
+}
+addEventListener('popstate', () => closePop(true));
+addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+$('expandBtn').onclick = () => (isPop() ? closePop() : openPop());
+$('popClose').onclick = () => closePop();
+$('popPlay').onclick = () => $('play').click();
+function syncPop() { $('popPlay').textContent = $('play').textContent; $('popTime').textContent = $('tNow').textContent; }
+new MutationObserver(() => isPop() && syncPop()).observe($('play'), { childList: true, characterData: true, subtree: true });
+new MutationObserver(() => isPop() && syncPop()).observe($('tNow'), { childList: true, characterData: true, subtree: true });
+// no celular, tocar no painel pequeno abre o grande (lá a pessoa escolhe a nota com o dedo com folga)
+$('editor').parentElement.addEventListener('pointerdown', (e) => {
+  if (isPop() || innerWidth >= 900) return;
+  e.preventDefault(); e.stopPropagation(); openPop();
+}, true);
 $('moreBtn').onclick = () => { $('more').hidden = !$('more').hidden; $('moreBtn').classList.toggle('on', !$('more').hidden); requestAnimationFrame(() => editor.resize()); };
 $('zIn').onclick = () => editor.zoom(1.5);
 $('zOut').onclick = () => editor.zoom(1 / 1.5);
@@ -502,7 +530,7 @@ $('undo').onclick = () => {
   if (o.s != null) $('s').dataset.global = o.s; else delete $('s').dataset.global;
   setPending(); refreshChips(); toast('Desfeito. Toque em "Aplicar edições" para ouvir.');
 };
-$('apply').onclick = doTune;
+$('apply').onclick = async () => { await doTune(); if (tuned) closePop(); };
 $('mSnap').onchange = () => { pushUndo(); setPending(); };
 $('mUseRef').onchange = () => { pushUndo(); setPending(); };
 function refreshRef() { $('mUseRef').disabled = !state.ref; $('mRefTxt').textContent = state.ref ? 'Trocar música original' : 'Subir música original'; }
