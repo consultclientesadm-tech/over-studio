@@ -449,14 +449,12 @@ footer a { color: #888; }
 
 <!-- 5. ANTES E DEPOIS -->
 <section id="antes-depois"><div class="w">
-  <div class="c rv"><span class="chip">Antes × Depois</span><h2 class="h2" style="margin-top:16px">Escute a diferença. <em>Veja</em> a diferença.</h2>
-  <p class="lead">Mesmo vídeo, mesmo celular. Arraste a linha e toque para ouvir.</p></div>
+  <div class="c rv"><span class="chip">Antes × Depois</span><h2 class="h2" style="margin-top:16px"><em>Veja</em> a diferença.</h2>
+  <p class="lead">Mesmo vídeo, mesmo celular. Arraste a linha para comparar.</p></div>
   <div class="ad">
     <div class="cmp rv" id="cmp"><img src="/assets/lp/antes.webp?v=2" alt="Antes" loading="lazy"><img class="dep" src="/assets/lp/depois.webp?v=2" alt="Depois com cor de cinema" loading="lazy"><div class="lin"></div><span class="tag t1">ANTES</span><span class="tag t2">DEPOIS</span></div>
     <div class="ouvir rv d1">
-      <button data-a="/assets/lp/antes.mp3?v=2"><i>▶</i><span>Ouvir o ANTES<small>Como saiu do celular</small></span><span class="onda"><b></b><b></b><b></b><b></b><b></b><b></b></span></button>
-      <button class="dep" data-a="/assets/lp/depois.mp3?v=2"><i>▶</i><span>Ouvir o DEPOIS<small>Afinado, mixado e masterizado no app</small></span><span class="onda"><b></b><b></b><b></b><b></b><b></b><b></b></span></button>
-      <p class="mini">Use fone para ouvir melhor. Afinação natural: o vibrato e o seu jeito de cantar continuam seus.</p>
+      <p class="mini">Mesmo vídeo do celular: depois de passar pelo app, com cor de cinema, voz afinada e som mixado.</p>
       <a class="btn full" href="#oferta" data-cta>Quero esse som nos meus covers</a>
     </div>
   </div>
@@ -636,7 +634,7 @@ footer a { color: #888; }
   $('play').onclick = () => {
     px('VSLPlay', {}, true);
     const vw = document.querySelector('#vsl .vw'), v = document.createElement('video');
-    v.src = '/assets/lp/vsl.mp4?v=2'; v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
+    v.src = '/assets/lp/vsl.mp4?v=3'; v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
     vw.querySelector('.capa').remove(); $('play').remove(); vw.appendChild(v); v.play().catch(() => {});
   };
 
