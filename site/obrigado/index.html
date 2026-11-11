@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050506">
+<meta name="robots" content="noindex">
+<title>Compra confirmada · Studio Cover</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root { --y: #ffd400; --g: #2ee59d; --ink: #f4f4f7; --mut: #9a9aa6; --line: #26262e; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: #050506; color: var(--ink); font-family: 'Space Grotesk', system-ui, sans-serif; }
+.grade { position: fixed; inset: 0; background: linear-gradient(rgba(255,212,0,.05) 1px, transparent 1px) 0 0/44px 44px, linear-gradient(90deg, rgba(255,212,0,.05) 1px, transparent 1px) 0 0/44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 0, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 0, transparent 70%); }
+main { position: relative; min-height: 100svh; display: grid; place-items: center; padding: 28px 16px; }
+.card { width: 100%; max-width: 420px; text-align: center; background: rgba(14,14,18,.85); border: 1px solid var(--line); border-radius: 22px; padding: 30px 22px; box-shadow: 0 0 0 1px rgba(255,212,0,.06), 0 30px 80px rgba(0,0,0,.6); }
+.ok { width: 72px; height: 72px; margin: 0 auto 14px; border-radius: 50%; display: grid; place-items: center; font-size: 34px; color: #000; background: var(--g); box-shadow: 0 0 40px rgba(46,229,157,.45); }
+h1 { font: 900 22px/1.2 Orbitron, sans-serif; letter-spacing: .06em; margin: 0 0 10px; }
+h1 em { font-style: normal; color: var(--y); }
+p { color: var(--mut); line-height: 1.55; margin: 0 0 12px; font-size: 15px; }
+p b { color: var(--ink); }
+.btn { display: block; margin-top: 18px; height: 54px; line-height: 54px; border-radius: 40px; background: linear-gradient(180deg, #ffe34d, #ffc400); color: #000; font: 900 14px Orbitron, sans-serif; letter-spacing: .08em; text-decoration: none; box-shadow: 0 0 30px rgba(255,212,0,.35); }
+</style>
+</head>
+<body>
+<div class="grade"></div>
+<main><div class="card">
+  <div class="ok">✓</div>
+  <h1>Bem-vindo ao <em>Studio Cover</em></h1>
+  <p>Sua compra deu certo. <b>O acesso chega no seu e-mail</b> em poucos minutos (olhe também o spam e as promoções).</p>
+  <p>Se pagou por boleto, o acesso é liberado assim que o banco confirmar o pagamento.</p>
+  <a class="btn" href="/entrar/">ENTRAR NO APP</a>
+</div></main>
+<script>
+// Compra para os pixels da página que NÃO estão no checkout da Eduzz (a Eduzz já manda a Compra do pixel dela).
+(function () {
+  var q = new URLSearchParams(location.search);
+  var pega = function (ks) { for (var i = 0; i < ks.length; i++) { var v = q.get(ks[i]); if (v) return v; } return ''; };
+  var memo = function (k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+  if (memo('sc_cookies') === 'no') return;
+  fetch('/api/conta.php?a=oferta').then(function (r) { return r.json(); }).then(function (o) {
+    var ja = String(o.eduzz_pixel || '').split(/[^0-9]+/).filter(Boolean);
+    var ids = String(o.pixel || '').split(/[^0-9]+/).filter(function (i) { return i && ja.indexOf(i) < 0; });
+    if (!ids.length) return;
+    var trans = pega(['trans_cod', 'edz_fat_cod', 'fatura', 'invoice', 'order_id', 'id']);
+    var valor = parseFloat(String(pega(['trans_paid', 'edz_valorpago', 'trans_value', 'valor', 'value']) || '').replace(',', '.')) || parseFloat(String(o.price || '297').replace(/\./g, '').replace(',', '.')) || 297;
+    !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s); }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+    ids.forEach(function (i) { fbq('init', i); });
+    fbq('track', 'PageView');
+    var chave = 'sc_compra_' + (trans || 'sem');
+    var antes = parseInt(memo(chave) || '0', 10);
+    if (antes && (trans || Date.now() - antes < 6 * 3600 * 1000)) return; // já contou esta compra neste aparelho
+    var opc = trans ? { eventID: 'sc-' + trans } : {};
+    ids.forEach(function (i) { fbq('trackSingle', i, 'Purchase', { content_name: 'Studio Cover', value: valor, currency: 'BRL' }, opc); });
+    memo(chave, String(Date.now()));
+  }).catch(function () {});
+})();
+</script>
+</body>
+</html>

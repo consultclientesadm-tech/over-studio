@@ -103,6 +103,8 @@ const SETTINGS_DEFAULT = [
   'product_name' => 'Studio Cover',
   'checkout_url' => '',          // link do checkout da Eduzz; pode ter {email} e {nome}
   'price' => '297,00',                 // ex.: 97,00 (só para mostrar)
+  'installments' => '10',              // parcelas mostradas na página (0 ou 1 = só o preço à vista)
+  'installment_value' => '35,69',      // valor de cada parcela com os juros da Eduzz (copiar do checkout)
   'trial_enabled' => '1',        // teste grátis ligado
   'trial_videos' => '2',         // quantos vídeos no teste
   'access_days' => '365',        // dias de acesso depois de pagar (0 = vitalício)
@@ -114,7 +116,8 @@ const SETTINGS_DEFAULT = [
   'mail_name' => 'Studio Cover',
   'smtp_host' => '', 'smtp_port' => '587', 'smtp_user' => '', 'smtp_pass' => '', 'smtp_secure' => 'tls',
   'support_whatsapp' => '',
-  'meta_pixel' => '1595086872316004', // Pixel da Meta na página de vendas (o mesmo do Viral Music Pro; vazio = sem pixel)
+  'meta_pixel' => '1595086872316004,1631589557846072', // Pixels da Meta na página de vendas, separados por vírgula (vazio = sem pixel)
+  'eduzz_pixel' => '1595086872316004', // pixel já cadastrado no checkout da Eduzz (a página de obrigado não repete a Compra dele)
 ];
 function setting(string $k): string {
   static $cache = null;

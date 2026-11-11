@@ -9,7 +9,7 @@ $a = (string)($_GET['a'] ?? '');
 switch ($a) {
   case 'oferta': // dados públicos para a página de vendas
     header('Cache-Control: public, max-age=300');
-    json_out(['ok' => true, 'checkout_url' => checkout_url(), 'price' => setting('price'), 'trial' => setting('trial_enabled') === '1', 'trial_videos' => (int)setting('trial_videos'), 'whatsapp' => setting('support_whatsapp'), 'pixel' => setting('meta_pixel')]);
+    json_out(['ok' => true, 'checkout_url' => checkout_url(), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value'), 'trial' => setting('trial_enabled') === '1', 'trial_videos' => (int)setting('trial_videos'), 'whatsapp' => setting('support_whatsapp'), 'pixel' => setting('meta_pixel'), 'eduzz_pixel' => setting('eduzz_pixel')]);
 
   case 'me': {
     $u = current_user();
