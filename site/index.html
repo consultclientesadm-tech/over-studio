@@ -636,7 +636,7 @@ footer a { color: #888; }
   $('play').onclick = () => {
     px('VSLPlay', {}, true);
     const vw = document.querySelector('#vsl .vw'), v = document.createElement('video');
-    v.src = '/assets/lp/vsl.mp4'; v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
+    v.src = '/assets/lp/vsl.mp4?v=2'; v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
     vw.querySelector('.capa').remove(); $('play').remove(); vw.appendChild(v); v.play().catch(() => {});
   };
 
