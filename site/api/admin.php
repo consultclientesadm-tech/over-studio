@@ -38,7 +38,8 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+// tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
+if (!in_array($a, ['resumo', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -152,6 +153,7 @@ switch ($a) {
   case 'avisar': { // aviso no app para um aluno ou para um grupo
     $title = trim((string)arg('titulo')); $body = trim((string)arg('texto')); $url = trim((string)arg('link'));
     if ($title === '' || $body === '') fail('Escreva o título e o texto.');
+    if ($url !== '' && !preg_match('#^(https://|/)#', $url)) fail('O link precisa começar com https:// ou /');
     $grupo = (string)arg('grupo');
     $ids = [];
     if ($grupo === 'um') $ids = [(int)arg('id')];

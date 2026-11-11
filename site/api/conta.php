@@ -22,7 +22,7 @@ switch ($a) {
   case 'cadastro': { // teste grátis
     require_post();
     if (setting('trial_enabled') !== '1') fail('O teste grátis está fechado no momento.');
-    throttle('cad:' . client_ip(), 5, 3600);
+    throttle('cad:' . client_ip(), 30, 3600); // várias pessoas no mesmo IP (internet de celular) não podem ser barradas
     $email = clean_email((string)arg('email')); $name = trim(mb_substr((string)arg('nome'), 0, 80)); $pass = (string)arg('senha');
     if (!valid_email($email)) fail('Confira o seu e-mail.');
     if ($name === '') fail('Digite o seu nome.');
@@ -40,7 +40,7 @@ switch ($a) {
   case 'login': {
     require_post();
     $email = clean_email((string)arg('email')); $pass = (string)arg('senha');
-    throttle('login:' . client_ip(), 20, 900); throttle('login:' . $email, 8, 900);
+    throttle('login:' . client_ip(), 60, 900); throttle('login:' . $email, 8, 900);
     $q = db()->prepare('SELECT * FROM users WHERE email = ?'); $q->execute([$email]);
     $u = $q->fetch();
     if (!$u || !$u['pass_hash'] || !password_verify($pass, $u['pass_hash'])) {

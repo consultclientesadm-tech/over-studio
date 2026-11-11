@@ -140,7 +140,8 @@ function h(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES,
 function json_out($data, int $code = 200): never {
   http_response_code($code);
   header('Content-Type: application/json; charset=utf-8');
-  header('Cache-Control: no-store');
+  if (!preg_grep('/^Cache-Control:/i', headers_list())) header('Cache-Control: no-store'); // a oferta pública pode ficar em cache
+  header('X-Content-Type-Options: nosniff');
   echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
   exit;
 }
