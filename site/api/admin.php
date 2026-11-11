@@ -186,6 +186,7 @@ switch ($a) {
       $v = trim((string)$in[$k]);
       if ($k === 'smtp_pass' && $v === '••••••••') continue;
       if (in_array($k, ['trial_videos', 'access_days', 'smtp_port'], true)) $v = (string)max(0, (int)$v);
+      if ($k === 'meta_pixel') $v = preg_replace('/\D/', '', $v);
       if ($k === 'checkout_url' && $v !== '' && !preg_match('#^https://#', $v)) fail('O link do checkout precisa começar com https://');
       set_setting($k, $v);
     }

@@ -333,6 +333,7 @@ footer a { color: #888; }
   .btn::after, .gal .iph, .hud, .palco .iph, .medidor i { animation: none !important; }
   .tour .vw img.on, .tour .vw img.off, .boot * { animation: none !important; }
 }
+.cookies{position:fixed;left:12px;right:12px;bottom:84px;z-index:60;max-width:520px;margin:0 auto;background:rgba(10,10,18,.94);border:1px solid rgba(255,212,0,.25);border-radius:14px;padding:12px 14px;font-size:13px;color:#cfcfd8;display:flex;flex-wrap:wrap;align-items:center;gap:8px;backdrop-filter:blur(8px)}.cookies[hidden]{display:none}.cookies button{border:0;border-radius:999px;padding:7px 14px;font:600 13px 'Space Grotesk',sans-serif;background:var(--y);color:#000;cursor:pointer}.cookies .nao{background:transparent;color:#9a9aa6;border:1px solid #333}
 </style>
 <script>document.documentElement.classList.add('js');</script>
 </head>
@@ -531,6 +532,7 @@ footer a { color: #888; }
 </div></section>
 
 <footer><div class="w">Studio Cover · <a href="/entrar/">Área do aluno</a><br><span id="suporte"></span><p style="margin:14px auto 0;max-width:640px;font-size:11.5px;color:#4a4a55">Instagram, TikTok e YouTube são marcas de seus respectivos donos. O Studio Cover não é afiliado, patrocinado nem endossado por essas empresas.</p></div></footer>
+<div class="cookies" id="cookies" hidden>Usamos cookies e o Pixel da Meta para medir os anúncios. <button id="ckOk">Ok</button><button id="ckNao" class="nao">Não aceito</button></div>
 <div class="fixa" id="fixa"><a class="btn" href="#oferta">Quero o Studio Cover</a></div>
 
 <script>
@@ -606,8 +608,33 @@ footer a { color: #888; }
   let forcaTour = 1; espectro($('espT'), () => forcaTour);
   const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
 
+  // ---- Pixel da Meta: liga ao abrir; a barra só informa e deixa recusar (lembrado neste aparelho) ----
+  // Para uma cópia da página com outro pixel, basta definir window.SC_PIXEL = 'ID' antes deste script.
+  const memo = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+  let pxFila = [];
+  const recusou = () => memo.get('sc_cookies') === 'no';
+  const px = (ev, p, custom) => {
+    if (recusou()) return;
+    if (window.fbq) return custom ? fbq('trackCustom', ev, p || {}) : fbq('track', ev, p || {});
+    if (pxFila.length < 30) pxFila.push([ev, p, custom]);
+  };
+  function pixelLiga(id) {
+    id = String(id || '').replace(/\D/g, '');
+    if (!id || window.fbq || recusou()) { pxFila = []; return; }
+    !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s); }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', id); fbq('track', 'PageView'); fbq('track', 'ViewContent', { content_name: 'Studio Cover', value: 297, currency: 'BRL' });
+    const q = pxFila; pxFila = []; q.forEach((e) => px(e[0], e[1], e[2]));
+    if (memo.get('sc_cookies') == null) $('cookies').hidden = false;
+  }
+  $('ckOk').onclick = () => { memo.set('sc_cookies', 'yes'); $('cookies').hidden = true; };
+  $('ckNao').onclick = () => { memo.set('sc_cookies', 'no'); $('cookies').hidden = true; pxFila = []; if (window.fbq) fbq('consent', 'revoke'); };
+  $('comprar').addEventListener('click', () => px('InitiateCheckout', { content_name: 'Studio Cover', value: 297, currency: 'BRL' }));
+  document.querySelectorAll('a[href^="/entrar/?teste"]').forEach((a) => a.addEventListener('click', () => px('Lead', { content_name: 'Teste grátis Studio Cover' })));
+  document.querySelectorAll('a[href="#oferta"]').forEach((a) => a.addEventListener('click', () => px('VerOferta', {}, true)));
+
   // VSL: o vídeo só baixa quando a pessoa toca (página leve)
   $('play').onclick = () => {
+    px('VSLPlay', {}, true);
     const vw = document.querySelector('#vsl .vw'), v = document.createElement('video');
     v.src = '/assets/lp/vsl.mp4'; v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
     vw.querySelector('.capa').remove(); $('play').remove(); vw.appendChild(v); v.play().catch(() => {});
@@ -615,6 +642,7 @@ footer a { color: #888; }
 
   // oferta: preço e checkout vêm do painel
   fetch('/api/conta.php?a=oferta').then((r) => r.json()).then((o) => {
+    pixelLiga(window.SC_PIXEL || o.pixel);
     if (o.checkout_url) $('comprar').href = o.checkout_url;
     else $('comprar').href = '/entrar/?teste';
     if (o.price) { $('preco').hidden = false; $('precoPor').textContent = 'R$ ' + o.price; }

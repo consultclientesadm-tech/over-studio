@@ -114,6 +114,7 @@ const SETTINGS_DEFAULT = [
   'mail_name' => 'Studio Cover',
   'smtp_host' => '', 'smtp_port' => '587', 'smtp_user' => '', 'smtp_pass' => '', 'smtp_secure' => 'tls',
   'support_whatsapp' => '',
+  'meta_pixel' => '1595086872316004', // Pixel da Meta na página de vendas (o mesmo do Viral Music Pro; vazio = sem pixel)
 ];
 function setting(string $k): string {
   static $cache = null;
