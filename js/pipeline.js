@@ -8,10 +8,11 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=34';
-import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=34';
-import { referenceNotes, applyReference } from './reference.js?v=34';
-import { decodeVideoAudio } from './demux.js?v=34';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=35';
+import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=35';
+import { referenceNotes, applyReference } from './reference.js?v=35';
+import { decodeVideoAudio } from './demux.js?v=35';
+import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=35';
 
 export const SR = STUDIO_SR;
 
@@ -385,41 +386,71 @@ const makeIR = (ctx, sr, len, decay) => {
   }
   return ir;
 };
-export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1, voiceDb = 0, bedDb = 0 } = {}) {
+// Atraso de um compressor do navegador (ele "olha à frente"; ~6 ms no Chrome/Safari). Medido uma vez.
+let compDelay = null;
+async function measureCompDelay(sr) {
+  if (compDelay != null) return compDelay;
+  try {
+    const n = Math.round(0.05 * sr), ctx = new OfflineAudioContext(1, n, sr);
+    const b = ctx.createBuffer(1, n, sr); b.getChannelData(0)[0] = 0.5;
+    const s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.createDynamicsCompressor()).connect(ctx.destination); s.start();
+    const o = (await ctx.startRendering()).getChannelData(0);
+    let k = 0; for (let i = 1; i < n; i++) if (Math.abs(o[i]) > Math.abs(o[k])) k = i;
+    compDelay = k / sr;
+  } catch { compDelay = 0.006; }
+  return compDelay;
+}
+
+// eq: { low, mid, high } em dB (grave 100 Hz, médio 1 kHz, agudo 8 kHz). comp: { mode: 'auto' | 'manual', amount 0..1 }
+export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1, voiceDb = 0, bedDb = 0, eq = {}, comp = { mode: 'auto' }, loud = true } = {}) {
   const rv = Math.max(0, Math.min(1, reverb));
   const len = voice[0].length;
-  // Cada compressor do navegador atrasa o som 6 ms (ele "olha à frente"); são dois, então o áudio sai
-  // 12 ms atrasado. Renderiza um pouco a mais e corta esse atraso, senão a voz fica atrás da boca.
-  const D = Math.round(0.012 * sr);
+  // Cada compressor atrasa o som (ele "olha à frente"). A voz passa por três (voz, cola, limitador) e a
+  // base por dois; a base ganha o mesmo atraso da voz e no fim o atraso total é cortado.
+  const L = await measureCompDelay(sr);
+  const D = Math.round(3 * L * sr);
   const ctx = new OfflineAudioContext(2, len + D, sr);
   const buf = (chs) => { const b = ctx.createBuffer(2, len, sr); b.copyToChannel(chs[0], 0); b.copyToChannel(chs[1] || chs[0], 1); return b; };
   const f = (type, freq, gain = 0, Q = 0.7) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = freq; b.gain.value = gain; b.Q.value = Q; return b; };
   const bus = ctx.createGain();
   const vs = ctx.createBufferSource(); vs.buffer = buf(voice);
+  // Compressor da voz (automático pelas regras de mix, ou manual)
+  const cs = compSettings(voiceDynamics(voice[0], sr), comp.mode, comp.amount);
+  const vc = ctx.createDynamicsCompressor();
+  vc.threshold.value = cs.threshold; vc.ratio.value = cs.ratio; vc.knee.value = cs.knee; vc.attack.value = cs.attack; vc.release.value = cs.release;
+  const makeup = ctx.createGain(); makeup.gain.value = 10 ** (cs.makeup / 20);
   const vg = ctx.createGain(); vg.gain.value = (bed ? voiceLift : 1) * 10 ** (voiceDb / 20); // volume da voz escolhido pela pessoa
-  vs.connect(vg).connect(bus);
-  if (bed) { const bs = ctx.createBufferSource(), bg = ctx.createGain(); bg.gain.value = 10 ** (bedDb / 20); bs.buffer = buf(bed); bs.connect(bg).connect(bus); bs.start(); }
+  vs.connect(f('highpass', 80)).connect(vc).connect(makeup).connect(vg).connect(bus);
+  if (bed) {
+    const bs = ctx.createBufferSource(), bg = ctx.createGain(), dl = ctx.createDelay(0.1); dl.delayTime.value = L;
+    bg.gain.value = 10 ** (bedDb / 20); bs.buffer = buf(bed); bs.connect(dl).connect(bg).connect(bus); bs.start();
+  }
   // Reverb só da voz (sala gerada; quanto mais reverb, maior a sala)
   if (rv > 0) {
     const conv = ctx.createConvolver(); conv.buffer = makeIR(ctx, sr, 0.8 + 2 * rv, 0.16 + 0.55 * rv);
     const wet = ctx.createGain(); wet.gain.value = 0.45 * rv;
     vg.connect(f('highpass', 250)).connect(conv).connect(f('lowpass', 7000)).connect(wet).connect(bus);
   }
-  // Master da música inteira: limpa o grave sujo, tira o embolado, presença e brilho, cola e limita
+  // Master da música inteira: limpa o grave sujo, tira o embolado, presença e brilho, o equalizador
+  // de 3 bandas da pessoa, cola e limita
   const glue = ctx.createDynamicsCompressor();
   glue.threshold.value = -18; glue.knee.value = 12; glue.ratio.value = 2; glue.attack.value = 0.025; glue.release.value = 0.3;
   const lim = ctx.createDynamicsCompressor();
   lim.threshold.value = -6; lim.knee.value = 3; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.12;
+  const cl = (v) => Math.max(-12, Math.min(12, +v || 0));
   let node = bus;
-  for (const n of [f('highpass', 35), f('peaking', 300, -1.5, 0.9), f('peaking', 3000, 1.5, 0.8), f('highshelf', 11000, 1.5), glue, lim]) node = node.connect(n);
+  for (const n of [f('highpass', 35), f('peaking', 300, -1.5, 0.9), f('peaking', 3000, 1.5, 0.8), f('highshelf', 11000, 1.5),
+    f('lowshelf', 100, cl(eq.low)), f('peaking', 1000, cl(eq.mid), 0.7), f('highshelf', 8000, cl(eq.high)), glue, lim]) node = node.connect(n);
   node.connect(ctx.destination);
   vs.start();
   const out = await ctx.startRendering();
   const res = [0, 1].map((c) => out.getChannelData(c).slice(D, D + len));
+  if (loud) { res.lufs = loudnessMaster(res, sr); res.comp = cs; return res; }
   let peak = 0;
   for (const c of res) for (let i = 0; i < c.length; i++) peak = Math.max(peak, Math.abs(c[i]));
   const g = peak > 0 ? 0.89 / peak : 1; // pico em −1 dB
   for (const c of res) for (let i = 0; i < c.length; i++) c[i] *= g;
+  res.comp = cs;
   return res;
 }
 
@@ -429,7 +460,8 @@ export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1,
 export async function render(state, opts = {}) {
   const o = { ...DEFAULTS, ...opts };
   const len = state.orig[0].length;
-  let mix = await mixMaster(state.tuned || state.voice, state.bed, SR, o.reverb, { voiceDb: o.voiceDb || 0, bedDb: o.bedDb || 0 });
+  let mix = await mixMaster(state.tuned || state.voice, state.bed, SR, o.reverb, { voiceDb: o.voiceDb || 0, bedDb: o.bedDb || 0, eq: o.eq, comp: o.comp });
+  const info = { lufs: mix.lufs, comp: mix.comp };
   mix = mix.map((c) => c.subarray(0, len)); // mesma duração do vídeo (a cauda do reverb fica no fade)
   const { start, end } = o.trim ? findTrim(state.orig, SR) : { start: 0, end: len / SR };
   const a = Math.round(start * SR), b = Math.round(end * SR);
@@ -437,7 +469,7 @@ export async function render(state, opts = {}) {
   applyFades(out, SR, o.fadeIn, o.fadeOut);
   // full: mesma linha do tempo do vídeo inteiro (silêncio fora do corte), para comparar lado a lado
   const full = out.map((c) => { const f = new Float32Array(len); f.set(c, a); return f; });
-  return { channels: out, full, sr: SR, start, end };
+  return { channels: out, full, sr: SR, start, end, ...info };
 }
 
 // WAV 16 bits (para ouvir no player e para mandar ao servidor montar o vídeo)

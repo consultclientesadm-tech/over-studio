@@ -35,6 +35,26 @@ try {
   const after = await rms(), mv = await page.evaluate(() => document.getElementById('mVoice').value);
   check(after !== before && mv === '9', `volume da voz +9 dB mixou de novo e a régua da Mix acompanhou (${mv})`);
   await page.screenshot({ path: `${dir}/audio-2b-volumes.png` });
+  // Equalizador, compressor e volume padrão Spotify
+  const lu = () => page.evaluate(() => { const m = window.studio.mastered; let p = 0; for (const c of m.channels) for (const v of c) p = Math.max(p, Math.abs(v)); return { lufs: m.lufs, peak: 20 * Math.log10(p), comp: m.comp }; });
+  let m = await lu();
+  check(Math.abs(m.lufs + 14) < 0.8 && m.peak <= -0.95, `master no padrão Spotify: ${m.lufs.toFixed(1)} LUFS, pico ${m.peak.toFixed(2)} dB`);
+  check(m.comp.mode === 'auto' && m.comp.ratio >= 2 && m.comp.ratio <= 5, `compressor automático escolheu ${m.comp.ratio.toFixed(1)}:1`);
+  await page.evaluate(() => window.studio.go(3)); await page.waitForTimeout(300); await page.waitForFunction(() => document.getElementById('busy').hidden, null, { timeout: 120000 });
+  const e0 = await rms();
+  for (const [id, v] of [['mLow', '4'], ['mHigh', '-3']]) await page.evaluate(([id, v]) => { const r = document.getElementById(id); r.value = v; r.dispatchEvent(new Event('input')); r.dispatchEvent(new Event('change')); }, [id, v]);
+  await page.waitForTimeout(300); await page.waitForFunction(() => document.getElementById('busy').hidden, null, { timeout: 120000 });
+  check((await rms()) !== e0 && (await page.textContent('#mLow + output')) === '+4 dB', 'grave +4 e agudo −3 mixaram de novo');
+  await page.click('#compMode [data-m=manual]'); await page.waitForTimeout(300); await page.waitForFunction(() => document.getElementById('busy').hidden, null, { timeout: 120000 });
+  check(await page.isVisible('#compRow'), 'manual mostra a régua de compressão');
+  await page.evaluate(() => { const r = document.getElementById('mComp'); r.value = '1'; r.dispatchEvent(new Event('input')); r.dispatchEvent(new Event('change')); });
+  await page.waitForTimeout(300); await page.waitForFunction(() => document.getElementById('busy').hidden, null, { timeout: 120000 });
+  m = await lu();
+  check(m.comp.mode === 'manual' && m.comp.ratio === 8 && Math.abs(m.lufs + 14) < 0.8, `manual 100% = ${m.comp.ratio}:1, ainda ${m.lufs.toFixed(1)} LUFS`);
+  check(/LUFS/.test(await page.textContent('#compInfo')), 'mostra o volume final: ' + (await page.textContent('#compInfo')));
+  await page.evaluate(() => document.getElementById('mLow').scrollIntoView({ block: 'center' }));
+  await page.screenshot({ path: `${dir}/audio-2c-eq.png` });
+  await page.evaluate(() => window.studio.go(5)); await page.waitForTimeout(300); await page.waitForFunction(() => document.getElementById('busy').hidden, null, { timeout: 120000 });
   for (const [id, nome] of [['#dlVoice', 'so-voz'], ['#dlBed', 'so-musica']]) {
     const [d] = await Promise.all([page.waitForEvent('download'), page.click(id)]);
     const sz = fs.statSync(await d.path()).size;

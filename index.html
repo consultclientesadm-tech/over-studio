@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=34">
+<link rel="stylesheet" href="css/app.css?v=35">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -32,7 +32,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v34</small></div>
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v35</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda">?</button>
     <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
@@ -156,6 +156,15 @@
         </div>
         <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="mVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="mBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        <div class="mixsec"><b>Equalizador</b><button class="pill" id="eqReset" data-help="Volta grave, médio e agudo para o zero.">Zerar</button></div>
+        <label class="row eq" data-help="Grave (abaixo de 100 Hz): corpo, peso do violão e do bumbo. Muito grave embola no celular."><span>Grave</span><input type="range" id="mLow" min="-6" max="6" step="0.5" value="0"><output></output></label>
+        <label class="row eq" data-help="Médio (perto de 1 kHz): presença e o 'meio' da voz. Muito médio deixa o som anasalado."><span>Médio</span><input type="range" id="mMid" min="-6" max="6" step="0.5" value="0"><output></output></label>
+        <label class="row eq" data-help="Agudo (acima de 8 kHz): brilho e ar da voz. Muito agudo deixa o S chiado."><span>Agudo</span><input type="range" id="mHigh" min="-6" max="6" step="0.5" value="0"><output></output></label>
+        <div class="mixsec"><b>Compressor da voz</b>
+          <div class="seg" id="compMode" role="group" aria-label="Compressor"><button data-m="auto" class="on" data-help="O app mede o quanto sua voz varia entre as partes fracas e fortes e escolhe a compressão certa.">Automático</button><button data-m="manual" data-help="Você escolhe quanto comprimir.">Manual</button></div>
+        </div>
+        <label class="row" id="compRow" hidden data-help="Quanto deixar a voz por igual. Pouco = natural, com as partes fortes e fracas. Muito = voz sempre na frente, estilo rádio."><span>Compressão</span><input type="range" id="mComp" min="0" max="1" step="0.05" value="0.4"><output></output></label>
+        <p class="mixinfo" id="compInfo">Volume final no padrão do Spotify: −14 LUFS, pico em −1 dB.</p>
         <label class="row" data-help="Ambiência na voz, como cantar numa sala ou palco. 0% = seco."><span>Reverb</span><input type="range" id="mReverb" min="0" max="1" step="0.05" value="0.2"><output></output></label>
         <label class="row" data-help="Quanto tempo o som leva para subir no começo do vídeo."><span>Fade-in</span><input type="range" id="mFadeIn" min="0" max="3" step="0.1" value="0.4"><output></output></label>
         <label class="row" data-help="Quanto tempo o som leva para sumir no final do vídeo."><span>Fade-out</span><input type="range" id="mFadeOut" min="0" max="5" step="0.1" value="1.5"><output></output></label>
@@ -209,7 +218,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=34"></script>
+<script type="module" src="js/app.js?v=35"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
