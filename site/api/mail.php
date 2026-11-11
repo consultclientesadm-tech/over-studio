@@ -43,6 +43,7 @@ function build_mime(string $to, string $subject, string $html, string $text, str
 // Manda e registra. $kind: senha | esqueci | funil-N | teste-acabou | boas-vindas | teste
 function send_mail(?array $u, string $to, string $kind, string $subject, string $title, string $bodyHtml, string $btnText = '', string $btnUrl = ''): bool {
   $from = setting('mail_from');
+  if (!$from) { $host = preg_replace('/^www\./', '', (string)parse_url(site_url(), PHP_URL_HOST)); if ($host && str_contains($host, '.') && !preg_match('/^[\d.]+$/', $host)) $from = 'contato@' . $host; }
   $unsub = $u && !empty($u['unsub_token']) ? site_url() . '/api/conta.php?a=sair-lista&t=' . $u['unsub_token'] : '';
   $html = mail_template($title, $bodyHtml, $btnText, $btnUrl, $unsub);
   $text = trim(html_entity_decode(strip_tags(str_replace(['<br>', '</p>'], ["\n", "\n\n"], $bodyHtml)))) . ($btnUrl ? "\n\n$btnText: $btnUrl" : '') . ($unsub ? "\n\nNão quer mais receber? $unsub" : '');
