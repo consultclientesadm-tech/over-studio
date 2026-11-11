@@ -102,7 +102,7 @@ SQL);
 const SETTINGS_DEFAULT = [
   'product_name' => 'Studio Cover',
   'checkout_url' => '',          // link do checkout da Eduzz; pode ter {email} e {nome}
-  'price' => '',                 // ex.: 97,00 (só para mostrar)
+  'price' => '297,00',                 // ex.: 97,00 (só para mostrar)
   'trial_enabled' => '1',        // teste grátis ligado
   'trial_videos' => '2',         // quantos vídeos no teste
   'access_days' => '365',        // dias de acesso depois de pagar (0 = vitalício)
