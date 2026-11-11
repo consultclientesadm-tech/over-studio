@@ -4,7 +4,7 @@
 // a voz original em cinza. Toque/clique seleciona; arrastar o bloco para cima ou para baixo muda a nota
 // (de semitom em semitom); arrastar o fundo anda pela música; pinça ou Ctrl+roda dá zoom;
 // tocar na régua de cima leva o vídeo para aquele ponto.
-import { noteName } from './music.js?v=33';
+import { noteName } from './music.js?v=34';
 
 const SCALE = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10] };
 const C = { bg: '#0a0a0d', row: '#101015', rowKey: '#16161d', line: '#202029', txt: '#8b8b99', yel: '#ffd400', green: '#2ee59d', red: '#ff4d5e', orig: 'rgba(170,170,190,.45)', band: 'rgba(46,229,157,.13)' };
@@ -13,7 +13,7 @@ export class TuneEditor {
   constructor(canvas, { onSelect = () => {}, onEdit = () => {}, onSeek = () => {} } = {}) {
     this.c = canvas; this.g = canvas.getContext('2d');
     this.cb = { onSelect, onEdit, onSeek };
-    this.state = null; this.sel = -1; this.showOrig = true; this.snap = true; this.time = 0; this.band = 0.15;
+    this.state = null; this.sel = -1; this.showOrig = true; this.snap = false; // mexer na mão vai para qualquer nota, até fora da escala this.time = 0; this.band = 0.15;
     this.pps = 70; this.t0 = 0; this.row = 18; this.top = 72; this.GUT = 38; this.RULER = 20;
     this.pointers = new Map();
     canvas.style.touchAction = 'none';
@@ -151,7 +151,9 @@ export class TuneEditor {
     g.font = '10px "Space Grotesk", system-ui'; g.textBaseline = 'middle';
     for (let m = mBot; m <= mTop; m++) {
       const y = this.Y(m);
-      g.fillStyle = scale.includes(((m % 12) + 12) % 12) ? C.rowKey : C.row;
+      // Fundo pela escala do tom: tônica em amarelo, notas da escala em verde, fora da escala escuro
+      const pcm = ((m % 12) + 12) % 12;
+      g.fillStyle = pcm === st.key.tonic ? 'rgba(255,212,0,.20)' : scale.includes(pcm) ? 'rgba(46,229,157,.12)' : '#060608';
       g.fillRect(this.GUT, y - this.row / 2, this.W, this.row);
       g.fillStyle = C.line; g.fillRect(this.GUT, y + this.row / 2 - 0.5, this.W, 0.5);
     }
@@ -214,7 +216,7 @@ export class TuneEditor {
     if (xh >= this.GUT) { g.fillStyle = C.yel; g.fillRect(xh - 1, 0, 2, this.H); g.beginPath(); g.moveTo(xh - 5, 0); g.lineTo(xh + 5, 0); g.lineTo(xh, 7); g.fill(); }
     // Nomes das notas (coluna fixa)
     g.fillStyle = '#0d0d12'; g.fillRect(0, this.RULER, this.GUT, this.H);
-    for (let m = mBot; m <= mTop; m++) { g.fillStyle = scale.includes(((m % 12) + 12) % 12) ? '#c9c9d6' : C.txt; g.fillText(noteName(m), 4, this.Y(m)); }
+    for (let m = mBot; m <= mTop; m++) { const pcm = ((m % 12) + 12) % 12; g.fillStyle = pcm === st.key.tonic ? C.yel : scale.includes(pcm) ? C.green : '#5a5a66'; g.fillText(noteName(m), 4, this.Y(m)); }
   }
 }
 

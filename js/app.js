@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=33';
-import { prefetchModel } from './studio.js?v=33';
-import { TuneEditor } from './editor.js?v=33';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=33';
-import { exportVideo, exportType } from './export.js?v=33';
+import * as cover from './pipeline.js?v=34';
+import { prefetchModel } from './studio.js?v=34';
+import { TuneEditor } from './editor.js?v=34';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=34';
+import { exportVideo, exportType } from './export.js?v=34';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -147,7 +147,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v33`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v34`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -466,7 +466,7 @@ $('tuneUndo').onclick = async () => {
   editor.load(state); refreshChips(); refreshAB(); toast('Afinação desfeita: a voz voltou a ser a original.');
 };
 function onSelect(i) {
-  $('selInfo').innerHTML = i >= 0 ? `Nota <b>${i + 1}</b> escolhida: arraste para cima ou para baixo, ou use Subir e Descer. A mudança já vale sozinha.` : 'Toque numa nota no painel para editar só ela. Arraste para os lados para andar na música.';
+  $('selInfo').innerHTML = i >= 0 ? `Nota <b>${i + 1}</b> escolhida: arraste para cima ou para baixo, ou use Subir e Descer. A mudança já vale sozinha.` : 'Toque numa nota e arraste para qualquer nota. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.';
   $('selInfo').classList.toggle('on', i >= 0);
   const n = state.plan[i], ed = (state.edits || {})[i] || {};
   $('qLabel').textContent = i >= 0 ? 'Quantizar nota' : 'Quantizar tudo';
@@ -566,7 +566,7 @@ $('undo').onclick = () => {
   toast('Desfeito.');
 };
 $('apply').onclick = async () => { clearTimeout(autoT); await runAuto(); closePop(); };
-$('mSnap').onchange = () => { editor.snap = $('mSnap').checked; pushUndo(); setPending(); autoApply(); };
+$('mSnap').onchange = () => { pushUndo(); setPending(); autoApply(); };
 $('mUseRef').onchange = () => { pushUndo(); setPending(); autoApply(); };
 function refreshRef() { $('mUseRef').disabled = !state.ref; $('mRefTxt').textContent = state.ref ? 'Trocar música original' : 'Subir música original'; }
 $('mRefFile').onchange = async () => {
