@@ -8,10 +8,10 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=32';
-import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=32';
-import { referenceNotes, applyReference } from './reference.js?v=32';
-import { decodeVideoAudio } from './demux.js?v=32';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=33';
+import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=33';
+import { referenceNotes, applyReference } from './reference.js?v=33';
+import { decodeVideoAudio } from './demux.js?v=33';
 
 export const SR = STUDIO_SR;
 
@@ -81,7 +81,14 @@ const pc = (m) => ((Math.round(m) % 12) + 12) % 12;
 // ou muito alto) vai para a nota do tom mais próxima, desde que esteja a menos de 3/4 de semitom dela.
 // edits[i] = ajuste feito à mão na nota i (editor estilo VariAudio):
 //   { target: nota MIDI escolhida, quantize: 0–1 (força só desta nota), straighten: 0–1, bypass: true }
-export function planTuning(notes, key, { strength = 1, scaleSnap = true, straighten = true, band = 0.15, useRef = true } = {}, edits = {}) {
+// Acorde que mais soa durante a nota (o que cobre mais tempo dela)
+export function chordAt(chords, a, b) {
+  if (!chords) return null;
+  let best = null, bo = 0;
+  for (const c of chords) { if (c.end <= a) continue; if (c.start >= b) break; const o = Math.min(b, c.end) - Math.max(a, c.start); if (o > bo) { bo = o; best = c; } }
+  return best;
+}
+export function planTuning(notes, key, { strength = 1, scaleSnap = true, straighten = true, band = 0.15, useRef = true, chords = null } = {}, edits = {}) {
   const scale = scaleOf(key);
   return notes.map((n, i) => {
     const ed = edits[i] || {};
@@ -89,6 +96,14 @@ export function planTuning(notes, key, { strength = 1, scaleSnap = true, straigh
     if (scaleSnap && !scale.includes(pc(target))) {
       const opts = [target - 1, target + 1].filter((t) => scale.includes(pc(t)) && Math.abs(t - n.m) < 0.75);
       if (opts.length) target = opts.sort((a, b) => Math.abs(a - n.m) - Math.abs(b - n.m))[0];
+    }
+    // Campo harmônico: se a nota cantada ficou no meio do caminho e a vizinha é nota do acorde que a base
+    // está tocando naquela hora, vai para a do acorde. Nota cantada certinha (perto do centro) fica.
+    const chord = scaleSnap ? chordAt(chords, n.start, n.end) : null;
+    if (chord && !chord.tones.includes(pc(target)) && Math.abs(target - n.m) > 0.25) {
+      const alt = [target - 2, target - 1, target + 1, target + 2].filter((t) => chord.tones.includes(pc(t)) && Math.abs(t - n.m) < 0.8)
+        .sort((a, b) => Math.abs(a - n.m) - Math.abs(b - n.m))[0];
+      if (alt != null) target = alt;
     }
     // Modo referência: a nota da música original (no tom do artista) manda, se estiver a até 2,5 semitons
     // do que ele cantou (mais longe que isso é casamento errado ou escolha dele, e fica a regra do tom)
@@ -103,7 +118,7 @@ export function planTuning(notes, key, { strength = 1, scaleSnap = true, straigh
     //    cantor). Na mão, o artista pode mover a nota até uma oitava.
     const lim = manual ? 12 : viaRef ? 2.5 : 1;
     const base = Math.max(-lim, Math.min(lim, target - n.m)) * q;
-    const plan = { ...n, i, target, appliedTarget: target, cents, manual, viaRef, q, st, shift: Math.abs(target - n.m) * q >= 0.03 ? base : 0 };
+    const plan = { ...n, i, target, appliedTarget: target, chord: chord?.name, cents, manual, viaRef, q, st, shift: Math.abs(target - n.m) * q >= 0.03 ? base : 0 };
     if (!n.fr || n.fr.length < 3) return plan;
     // 2) Endireitar: a linha "lenta" da nota (média de ~0,22 s, que some com o vibrato) não pode sair da
     //    faixa em volta da nota certa. O que vazar é puxado de volta só o quanto vazou; o vibrato fica.
@@ -223,9 +238,11 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   onStep('notes', 0);
   const track = await pitchTrack(voice, SR, (p) => onStep('notes', p));
   const raw = notesFrom(track);
-  const chroma = bed ? await chromaOf(bed, SR) : null;
+  const cf = bed ? await chromaFrames(bed, SR) : null;
+  const chroma = cf ? cf.frames.reduce((a, f) => { for (let i = 0; i < 12; i++) a[i] += f[i]; return a; }, new Array(12).fill(0)) : null;
   const key = detectKey(raw, chroma);
-  const state = { orig, voice, bed, key, track, rawNotes: raw, duration: orig[0].length / SR };
+  const chords = cf ? chordTrack(cf, key) : null; // acordes da base, dentro do campo harmônico
+  const state = { orig, voice, bed, key, chords, track, rawNotes: raw, duration: orig[0].length / SR };
   if (o.reference) await setReference(state, o.reference, onStep);
   if (o.autoTune === false) untune(state, o); else await retune(state, o, onStep);
   return state;
@@ -236,7 +253,7 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
 export function untune(state, opts = {}) {
   const o = { ...DEFAULTS, ...opts };
   state.edits = state.edits || {};
-  state.plan = planTuning(state.rawNotes, state.key, o, state.edits);
+  state.plan = planTuning(state.rawNotes, state.key, { ...o, chords: state.chords }, state.edits);
   state.tuned = null;
   state.afterTrack = state.track;
   state.check = bandCheck(state.track, state.plan, o.band);
@@ -272,7 +289,7 @@ export async function setReference(state, file, onStep = () => {}) {
 export async function retune(state, opts = {}, onStep = () => {}) {
   const o = { ...DEFAULTS, ...opts };
   state.edits = state.edits || {};
-  const plan = planTuning(state.rawNotes, state.key, o, state.edits);
+  const plan = planTuning(state.rawNotes, state.key, { ...o, chords: state.chords }, state.edits);
   const target = 99;
   let check = null;
   for (let pass = 0; pass < 4; pass++) {
@@ -312,7 +329,7 @@ export async function retune(state, opts = {}, onStep = () => {}) {
 export async function retuneLocal(state, opts = {}, idxs = []) {
   const o = { ...DEFAULTS, ...opts };
   state.edits = state.edits || {};
-  const fresh = planTuning(state.rawNotes, state.key, o, state.edits);
+  const fresh = planTuning(state.rawNotes, state.key, { ...o, chords: state.chords }, state.edits);
   const keep = state.plan && state.plan.length === fresh.length;
   const set = new Set(idxs);
   const plan = keep ? state.plan.map((n, i) => (set.has(i) ? fresh[i] : n)) : fresh;

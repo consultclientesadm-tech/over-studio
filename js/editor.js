@@ -4,7 +4,7 @@
 // a voz original em cinza. Toque/clique seleciona; arrastar o bloco para cima ou para baixo muda a nota
 // (de semitom em semitom); arrastar o fundo anda pela música; pinça ou Ctrl+roda dá zoom;
 // tocar na régua de cima leva o vídeo para aquele ponto.
-import { noteName } from './music.js?v=32';
+import { noteName } from './music.js?v=33';
 
 const SCALE = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10] };
 const C = { bg: '#0a0a0d', row: '#101015', rowKey: '#16161d', line: '#202029', txt: '#8b8b99', yel: '#ffd400', green: '#2ee59d', red: '#ff4d5e', orig: 'rgba(170,170,190,.45)', band: 'rgba(46,229,157,.13)' };
@@ -26,6 +26,7 @@ export class TuneEditor {
   }
   load(state) {
     this.state = state;
+    this.RULER = state?.chords?.length ? 34 : 20; // com acordes: faixa de cifras embaixo da régua
     this.fitPitch();
     this.draw();
   }
@@ -194,10 +195,21 @@ export class TuneEditor {
       curve(st.afterTrack, (k) => (marks?.[k] === -1 ? C.red : marks?.[k] === 1 ? C.green : 'rgba(255,255,255,.25)'), 3, this._sm, true);
     }
     // Régua e cursor
-    g.fillStyle = '#0d0d12'; g.fillRect(0, 0, this.W, this.RULER);
+    g.fillStyle = '#0d0d12'; g.fillRect(0, 0, this.W, 20);
     g.fillStyle = C.txt;
+    // Acordes da base (cifra), na faixa de baixo da régua
+    if (st.chords?.length) {
+      g.fillStyle = '#121218'; g.fillRect(0, 20, this.W, 14);
+      for (const c of st.chords) {
+        if (c.end < this.t0 || c.start > t1) continue;
+        const x = Math.max(this.GUT, this.X(c.start));
+        g.fillStyle = 'rgba(255,212,0,.25)'; g.fillRect(x, 21, 1, 12);
+        if (this.X(c.end) - x > 18) { g.fillStyle = '#ffd400'; g.fillText(c.name, x + 3, 27); }
+      }
+      g.fillStyle = C.txt;
+    }
     const stepS = this.pps > 120 ? 1 : this.pps > 40 ? 2 : 5;
-    for (let s = Math.ceil(this.t0 / stepS) * stepS; s < t1; s += stepS) { const x = this.X(s); g.fillRect(x, this.RULER - 5, 1, 5); g.fillText(fmt(s), x + 3, 9); }
+    for (let s = Math.ceil(this.t0 / stepS) * stepS; s < t1; s += stepS) { const x = this.X(s); g.fillRect(x, 15, 1, 5); g.fillText(fmt(s), x + 3, 9); }
     const xh = this.X(this.time);
     if (xh >= this.GUT) { g.fillStyle = C.yel; g.fillRect(xh - 1, 0, 2, this.H); g.beginPath(); g.moveTo(xh - 5, 0); g.lineTo(xh + 5, 0); g.lineTo(xh, 7); g.fill(); }
     // Nomes das notas (coluna fixa)
