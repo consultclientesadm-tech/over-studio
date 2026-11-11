@@ -4,7 +4,7 @@
 // a voz original em cinza. Toque/clique seleciona; arrastar o bloco para cima ou para baixo muda a nota
 // (de semitom em semitom); arrastar o fundo anda pela música; pinça ou Ctrl+roda dá zoom;
 // tocar na régua de cima leva o vídeo para aquele ponto.
-import { noteName } from './music.js?v=30';
+import { noteName } from './music.js?v=31';
 
 const SCALE = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10] };
 const C = { bg: '#0a0a0d', row: '#101015', rowKey: '#16161d', line: '#202029', txt: '#8b8b99', yel: '#ffd400', green: '#2ee59d', red: '#ff4d5e', orig: 'rgba(170,170,190,.45)', band: 'rgba(46,229,157,.13)' };
@@ -13,7 +13,7 @@ export class TuneEditor {
   constructor(canvas, { onSelect = () => {}, onEdit = () => {}, onSeek = () => {} } = {}) {
     this.c = canvas; this.g = canvas.getContext('2d');
     this.cb = { onSelect, onEdit, onSeek };
-    this.state = null; this.sel = -1; this.showOrig = true; this.time = 0; this.band = 0.15;
+    this.state = null; this.sel = -1; this.showOrig = true; this.snap = true; this.time = 0; this.band = 0.15;
     this.pps = 70; this.t0 = 0; this.row = 18; this.top = 72; this.GUT = 38; this.RULER = 20;
     this.pointers = new Map();
     canvas.style.touchAction = 'none';
@@ -64,6 +64,9 @@ export class TuneEditor {
     this.t0 = Math.max(0, t - (cx - this.GUT) / this.pps);
     this.draw();
   }
+  inScale(m) { const k = this.state.key, sc = (k.minor ? SCALE.min : SCALE.maj).map((x) => (x + k.tonic) % 12); return sc.includes(((m % 12) + 12) % 12); }
+  // próxima nota para cima (+1) ou para baixo (-1); com "Prender no tom", pula as notas fora da escala
+  stepFrom(m, dir) { let k = m + dir; if (this.snap && this.state?.key) while (!this.inScale(k)) k += dir; return k; }
   select(i) { this.sel = i; this.cb.onSelect(i); this.draw(); }
   noteAt(x, y) {
     const t = this.T(x), m = this.M(y);
@@ -112,7 +115,9 @@ export class TuneEditor {
     if (d.kind === 'note') {
       const steps = Math.round((d.y0 - p.y) / this.row);
       const n = this.state.plan[d.i];
-      const nt = Math.max(d.base - 12, Math.min(d.base + 12, d.base + steps));
+      let nt = Math.max(d.base - 12, Math.min(d.base + 12, d.base + steps));
+      // "Prender no tom": sobe e desce de nota da escala em nota da escala
+      if (this.snap && this.state.key && !this.inScale(nt)) { const dir = Math.sign(nt - d.base) || 1; let k = nt; while (!this.inScale(k)) k += dir; nt = k; }
       if (nt !== n.target) { n.preview = nt; d.moved = true; this.draw(); }
     }
   }
@@ -164,13 +169,17 @@ export class TuneEditor {
       if (n.q === 0 && n.st === 0) { g.fillStyle = C.txt; g.fillText('orig', x + 3, y); }
     });
     // Voz original (cinza)
-    const curve = (track, colorOf, width, smooth) => {
+    // enquanto a nota é arrastada (ou ainda está sendo afinada), a linha da voz dela anda junto
+    const moved = st.plan.filter((n) => (n.preview ?? n.target) !== (n.appliedTarget ?? n.target));
+    const lift = (t) => { for (const n of moved) if (t >= n.start && t <= n.end) return (n.preview ?? n.target) - (n.appliedTarget ?? n.target); return 0; };
+    const curve = (track, colorOf, width, smooth, shift) => {
       if (!track) return;
       const dt = track.length > 1 ? track[1].t - track[0].t : 0.032;
       const k0 = Math.max(1, Math.floor(this.t0 / dt) - 2), k1 = Math.min(track.length - 1, Math.ceil(t1 / dt) + 2);
       g.lineWidth = width; g.lineCap = 'round';
       for (let k = k0; k <= k1; k++) {
-        const a = smooth ? smooth[k - 1] : track[k - 1].midi, b = smooth ? smooth[k] : track[k].midi;
+        let a = smooth ? smooth[k - 1] : track[k - 1].midi, b = smooth ? smooth[k] : track[k].midi;
+        if (shift && moved.length && a != null && b != null) { a += lift((k - 1) * dt + 0.032); b += lift(k * dt + 0.032); }
         if (a == null || b == null || Math.abs(a - b) > 1.2) continue;
         g.strokeStyle = colorOf(k);
         g.beginPath(); g.moveTo(this.X((k - 1) * dt + 0.032), this.Y(a)); g.lineTo(this.X(k * dt + 0.032), this.Y(b)); g.stroke();
@@ -181,8 +190,8 @@ export class TuneEditor {
     const marks = st.check?.marks;
     if (st.afterTrack) {
       if (!this._sm || this._smFor !== st.afterTrack) { this._sm = smoothLine(st.afterTrack); this._smFor = st.afterTrack; }
-      curve(st.afterTrack, () => 'rgba(255,255,255,.35)', 1);
-      curve(st.afterTrack, (k) => (marks?.[k] === -1 ? C.red : marks?.[k] === 1 ? C.green : 'rgba(255,255,255,.25)'), 3, this._sm);
+      curve(st.afterTrack, () => 'rgba(255,255,255,.35)', 1, null, true);
+      curve(st.afterTrack, (k) => (marks?.[k] === -1 ? C.red : marks?.[k] === 1 ? C.green : 'rgba(255,255,255,.25)'), 3, this._sm, true);
     }
     // Régua e cursor
     g.fillStyle = '#0d0d12'; g.fillRect(0, 0, this.W, this.RULER);

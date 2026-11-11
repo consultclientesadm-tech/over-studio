@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=30">
+<link rel="stylesheet" href="css/app.css?v=31">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -32,7 +32,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v30</small></div>
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v31</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda">?</button>
     <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
@@ -128,13 +128,13 @@
           <button class="tb" id="nOrig" data-help="Deixa a nota escolhida sem afinação, do jeito que você cantou."><i>◎</i><span>Original</span></button>
           <button class="tb" id="nAuto" data-help="Desfaz o que você mexeu nesta nota e devolve para o automático."><i>✦</i><span>Auto</span></button>
           <button class="tb" id="undo" data-help="Volta a última mudança que você fez no painel."><i>↶</i><span>Desfazer</span></button>
-          <button class="tb go" id="apply" disabled data-help="Suas mudanças no painel só valem no som depois de tocar aqui."><i>✓</i><span>Aplicar</span></button>
+          <button class="tb go" id="apply" data-help="As mudanças nas notas já valem sozinhas. Toque aqui quando terminar para fechar o painel."><i>✓</i><span>Pronto</span></button>
         </div>
         <div class="toolrow">
           <button class="tb sm" id="zOut" title="Menos zoom"><i>−</i></button>
           <button class="tb sm" id="zIn" title="Mais zoom"><i>+</i></button>
           <button class="tb sm wide on" id="showOrig" data-help="Mostra no painel a linha cinza da sua voz original, para comparar com a afinada."><span>Voz original</span></button>
-          <button class="tb sm wide" id="expandBtn" data-help="Abre o painel de notas na tela toda para mexer com calma. Toque em Aplicar ou Fechar para voltar."><span id="expandTxt">⤢ Painel grande</span></button>
+          <button class="tb sm wide" id="expandBtn" data-help="Abre o painel de notas na tela toda para mexer com calma. Toque em Pronto ou Fechar para voltar."><span id="expandTxt">⤢ Painel grande</span></button>
           <button class="tb sm wide" id="moreBtn" data-help="Ajustes finos: quanto puxar as notas, prender no tom e afinar pela música original."><span>⚙ Ajustes</span></button>
         </div>
         <div class="more" id="more" hidden>
@@ -209,7 +209,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=30"></script>
+<script type="module" src="js/app.js?v=31"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

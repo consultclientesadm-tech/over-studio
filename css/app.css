@@ -407,3 +407,7 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .app.popopen #busy { position: fixed; z-index: 50; }
 #studio.pop .panel, #studio.pop .stage { backdrop-filter: none; -webkit-backdrop-filter: none; transform: none; filter: none; }
 #studio.pop #expandBtn { display: none; } #studio.pop .toolrow { grid-template-columns: 44px 44px repeat(2, minmax(0, 1fr)); }
+/* sem seleção de texto nem menu de copiar ao tocar e arrastar (atrapalhava mexer nas notas no celular) */
+body, .app, .app * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.app input, .app textarea { -webkit-user-select: text; user-select: text; }
+#popBar.working b::after { content: ' · afinando…'; color: var(--mut); font-weight: 500; }

@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=30';
-import { prefetchModel } from './studio.js?v=30';
-import { TuneEditor } from './editor.js?v=30';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=30';
-import { exportVideo, exportType } from './export.js?v=30';
+import * as cover from './pipeline.js?v=31';
+import { prefetchModel } from './studio.js?v=31';
+import { TuneEditor } from './editor.js?v=31';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=31';
+import { exportVideo, exportType } from './export.js?v=31';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -147,7 +147,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v30`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v31`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -264,6 +264,7 @@ $('quickAll').onclick = async () => {
 // Etapas
 function go(n) {
   if (n !== 2) closePop();
+  if (n >= 3 && masterStale && mastered) { masterStale = false; busy(true, 'Atualizando a mix…'); doMaster(false).then(() => { busy(false); refreshAB(); if (step === 5) refreshSummary(); }); }
   if (audioOnly && n === 4) n = step > 4 ? 3 : 5; // só áudio: não tem etapa de cor
   const wasPlaying = playing();
   pause();
@@ -465,7 +466,7 @@ $('tuneUndo').onclick = async () => {
   editor.load(state); refreshChips(); refreshAB(); toast('Afinação desfeita: a voz voltou a ser a original.');
 };
 function onSelect(i) {
-  $('selInfo').innerHTML = i >= 0 ? `Nota <b>${i + 1}</b> escolhida: use Subir, Descer, Original ou Auto, e depois <b>Aplicar</b>.` : 'Toque numa nota no painel para editar só ela. Arraste para os lados para andar na música.';
+  $('selInfo').innerHTML = i >= 0 ? `Nota <b>${i + 1}</b> escolhida: arraste para cima ou para baixo, ou use Subir e Descer. A mudança já vale sozinha.` : 'Toque numa nota no painel para editar só ela. Arraste para os lados para andar na música.';
   $('selInfo').classList.toggle('on', i >= 0);
   const n = state.plan[i], ed = (state.edits || {})[i] || {};
   $('qLabel').textContent = i >= 0 ? 'Quantizar nota' : 'Quantizar tudo';
@@ -475,22 +476,50 @@ function onSelect(i) {
   $('qOut').textContent = pct(+$('q').value); $('sOut').textContent = pct(+$('s').value);
 }
 function pushUndo() { undo.push(JSON.stringify({ edits: state.edits, q: $('q').dataset.global, s: $('s').dataset.global })); }
-function setPending(v = true) { pending = v; $('apply').disabled = !v; }
+function setPending(v = true) { pending = v; }
 function onEdit(i, patch) {
   pushUndo();
   state.edits[i] = { ...(state.edits[i] || {}), ...patch };
   if (patch.target != null) { state.plan[i].target = patch.target; state.plan[i].manual = true; }
-  setPending(); editor.draw(); refreshChips();
+  setPending(); editor.draw(); refreshChips(); autoApply(i);
+}
+// Cada mudança de nota já vale sozinha, sem tocar em Aplicar: afina só aquele pedacinho (rápido).
+// Mudança geral (quantizar tudo, prender no tom) afina a voz inteira.
+let dirty = new Set(), dirtyAll = false, autoT = 0, applying = null, masterStale = false;
+function autoApply(i) {
+  if (i == null) dirtyAll = true; else dirty.add(i);
+  clearTimeout(autoT); autoT = setTimeout(runAuto, 450);
+}
+async function runAuto() {
+  if (applying) { await applying; }
+  if (!dirtyAll && !dirty.size) return;
+  const all = dirtyAll, idx = [...dirty]; dirty = new Set(); dirtyAll = false;
+  applying = (async () => {
+    if (all) { await doTune(); if (mastered) masterStale = false; return; }
+    const was = playing(), t = clipT(); if (was) pause();
+    $('popBar')?.classList.add('working');
+    try {
+      await cover.retuneLocal(state, tuneOpts(), idx);
+      setPending(false);
+      tracks.raw = cover.rawMix(state); fresh('raw');
+      if (mastered) masterStale = true;
+      editor.draw(); refreshChips();
+    } catch (e) { console.error(e); toast('Deu erro: ' + e.message, 6000); }
+    $('popBar')?.classList.remove('working');
+    seek(t); if (was) play();
+  })();
+  await applying; applying = null;
+  if (dirty.size || dirtyAll) runAuto();
 }
 const needSel = () => (editor.sel < 0 ? (toast('Toque numa nota primeiro'), false) : true);
-$('nUp').onclick = () => needSel() && onEdit(editor.sel, { target: state.plan[editor.sel].target + 1, bypass: false });
-$('nDown').onclick = () => needSel() && onEdit(editor.sel, { target: state.plan[editor.sel].target - 1, bypass: false });
-$('nOrig').onclick = () => { if (!needSel()) return; onEdit(editor.sel, { bypass: true }); state.plan[editor.sel].q = 0; state.plan[editor.sel].st = 0; editor.draw(); };
-$('nAuto').onclick = () => { if (!needSel()) return; pushUndo(); delete state.edits[editor.sel]; setPending(); refreshChips(); };
+$('nUp').onclick = () => needSel() && onEdit(editor.sel, { target: editor.stepFrom(state.plan[editor.sel].target, 1), bypass: false });
+$('nDown').onclick = () => needSel() && onEdit(editor.sel, { target: editor.stepFrom(state.plan[editor.sel].target, -1), bypass: false });
+$('nOrig').onclick = () => { if (!needSel()) return; state.plan[editor.sel].q = 0; state.plan[editor.sel].st = 0; onEdit(editor.sel, { bypass: true }); };
+$('nAuto').onclick = () => { if (!needSel()) return; pushUndo(); delete state.edits[editor.sel]; state.plan[editor.sel].manual = false; setPending(); refreshChips(); autoApply(editor.sel); };
 $('q').oninput = () => ($('qOut').textContent = pct(+$('q').value));
 $('s').oninput = () => ($('sOut').textContent = pct(+$('s').value));
-$('q').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { quantize: +$('q').value, bypass: false }); else { pushUndo(); $('q').dataset.global = $('q').value; setPending(); } };
-$('s').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { straighten: +$('s').value, bypass: false }); else { pushUndo(); $('s').dataset.global = $('s').value; setPending(); } };
+$('q').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { quantize: +$('q').value, bypass: false }); else { pushUndo(); $('q').dataset.global = $('q').value; setPending(); autoApply(); } };
+$('s').onchange = () => { if (editor.sel >= 0) onEdit(editor.sel, { straighten: +$('s').value, bypass: false }); else { pushUndo(); $('s').dataset.global = $('s').value; setPending(); autoApply(); } };
 // Painel de notas grande, como um pop-up na tela toda. O vídeo fica escondido atrás (o som continua),
 // então o celular não gasta força desenhando o vídeo enquanto a pessoa mexe nas notas.
 const isPop = () => $('studio').classList.contains('pop');
@@ -525,14 +554,20 @@ $('zOut').onclick = () => editor.zoom(1 / 1.5);
 $('showOrig').onclick = () => { editor.showOrig = !editor.showOrig; $('showOrig').classList.toggle('on', editor.showOrig); editor.draw(); };
 $('undo').onclick = () => {
   const u = undo.pop(); if (!u) return toast('Nada para desfazer');
-  const o = JSON.parse(u); state.edits = o.edits;
+  const o = JSON.parse(u), old = state.edits || {};
+  const gChanged = (o.q ?? null) !== ($('q').dataset.global ?? null) || (o.s ?? null) !== ($('s').dataset.global ?? null);
+  const changed = [...new Set([...Object.keys(old), ...Object.keys(o.edits || {})])].filter((k) => JSON.stringify(old[k]) !== JSON.stringify((o.edits || {})[k])).map(Number);
+  state.edits = o.edits || {};
+  for (const k of changed) if (state.plan[k]) { state.plan[k].manual = state.edits[k]?.target != null; if (state.edits[k]?.target != null) state.plan[k].target = state.edits[k].target; }
   if (o.q != null) $('q').dataset.global = o.q; else delete $('q').dataset.global;
   if (o.s != null) $('s').dataset.global = o.s; else delete $('s').dataset.global;
-  setPending(); refreshChips(); toast('Desfeito. Toque em "Aplicar edições" para ouvir.');
+  setPending(); refreshChips(); editor.draw();
+  if (gChanged) autoApply(); else changed.forEach((k) => autoApply(k));
+  toast('Desfeito.');
 };
-$('apply').onclick = async () => { await doTune(); if (tuned) closePop(); };
-$('mSnap').onchange = () => { pushUndo(); setPending(); };
-$('mUseRef').onchange = () => { pushUndo(); setPending(); };
+$('apply').onclick = async () => { clearTimeout(autoT); await runAuto(); closePop(); };
+$('mSnap').onchange = () => { editor.snap = $('mSnap').checked; pushUndo(); setPending(); autoApply(); };
+$('mUseRef').onchange = () => { pushUndo(); setPending(); autoApply(); };
 function refreshRef() { $('mUseRef').disabled = !state.ref; $('mRefTxt').textContent = state.ref ? 'Trocar música original' : 'Subir música original'; }
 $('mRefFile').onchange = async () => {
   const f = $('mRefFile').files[0]; if (!f) return;
@@ -653,7 +688,7 @@ $('exportBtn').onclick = async () => {
 };
 $('dlWav').onclick = () => { const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = `${((file && file.name) || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.wav`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
 
-window.studio = { audio: () => ({ currentTime: aTime() }), get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go };
+window.studio = { audio: () => ({ currentTime: aTime() }), get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go, get editor() { return editor; } };
 
 // ---------- Ajuda: com o "?" do topo ligado, tocar em qualquer botão mostra o que ele faz (em vez de executar) ----------
 let helpOn = false;

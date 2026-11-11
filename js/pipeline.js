@@ -8,10 +8,10 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=30';
-import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=30';
-import { referenceNotes, applyReference } from './reference.js?v=30';
-import { decodeVideoAudio } from './demux.js?v=30';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=31';
+import { pitchTrack, detectKey, chromaOf } from './analysis.js?v=31';
+import { referenceNotes, applyReference } from './reference.js?v=31';
+import { decodeVideoAudio } from './demux.js?v=31';
 
 export const SR = STUDIO_SR;
 
@@ -103,7 +103,7 @@ export function planTuning(notes, key, { strength = 1, scaleSnap = true, straigh
     //    cantor). Na mão, o artista pode mover a nota até uma oitava.
     const lim = manual ? 12 : viaRef ? 2.5 : 1;
     const base = Math.max(-lim, Math.min(lim, target - n.m)) * q;
-    const plan = { ...n, i, target, cents, manual, viaRef, q, st, shift: Math.abs(target - n.m) * q >= 0.03 ? base : 0 };
+    const plan = { ...n, i, target, appliedTarget: target, cents, manual, viaRef, q, st, shift: Math.abs(target - n.m) * q >= 0.03 ? base : 0 };
     if (!n.fr || n.fr.length < 3) return plan;
     // 2) Endireitar: a linha "lenta" da nota (média de ~0,22 s, que some com o vibrato) não pode sair da
     //    faixa em volta da nota certa. O que vazar é puxado de volta só o quanto vazou; o vibrato fica.
@@ -304,6 +304,45 @@ export async function retune(state, opts = {}, onStep = () => {}) {
   state.check = check;
   state.beforeCheck = bandCheck(state.track, plan, o.band);
   state.before = { ...tuningStats(plan, (n) => n.target), band: state.beforeCheck.pct };
+  return state;
+}
+
+// Afinação só das notas mexidas (o resto da voz fica como está): rápida, roda sozinha a cada mudança.
+// Afina um trecho curto em volta das notas, emenda com 25 ms de transição e mede a voz nova só ali.
+export async function retuneLocal(state, opts = {}, idxs = []) {
+  const o = { ...DEFAULTS, ...opts };
+  state.edits = state.edits || {};
+  const fresh = planTuning(state.rawNotes, state.key, o, state.edits);
+  const keep = state.plan && state.plan.length === fresh.length;
+  const set = new Set(idxs);
+  const plan = keep ? state.plan.map((n, i) => (set.has(i) ? fresh[i] : n)) : fresh;
+  const len = state.voice[0].length, dur = len / SR;
+  let a = Infinity, b = -Infinity;
+  for (const i of set) { const n = plan[i]; if (n) { a = Math.min(a, n.start); b = Math.max(b, n.end); } }
+  state.plan = plan; state.opts = o;
+  if (!isFinite(a)) return state;
+  a = Math.max(0, a - 0.15); b = Math.min(dur, b + 0.15);
+  const PAD = 0.6, s0 = Math.max(0, Math.floor((a - PAD) * SR)), s1 = Math.min(len, Math.ceil((b + PAD) * SR)), off = s0 / SR;
+  const notes = plan.filter((n) => n.end > off - 0.1 && n.start < s1 / SR + 0.1)
+    .map((n) => ({ ...n, start: n.start - off, end: n.end - off, curve: n.curve && { ...n.curve, t0: n.curve.t0 - off } }));
+  const seg = await tuneVoice(state.voice.map((c) => c.slice(s0, s1)), SR, notes);
+  if (!state.tuned) state.tuned = state.voice.map((c) => c.slice());
+  const ia = Math.round(a * SR), ib = Math.round(b * SR), F = Math.round(0.025 * SR);
+  for (let c = 0; c < state.tuned.length; c++) {
+    const t = state.tuned[c], v = seg[c] || seg[0];
+    for (let i = ia; i < ib; i++) { const w = Math.min(1, (i - ia) / F, (ib - 1 - i) / F); t[i] = t[i] * (1 - w) + v[i - s0] * w; }
+  }
+  // linha da voz afinada no painel: troca só o trecho mexido
+  const tr = await pitchTrack(seg, SR);
+  const after = (state.afterTrack || state.track).slice();
+  const dt = after.length > 1 ? after[1].t - after[0].t : 0.032;
+  for (const f of tr) {
+    const t = f.t + off; if (t < a || t > b) continue;
+    const k = Math.round(t / dt); if (k >= 0 && k < after.length) after[k] = { t: after[k].t, midi: f.midi };
+  }
+  state.afterTrack = after;
+  state.check = bandCheck(after, plan.filter((n) => n.st > 0), o.band);
+  state.after = { ...(state.after || {}), band: state.check.pct };
   return state;
 }
 
