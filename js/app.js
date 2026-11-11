@@ -179,6 +179,8 @@ try {
 } catch {}
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
+  // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar
+  if (tries === 1 && window.scGate && !(await window.scGate(f))) { $('file').value = ''; $('audioFile').value = ''; return; }
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
   if (tries === 1) await Promise.race([keep(f, refFile), new Promise((r) => setTimeout(r, 5000))]);
   file = f;

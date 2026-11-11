@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050506">
+<meta name="robots" content="noindex">
+<title>Entrar · Studio Cover</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<link rel="manifest" href="/app/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root { --y: #ffd400; --g: #2ee59d; --r: #ff4d5e; --ink: #f4f4f7; --mut: #9a9aa6; --line: #26262e; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: #050506; color: var(--ink); font-family: 'Space Grotesk', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+canvas.estrelas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+.grade { position: fixed; inset: 0; z-index: 0; background: linear-gradient(rgba(255,212,0,.05) 1px, transparent 1px) 0 0/44px 44px, linear-gradient(90deg, rgba(255,212,0,.05) 1px, transparent 1px) 0 0/44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 0, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 0, transparent 70%); }
+main { position: relative; z-index: 1; min-height: 100svh; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) 18px 28px; }
+.box { width: 100%; max-width: 400px; }
+.marca { width: 170px; height: 170px; margin: 0 auto 8px; }
+h1 { font: 900 26px/1.1 Orbitron, sans-serif; letter-spacing: .12em; text-align: center; margin: 0; }
+h1 em { font-style: normal; color: var(--y); text-shadow: 0 0 22px rgba(255,212,0,.55); }
+.tag { text-align: center; color: var(--mut); margin: 8px 0 26px; font-size: 14px; }
+.card { background: rgba(14,14,18,.82); border: 1px solid var(--line); border-radius: 22px; padding: 22px 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 0 0 1px rgba(255,212,0,.06), 0 30px 80px rgba(0,0,0,.6); }
+.card h2 { margin: 0 0 4px; font-size: 19px; }
+.card p.sub { margin: 0 0 16px; color: var(--mut); font-size: 13.5px; line-height: 1.5; }
+label { display: block; font-size: 12px; color: var(--mut); margin: 12px 0 6px; letter-spacing: .04em; }
+input { width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--line); background: #0b0b0f; color: var(--ink); font: 500 16px 'Space Grotesk', sans-serif; padding: 0 14px; outline: none; transition: border-color .2s, box-shadow .2s; }
+input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12); }
+.senha { position: relative; } .senha button { position: absolute; right: 6px; top: 6px; height: 38px; border: 0; background: none; color: var(--mut); font: inherit; font-size: 12px; cursor: pointer; padding: 0 10px; }
+.btn { width: 100%; height: 54px; margin-top: 18px; border: 0; border-radius: 40px; background: linear-gradient(180deg, #ffe34d, #ffc400); color: #000; font: 900 15px Orbitron, sans-serif; letter-spacing: .08em; cursor: pointer;
+  box-shadow: 0 0 30px rgba(255,212,0,.35), inset 0 -3px 0 rgba(0,0,0,.18); transition: transform .12s, box-shadow .2s; }
+.btn:active { transform: scale(.98); } .btn[disabled] { opacity: .6; }
+.links { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; font-size: 13.5px; }
+.links a, .link { color: var(--y); text-decoration: none; cursor: pointer; background: none; border: 0; font: inherit; padding: 0; }
+.msg { margin-top: 12px; font-size: 13.5px; min-height: 18px; line-height: 1.45; }
+.msg.erro { color: var(--r); } .msg.ok { color: var(--g); }
+.teste { margin-top: 16px; padding: 14px; border-radius: 16px; border: 1px dashed rgba(255,212,0,.4); text-align: center; font-size: 14px; }
+.teste b { color: var(--y); }
+[hidden] { display: none !important; }
+.rodape { text-align: center; color: #55555f; font-size: 12px; margin-top: 22px; }
+.card { animation: sobe .6s cubic-bezier(.2,.8,.2,1) both .15s; } .marca, h1, .tag { animation: sobe .6s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes sobe { from { opacity: 0; transform: translateY(18px); } }
+</style>
+</head>
+<body>
+<canvas class="estrelas"></canvas><div class="grade"></div>
+<main><div class="box">
+  <div class="marca"></div>
+  <h1>STUDIO <em>COVER</em></h1>
+  <p class="tag">Som de estúdio e cara de cinema no seu celular.</p>
+
+  <!-- Entrar -->
+  <form class="card" id="fLogin" novalidate>
+    <h2>Entrar</h2>
+    <p class="sub">Use o e-mail da sua compra e a senha que você criou.</p>
+    <label for="lEmail">E-mail</label><input id="lEmail" type="email" autocomplete="email" inputmode="email" required>
+    <label for="lSenha">Senha</label><div class="senha"><input id="lSenha" type="password" autocomplete="current-password" required><button type="button" class="ver">mostrar</button></div>
+    <button class="btn" type="submit">ENTRAR</button>
+    <div class="msg" role="status"></div>
+    <div class="links"><button type="button" class="link" data-ir="fEsqueci">Esqueci a senha</button><button type="button" class="link" data-ir="fCadastro" id="irTeste" hidden>Criar conta grátis</button></div>
+    <div class="teste" id="boxTeste" hidden>Ainda não tem acesso? <b id="nTeste">Teste grátis</b>.<br><button type="button" class="link" data-ir="fCadastro">Criar minha conta grátis →</button></div>
+  </form>
+
+  <!-- Teste grátis -->
+  <form class="card" id="fCadastro" novalidate hidden>
+    <h2>Teste grátis</h2>
+    <p class="sub" id="cadSub">Crie a sua conta e teste com os seus vídeos. Sem cartão.</p>
+    <label for="cNome">Seu nome</label><input id="cNome" autocomplete="name" required>
+    <label for="cEmail">E-mail</label><input id="cEmail" type="email" autocomplete="email" inputmode="email" required>
+    <label for="cSenha">Crie uma senha</label><div class="senha"><input id="cSenha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver">mostrar</button></div>
+    <button class="btn" type="submit">COMEÇAR O TESTE</button>
+    <div class="msg" role="status"></div>
+    <div class="links"><button type="button" class="link" data-ir="fLogin">← Já tenho conta</button></div>
+  </form>
+
+  <!-- Criar senha (link do e-mail) -->
+  <form class="card" id="fCriar" novalidate hidden>
+    <h2>Crie a sua senha</h2>
+    <p class="sub" id="criarSub">Falta só isso para entrar no Studio Cover.</p>
+    <label for="nSenha">Nova senha</label><div class="senha"><input id="nSenha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver">mostrar</button></div>
+    <label for="nSenha2">Repita a senha</label><input id="nSenha2" type="password" autocomplete="new-password" required>
+    <p class="sub" style="margin:10px 0 0">Mínimo de 8 caracteres, com letras e números.</p>
+    <button class="btn" type="submit">CRIAR E ENTRAR</button>
+    <div class="msg" role="status"></div>
+  </form>
+
+  <!-- Esqueci -->
+  <form class="card" id="fEsqueci" novalidate hidden>
+    <h2>Esqueci a senha</h2>
+    <p class="sub">Digite o seu e-mail. Vamos mandar um link para criar uma nova senha.</p>
+    <label for="eEmail">E-mail</label><input id="eEmail" type="email" autocomplete="email" inputmode="email" required>
+    <button class="btn" type="submit">MANDAR O LINK</button>
+    <div class="msg" role="status"></div>
+    <div class="links"><button type="button" class="link" data-ir="fLogin">← Voltar</button></div>
+  </form>
+  <p class="rodape" id="suporte"></p>
+</div></main>
+<script src="/assets/marca.js"></script>
+<script>
+Marca.montar();
+const $ = (id) => document.getElementById(id);
+const api = async (a, body) => {
+  const r = await fetch('/api/conta.php?a=' + a, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-SC': '1' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin' });
+  let j = {}; try { j = await r.json(); } catch {}
+  return j;
+};
+const forms = ['fLogin', 'fCadastro', 'fCriar', 'fEsqueci'];
+const show = (id) => { forms.forEach((f) => ($(f).hidden = f !== id)); const i = $(id).querySelector('input'); if (i && matchMedia('(pointer:fine)').matches) i.focus(); };
+document.querySelectorAll('[data-ir]').forEach((b) => (b.onclick = () => show(b.dataset.ir)));
+document.querySelectorAll('.ver').forEach((b) => (b.onclick = () => { const i = b.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? 'mostrar' : 'ocultar'; }));
+const msg = (form, text, ok) => { const m = $(form).querySelector('.msg'); m.textContent = text || ''; m.className = 'msg ' + (ok ? 'ok' : 'erro'); };
+const go = () => { const n = new URLSearchParams(location.search).get('voltar'); location.href = n && n.startsWith('/') && !n.startsWith('//') ? n : '/app/'; };
+async function send(form, action, body, after) {
+  const btn = $(form).querySelector('.btn'); btn.disabled = true; msg(form, '');
+  try { const j = await api(action, body); if (j.ok) after(j); else msg(form, j.error || 'Não deu certo. Tente de novo.'); }
+  catch { msg(form, 'Sem conexão. Confira a internet e tente de novo.'); }
+  btn.disabled = false;
+}
+$('fLogin').onsubmit = (e) => { e.preventDefault(); send('fLogin', 'login', { email: $('lEmail').value, senha: $('lSenha').value }, go); };
+$('fCadastro').onsubmit = (e) => { e.preventDefault(); send('fCadastro', 'cadastro', { nome: $('cNome').value, email: $('cEmail').value, senha: $('cSenha').value }, go); };
+$('fEsqueci').onsubmit = (e) => { e.preventDefault(); send('fEsqueci', 'esqueci', { email: $('eEmail').value }, () => msg('fEsqueci', 'Se este e-mail tiver cadastro, o link chega em alguns minutos. Olhe também o spam.', true)); };
+const params = new URLSearchParams(location.search), tok = params.get('criar');
+$('fCriar').onsubmit = (e) => {
+  e.preventDefault();
+  if ($('nSenha').value !== $('nSenha2').value) return msg('fCriar', 'As duas senhas não são iguais.');
+  send('fCriar', 'criar-senha', { t: tok, senha: $('nSenha').value }, () => { history.replaceState(null, '', '/entrar/'); go(); });
+};
+(async () => {
+  const me = await api('me');
+  if (tok) {
+    show('fCriar');
+    const t = await api('token&t=' + encodeURIComponent(tok));
+    if (t.ok) $('criarSub').textContent = `Olá${t.name ? ', ' + t.name.split(' ')[0] : ''}! Crie a senha da conta ${t.email}.`;
+    else { msg('fCriar', 'Este link venceu ou já foi usado. Peça um novo em "Esqueci a senha".'); $('fCriar').querySelector('.btn').disabled = true; }
+    return;
+  }
+  if (me.user) return go();
+  if (me.trial_enabled) {
+    $('irTeste').hidden = false; $('boxTeste').hidden = false;
+    $('nTeste').textContent = `Teste grátis com ${me.trial_videos} vídeos`;
+    $('cadSub').textContent = `Crie a sua conta e teste com ${me.trial_videos} vídeos seus. Sem cartão.`;
+  }
+  if (params.get('teste') !== null && me.trial_enabled) show('fCadastro');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#030308">
+<title>Comando · Studio Cover</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css?v=1">
+</head>
+<body>
+<canvas class="estrelas"></canvas>
+<div class="nebula"></div>
+
+<!-- Login -->
+<section id="vLogin" class="login" hidden>
+  <div class="lbox">
+    <div class="marca"></div>
+    <h1>STUDIO <em>COVER</em></h1>
+    <p class="cap">CENTRAL DE COMANDO</p>
+    <form id="fLogin" class="glass" novalidate>
+      <label>E-mail</label><input id="lEmail" type="email" autocomplete="username" required>
+      <label>Senha</label><input id="lSenha" type="password" autocomplete="current-password" required>
+      <button class="btn">ACESSAR</button><p class="msg"></p>
+    </form>
+    <form id="fPrimeiro" class="glass" novalidate hidden>
+      <p class="info">Primeiro acesso: crie o administrador principal. Use a chave de instalação.</p>
+      <label>Chave de instalação</label><input id="pChave" autocomplete="off" required>
+      <label>Seu nome</label><input id="pNome" autocomplete="name" required>
+      <label>E-mail</label><input id="pEmail" type="email" autocomplete="username" required>
+      <label>Senha (8+ caracteres, letras e números)</label><input id="pSenha" type="password" autocomplete="new-password" required>
+      <button class="btn">CRIAR E ENTRAR</button><p class="msg"></p>
+    </form>
+  </div>
+</section>
+
+<!-- Painel -->
+<section id="vPainel" class="painel" hidden>
+  <aside class="nav">
+    <div class="brand"><div class="marca mini"></div><b>STUDIO <em>COVER</em></b></div>
+    <button data-tab="geral" class="on"><i>◈</i><span>Visão geral</span></button>
+    <button data-tab="alunos"><i>◉</i><span>Alunos</span></button>
+    <button data-tab="funil"><i>⟴</i><span>Funil</span></button>
+    <button data-tab="admins"><i>⛨</i><span>Administradores</span></button>
+    <button data-tab="config"><i>⚙</i><span>Configurações</span></button>
+    <div class="eu"><small id="euNome"></small><button id="sair" class="lnk">Sair</button></div>
+  </aside>
+
+  <main class="main">
+    <!-- Visão geral -->
+    <div class="tab" id="tGeral">
+      <header class="th"><div><h2>Visão geral</h2><p class="sub">Saúde financeira e uso do Studio Cover</p></div>
+        <div class="seg" id="periodo"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
+      <div class="kpis" id="kpis"></div>
+      <div class="grid2">
+        <div class="glass chart big"><div class="ch"><b>Faturamento</b><span id="fatTot"></span></div><canvas id="cFat"></canvas></div>
+        <div class="glass chart"><div class="ch"><b>Conversão do teste grátis</b></div><canvas id="cConv"></canvas><p class="legend" id="convLeg"></p></div>
+      </div>
+      <div class="grid3">
+        <div class="glass chart"><div class="ch"><b>Vendas por dia</b></div><canvas id="cVendas"></canvas></div>
+        <div class="glass chart"><div class="ch"><b>Cadastros</b> <i class="dot y"></i> e <b>vídeos processados</b> <i class="dot g"></i></div><canvas id="cUso"></canvas></div>
+        <div class="glass chart"><div class="ch"><b>Base de alunos</b></div><canvas id="cBase"></canvas><p class="legend" id="baseLeg"></p></div>
+      </div>
+      <div class="glass"><div class="ch"><b>Últimas vendas</b></div><div class="tbl" id="ultVendas"></div></div>
+    </div>
+
+    <!-- Alunos -->
+    <div class="tab" id="tAlunos" hidden>
+      <header class="th"><div><h2>Alunos</h2><p class="sub" id="alunosSub"></p></div>
+        <div class="acts"><button class="btn sm" id="novoAluno">+ Liberar acesso</button><button class="btn sm ghost" id="avisoGrupo">🔔 Aviso no app</button></div></header>
+      <div class="filtros glass">
+        <input id="busca" placeholder="Buscar por nome, e-mail ou telefone" type="search">
+        <div class="seg" id="fStatus"><button data-s="" class="on">Todos</button><button data-s="active">Pagos</button><button data-s="trial">Teste</button><button data-s="refunded">Reembolso</button><button data-s="blocked">Bloqueados</button></div>
+      </div>
+      <div class="glass"><div class="tbl" id="tblAlunos"></div><div class="pager" id="pager"></div></div>
+    </div>
+
+    <!-- Funil -->
+    <div class="tab" id="tFunil" hidden>
+      <header class="th"><div><h2>Funil de conversão</h2><p class="sub">Quem fez o teste grátis e não comprou recebe e-mail + aviso no app, um passo por vez (das 8h às 21h).</p></div>
+        <div class="acts"><button class="btn sm ghost" id="rodarFunil">Rodar agora</button></div></header>
+      <div class="glass"><div id="funilFlow" class="flow"></div><p class="sub" id="cronInfo"></p></div>
+      <div class="glass"><div class="ch"><b>Últimos e-mails enviados</b></div><div class="tbl" id="tblEmails"></div></div>
+    </div>
+
+    <!-- Admins -->
+    <div class="tab" id="tAdmins" hidden>
+      <header class="th"><div><h2>Administradores</h2><p class="sub">Quem pode entrar nesta central.</p></div><div class="acts"><button class="btn sm" id="novoAdmin">+ Novo administrador</button></div></header>
+      <div class="glass"><div class="tbl" id="tblAdmins"></div></div>
+      <form class="glass formgrid" id="fMinhaSenha"><div class="ch"><b>Trocar a minha senha</b></div>
+        <label>Senha atual<input type="password" id="sAtual" autocomplete="current-password"></label>
+        <label>Nova senha<input type="password" id="sNova" autocomplete="new-password"></label>
+        <button class="btn sm">Salvar</button></form>
+    </div>
+
+    <!-- Config -->
+    <div class="tab" id="tConfig" hidden>
+      <header class="th"><div><h2>Configurações</h2><p class="sub">Venda, teste grátis, Eduzz e e-mail.</p></div></header>
+      <form id="fConfig">
+        <div class="glass formgrid"><div class="ch"><b>💰 Venda</b></div>
+          <label class="full">Link do checkout da Eduzz <small>pode usar {email} e {nome} para preencher</small><input name="checkout_url" placeholder="https://sun.eduzz.com/..."></label>
+          <label>Preço (só para mostrar)<input name="price" placeholder="97,00"></label>
+          <label>Dias de acesso depois de pagar <small>0 = vitalício</small><input name="access_days" type="number" min="0"></label>
+          <label>WhatsApp do suporte<input name="support_whatsapp" placeholder="5511999999999"></label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>🎁 Teste grátis</b></div>
+          <label class="sw"><input type="checkbox" name="trial_enabled"><span></span> Teste grátis ligado</label>
+          <label>Vídeos no teste<input name="trial_videos" type="number" min="0" max="20"></label>
+          <label class="sw"><input type="checkbox" name="funnel_enabled"><span></span> Funil de e-mails ligado</label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>⚡ Eduzz (webhook)</b></div>
+          <label class="full">URL do webhook para colar na Eduzz<div class="copy"><input id="whUrl" readonly><button type="button" class="btn sm ghost" id="copiarWh">Copiar</button><button type="button" class="btn sm ghost" id="novoWh">Gerar outro</button></div></label>
+          <label>Código do produto na Eduzz <small>vazio = aceita todos</small><input name="eduzz_product"></label>
+          <label>Chave de assinatura da Eduzz <small>opcional</small><input name="eduzz_secret" autocomplete="off"></label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>✉️ E-mail</b> <small>(sem SMTP, usa o envio do servidor)</small></div>
+          <label>E-mail de envio<input name="mail_from" placeholder="contato@seudominio.com.br"></label>
+          <label>Nome do remetente<input name="mail_name"></label>
+          <label>Servidor SMTP<input name="smtp_host" placeholder="smtp.seudominio.com.br"></label>
+          <label>Porta<input name="smtp_port" type="number"></label>
+          <label>Segurança<select name="smtp_secure"><option value="tls">TLS (587)</option><option value="ssl">SSL (465)</option><option value="">Nenhuma</option></select></label>
+          <label>Usuário SMTP<input name="smtp_user" autocomplete="off"></label>
+          <label>Senha SMTP<input name="smtp_pass" type="password" autocomplete="new-password"></label>
+          <div class="full acts"><button type="button" class="btn sm ghost" id="testeEmail">Mandar e-mail de teste para mim</button></div>
+        </div>
+        <div class="salvar"><button class="btn">Salvar configurações</button><span class="msg" id="cfgMsg"></span></div>
+      </form>
+      <div class="glass"><div class="ch"><b>Webhooks recebidos</b> <small>(para conferir a primeira venda)</small></div><div class="tbl" id="tblWh"></div></div>
+    </div>
+  </main>
+</section>
+
+<div id="modal" class="modal" hidden><div class="mbox glass"><button class="x" data-fechar>✕</button><div id="mbody"></div></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="/assets/marca.js"></script>
+<script src="graficos.js?v=1"></script>
+<script src="admin.js?v=1"></script>
+</body>
+</html>

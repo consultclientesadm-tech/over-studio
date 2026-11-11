@@ -1,0 +1,3 @@
+<FilesMatch "^(config\.php|config\.exemplo\.php|lib\.php|mail\.php|funil\.php)$">
+  Require all denied
+</FilesMatch>

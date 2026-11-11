@@ -1,3 +1,9 @@
 node_modules/
 test/out/
 .DS_Store
+site/api/config.php
+site/app/index.html
+site/app/coi-sw.js
+site/app/css/
+site/app/js/
+site/app/assets/
