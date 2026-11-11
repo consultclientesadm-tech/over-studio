@@ -146,7 +146,8 @@
     render();
     // primeira vez no app: oferece instalar
     try {
-      if (!standalone && (ios || android) && !localStorage.getItem('sc-inst')) { localStorage.setItem('sc-inst', '1'); setTimeout(install, 1500); }
+      const pede = new URLSearchParams(location.search).has('instalar');
+      if (!standalone && (pede || ((ios || android) && !localStorage.getItem('sc-inst')))) { localStorage.setItem('sc-inst', '1'); setTimeout(install, pede ? 700 : 1500); }
     } catch {}
     if (unread) setTimeout(async () => { const a = await api('avisos'); const n = (a.items || []).find((x) => !x.read_at); if (n) toast(n.title, n.body, avisos); }, 2500);
   })();

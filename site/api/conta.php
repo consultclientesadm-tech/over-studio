@@ -74,6 +74,27 @@ switch ($a) {
     json_out(['ok' => true, 'user' => public_user($u)]);
   }
 
+  case 'obrigado': { // página de obrigado: confere se a compra deste e-mail já chegou da Eduzz
+    require_post();
+    throttle('obr:' . client_ip(), 60, 900);
+    [$u, $st] = compra_recente(clean_email((string)arg('email')), (string)arg('trans'));
+    json_out(['ok' => true, 'estado' => $st, 'nome' => $u ? explode(' ', (string)$u['name'])[0] : '']);
+  }
+
+  case 'obrigado-senha': { // cria a senha ali mesmo, só para compra paga nas últimas horas e ainda sem senha
+    require_post();
+    throttle('obrs:' . client_ip(), 10, 900);
+    [$u, $st] = compra_recente(clean_email((string)arg('email')), (string)arg('trans'));
+    if ($st !== 'criar') fail($st === 'tem_senha' ? 'Você já tem senha. Toque em "Entrar".' : 'Não achamos a compra deste e-mail. Use o link que chegou no seu e-mail.');
+    $pass = (string)arg('senha');
+    if ($e = strong_password($pass)) fail($e);
+    $hash = password_hash($pass, PASSWORD_DEFAULT);
+    db()->prepare('UPDATE users SET pass_hash = ?, last_login = ? WHERE id = ?')->execute([$hash, now(), $u['id']]);
+    $u['pass_hash'] = $hash;
+    login_user($u);
+    json_out(['ok' => true, 'user' => public_user($u)]);
+  }
+
   case 'esqueci': {
     require_post();
     $email = clean_email((string)arg('email'));
@@ -129,4 +150,20 @@ function user_by_token(string $t): ?array {
   if (strlen($t) < 20) return null;
   $q = db()->prepare('SELECT * FROM users WHERE token = ? AND token_exp > ?'); $q->execute([hash('sha256', $t), now()]);
   return $q->fetch() ?: null;
+}
+
+// compra que acabou de acontecer: devolve [pessoa, estado]
+// estados: esperando (a Eduzz ainda não avisou), criar (pode criar a senha aqui), tem_senha, antiga (só pelo link do e-mail)
+function compra_recente(string $email, string $trans): array {
+  if (!valid_email($email)) return [null, 'esperando'];
+  $q = db()->prepare('SELECT * FROM users WHERE email = ?'); $q->execute([$email]);
+  $u = $q->fetch();
+  if (!$u || !access($u)['paid']) return [null, 'esperando'];
+  if ($u['pass_hash']) return [$u, 'tem_senha'];
+  if (!$u['paid_at'] || strtotime($u['paid_at']) < time() - 3 * 3600) return [$u, 'antiga'];
+  if ($trans !== '') { // se a Eduzz mandou o código da fatura, ele tem que bater
+    $q = db()->prepare("SELECT 1 FROM sales WHERE user_id = ? AND trans = ? AND status = 'pago'"); $q->execute([$u['id'], $trans]);
+    if (!$q->fetch()) return [$u, 'antiga'];
+  }
+  return [$u, 'criar'];
 }
