@@ -165,8 +165,28 @@ section { position: relative; padding: clamp(70px, 11vw, 130px) 0; overflow: hid
   background: linear-gradient(180deg, transparent, rgba(111,243,255,.22) 70%, rgba(200,255,255,.9) 98%, transparent); }
 .scan.go { animation: varre .75s cubic-bezier(.6,0,.2,1); }
 @keyframes varre { 0% { top: 100%; opacity: 1; } 100% { top: -20%; opacity: 1; } }
-.desliga { position: absolute; inset: 0; z-index: 10; background: #000; pointer-events: none; }
-.desliga::after { content: ''; position: absolute; left: 10%; right: 10%; top: 50%; height: 2px; margin-top: -1px; background: #fff; box-shadow: 0 0 20px var(--h); opacity: var(--lin, 0); transform: scaleX(var(--lin, 0)); }
+/* abertura: logo animada + promessa na tela do iPhone */
+.boot { position: absolute; inset: 0; z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 5em; padding: 14em 9em 10em;
+  background: radial-gradient(60% 40% at 50% 40%, rgba(255,212,0,.22), transparent 70%), radial-gradient(80% 50% at 50% 100%, rgba(111,243,255,.12), transparent), #050506; transform-origin: 50% 40%; }
+.boot::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(111,243,255,.05) 0 .5em, transparent .5em 1.6em); }
+.boot .lg { position: relative; width: 44em; height: 44em; }
+.boot .lg svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.boot .lg .dia { transform-origin: 0 0; animation: dia 6s ease-in-out infinite; }
+.boot .lg .br rect { transform-box: fill-box; transform-origin: center; animation: barra 1.1s ease-in-out infinite; }
+.boot .lg .br rect:nth-child(2) { animation-delay: -.3s; } .boot .lg .br rect:nth-child(3) { animation-delay: -.6s; } .boot .lg .br rect:nth-child(4) { animation-delay: -.15s; }
+.boot .lg::before, .boot .lg::after { content: ''; position: absolute; inset: -14%; border-radius: 50%; border: .35em solid rgba(111,243,255,.35); border-top-color: var(--h); animation: orbita 3s linear infinite; }
+.boot .lg::after { inset: -28%; border-color: rgba(255,212,0,.22); border-bottom-color: var(--y); animation-duration: 5s; animation-direction: reverse; }
+@keyframes dia { 50% { transform: rotate(90deg); } }
+@keyframes barra { 50% { transform: scaleY(.45); } }
+@keyframes orbita { to { transform: rotate(360deg); } }
+.boot .nm { position: relative; font: 900 7.4em/1 var(--fd); letter-spacing: .12em; color: #fff; }
+.boot .nm em { color: var(--y); }
+.boot .pr { position: relative; font: 800 8.6em/1.15 var(--fd); color: #fff; text-wrap: balance; }
+.boot .pr em { color: var(--y); text-shadow: 0 0 .5em rgba(255,212,0,.5); }
+.boot .sub { position: relative; font: 500 4.6em/1.4 var(--fb); color: #b9b9c6; max-width: 15em; }
+.boot .ld { position: relative; width: 50em; height: 1.2em; border-radius: 1em; background: rgba(255,255,255,.1); overflow: hidden; }
+.boot .ld i { position: absolute; inset: 0; background: linear-gradient(90deg, var(--y), var(--h)); transform-origin: left; animation: carrega 2.4s ease-in-out infinite; }
+@keyframes carrega { 0% { transform: scaleX(0); } 70%, 100% { transform: scaleX(1); opacity: 0; } }
 /* palco holográfico do tour */
 .chao { position: absolute; left: -40%; right: -40%; bottom: -10%; height: 55%; pointer-events: none; transform: perspective(500px) rotateX(62deg); transform-origin: bottom;
   background: linear-gradient(rgba(111,243,255,.18) 1px, transparent 1px) 0 0/44px 44px, linear-gradient(90deg, rgba(111,243,255,.18) 1px, transparent 1px) 0 0/44px 44px;
@@ -284,7 +304,7 @@ footer a { color: #888; }
 @media (prefers-reduced-motion: reduce) {
   .js .rv { opacity: 1; transform: none; filter: none; }
   .btn::after, .gal .iph, .anel, .hud, .palco .iph, .medidor i { animation: none !important; }
-  .tour .vw img.on, .tour .vw img.off { animation: none !important; }
+  .tour .vw img.on, .tour .vw img.off, .boot * { animation: none !important; }
 }
 </style>
 <script>document.documentElement.classList.add('js');</script>
@@ -363,7 +383,13 @@ footer a { color: #888; }
             <img data-src="/assets/lp/pronto.webp" alt="Vídeo pronto">
             <div class="scan" id="tScan"></div>
           </div>
-          <div class="desliga" id="tOff"></div>
+          <div class="boot" id="tOff">
+            <div class="lg"><svg viewBox="-160 -160 320 320" aria-hidden="true"><defs><linearGradient id="bl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6b0"/><stop offset=".45" stop-color="#ffd400"/><stop offset="1" stop-color="#ff9d00"/></linearGradient></defs><g class="dia"><rect x="-110" y="-110" width="220" height="220" rx="28" transform="rotate(45)" fill="none" stroke="url(#bl)" stroke-width="22" style="filter:drop-shadow(0 0 10px rgba(255,212,0,.7))"/></g><g class="br" fill="url(#bl)"><rect x="-58" y="-26" width="20" height="52" rx="10"/><rect x="-26" y="-52" width="20" height="104" rx="10"/><rect x="6" y="-70" width="20" height="140" rx="10"/><rect x="38" y="-35" width="20" height="70" rx="10"/></g></svg></div>
+            <div class="nm">STUDIO <em>COVER</em></div>
+            <div class="pr">Seu cover com <em>som de estúdio</em>.</div>
+            <div class="sub">Voz afinada, mixada e masterizada. Direto do seu celular, em minutos.</div>
+            <div class="ld"><i></i></div>
+          </div>
           <div class="hi"></div><div class="gl"></div>
         </div>
       </div>
@@ -371,9 +397,9 @@ footer a { color: #888; }
     <div class="slot-tx">
       <div class="prog" id="tProg"></div>
       <span class="n" id="tN">Por dentro do app</span>
-      <h3 id="tH">Role a tela e entre no estúdio</h3>
-      <p id="tP">Veja o caminho do seu vídeo, do celular até o som de estúdio.</p>
-      <span class="dado" id="tD">estúdio desligado · role para ligar</span>
+      <h3 id="tH">Do celular ao som de estúdio em 5 passos</h3>
+      <p id="tP">Role a tela e entre no estúdio: veja o seu cover sair afinado, mixado e com cara de clipe.</p>
+      <span class="dado" id="tD">estúdio carregando · role para entrar</span>
       <ol class="lista" id="tList"></ol>
     </div>
   </div>
@@ -502,7 +528,7 @@ footer a { color: #888; }
   ['painel', 'cor', 'mix'].forEach((n, i) => {
     const p = molde.cloneNode(true); p.removeAttribute('id');
     p.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
-    p.querySelector('.desliga').remove(); p.querySelector('.scan').remove();
+    p.querySelector('.boot').remove(); p.querySelector('.scan').remove();
     p.querySelector('.vw').innerHTML = `<img loading="lazy" src="/assets/lp/${n}.webp" alt="${['Painel de notas', 'Filtros de cinema', 'Mix e master'][i]}">`;
     $('gal').appendChild(p);
   });
@@ -523,7 +549,7 @@ footer a { color: #888; }
     ['Passo 5 de 5', 'Cor de cinema', 'Colorista automático e filtros que tiram a luz amarela do quarto e dão cara de clipe.', 'LUT cinema · pele corrigida', ['Cor', 'colorista automático'], ['Filtro', 'cinema']],
     ['Pronto', 'Exporta na qualidade original', 'Direto para o Reels, TikTok e Shorts. Ou baixe só a voz, só a base ou só o áudio.', 'exportando · 1080p · 100%', ['Saída', 'qualidade original'], ['Destino', 'Reels · TikTok']],
   ];
-  const INTRO = ['Por dentro do app', 'Role a tela e entre no estúdio', 'Veja o caminho do seu vídeo, do celular até o som de estúdio.', 'estúdio desligado · role para ligar', ['Studio Cover', 'pronto para gravar'], ['Sinal', 'entrada do celular']];
+  const INTRO = ['Por dentro do app', 'Do celular ao som de estúdio em 5 passos', 'Role a tela e entre no estúdio: veja o seu cover sair afinado, mixado e com cara de clipe.', 'estúdio carregando · role para entrar', ['Studio Cover', 'pronto para gravar'], ['Sinal', 'entrada do celular']];
   const OUTRO = ['Gravou no celular', 'Saiu com som de estúdio.', 'Sem estúdio, sem programa, sem horas no computador. E sem vergonha de postar.', 'cover pronto ✓', ['Resultado', 'som de estúdio'], ['Tempo', 'minutos']];
   const FX = ['wipe', 'depth', 'glitch', 'slide'];
   $('tProg').innerHTML = STEPS.map(() => '<i><b></b></i>').join('');
@@ -562,8 +588,8 @@ footer a { color: #888; }
     let s = 1, rx = 0, ry = 0, rz = 0, ty = 0, power = 1;
     if (p < IN1) {
       const k = ease(p / (IN1 * 0.8));
-      s = 0.62 + 0.38 * k; rx = 58 * (1 - k); ry = -24 * (1 - k); rz = 8 * (1 - k); ty = 18 * (1 - k);
-      power = clamp((p - IN1 * 0.72) / (IN1 * 0.28));
+      s = 0.72 + 0.28 * k; rx = 32 * (1 - k); ry = -22 * (1 - k); rz = 6 * (1 - k); ty = 10 * (1 - k);
+      power = clamp((p - IN1 * 0.8) / (IN1 * 0.2));
     } else if (p > OUT0) {
       const k = ease((p - OUT0) / (1 - OUT0));
       s = 1 - 0.18 * k; ry = 38 * k; rx = -10 * k; rz = -4 * k; ty = -4 * k;
@@ -574,8 +600,8 @@ footer a { color: #888; }
     if (!calm && idx >= 0 && idx < STEPS.length) ry += Math.sin(local * Math.PI) * (innerWidth > 900 ? -7 : -3);
     if (calm) { rx = ry = rz = 0; }
     phone.style.transform = `translateY(${ty}%) scale(${s}) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
-    off.style.opacity = 1 - power;
-    off.style.setProperty('--lin', power > 0 && power < 1 ? Math.sin(power * Math.PI) : 0);
+    off.style.opacity = 1 - power; off.style.transform = `scale(${1 + power * 0.35})`; off.style.filter = power > 0 && power < 1 ? `blur(${power * 6}px)` : 'none';
+    off.style.visibility = power >= 1 ? 'hidden' : 'visible';
     slot.style.setProperty('--chao', 0.15 + 0.45 * clamp(p / IN1));
     if (idx !== last) {
       last = idx;
