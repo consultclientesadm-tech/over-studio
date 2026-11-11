@@ -71,7 +71,7 @@ td { padding: 11px 10px; border-bottom: 1px solid rgba(140,150,200,.07); vertica
 tr.click { cursor: pointer; } tr.click:hover td { background: rgba(255,212,0,.04); }
 td small { color: var(--mut); display: block; }
 .st { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
-.st.active { background: rgba(46,229,157,.12); color: var(--g); } .st.trial { background: rgba(255,212,0,.12); color: var(--y); } .st.refunded, .st.blocked { background: rgba(255,77,94,.12); color: var(--r); } .st.pago { background: rgba(46,229,157,.12); color: var(--g); } .st.reembolso { background: rgba(255,77,94,.12); color: var(--r); }
+.st.active { background: rgba(46,229,157,.12); color: var(--g); } .st.trial { background: rgba(255,212,0,.12); color: var(--y); } .st.refunded, .st.blocked { background: rgba(255,77,94,.12); color: var(--r); } .st.cortesia { background: rgba(167,123,255,.14); color: #a77bff; } .st.pago { background: rgba(46,229,157,.12); color: var(--g); } .st.reembolso { background: rgba(255,77,94,.12); color: var(--r); }
 .filtros { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px; } .filtros input { flex: 1; min-width: 200px; }
 .pager { display: flex; gap: 8px; justify-content: center; margin-top: 12px; align-items: center; color: var(--mut); font-size: 13px; }
 

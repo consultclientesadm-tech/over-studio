@@ -6,6 +6,8 @@ const brl = (v) => 'R$ ' + (+v || 0).toLocaleString('pt-BR', { minimumFractionDi
 const brl0 = (v) => 'R$ ' + Math.round(+v || 0).toLocaleString('pt-BR');
 const dt = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(2, 4) + ' ' + s.slice(11, 16) : '—');
 const STATUS = { active: 'Pago', trial: 'Teste', refunded: 'Reembolso', blocked: 'Bloqueado' };
+// acesso liberado sem pagamento (convite / cortesia) aparece separado dos pagos
+const stDe = (u) => (u.status === 'active' && !(+u.paid_value > 0) ? ['cortesia', 'Cortesia'] : [u.status, STATUS[u.status]]);
 async function api(a, body, q = '') {
   const r = await fetch('/api/admin.php?a=' + a + q, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-SC': '1' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin', cache: 'no-store' });
   const j = await r.json().catch(() => ({ ok: false, error: 'Erro no servidor (' + r.status + ')' }));
@@ -57,6 +59,7 @@ async function loadGeral() {
   $('kpis').innerHTML = [
     k('y', 'Faturamento no período', brl0(t.faturamento_periodo), `${t.vendas_periodo} vendas · ticket ${brl0(t.ticket_medio)}`),
     k('g', 'Alunos pagos', t.alunos_pagos, `${t.reembolsos} reembolsos`),
+    k('p', 'Cortesias (convite)', t.cortesias, 'acesso liberado sem pagamento'),
     k('c', 'Em teste grátis', t.em_teste, `${t.teste_acabou} já usaram tudo`),
     k('p', 'Conversão do teste', Math.round(t.conversao_teste * 100) + '%', `${t.testes_convertidos} de ${t.testes_total} compraram`),
     k('y', 'Faturamento no mês', brl0(t.faturamento_mes), `hoje: ${brl0(t.faturamento_hoje)}`),
@@ -70,7 +73,7 @@ async function loadGeral() {
   $('convLeg').textContent = `${t.testes_convertidos} compraram de ${t.testes_total} que testaram`;
   G.bars($('cVendas'), j.vendas, { color: '#2ee59d' });
   G.area($('cUso'), j.cadastros, { color: '#ffd400', second: j.videos, color2: '#2ee59d' });
-  const parts = [{ v: t.alunos_pagos, c: '#2ee59d', n: 'Pagos' }, { v: t.em_teste, c: '#ffd400', n: 'Teste' }, { v: t.reembolsos + t.bloqueados, c: '#ff4d5e', n: 'Reembolso/bloqueio' }];
+  const parts = [{ v: t.alunos_pagos, c: '#2ee59d', n: 'Pagos' }, { v: t.cortesias, c: '#a77bff', n: 'Cortesia' }, { v: t.em_teste, c: '#ffd400', n: 'Teste' }, { v: t.reembolsos + t.bloqueados, c: '#ff4d5e', n: 'Reembolso/bloqueio' }];
   G.donut($('cBase'), parts);
   $('baseLeg').innerHTML = parts.map((p) => `<span style="color:${p.c}">●</span> ${p.n} ${p.v}`).join(' &nbsp; ');
   $('ultVendas').innerHTML = j.ultimas_vendas.length ? `<table><tr><th>Quando</th><th>Aluno</th><th>Valor</th><th>Status</th></tr>${j.ultimas_vendas.map((v) => `<tr><td>${dt(v.created_at)}</td><td>${esc(v.name || '')}<small>${esc(v.email)}</small></td><td>${brl(v.value)}</td><td><span class="st ${esc(v.status)}">${esc(v.status)}</span></td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda ainda. Elas aparecem aqui assim que a Eduzz avisar.</p>';
@@ -88,7 +91,7 @@ async function loadAlunos() {
   $('alunosSub').textContent = `${j.total} ${j.total === 1 ? 'conta' : 'contas'}`;
   $('tblAlunos').innerHTML = alunos.length ? `<table><tr><th>Aluno</th><th>Status</th><th>Vídeos</th><th>Pagou</th><th>Acesso até</th><th>Cadastro</th><th>Visto</th></tr>${alunos.map((u) => `<tr class="click" data-id="${u.id}">
     <td><b>${esc(u.name || '—')}</b><small>${esc(u.email)}${+u.tem_senha ? '' : ' · <span style="color:#ff9d00">sem senha</span>'}</small></td>
-    <td><span class="st ${u.status}">${STATUS[u.status]}</span>${u.status === 'trial' ? `<small>${u.trial_left} grátis</small>` : ''}</td>
+    <td><span class="st ${stDe(u)[0]}">${stDe(u)[1]}</span>${u.status === 'trial' ? `<small>${u.trial_left} grátis</small>` : ''}</td>
     <td>${u.videos_used}</td><td>${+u.paid_value ? brl(u.paid_value) : '—'}</td><td>${u.status === 'active' ? (u.expires_at ? dt(u.expires_at).slice(0, 8) : 'vitalício') : '—'}</td>
     <td>${dt(u.created_at).slice(0, 8)}<small>${esc(u.source)}</small></td><td>${u.last_seen ? dt(u.last_seen) : '—'}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhum aluno encontrado.</p>';
   $('tblAlunos').querySelectorAll('tr[data-id]').forEach((tr) => (tr.onclick = () => editAluno(alunos.find((u) => u.id == tr.dataset.id))));
@@ -99,7 +102,7 @@ async function loadAlunos() {
 function editAluno(u) {
   modal(`<h3>${esc(u.name || u.email)}</h3><p class="sub">${esc(u.email)}${u.phone ? ' · ' + esc(u.phone) : ''}<br>Cadastro ${dt(u.created_at)} · origem ${esc(u.source)} · ${u.videos_used} vídeos · funil passo ${u.funnel_step}${+u.unsub ? ' · saiu da lista' : ''}</p>
     <label>Nome<input id="eNome" value="${esc(u.name)}"></label>
-    <label>Status<select id="eStatus">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === u.status ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+    <label>Status<select id="eStatus">${Object.entries({ ...STATUS, active: 'Acesso liberado (pago ou cortesia)' }).map(([k, v]) => `<option value="${k}" ${k === u.status ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
     <label>Vídeos grátis restantes (teste)<input id="eTrial" type="number" min="0" value="${u.trial_left}"></label>
     <label>Acesso até <small>(vazio = vitalício; ao mudar para Pago sem data, usa os dias da configuração)</small><input id="eExp" type="datetime-local" value="${u.expires_at ? u.expires_at.replace(' ', 'T').slice(0, 16) : ''}"></label>
     <div class="acts"><button class="btn sm" id="eSalvar">Salvar</button><button class="btn sm ghost" id="eLink">Link de criar senha</button><button class="btn sm ghost" id="eAviso">Aviso no app</button><button class="btn sm red" id="eApagar">Apagar</button></div>
@@ -119,7 +122,7 @@ function editAluno(u) {
 }
 $('novoAluno').onclick = () => modal(`<h3>Liberar acesso</h3><p class="sub">Para cortesia, parceiro ou suporte. A pessoa recebe o link para criar a senha.</p>
   <label>Nome<input id="nNome"></label><label>E-mail<input id="nEmail" type="email"></label>
-  <label>Tipo<select id="nTipo"><option value="active">Acesso completo</option><option value="trial">Teste grátis</option></select></label>
+  <label>Tipo<select id="nTipo"><option value="active">Cortesia (acesso completo, sem pagar)</option><option value="trial">Teste grátis</option></select></label>
   <div class="acts"><button class="btn sm" id="nOk">Liberar e mandar o e-mail</button></div><p class="msg" id="nMsg"></p><div id="nOut"></div>`, () => {
   $('nOk').onclick = async () => {
     const j = await api('aluno-criar', { nome: $('nNome').value, email: $('nEmail').value, tipo: $('nTipo').value, enviar: true });
@@ -130,7 +133,7 @@ $('novoAluno').onclick = () => modal(`<h3>Liberar acesso</h3><p class="sub">Para
 });
 function aviso(pre = {}) {
   modal(`<h3>Aviso no app</h3><p class="sub">${pre.grupo === 'um' ? 'Para ' + esc(pre.nome) : 'Aparece no sininho do app e como alerta quando a pessoa abrir.'}</p>
-    ${pre.grupo === 'um' ? '' : '<label>Para quem<select id="aGrupo"><option value="todos">Todos</option><option value="pagos">Só pagos</option><option value="teste">Só em teste grátis</option></select></label>'}
+    ${pre.grupo === 'um' ? '' : '<label>Para quem<select id="aGrupo"><option value="todos">Todos</option><option value="pagos">Só pagos</option><option value="cortesias">Só cortesias</option><option value="teste">Só em teste grátis</option></select></label>'}
     <label>Título<input id="aTit" maxlength="80"></label><label>Texto<textarea id="aTxt" maxlength="300"></textarea></label><label>Link (opcional)<input id="aLink" placeholder="https://"></label>
     <div class="acts"><button class="btn sm" id="aOk">Enviar aviso</button></div><p class="msg" id="aMsg"></p>`, () => {
     $('aOk').onclick = async () => {

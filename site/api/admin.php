@@ -46,7 +46,8 @@ switch ($a) {
     $since = date('Y-m-d', time() - ($days - 1) * 86400);
     $one = fn($sql, $p = []) => (function () use ($db, $sql, $p) { $q = $db->prepare($sql); $q->execute($p); return $q->fetchColumn(); })();
     $tot = [
-      'alunos_pagos' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'active' AND (expires_at IS NULL OR expires_at > ?)", [now()]),
+      'alunos_pagos' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'active' AND paid_value > 0 AND (expires_at IS NULL OR expires_at > ?)", [now()]),
+      'cortesias' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'active' AND paid_value <= 0 AND (expires_at IS NULL OR expires_at > ?)", [now()]),
       'em_teste' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'trial'"),
       'teste_acabou' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'trial' AND trial_left = 0"),
       'reembolsos' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'refunded'"),
@@ -88,6 +89,8 @@ switch ($a) {
     $w = []; $p = [];
     if ($busca !== '') { $w[] = '(email LIKE ? OR name LIKE ? OR phone LIKE ?)'; array_push($p, "%$busca%", "%$busca%", "%$busca%"); }
     if (in_array($st, ['trial', 'active', 'blocked', 'refunded'], true)) { $w[] = 'status = ?'; $p[] = $st; }
+    if ($st === 'pago') $w[] = "status = 'active' AND paid_value > 0";
+    if ($st === 'cortesia') $w[] = "status = 'active' AND paid_value <= 0";
     $where = $w ? 'WHERE ' . implode(' AND ', $w) : '';
     $q = $db->prepare("SELECT COUNT(*) FROM users $where"); $q->execute($p); $total = (int)$q->fetchColumn();
     $q = $db->prepare("SELECT id, email, name, phone, status, source, trial_left, videos_used, paid_value, paid_at, expires_at, created_at, last_seen, funnel_step, unsub, (pass_hash IS NOT NULL) AS tem_senha FROM users $where ORDER BY id DESC LIMIT $per OFFSET " . (($pag - 1) * $per));
@@ -145,7 +148,7 @@ switch ($a) {
     $ids = [];
     if ($grupo === 'um') $ids = [(int)arg('id')];
     else {
-      $sql = ['todos' => 'SELECT id FROM users', 'pagos' => "SELECT id FROM users WHERE status = 'active'", 'teste' => "SELECT id FROM users WHERE status = 'trial'"][$grupo] ?? null;
+      $sql = ['todos' => 'SELECT id FROM users', 'pagos' => "SELECT id FROM users WHERE status = 'active' AND paid_value > 0", 'cortesias' => "SELECT id FROM users WHERE status = 'active' AND paid_value <= 0", 'teste' => "SELECT id FROM users WHERE status = 'trial'"][$grupo] ?? null;
       if (!$sql) fail('Grupo inválido.');
       $ids = array_column($db->query($sql)->fetchAll(), 'id');
     }
