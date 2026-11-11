@@ -16,7 +16,8 @@ async function fetchPart(url, onBytes) {
   try { cache = await caches.open(MODEL_CACHE); } catch { /* sem Cache Storage */ }
   const hit = cache && (await cache.match(url));
   if (hit) { const b = await hit.arrayBuffer(); onBytes(b.byteLength); return b; }
-  const res = await fetch(url);
+  let res = await fetch(url).catch(() => null);
+  if ((!res || !res.ok) && localOf(url) !== url) res = await fetch(localOf(url));
   if (!res.ok) throw new Error(`modelo ${res.status}`);
   if (cache) {
     // Grava direto no armazenamento do aparelho enquanto baixa (sem juntar pedaços na memória: no iPhone,
@@ -25,7 +26,7 @@ async function fetchPart(url, onBytes) {
     const reader = res.body.getReader();
     for (;;) { const { done, value } = await reader.read(); if (done) break; onBytes(value.length); }
     try { await put; const again = await cache.match(url); if (again) return again.arrayBuffer(); } catch { /* sem espaço */ }
-    const r2 = await fetch(url); return r2.arrayBuffer();
+    const r2 = await fetch(url).catch(() => fetch(localOf(url))); return r2.arrayBuffer();
   }
   const reader = res.body.getReader();
   const chunks = [];
@@ -42,13 +43,21 @@ async function fetchPart(url, onBytes) {
 export async function prefetchModel() {
   try {
     const cache = await caches.open(MODEL_CACHE);
-    for (const u of useLite() ? SP_PARTS : MODEL_PARTS) if (!(await cache.match(u))) await cache.add(u);
+    for (const u of useLite() ? SP_PARTS : MODEL_PARTS) if (!(await cache.match(u))) {
+      let r = await fetch(u).catch(() => null);
+      if ((!r || !r.ok) && localOf(u) !== u) r = await fetch(localOf(u));
+      if (r.ok) await cache.put(u, r);
+    }
     return true;
   } catch { return false; }
 }
 
 // Celular usa a IA leve (Spleeter, ~40 MB, pouca memória). Computador usa a HTDemucs (mais fina, ~170 MB, ~2,5 GB de memória).
-const SP_PARTS = ['vocals', 'accompaniment'].map((n) => new URL(`../assets/ai/spleeter-${n}.bin`, import.meta.url).href);
+// A IA leve vem da CDN gratuita jsDelivr (cópia fixa deste repositório público): não pesa no servidor do site
+// quando muita gente usa ao mesmo tempo. Se a CDN falhar, baixa do próprio site.
+const CDN = 'https://cdn.jsdelivr.net/gh/consultclientesadm-tech/over-studio@2be6b966940bbd840065d29ce803ab1428c1302c/';
+const SP_PARTS = ['vocals', 'accompaniment'].map((n) => CDN + `assets/ai/spleeter-${n}.bin`);
+const localOf = (u) => (u.startsWith(CDN) ? new URL('../' + u.slice(CDN.length), import.meta.url).href : u);
 const SP_TOTAL = 19681017 + 19681024;
 export const useLite = () => {
   try {
@@ -205,7 +214,7 @@ const bedOf = (src, voice) => voice.map((v, c) => { const s = src[c] || src[0], 
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=36', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=37', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now(), sent = false;
     const send = () => {
       if (sent) return; sent = true;

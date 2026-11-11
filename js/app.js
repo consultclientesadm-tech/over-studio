@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=36';
-import { prefetchModel } from './studio.js?v=36';
-import { TuneEditor } from './editor.js?v=36';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=36';
-import { exportVideo, exportType } from './export.js?v=36';
+import * as cover from './pipeline.js?v=37';
+import { prefetchModel } from './studio.js?v=37';
+import { TuneEditor } from './editor.js?v=37';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=37';
+import { exportVideo, exportType } from './export.js?v=37';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -148,7 +148,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v36`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v37`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -213,7 +213,7 @@ async function start(f, tries = 1) {
 
 // O navegador leu o som mas não abre a imagem (Edge sem HEVC com vídeo do iPhone): converte aqui no aparelho
 async function convertVideo() {
-  let conv; try { conv = await import('./convert.js?v=36'); } catch { return; }
+  let conv; try { conv = await import('./convert.js?v=37'); } catch { return; }
   if (!conv.canConvert()) return;
   note({ stage: 'Convertendo o vídeo para este navegador', pct: 99 });
   $('workStep').textContent = 'Preparando a imagem do vídeo para este navegador (só neste caso)';

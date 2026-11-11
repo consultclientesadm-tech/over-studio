@@ -654,7 +654,10 @@ footer a { color: #888; }
   $('play').onclick = () => {
     px('VSLPlay', {}, true);
     const vw = document.querySelector('#vsl .vw'), v = document.createElement('video');
-    v.src = '/assets/lp/vsl.mp4?v=3'; v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
+    // o vídeo vem da CDN gratuita jsDelivr (não pesa no servidor com muita gente); se falhar, do próprio site
+    v.src = 'https://cdn.jsdelivr.net/gh/consultclientesadm-tech/over-studio@2be6b966940bbd840065d29ce803ab1428c1302c/site/assets/lp/vsl.mp4';
+    v.addEventListener('error', () => { if (!v.dataset.local) { v.dataset.local = '1'; v.src = '/assets/lp/vsl.mp4?v=3'; v.play().catch(() => {}); } });
+    v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
     vw.querySelector('.capa').remove(); $('play').remove(); vw.appendChild(v); v.play().catch(() => {});
   };
 
