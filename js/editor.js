@@ -2,9 +2,9 @@
 // Cada nota cantada vira um bloco na grade de notas. O bloco fica na nota certa, com a faixa verde em volta.
 // Dentro dele: a linha da voz afinada (verde onde está na faixa, vermelha onde saiu) e, se quiser,
 // a voz original em cinza. Toque/clique seleciona; arrastar o bloco para cima ou para baixo muda a nota
-// (de semitom em semitom); arrastar o fundo anda pela música; pinça ou Ctrl+roda dá zoom;
+// (de semitom em semitom); arrastar o fundo anda pela música; pinça ou roda do mouse dá zoom (tempo e altura juntos);
 // tocar na régua de cima leva o vídeo para aquele ponto.
-import { noteName } from './music.js?v=35';
+import { noteName } from './music.js?v=36';
 
 const SCALE = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10] };
 const C = { bg: '#0a0a0d', row: '#101015', rowKey: '#16161d', line: '#202029', txt: '#8b8b99', yel: '#ffd400', green: '#2ee59d', red: '#ff4d5e', orig: 'rgba(170,170,190,.45)', band: 'rgba(46,229,157,.13)' };
@@ -59,11 +59,14 @@ export class TuneEditor {
     if (!this.dragging && (x > this.W - 40 || x < this.GUT)) this.t0 = Math.max(0, t - (this.W - this.GUT) * 0.2 / this.pps);
     this.draw();
   }
-  zoom(f, cx = this.W / 2) {
-    const t = this.T(cx);
-    this.pps = Math.max(12, Math.min(400, this.pps * f));
+  // zoom nos dois sentidos (tempo e altura): a nota fica maior na tela, centrado onde está o dedo ou o mouse
+  zoom(f, cx = this.W / 2, cy = (this.RULER + this.H) / 2) { this.zoomTo(this.pps * f, this.row * f, cx, cy); this.draw(); }
+  zoomTo(pps, row, cx, cy) {
+    const t = this.T(cx), m = this.M(cy);
+    this.pps = Math.max(12, Math.min(600, pps));
+    this.row = Math.max(8, Math.min(90, row));
     this.t0 = Math.max(0, t - (cx - this.GUT) / this.pps);
-    this.draw();
+    this.top = m + (cy - this.RULER) / this.row;
   }
   inScale(m) { const k = this.state.key, sc = (k.minor ? SCALE.min : SCALE.maj).map((x) => (x + k.tonic) % 12); return sc.includes(((m % 12) + 12) % 12); }
   // próxima nota para cima (+1) ou para baixo (-1); com "Prender no tom", pula as notas fora da escala
@@ -82,7 +85,7 @@ export class TuneEditor {
     this.pointers.set(e.pointerId, p);
     if (this.pointers.size === 2) { // pinça
       const [a, b] = [...this.pointers.values()];
-      this.pinch = { d: Math.abs(a.x - b.x) || 1, pps: this.pps, cx: (a.x + b.x) / 2 };
+      this.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, pps: this.pps, row: this.row, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
       this.drag = null; return;
     }
     if (p.y < this.RULER) { this.drag = { kind: 'seek' }; this.cb.onSeek(Math.max(0, this.T(p.x))); return; }
@@ -99,9 +102,8 @@ export class TuneEditor {
     this.pointers.set(e.pointerId, p);
     if (this.pinch && this.pointers.size === 2) {
       const [a, b] = [...this.pointers.values()];
-      const d = Math.abs(a.x - b.x) || 1, t = this.T(this.pinch.cx);
-      this.pps = Math.max(12, Math.min(400, (this.pinch.pps * d) / this.pinch.d));
-      this.t0 = Math.max(0, t - (this.pinch.cx - this.GUT) / this.pps);
+      const k = (Math.hypot(a.x - b.x, a.y - b.y) || 1) / this.pinch.d, pc = this.pinch;
+      this.zoomTo(pc.pps * k, pc.row * k, pc.cx, pc.cy);
       return this.draw();
     }
     const d = this.drag;
@@ -136,9 +138,9 @@ export class TuneEditor {
   }
   wheel(e) {
     e.preventDefault();
-    if (e.ctrlKey || e.metaKey) return this.zoom(Math.exp(-e.deltaY * 0.01), this.local(e).x);
+    // roda do mouse (ou pinça no touchpad) = zoom na nota; Shift + roda ou arrastar de lado = andar pela música
     if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) this.t0 = Math.max(0, this.t0 + (e.deltaX || e.deltaY) / this.pps);
-    else this.top += e.deltaY / this.row / 3;
+    else { const p = this.local(e), dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY; return this.zoom(Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0025)), p.x, p.y); }
     this.draw();
   }
   draw() {

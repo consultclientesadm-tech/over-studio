@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=35">
+<link rel="stylesheet" href="css/app.css?v=36">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -32,7 +32,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v35</small></div>
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v36</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda">?</button>
     <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
@@ -121,7 +121,7 @@
           </div>
         </div>
         <div class="editor"><canvas id="editor"></canvas></div>
-        <div class="selinfo" id="selInfo">Toque numa nota e arraste para qualquer nota. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.</div>
+        <div class="selinfo" id="selInfo">Toque numa nota e arraste para qualquer nota. Zoom: pinça com dois dedos ou rodinha do mouse. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.</div>
         <div class="toolbar">
           <button class="tb" id="nUp" data-help="Sobe a nota escolhida meio tom. Primeiro toque numa nota no painel."><i>▲</i><span>Subir</span></button>
           <button class="tb" id="nDown" data-help="Desce a nota escolhida meio tom. Primeiro toque numa nota no painel."><i>▼</i><span>Descer</span></button>
@@ -218,7 +218,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=35"></script>
+<script type="module" src="js/app.js?v=36"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

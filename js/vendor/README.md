@@ -8,3 +8,7 @@
 - `../../assets/ai/spleeter-*.bin` — Spleeter 2 faixas (Deezer, licença MIT), convertido para ONNX (pesos fp16) pelo projeto
   sherpa-onnx (k2-fsa, Apache-2.0): arquivos `vocals.fp16.onnx` e `accompaniment.fp16.onnx` renomeados. É a IA leve usada no celular.
 - `mediabunny/` — Mediabunny 1.65.2 (Vanilagy, licença MPL-2.0, arquivo sem alterações). Lê o vídeo original e grava o vídeo final quadro a quadro.
+
+## ffmpeg (js/vendor/ffmpeg)
+- `ffmpeg/`: @ffmpeg/ffmpeg 0.12.15 (MIT), pasta dist/esm.
+- `core/`: @ffmpeg/core-mt 0.12.10 (FFmpeg em WebAssembly, GPL por causa do libx264; código-fonte em https://github.com/ffmpegwasm/ffmpeg.wasm). Só é baixado quando o navegador não abre a imagem do vídeo (Edge sem HEVC): js/convert.js converte para H.264 no aparelho.

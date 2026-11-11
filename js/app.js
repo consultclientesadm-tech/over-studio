@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=35';
-import { prefetchModel } from './studio.js?v=35';
-import { TuneEditor } from './editor.js?v=35';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=35';
-import { exportVideo, exportType } from './export.js?v=35';
+import * as cover from './pipeline.js?v=36';
+import { prefetchModel } from './studio.js?v=36';
+import { TuneEditor } from './editor.js?v=36';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=36';
+import { exportVideo, exportType } from './export.js?v=36';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -148,7 +148,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v35`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v36`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
@@ -199,6 +199,7 @@ async function start(f, tries = 1) {
     video.src = URL.createObjectURL(f); video.load();
     kick();
     if (!audioOnly) await videoReady();
+    if (!audioOnly && (!video.videoWidth || video.error)) await convertVideo();
     note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
     endRun();
@@ -208,6 +209,26 @@ async function start(f, tries = 1) {
     toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(e.duration || video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
       : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);
   }
+}
+
+// O navegador leu o som mas não abre a imagem (Edge sem HEVC com vídeo do iPhone): converte aqui no aparelho
+async function convertVideo() {
+  let conv; try { conv = await import('./convert.js?v=36'); } catch { return; }
+  if (!conv.canConvert()) return;
+  note({ stage: 'Convertendo o vídeo para este navegador', pct: 99 });
+  $('workStep').textContent = 'Preparando a imagem do vídeo para este navegador (só neste caso)';
+  $('eta').textContent = '';
+  const ring = (p) => { $('ringBar').style.strokeDashoffset = 327 * (1 - p); $('ringPct').textContent = Math.round(p * 100) + '%'; };
+  ring(0);
+  try {
+    const tc = performance.now();
+    const out = await conv.toH264(file, ring);
+    console.info('conversão do vídeo:', Math.round((performance.now() - tc) / 1000) + ' s');
+    file = out;
+    URL.revokeObjectURL(video.src);
+    video.src = URL.createObjectURL(out); video.load(); kick();
+    await videoReady();
+  } catch (e) { console.warn('conversão', e); }
 }
 
 // ---------- Estúdio ----------
@@ -247,9 +268,24 @@ function openStudio() {
   editor.load(state);
   $('seek').max = state.duration.toFixed(2); $('tEnd').textContent = fmt(state.duration);
   refreshRef(); refreshChips();
+  noImage();
   go(2);
   requestAnimationFrame(loop);
   $('quick').hidden = false;
+}
+
+// O navegador abriu o som mas não a imagem (ex.: Edge no Windows sem a extensão de HEVC não abre o vídeo do iPhone).
+// Em vez de deixar a área do vídeo vazia, explica e manda abrir no Chrome (que abre HEVC sozinho).
+function noImage() {
+  const box = $('noImg'); if (box) box.remove();
+  if (audioOnly || (video.videoWidth && !video.error)) return;
+  const edge = /Edg\//.test(navigator.userAgent), ff = /Firefox\//.test(navigator.userAgent);
+  const nav = edge ? 'O Microsoft Edge' : ff ? 'O Firefox' : 'Este navegador';
+  const d = document.createElement('div'); d.id = 'noImg';
+  d.innerHTML = `<b>${nav} não abriu a imagem deste vídeo</b><span>Vídeo de iPhone vem no formato HEVC, que ${edge ? 'o Edge só abre com uma extensão paga da Microsoft' : 'este navegador não abre'}. O som funciona, mas para ver e exportar o vídeo abra o Studio Cover no <b>Google Chrome</b> ou direto no celular.</span><button type="button">Copiar o link para abrir no Chrome</button>`;
+  d.querySelector('button').onclick = async (e) => { try { await navigator.clipboard.writeText(location.origin + location.pathname); e.target.textContent = 'Link copiado. Cole no Chrome.'; } catch { e.target.textContent = location.origin + location.pathname; } };
+  $('viewer').appendChild(d);
+  toast(`${nav} não abriu a imagem deste vídeo do iPhone. Use o Google Chrome ou o celular.`, 9000);
 }
 
 // Caminho rápido: um toque e o vídeo sai pronto (o cantor quer postar logo)
@@ -469,7 +505,7 @@ $('tuneUndo').onclick = async () => {
   editor.load(state); refreshChips(); refreshAB(); toast('Afinação desfeita: a voz voltou a ser a original.');
 };
 function onSelect(i) {
-  $('selInfo').innerHTML = i >= 0 ? `Nota <b>${i + 1}</b> escolhida: arraste para cima ou para baixo, ou use Subir e Descer. A mudança já vale sozinha.` : 'Toque numa nota e arraste para qualquer nota. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.';
+  $('selInfo').innerHTML = i >= 0 ? `Nota <b>${i + 1}</b> escolhida: arraste para cima ou para baixo, ou use Subir e Descer. A mudança já vale sozinha.` : 'Toque numa nota e arraste para qualquer nota. Zoom: pinça com dois dedos ou rodinha do mouse. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.';
   $('selInfo').classList.toggle('on', i >= 0);
   const n = state.plan[i], ed = (state.edits || {})[i] || {};
   $('qLabel').textContent = i >= 0 ? 'Quantizar nota' : 'Quantizar tudo';

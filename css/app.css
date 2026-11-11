@@ -420,3 +420,8 @@ body, .app, .app * { -webkit-user-select: none; user-select: none; -webkit-touch
 .seg button.on { background: var(--y); color: #000; }
 .mixinfo { margin: 6px 0 12px; font-size: 12px; color: var(--mut); }
 .mixinfo b { color: var(--ink); }
+
+/* navegador sem a imagem do vídeo (Edge sem HEVC): aviso no lugar da prévia */
+#noImg { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 22px; text-align: center; background: rgba(8, 8, 10, .92); border-radius: 12px; color: #ddd; font: 500 14px/1.5 'Space Grotesk', sans-serif; }
+#noImg > b { color: var(--y); font-size: 16px; }
+#noImg button { margin-top: 4px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--y); background: transparent; color: var(--y); font: 600 13px 'Space Grotesk', sans-serif; cursor: pointer; }
