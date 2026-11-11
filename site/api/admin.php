@@ -79,7 +79,7 @@ switch ($a) {
       'cadastros' => $series('SELECT substr(created_at, 1, 10) d, COUNT(*) v FROM users WHERE created_at >= ? GROUP BY d'),
       'videos' => $series('SELECT substr(created_at, 1, 10) d, COUNT(*) v FROM usage WHERE created_at >= ? GROUP BY d'),
       'funil' => funnel_counts(),
-      'ultimas_vendas' => $db->query('SELECT s.created_at, s.email, s.value, s.status, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id DESC LIMIT 8')->fetchAll(),
+      'ultimas_vendas' => $db->query('SELECT s.id, s.created_at, s.email, s.value, s.status, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id DESC LIMIT 8')->fetchAll(),
     ]);
   }
 
@@ -132,6 +132,14 @@ switch ($a) {
     $link = set_password_link($u, 7);
     $sent = arg('enviar') ? send_mail($u, $u['email'], 'senha', 'Crie a sua senha do Studio Cover', 'Crie a sua senha', '<p>Toque no botão para criar a sua senha e entrar no Studio Cover.</p>', 'Criar minha senha', $link) : null;
     json_out(['ok' => true, 'link' => $link, 'email_enviado' => $sent]);
+  }
+
+  case 'venda-apagar': { // venda lançada por engano (teste da Eduzz etc.): sai do faturamento
+    $q = $db->prepare('SELECT * FROM sales WHERE id = ?'); $q->execute([(int)arg('id')]); $s = $q->fetch();
+    if (!$s) fail('Venda não encontrada.');
+    $db->prepare('DELETE FROM sales WHERE id = ?')->execute([$s['id']]);
+    if ($s['user_id']) $db->prepare("UPDATE users SET paid_value = MAX(0, COALESCE((SELECT SUM(value) FROM sales WHERE user_id = users.id), 0)) WHERE id = ?")->execute([$s['user_id']]);
+    json_out(['ok' => true]);
   }
 
   case 'aluno-apagar': {
