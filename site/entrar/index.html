@@ -141,8 +141,8 @@ $('fCriar').onsubmit = (e) => {
   if (me.user) return go();
   if (me.trial_enabled) {
     $('irTeste').hidden = false; $('boxTeste').hidden = false;
-    $('nTeste').textContent = `Teste grátis com ${me.trial_videos} vídeos`;
-    $('cadSub').textContent = `Crie a sua conta e teste com ${me.trial_videos} vídeos seus. Sem cartão.`;
+    $('nTeste').textContent = `Teste grátis com ${me.trial_videos} vídeo${me.trial_videos == 1 ? '' : 's'}`;
+    $('cadSub').textContent = `Crie a sua conta e teste com ${me.trial_videos == 1 ? '1 vídeo seu' : me.trial_videos + ' vídeos seus'}. Sem cartão.`;
   }
   if (params.get('teste') !== null && me.trial_enabled) show('fCadastro');
 })();

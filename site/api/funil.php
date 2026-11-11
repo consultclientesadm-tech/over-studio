@@ -46,14 +46,15 @@ function funnel_send(array $u, string $kind, array $st): void {
 
 function funnel_welcome(array $u): void {
   $n = (int)setting('trial_videos');
+  $vid = $n === 1 ? '1 vídeo' : "$n vídeos";
   funnel_send($u, 'boas-vindas', ['assunto' => 'Bem-vindo ao Studio Cover, {nome}!', 'titulo' => 'Seu teste grátis está liberado',
-    'texto' => "<p>Você tem <b>$n vídeos</b> para testar o Studio Cover completo: separar a voz, afinar, mixar, cor de cinema e exportar.</p><p>Dica: escolha um cover que você gravou e achou que \"não ficou bom\". É nele que a diferença aparece.</p>",
-    'botao' => 'Abrir o Studio Cover', 'link' => '{app}', 'aviso' => "Você tem $n vídeos grátis. Suba o primeiro!"]);
+    'texto' => "<p>Você tem <b>$vid</b> para testar o Studio Cover completo: separar a voz, afinar, mixar, cor de cinema e exportar.</p><p>Dica: escolha um cover que você gravou e achou que \"não ficou bom\". É nele que a diferença aparece.</p>",
+    'botao' => 'Abrir o Studio Cover', 'link' => '{app}', 'aviso' => "Você tem $vid grátis. " . ($n === 1 ? 'Suba o seu!' : 'Suba o primeiro!')]);
 }
 
 function funnel_trial_over(array $u): void {
   funnel_send($u, 'teste-acabou', ['assunto' => '{nome}, seu teste grátis terminou', 'titulo' => 'Gostou do resultado?',
-    'texto' => '<p>Você usou os vídeos do teste. Agora é só liberar o acesso completo para afinar, mixar e exportar quantos covers quiser.</p>',
+    'texto' => '<p>Você usou o teste grátis. Agora é só liberar o acesso completo para afinar, mixar e exportar quantos covers quiser.</p>',
     'botao' => 'Liberar meu acesso completo', 'link' => '{checkout}', 'aviso' => 'Seu teste terminou. Libere o acesso completo.']);
 }
 

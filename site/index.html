@@ -373,7 +373,7 @@ footer a { color: #888; }
   </div>
   <div class="hcta">
     <a class="btn" href="#oferta" data-cta>Quero o Studio Cover</a>
-    <a class="btn2" href="/entrar/?teste" data-teste hidden>ou teste grátis com <span data-tv>2</span> vídeos seus →</a>
+    <a class="btn2" href="/entrar/?teste" data-teste hidden>ou teste grátis com <span data-tv>2</span> <span data-tvp>vídeos seus</span> →</a>
     <div class="postar"><span>Pronto para postar no</span><span class="rs"><i class="rede ig" title="Instagram"><svg><use href="#i-ig"/></svg></i><i class="rede tt" title="TikTok"><svg><use href="#i-tt"/></svg></i><i class="rede yt" title="YouTube Shorts"><svg><use href="#i-yt"/></svg></i></span></div>
     <div class="trust"><span>iPhone 13+ e Android</span><span>Sem instalar programa</span><span>Acesso na hora</span></div>
   </div>
@@ -504,7 +504,7 @@ footer a { color: #888; }
     <a class="btn full" href="#" id="comprar" style="margin-top:18px">Quero o Studio Cover</a>
     <p class="mini" style="margin:12px 0 0">🔒 Compra segura pela Eduzz · Pix, cartão ou boleto · Acesso chega no seu e-mail</p>
     <div class="garantia"><div class="selo">7<small>DIAS</small></div><p><b>Garantia incondicional de 7 dias.</b> Testou e não gostou? Devolvemos 100% do seu dinheiro. Sem perguntas.</p></div>
-    <p style="margin:18px 0 0" data-teste hidden><a class="btn2" href="/entrar/?teste">Prefere testar antes? Comece grátis com <span data-tv>2</span> vídeos →</a></p>
+    <p style="margin:18px 0 0" data-teste hidden><a class="btn2" href="/entrar/?teste">Prefere testar antes? Comece grátis com <span data-tv>2</span> <span data-tvp2>vídeos</span> →</a></p>
   </div>
 </div></section>
 
@@ -654,6 +654,7 @@ footer a { color: #888; }
     }
     if (o.trial) document.querySelectorAll('[data-teste]').forEach((e) => (e.hidden = false));
     document.querySelectorAll('[data-tv]').forEach((e) => (e.textContent = o.trial_videos || 2));
+    if (+o.trial_videos === 1) { document.querySelectorAll('[data-tvp]').forEach((e) => (e.textContent = 'vídeo seu')); document.querySelectorAll('[data-tvp2]').forEach((e) => (e.textContent = 'vídeo')); }
     if (o.whatsapp) $('suporte').innerHTML = `Dúvidas? <a href="https://wa.me/${o.whatsapp.replace(/\D/g, '')}" target="_blank" rel="noopener">Fale no WhatsApp</a>`;
   }).catch(() => {});
 
