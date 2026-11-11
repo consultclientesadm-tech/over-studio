@@ -3,8 +3,7 @@
 # Nunca mexe no banco (fica fora do httpdocs) nem no httpdocs/api/config.php.
 set -e
 R="$HOME/sc-repo"; W="$HOME/httpdocs"; MARK="$HOME/.sc_publicado"
-export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/sc_deploy -o StrictHostKeyChecking=accept-new -o BatchMode=yes"
-[ -d "$R/.git" ] || git clone -q git@github.com:consultclientesadm-tech/over-studio.git "$R"
+[ -d "$R/.git" ] || git clone -q https://github.com/consultclientesadm-tech/over-studio.git "$R"
 cd "$R"
 git fetch -q origin main
 NEW=$(git rev-parse origin/main); OLD=$(cat "$MARK" 2>/dev/null || echo nada)
