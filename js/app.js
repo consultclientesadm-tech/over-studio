@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=31';
-import { prefetchModel } from './studio.js?v=31';
-import { TuneEditor } from './editor.js?v=31';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=31';
-import { exportVideo, exportType } from './export.js?v=31';
+import * as cover from './pipeline.js?v=32';
+import { prefetchModel } from './studio.js?v=32';
+import { TuneEditor } from './editor.js?v=32';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=32';
+import { exportVideo, exportType } from './export.js?v=32';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -147,7 +147,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
-    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v31`;
+    const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v32`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
   }
