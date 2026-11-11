@@ -29,17 +29,21 @@ function pick(array $d, array $keys) {
   foreach ($d as $v) if (is_array($v) && ($r = pick($v, $keys)) !== null) return $r;
   return null;
 }
-$email = clean_email((string)pick($data, ['cus_email', 'email', 'buyer_email', 'client_email', 'customer_email']));
-$name = trim((string)pick($data, ['cus_name', 'name', 'buyer_name', 'client_name', 'customer_name']));
-$phone = trim((string)pick($data, ['cus_cel', 'cellphone', 'phone', 'cus_tel']));
+$email = clean_email((string)pick($data, ['edz_cli_email', 'cus_email', 'email', 'buyer_email', 'client_email', 'customer_email']));
+$name = trim((string)pick($data, ['edz_cli_rsocial', 'cus_name', 'name', 'buyer_name', 'client_name', 'customer_name']));
+$phone = trim((string)pick($data, ['edz_cli_cel', 'cus_cel', 'cellphone', 'phone', 'cus_tel']));
 $event = mb_strtolower((string)pick($data, ['event', 'event_name', 'type']));
-$status = mb_strtolower((string)pick($data, ['trans_status', 'status', 'invoice_status', 'sale_status']));
-$value = (float)str_replace(',', '.', (string)(pick($data, ['trans_paid', 'trans_value', 'paid_value', 'value', 'amount', 'price']) ?? 0));
+$status = mb_strtolower((string)pick($data, ['edz_fat_status', 'trans_status', 'status', 'invoice_status', 'sale_status']));
+$value = (float)str_replace(',', '.', (string)(pick($data, ['edz_valorpago', 'trans_paid', 'trans_value', 'paid_value', 'value', 'amount', 'price']) ?? 0));
 if ($value > 10000) $value /= 100; // veio em centavos
-$trans = (string)pick($data, ['trans_cod', 'invoice_id', 'transaction_id', 'id']);
-$product = (string)pick($data, ['product_cod', 'productId', 'product_id', 'content_id']);
+$trans = (string)pick($data, ['edz_fat_cod', 'trans_cod', 'invoice_id', 'transaction_id', 'id']);
+$product = (string)pick($data, ['edz_cnt_cod', 'product_cod', 'productId', 'product_id', 'content_id']);
 
 $s = $event . ' ' . $status;
+// entrega customizada da Eduzz: type = create (liberar) ou remove (tirar acesso: reembolso, atraso, cancelamento)
+$tipo = mb_strtolower((string)($data['type'] ?? ''));
+if ($tipo === 'create') $s = 'paid';
+if ($tipo === 'remove') $s = 'cancel';
 $paid = preg_match('/invoice_paid|paid|aprovad|pago|paga|approved|confirm|^\s*3$/', $s) || $status === '3';
 $back = preg_match('/refund|reembols|chargeback|cancel|estorn|^\s*(4|6|7)$/', $s) || in_array($status, ['4', '6', '7'], true);
 
