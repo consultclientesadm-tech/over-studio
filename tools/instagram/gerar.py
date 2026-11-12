@@ -67,7 +67,7 @@ O Studio Cover é um estúdio inteiro dentro do seu celular: você sobe o vídeo
 
 Arrasta pro lado e vê como funciona 👉
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(760, 760) + holo(760, 760, 900) +
       bloco(64, 170, 560, '<span class="k">● Novo app</span><h1 style="margin-top:34px;font-size:70px">Seu cover com som de <em>estúdio</em></h1><p style="margin-top:30px">E cara de cinema. Direto do seu celular.</p>') +
       phone('home', 410, 600, 210, 'rotate(6deg)') + onda(64, 1060, 26, 110, 3)),
@@ -78,7 +78,7 @@ Arrasta pro lado e vê como funciona 👉
       bloco(64, 260, 540, '<span class="k">Passo 2</span><h2 style="margin-top:30px">A IA <em>afina</em> sua voz</h2><p style="margin-top:28px">No tom da música, mantendo o seu vibrato e o seu jeito de cantar.</p>')),
     S(glow(300, 700) + phone('mix', 400, 620, 230, 'rotate(-4deg)') +
       bloco(64, 260, 540, '<span class="k">Passo 3 e 4</span><h2 style="margin-top:30px">Mixa, masteriza e dá <em>cor de cinema</em></h2><p style="margin-top:28px">Voz na frente, violão no lugar, reverb na medida e imagem com cara de clipe.</p>')),
-    S(glow(540, 680, 1300) + centro('<span class="k">Passo 5</span><h1 style="margin-top:36px">Baixa pronto em <em>1080p</em> e posta.</h1><p style="margin-top:36px">Teste grátis com 2 vídeos, por nossa conta.</p><div style="margin-top:60px"><span class="btn">Link na bio →</span></div>', 'text-align:left') +
+    S(glow(540, 680, 1300) + centro('<span class="k">Passo 5</span><h1 style="margin-top:36px">Baixa pronto em <em>1080p</em> e posta.</h1><p style="margin-top:36px">Teste grátis com 1 vídeo, por nossa conta.</p><div style="margin-top:60px"><span class="btn">Link na bio →</span></div>', 'text-align:left') +
       onda(64, 1120, 40, 80, 9), True),
 ])
 
@@ -90,7 +90,7 @@ Você gravou, ouviu de volta e pensou: “não, assim não posto”. Não é a s
 
 O Studio Cover resolve isso no próprio celular: afina, mixa, masteriza e coloca cor de cinema. Você só escolhe e baixa.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 520, 1200) + centro('<span class="k">Seja sincero</span><h1 style="margin-top:36px;font-size:84px">Quantos covers seus estão <em>parados</em> na galeria?</h1>' + '<div style="margin-top:64px">' + '<p>Não é falta de talento. É o áudio do celular que chega sem tratamento nenhum.</p><p style="margin-top:28px"><b>O Studio Cover trata pra você.</b></p>' + '</div>') + onda(64, 1120, 40, 80, 4)),
 ])
 
@@ -106,14 +106,14 @@ post('5 sinais de que o áudio te entrega', 'carrossel',
 
 Se você se viu em 2 ou mais, salva esse post. O Studio Cover corrige os 5 automaticamente, no celular.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 600, 1300) + centro('<span class="k">Salva esse post</span><h1 style="margin-top:36px;font-size:92px"><em>5 sinais</em> de que o áudio do seu cover te entrega</h1>') + onda(64, 1120, 40, 80, 5), True),
     S(glow(540, 700) + centro('<span class="k">Sinal 01</span><h2 style="margin-top:30px">A voz sai <em>abafada</em></h2><p style="margin-top:30px">O microfone do celular grava tudo plano, sem graves e sem brilho. Parece que você cantou dentro de uma caixa.</p>' + '<div style="margin-top:64px">' + '<div class="card"><p style="font-size:32px"><b>No app:</b> equalizador, compressor e master deixam a voz cheia e na frente.</p></div>' + '</div>')),
     S(glow(540, 700) + centro('<span class="k">Sinal 02</span><h2 style="margin-top:30px">A nota escapa no <em>refrão</em></h2><p style="margin-top:30px">Justo na parte mais alta, a que todo mundo espera. E dá vontade de apagar o vídeo inteiro.</p>' + '<div style="margin-top:64px">' + '<div class="card"><p style="font-size:32px"><b>No app:</b> afinação automática no tom da música, sem voz robótica.</p></div>' + '</div>')),
     S(glow(540, 700) + centro('<span class="k">Sinal 03</span><h2 style="margin-top:30px">O violão <em>engole</em> a voz</h2><p style="margin-top:30px">Celular perto do violão, longe da boca. A voz fica lá atrás e ninguém entende a letra.</p>' + '<div style="margin-top:64px">' + '<div class="card"><p style="font-size:32px"><b>No app:</b> a IA separa voz e instrumental e você ajusta o volume de cada um.</p></div>' + '</div>')),
     S(glow(540, 700) + centro('<span class="k">Sinal 04</span><h2 style="margin-top:30px">Silêncio no começo, <em>corte seco</em> no fim</h2><p style="margin-top:30px">Aqueles segundos ajeitando o celular e o final que termina do nada.</p>' + '<div style="margin-top:64px">' + '<div class="card"><p style="font-size:32px"><b>No app:</b> corta o silêncio do começo e do fim, com fade-in e fade-out suaves.</p></div>' + '</div>')),
     S(glow(540, 700) + centro('<span class="k">Sinal 05</span><h2 style="margin-top:30px">Imagem com <em>cara de quarto</em></h2><p style="margin-top:30px">Luz amarela, pele apagada, cor lavada. O som pode estar ótimo e o vídeo ainda parece amador.</p>' + '<div style="margin-top:64px">' + '<div class="card"><p style="font-size:32px"><b>No app:</b> colorista automático e filtros de cinema. É só tocar e comparar.</p></div>' + '</div>')),
-    S(glow(540, 620, 1300) + centro('<span class="k">Se viu em 2 ou mais?</span><h1 style="margin-top:36px">O Studio Cover corrige <em>os 5</em> no celular.</h1><p style="margin-top:36px">Teste grátis com 2 vídeos.</p><div style="margin-top:56px"><span class="btn">Link na bio →</span></div>'), True),
+    S(glow(540, 620, 1300) + centro('<span class="k">Se viu em 2 ou mais?</span><h1 style="margin-top:36px">O Studio Cover corrige <em>os 5</em> no celular.</h1><p style="margin-top:36px">Teste grátis com 1 vídeo.</p><div style="margin-top:56px"><span class="btn">Link na bio →</span></div>'), True),
 ])
 
 # 4 — afinação (único)
@@ -124,7 +124,7 @@ O Studio Cover encontra o tom da música e coloca cada nota da sua voz no lugar,
 
 Quer mexer nota por nota? Tem o painel de notas também.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(720, 700) + holo(720, 700, 820) + bloco(64, 200, 540, '<span class="k">Afinação</span><h1 style="margin-top:34px;font-size:68px">Afinado. <em>Sem voz de robô.</em></h1><p style="margin-top:30px">A IA acha o tom da música e coloca cada nota no lugar, mantendo o seu vibrato.</p>') +
       phone('afinacao', 420, 600, 200, 'rotate(5deg)') + onda(64, 1080, 24, 100, 7)),
 ])
@@ -135,7 +135,7 @@ post('Quanto custa um cover profissional', 'carrossel',
 
 Estúdio para gravar a voz separada, alguém para mixar e masterizar, alguém para sincronizar o áudio com o vídeo e tratar a cor. Por cover. Toda vez.
 
-No Studio Cover é R$ 297 por um ano inteiro (ou 10x de R$ 35,69), quantos vídeos você quiser. E você testa grátis antes com 2 vídeos.
+No Studio Cover é R$ 297 por um ano inteiro (ou 10x de R$ 35,69), quantos vídeos você quiser. E você testa grátis antes com 1 vídeo.
 
 Os valores de estúdio variam por cidade; é uma média do que a gente vê no mercado.
 
@@ -148,7 +148,7 @@ Os valores de estúdio variam por cidade; é uma média do que a gente vê no me
     S(glow(540, 700) + centro('<span class="k">Resultado</span><h2 style="margin-top:30px">Facilmente passa de <em>R$ 300</em> por cover.</h2><p style="margin-top:34px">E leva dias. Quem posta toda semana não consegue manter isso.</p><p style="margin-top:26px;font-size:26px;opacity:.6">Valores variam por cidade e profissional.</p>')),
     S(glow(540, 700, 1300) + phone('pronto', 360, 640, 300, 'rotate(5deg)') +
       bloco(64, 240, 560, '<span class="k">Com o Studio Cover</span><div class="preco" style="margin-top:40px;font-size:100px">R$ 297</div><p style="margin-top:14px"><b>por 1 ano inteiro</b>, quantos covers quiser.</p><p style="margin-top:30px">Ou <em>10x de R$ 35,69</em>.</p>')),
-    S(glow(540, 620, 1300) + centro('<span class="k">Antes de pagar</span><h1 style="margin-top:36px">Testa <em>grátis</em> com 2 vídeos.</h1><p style="margin-top:36px">Garantia de 7 dias depois da compra.</p><div style="margin-top:56px"><span class="btn">Link na bio →</span></div>'), True),
+    S(glow(540, 620, 1300) + centro('<span class="k">Antes de pagar</span><h1 style="margin-top:36px">Testa <em>grátis</em> com 1 vídeo.</h1><p style="margin-top:36px">Garantia de 7 dias depois da compra.</p><div style="margin-top:56px"><span class="btn">Link na bio →</span></div>'), True),
 ])
 
 # 6 — separação de voz (único, amarelo)
@@ -159,7 +159,7 @@ A IA do Studio Cover separa a sua voz do instrumental dentro do próprio celular
 
 E o seu vídeo não é enviado pra ninguém: o processamento roda no seu aparelho.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 900) + bloco(64, 180, 952, '<span class="k">IA no seu celular</span><h1 style="margin-top:34px;font-size:72px">Separa sua <em>voz</em> do violão.</h1>') +
       phone('separando', 360, 360, 520, '') + bloco(64, 1150, 260, '<p style="font-size:28px"><b>Afina só a voz.</b></p>') + bloco(760, 1150, 260, '<p style="font-size:28px;text-align:right"><b>Violão intacto.</b></p>'), True),
 ])
@@ -177,7 +177,7 @@ post('Tutorial: do vídeo cru ao cover pronto', 'carrossel',
 Prefere não mexer em nada? Toca em “Deixar tudo pronto” e o app faz os 5 sozinho.
 
 Salva pra usar no próximo cover 📌
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 600, 1300) + centro('<span class="k">Tutorial</span><h1 style="margin-top:36px;font-size:84px">Do vídeo cru ao cover <em>pronto</em></h1><p style="margin-top:34px">5 passos. Alguns minutos. Só o celular.</p>') + onda(64, 1120, 40, 80, 13), True),
     S(glow(300, 700) + phone('home', 400, 620, 230, 'rotate(-4deg)') + bloco(64, 280, 540, '<span class="k">01 · Vídeo</span><h2 style="margin-top:30px">Escolhe o vídeo</h2><p style="margin-top:28px">Do jeito que gravou. Tem playback ou violão? Marca a opção e a IA separa a voz.</p>')),
     S(glow(300, 700) + phone('afinacao', 400, 620, 230, 'rotate(4deg)') + bloco(64, 280, 540, '<span class="k">02 · Afinação</span><h2 style="margin-top:30px">Afina no tom</h2><p style="margin-top:28px">Toca em ANTES e DEPOIS pra comparar. Não gostou? Desfaz.</p>')),
@@ -195,7 +195,7 @@ A diferença é o tratamento de cor do Studio Cover: o colorista automático cor
 
 Qual você postaria? Comenta ANTES ou DEPOIS 👇
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 760, 1300) + bloco(64, 160, 952, '<span class="k">Mesmo vídeo</span><h2 style="margin-top:28px;font-size:58px">Antes e depois da <em>cor de cinema</em></h2>') +
       f'<div class="foto" style="left:64px;top:470px;width:460px;height:780px"><img src="{LP}antes.webp"><span class="tag">ANTES</span></div>' +
       f'<div class="foto dep" style="left:556px;top:470px;width:460px;height:780px"><img src="{LP}depois.webp"><span class="tag">DEPOIS</span></div>'),
@@ -209,7 +209,7 @@ A afinação automática resolve quase tudo. Mas se você quiser, abre o painel,
 
 Tem também “Subir”, “Descer”, “Original” e “Desfazer” pra cada trecho.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(720, 700) + phone('painel', 420, 600, 200, 'rotate(-5deg)') + bloco(64, 240, 540, '<span class="k">Modo detalhista</span><h1 style="margin-top:34px;font-size:66px">Você no <em>controle</em> de cada nota</h1>') + onda(64, 1000, 24, 100, 17)),
     S(glow(540, 700) + centro('<span class="k">Como usa</span><h2 style="margin-top:30px">Toca e <em>arrasta</em></h2>' + '<div style="height:56px"></div>' + lista([('Toca na nota', 'Ela acende no painel.'), ('Arrasta', 'Pra cima ou pra baixo. A mudança já vale.'), ('Faixa verde', 'Mostra as notas do tom da música.'), ('Desfazer', 'Voltou atrás? Um toque.')]))),
     S(glow(300, 700) + phone('arrastar', 400, 620, 230, 'rotate(4deg)') + bloco(64, 300, 540, '<span class="k">Atalhos</span><h2 style="margin-top:30px">Subir, descer, auto</h2><p style="margin-top:28px">Botões prontos pra ajustar um trecho inteiro de uma vez.</p>')),
@@ -224,7 +224,7 @@ Cada vídeo que vai pro ar é o seu cartão de visita. Quem te descobre por um c
 
 Grava no celular e deixa o Studio Cover cuidar do resto.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 640, 1300) + holo(540, 640, 1000) + centro('<h1 style="font-size:84px;text-align:center">Estúdio é caro.<br><br>Postar <em>desafinado</em> custa mais caro ainda.</h1>') + onda(250, 1050, 36, 90, 21)),
 ])
 
@@ -241,7 +241,7 @@ No passo 3 do Studio Cover você tem:
 
 Tudo já vem ajustado. Mexe só se quiser. E compara ORIGINAL, AFINADA e MIXADA com um toque.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(720, 700) + phone('mix', 420, 600, 200, 'rotate(5deg)') + bloco(64, 240, 540, '<span class="k">Passo 3</span><h1 style="margin-top:34px;font-size:60px">Mix e master <em>sem</em> complica­ção</h1>') + onda(64, 1000, 24, 100, 23)),
     S(glow(540, 700) + centro('<span class="k">O que tem</span><h2 style="margin-top:30px">Tudo que um estúdio faz</h2>' + '<div style="height:56px"></div>' + lista([('Volume', 'Voz na frente, base no lugar.'), ('Equalizador', 'Grave, médio e agudo.'), ('Reverb', 'Do seco ao de igreja.'), ('Fade-in e fade-out', 'Entrada e saída suaves.')]))),
     S(glow(540, 700) + centro('<span class="k">Detalhe que faz diferença</span><h2 style="margin-top:30px">Corta o <em>silêncio</em> do começo e do fim</h2><p style="margin-top:34px">Aqueles segundos ajeitando o celular somem. O vídeo já começa na música.</p>')),
@@ -257,7 +257,7 @@ O colorista automático corrige a luz amarela do quarto e a cor da pele. Quer um
 
 Qual é o seu estilo: quente, frio ou preto e branco? 👇
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(720, 700) + holo(720, 700, 820) + bloco(64, 220, 540, '<span class="k">Passo 4</span><h1 style="margin-top:34px;font-size:68px">Cor de <em>cinema</em> com um toque</h1><p style="margin-top:30px">Colorista automático e filtros com prévia antes de baixar.</p>') +
       phone('cor', 420, 600, 200, 'rotate(-5deg)') + onda(64, 1080, 24, 100, 29)),
 ])
@@ -292,7 +292,7 @@ Depois que a IA separa a voz, o Studio Cover pergunta: “Deixar tudo pronto” 
 
 No primeiro, ele afina, mixa, masteriza e coloca cor de cinema sozinho. Você só assiste a prévia e baixa. E pode voltar e mudar qualquer etapa.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 900) + bloco(64, 180, 952, '<span class="k">Modo rápido</span><h1 style="margin-top:34px;font-size:76px">Um toque. <em>Cover pronto.</em></h1>') +
       phone('rapido', 360, 360, 520, '') + bloco(64, 1100, 270, '<p style="font-size:28px"><b>Afina e mixa</b></p>') + bloco(750, 1100, 270, '<p style="font-size:28px;text-align:right"><b>Master e cor</b></p>'), True),
 ])
@@ -324,7 +324,7 @@ post('Funciona no seu celular', 'post',
 
 Não precisa baixar da loja: abre no navegador e instala na tela de início. A IA roda no seu aparelho.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 820, 1300) + bloco(64, 180, 952, '<span class="k">Compatível</span><h1 style="margin-top:34px;font-size:72px">Funciona no celular que você <em>já tem</em></h1>') +
       phone('home', 310, 190, 500, 'rotate(-8deg)', z=4) + phone('pronto', 310, 580, 480, 'rotate(7deg)', z=6) +
       bloco(64, 1190, 952, '<p style="font-size:30px;text-align:center"><b>iPhone 13+</b> · <b>Android 4 GB+</b> · <b>Computador</b></p>')),
@@ -338,7 +338,7 @@ No Studio Cover tem a opção “Subir a música original”. Você manda a mús
 
 É opcional. Sem ela, a afinação automática já funciona pelo tom da música.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(540, 600, 1300) + centro('<span class="k">Função secreta</span><h1 style="margin-top:36px;font-size:80px">Afina pela melodia do <em>cantor original</em></h1>') + onda(64, 1120, 40, 80, 41), True),
     S(glow(300, 700) + phone('home', 400, 620, 230, 'rotate(-4deg)') + bloco(64, 300, 540, '<span class="k">Como</span><h2 style="margin-top:30px">Sobe a música original</h2><p style="margin-top:28px">MP3, M4A ou WAV. É opcional.</p>')),
     S(glow(300, 700) + phone('afinacao', 400, 620, 230, 'rotate(4deg)') + bloco(64, 300, 540, '<span class="k">O que acontece</span><h2 style="margin-top:30px">Vira guia no <em>seu</em> tom</h2><p style="margin-top:28px">O app pega a melodia do cantor e afina você por ela.</p>')),
@@ -351,7 +351,7 @@ post('Pronto pra postar em 1080p', 'post',
 
 No final é só tocar em “Baixar meu vídeo pronto”. O vídeo sai no formato vertical certinho pro Reels, TikTok e Shorts, com o som e a cor que você escolheu.
 
-🎁 Teste grátis com 2 vídeos: link na bio.''', [
+🎁 Teste grátis com 1 vídeo: link na bio.''', [
     S(glow(720, 700) + holo(720, 700, 820) + bloco(64, 220, 540, '<span class="k">Passo 5</span><div class="preco" style="margin-top:40px;font-size:96px">1080p</div><h2 style="margin-top:24px;font-size:52px">Pronto pra <em>postar</em></h2><p style="margin-top:30px">Vertical, 1080 x 1920, com som e cor do jeito que você escolheu.</p>') +
       phone('pronto', 420, 600, 200, 'rotate(5deg)')),
 ])
@@ -360,7 +360,7 @@ No final é só tocar em “Baixar meu vídeo pronto”. O vídeo sai no formato
 post('Como assinar e testar grátis', 'carrossel',
      '''Tudo sobre o Studio Cover em 1 carrossel 👇
 
-🎁 Teste grátis: 2 vídeos, sem cartão
+🎁 Teste grátis: 1 vídeo, sem cartão
 💳 R$ 297 por 1 ano (ou 10x de R$ 35,69)
 ♾️ Quantos covers você quiser no ano
 🛡️ Garantia de 7 dias
@@ -369,7 +369,7 @@ post('Como assinar e testar grátis', 'carrossel',
 
 🔗 studiocover.com.br (link na bio)''', [
     S(glow(540, 600, 1300) + centro('<span class="k">Guia rápido</span><h1 style="margin-top:36px;font-size:84px">Tudo sobre o Studio Cover em <em>1 post</em></h1>') + onda(64, 1120, 40, 80, 43)),
-    S(glow(540, 700) + centro('<span class="k">01 · Testa primeiro</span><h2 style="margin-top:30px"><em>2 vídeos</em> grátis</h2><p style="margin-top:34px">Cria a conta, sobe o vídeo e baixa pronto. Só assina se gostar.</p>')),
+    S(glow(540, 700) + centro('<span class="k">01 · Testa primeiro</span><h2 style="margin-top:30px"><em>1 vídeo</em> grátis</h2><p style="margin-top:34px">Cria a conta, sobe o vídeo e baixa pronto. Só assina se gostar.</p>')),
     S(glow(540, 700) + centro('<span class="k">02 · Preço</span><div class="preco" style="margin-top:40px">R$ 297</div><p style="margin-top:20px"><b>por 1 ano</b>, quantos covers quiser.</p><p style="margin-top:30px">Ou <em>10x de R$ 35,69</em> no cartão.</p>')),
     S(glow(540, 700) + centro('<span class="k">03 · Segurança</span><h2 style="margin-top:30px">Garantia de <em>7 dias</em></h2><p style="margin-top:34px">Não gostou? Pede o reembolso dentro de 7 dias. Pagamento seguro pela Eduzz.</p>')),
     S(glow(540, 700) + centro('<span class="k">04 · Onde funciona</span><h2 style="margin-top:30px">No celular e no <em>computador</em></h2><p style="margin-top:34px">iPhone 13 ou mais novo, Android com 4 GB, e qualquer computador recente.</p>')),
@@ -377,13 +377,13 @@ post('Como assinar e testar grátis', 'carrossel',
 ])
 
 # 20 — CTA final (único)
-post('Teste grátis: 2 vídeos', 'post',
+post('Teste grátis: 1 vídeo', 'post',
      '''Seu próximo cover pode sair com som de estúdio. 🎙️✨
 
-Testa o Studio Cover de graça com 2 vídeos: sobe do jeito que gravou e baixa afinado, mixado e com cor de cinema.
+Testa o Studio Cover de graça com 1 vídeo: sobe do jeito que gravou e baixa afinado, mixado e com cor de cinema.
 
 👉 Link na bio: studiocover.com.br''', [
-    S(glow(720, 700) + holo(720, 700, 820) + bloco(64, 220, 560, '<span class="k">🎁 Presente</span><h1 style="margin-top:34px;font-size:74px">Teste <em>grátis</em> com 2 vídeos</h1><p style="margin-top:30px">Sobe do jeito que gravou. Baixa com som de estúdio.</p><div style="margin-top:50px"><span class="btn">Link na bio →</span></div>') +
+    S(glow(720, 700) + holo(720, 700, 820) + bloco(64, 220, 560, '<span class="k">🎁 Presente</span><h1 style="margin-top:34px;font-size:74px">Teste <em>grátis</em> com 1 vídeo</h1><p style="margin-top:30px">Sobe do jeito que gravou. Baixa com som de estúdio.</p><div style="margin-top:50px"><span class="btn">Link na bio →</span></div>') +
       phone('rapido', 400, 620, 230, 'rotate(5deg)')),
 ])
 
