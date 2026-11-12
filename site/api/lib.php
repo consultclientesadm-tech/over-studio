@@ -119,7 +119,8 @@ const SETTINGS_DEFAULT = [
   'meta_pixel' => '1595086872316004,1631589557846072', // Pixels da Meta na página de vendas, separados por vírgula (vazio = sem pixel)
   'eduzz_pixel' => '1595086872316004',
   'eduzz_taxa' => '17,04',           // taxa que a Eduzz desconta de cada venda (R$). Os juros do parcelamento quem paga é o comprador
-  'socio_pct' => '50',               // parte do sócio (Reinaldo) no líquido, em % // pixel já cadastrado no checkout da Eduzz (a página de obrigado não repete a Compra dele)
+  'socio_pct' => '50',
+  'af_comissao_pct' => '50',         // comissão do afiliado na Eduzz (% do valor já sem a taxa)               // parte do sócio (Reinaldo) no líquido, em % // pixel já cadastrado no checkout da Eduzz (a página de obrigado não repete a Compra dele)
 ];
 function setting(string $k): string {
   static $cache = null;
@@ -261,20 +262,22 @@ function ua_short(string $ua): string {
 
 // ---------- valores de venda: bruto (preço), taxa da Eduzz e líquido que cai para os sócios ----------
 function brnum(string $v): float { $v = preg_replace('/[^\d,.\-]/', '', $v); if (str_contains($v, ',')) $v = str_replace(['.', ','], ['', '.'], $v); return (float)$v; }
-function sale_net(float $value): array {
+function sale_net(float $value, bool $afiliado = false): array {
   $price = brnum(setting('price')); $b = abs($value);
   // o aviso da Eduzz pode vir sem valor, com juros do parcelamento ou só com a parte de um sócio: aí vale o preço
   if ($price > 0 && ($b <= 0 || $b > $price || $b < $price * 0.6)) $b = $price;
   $taxa = min($b, brnum(setting('eduzz_taxa')));
   $sg = $value < 0 ? -1 : 1;
-  return ['bruto' => $sg * $b, 'taxa' => $sg * $taxa, 'liquido' => $sg * round($b - $taxa, 2)];
+  $com = $afiliado ? round(($b - $taxa) * max(0, min(100, brnum(setting('af_comissao_pct')))) / 100, 2) : 0;
+  return ['bruto' => $sg * $b, 'taxa' => $sg * $taxa, 'comissao' => $sg * $com, 'liquido' => $sg * round($b - $taxa - $com, 2)];
 }
 // colunas novas em vendas antigas + calcula o líquido das que ainda não têm
 function sales_fill_net(): void {
   $db = db(); $cols = array_column($db->query('PRAGMA table_info(sales)')->fetchAll(), 'name');
-  foreach (['bruto', 'taxa', 'liquido'] as $c) if (!in_array($c, $cols, true)) $db->exec("ALTER TABLE sales ADD COLUMN $c REAL");
-  $up = $db->prepare('UPDATE sales SET bruto = ?, taxa = ?, liquido = ? WHERE id = ?');
-  foreach ($db->query('SELECT id, value FROM sales WHERE liquido IS NULL')->fetchAll() as $r) { $n = sale_net((float)$r['value']); $up->execute([$n['bruto'], $n['taxa'], $n['liquido'], $r['id']]); }
+  foreach (['bruto', 'taxa', 'liquido', 'comissao'] as $c) if (!in_array($c, $cols, true)) $db->exec("ALTER TABLE sales ADD COLUMN $c REAL");
+  af_db();
+  $up = $db->prepare('UPDATE sales SET bruto = ?, taxa = ?, comissao = ?, liquido = ? WHERE id = ?');
+  foreach ($db->query('SELECT id, value, afiliado_id FROM sales WHERE liquido IS NULL OR (afiliado_id IS NOT NULL AND comissao IS NULL)')->fetchAll() as $r) { $n = sale_net((float)$r['value'], !empty($r['afiliado_id'])); $up->execute([$n['bruto'], $n['taxa'], $n['comissao'], $n['liquido'], $r['id']]); }
 }
 
 function notify(int $uid, string $title, string $body, string $url = ''): void {

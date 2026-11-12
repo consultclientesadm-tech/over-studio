@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=6">
+<link rel="stylesheet" href="admin.css?v=7">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -118,6 +118,7 @@
           <label>Valor da parcela (com juros da Eduzz)<input name="installment_value" placeholder="35,69"></label>
           <label>Taxa da Eduzz por venda (R$) <small>o painel mostra o líquido, já sem ela</small><input name="eduzz_taxa" placeholder="17,04"></label>
           <label>Parte do sócio (Reinaldo) no líquido (%)<input name="socio_pct" placeholder="50"></label>
+          <label>Comissão dos afiliados na Eduzz (%) <small>sobre o valor já sem a taxa</small><input name="af_comissao_pct" placeholder="50"></label>
           <label class="full">Pixels da Meta (página de vendas) <small>separe por vírgula; vazio = sem pixel</small><input name="meta_pixel" placeholder="1595086872316004, 1631589557846072"></label>
           <label class="full">Pixel que já está no checkout da Eduzz <small>a página de obrigado manda a Compra só para os outros</small><input name="eduzz_pixel" placeholder="1595086872316004"></label>
         </div>
@@ -153,6 +154,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=6"></script>
+<script src="admin.js?v=7"></script>
 </body>
 </html>

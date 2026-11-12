@@ -102,7 +102,7 @@ async function loadGeral() {
     <div class="bh"><span class="tag y">💰 SAÚDE FINANCEIRA</span><small>valores líquidos: o que a Eduzz paga, já sem a taxa. Cortesia não entra aqui.</small></div>
     <div class="hero">
       <div class="hmain"><small>LÍQUIDO QUE CAIU PARA OS SÓCIOS</small>${N(t.faturamento_total, 'brl')}
-        <span>${brl(t.bruto_total)} vendidos − ${brl(t.taxas_total)} taxa da Eduzz${t.reembolsado_total ? ` − ${brl(t.reembolsado_total)} reembolsados` : ''} · ${t.alunos_pagos} aluno${t.alunos_pagos === 1 ? '' : 's'} pagando</span>
+        <span>${brl(t.bruto_total)} vendidos − ${brl(t.taxas_total)} taxa da Eduzz${t.comissoes_total ? ` − ${brl(t.comissoes_total)} comissão de afiliados` : ''}${t.reembolsado_total ? ` − ${brl(t.reembolsado_total)} reembolsados` : ''} · ${t.alunos_pagos} aluno${t.alunos_pagos === 1 ? '' : 's'} pagando</span>
         <div class="socios"><div><small>Leo (${100 - t.socio_pct}%)</small>${N(t.faturamento_total * (100 - t.socio_pct) / 100, 'brl')}</div><div><small>Reinaldo (${t.socio_pct}%)</small>${N(t.faturamento_total * t.socio_pct / 100, 'brl')}</div></div>
       </div>
       <div class="hgrid">
@@ -111,6 +111,12 @@ async function loadGeral() {
         ${card('g', '🔁', 'Receita recorrente / mês', t.mrr, 'brl', `carteira anual ativa: ${brl0(t.carteira_anual)}`)}
         ${card(t.taxa_reembolso > 0.1 ? 'r' : 'c', '↩', 'Reembolsos', t.reembolsado_total, 'brl', `${pc(t.taxa_reembolso)} do vendido · ${t.reembolsos_periodo} no período`)}
       </div>
+    </div>
+    <div class="origem">
+      ${[['direto', '🎯', 'VENDAS DIRETAS (NOSSAS)', 'y', `${t.vendas_direto} venda${t.vendas_direto === 1 ? '' : 's'} · ${brl0(t.bruto_direto)} vendidos · no mês ${brl0(t.liq_direto_mes)}`],
+         ['afiliado', '🤝', 'VENDAS DE AFILIADOS', 'p', `${t.vendas_afiliado} venda${t.vendas_afiliado === 1 ? '' : 's'} · ${brl0(t.bruto_afiliado)} vendidos · ${brl0(t.comissoes_total)} de comissão (${t.af_comissao_pct}%) · no mês ${brl0(t.liq_afiliado_mes)}`]]
+        .map(([k, ico, rot, cor, sub]) => `<div class="ncard ${cor} og"><div class="nh"><i>${ico}</i><small>${rot} · LÍQUIDO</small></div>${N(t['liq_' + k], 'brl')}<span>${sub}</span>
+          <div class="socios"><div><small>Leo (${100 - t.socio_pct}%)</small>${N(t['liq_' + k] * (100 - t.socio_pct) / 100, 'brl')}</div><div><small>Reinaldo (${t.socio_pct}%)</small>${N(t['liq_' + k] * t.socio_pct / 100, 'brl')}</div></div></div>`).join('')}
     </div>
   </section>
   <section class="bloco">

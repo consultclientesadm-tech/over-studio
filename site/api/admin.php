@@ -82,6 +82,15 @@ switch ($a) {
     $tot['fat_mes_anterior'] = (float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ? AND created_at < ?', [date('Y-m-01', strtotime('first day of last month')), date('Y-m-01')]);
     $tot['emails_ok_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 1 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
     $tot['emails_falha_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 0 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
+    // nossas x afiliados (o líquido de afiliado já vem sem a comissão dele)
+    foreach (['direto' => 'afiliado_id IS NULL', 'afiliado' => 'afiliado_id IS NOT NULL'] as $k => $w) {
+      $tot["liq_$k"] = (float)$one("SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE $w");
+      $tot["liq_{$k}_mes"] = (float)$one("SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE $w AND created_at >= ?", [date('Y-m-01')]);
+      $tot["vendas_$k"] = (int)$one("SELECT COUNT(*) FROM sales WHERE $w AND status = 'pago'");
+      $tot["bruto_$k"] = (float)$one("SELECT COALESCE(SUM(bruto), 0) FROM sales WHERE $w AND value > 0");
+    }
+    $tot['comissoes_total'] = (float)$one('SELECT COALESCE(SUM(comissao), 0) FROM sales WHERE afiliado_id IS NOT NULL');
+    $tot['af_comissao_pct'] = brnum(setting('af_comissao_pct'));
     $tot['saude'] = json_decode(setting('saude') ?: 'null', true);
     $tot['ticket_medio'] = $tot['vendas_periodo'] ? $tot['faturamento_periodo'] / $tot['vendas_periodo'] : 0;
     $tot['conversao_teste'] = $tot['testes_total'] ? $tot['testes_convertidos'] / $tot['testes_total'] : 0;
