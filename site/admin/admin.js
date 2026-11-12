@@ -70,8 +70,22 @@ async function loadHoje() {
   const total = cum(vendas), nV = vendas.filter((v) => v.liquido > 0).length, ontemAte = cum(ontem, agora), ontemTot = cum(ontem);
   const ymax = Math.max(total, ontemTot, j.media_7d, 280) * 1.18, W = 1000, H = 240;
   const X = (m) => (m / 1440) * W, Y = (v) => H - (Math.max(0, v) / ymax) * H;
-  const passos = (arr, fim) => { let c = 0, d = `M0 ${H}`; arr.forEach((v) => { if (v.min > fim) return; d += ` L${X(v.min).toFixed(1)} ${Y(c).toFixed(1)}`; c += v.liquido; d += ` L${X(v.min).toFixed(1)} ${Y(c).toFixed(1)}`; }); return { d: d + ` L${X(fim).toFixed(1)} ${Y(c).toFixed(1)}`, c }; };
-  const pt = passos(vendas, agora), po = passos(ontem, 1440);
+  // curva suave que nunca desce entre dois pontos (monotone cubic), passando pelo total depois de cada venda
+  const curva = (arr, fim) => {
+    const P = [[0, 0]]; let c = 0;
+    arr.forEach((v) => { if (v.min > fim) return; c += v.liquido; const x = Math.max(v.min, P[P.length - 1][0] + 1); P.push([x, c]); });
+    if (fim > P[P.length - 1][0]) P.push([fim, c]);
+    const xs = P.map((p) => X(p[0])), ys = P.map((p) => Y(p[1])), n = P.length;
+    if (n < 2) return { d: `M0 ${H}`, c };
+    const dx = [], m = [], t = [];
+    for (let i = 0; i < n - 1; i++) { dx[i] = xs[i + 1] - xs[i]; m[i] = (ys[i + 1] - ys[i]) / (dx[i] || 1); }
+    t[0] = m[0]; t[n - 1] = m[n - 2];
+    for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]);
+    let d = `M${xs[0].toFixed(1)} ${ys[0].toFixed(1)}`;
+    for (let i = 0; i < n - 1; i++) { const h = dx[i] / 3; d += ` C${(xs[i] + h).toFixed(1)} ${(ys[i] + t[i] * h).toFixed(1)} ${(xs[i + 1] - h).toFixed(1)} ${(ys[i + 1] - t[i + 1] * h).toFixed(1)} ${xs[i + 1].toFixed(1)} ${ys[i + 1].toFixed(1)}`; }
+    return { d, c };
+  };
+  const pt = curva(vendas, agora), po = curva(ontem, 1440);
   const cadMax = Math.max(1, ...j.cad_hoje, ...j.cad_ontem);
   const barras = j.cad_hoje.map((n, h) => (h * 60 <= agora && n ? `<rect x="${X(h * 60 + 6).toFixed(1)}" y="${(H - (n / cadMax) * 46).toFixed(1)}" width="${(X(48)).toFixed(1)}" height="${((n / cadMax) * 46).toFixed(1)}" rx="3" class="cb"><title>${h}h: ${n} cadastro${n === 1 ? '' : 's'}</title></rect>` : '')).join('');
   let c = 0;

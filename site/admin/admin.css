@@ -184,7 +184,7 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .hc .gr { stroke: rgba(140,150,200,.12); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .hc .md { stroke: rgba(63,208,255,.55); stroke-width: 1.5; stroke-dasharray: 2 6; vector-effect: non-scaling-stroke; }
 .hc .on { fill: none; stroke: rgba(200,205,230,.45); stroke-width: 2; stroke-dasharray: 6 6; vector-effect: non-scaling-stroke; }
-.hc .tl { fill: none; stroke: var(--y); stroke-width: 3.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 6px rgba(255,212,0,.7)); }
+.hc .tl { fill: none; stroke: var(--y); stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 6px rgba(255,212,0,.7)); }
 .hc .tl.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: desenha 1.8s ease-out forwards; }
 @keyframes desenha { to { stroke-dashoffset: 0; } }
 .hc .ar { opacity: 0; animation: aparece 1s .8s ease-out forwards; } @keyframes aparece { to { opacity: 1; } }
