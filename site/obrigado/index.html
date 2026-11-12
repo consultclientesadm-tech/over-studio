@@ -224,6 +224,9 @@ ol.st li svg, ol.st li img { flex: 0 0 26px; }
   if (memo('sc_cookies') === 'no') return;
   fetch('/api/conta.php?a=oferta').then(function (r) { return r.json(); }).then(function (o) {
     var ja = String(o.eduzz_pixel || '').split(/[^0-9]+/).filter(Boolean);
+    // veio por afiliado: o checkout é o link dele (pode disparar o pixel dele, não o nosso), então a Compra vai para TODOS os nossos pixels
+    var af = /(^|;\s*)sc_af=/.test(document.cookie); try { var g = JSON.parse(memo('sc-af') || 'null'); if (g && Date.now() - g.t < 60 * 864e5) af = true; } catch (e) {}
+    if (af) ja = [];
     var ids = String(o.pixel || '').split(/[^0-9]+/).filter(function (i) { return i && ja.indexOf(i) < 0; });
     if (!ids.length) return;
     var trans = pega(['trans_cod', 'edz_fat_cod', 'fatura', 'invoice', 'order_id']);
