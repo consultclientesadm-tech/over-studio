@@ -56,7 +56,8 @@ if ($back) {
   $q = $db->prepare('SELECT * FROM users WHERE email = ?'); $q->execute([$email]);
   if ($u = $q->fetch()) {
     $db->prepare("UPDATE users SET status = 'refunded' WHERE id = ?")->execute([$u['id']]);
-    $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, -abs($value), 'reembolso', now()]);
+    sales_fill_net(); $n = sale_net(-abs($value));
+    $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, liquido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, -abs($value), 'reembolso', now(), $n['bruto'], $n['taxa'], $n['liquido']]);
   }
   $log("reembolso/cancelamento: $email"); json_out(['ok' => true, 'acao' => 'bloqueado']);
 }
@@ -71,7 +72,8 @@ $days = (int)setting('access_days');
 $exp = $days > 0 ? date('Y-m-d H:i:s', time() + $days * 86400) : null;
 $db->prepare("UPDATE users SET status = 'active', source = CASE WHEN source = 'trial' AND ? = 0 THEN 'trial' ELSE source END, paid_value = paid_value + ?, paid_at = ?, expires_at = ?, phone = CASE WHEN phone = '' THEN ? ELSE phone END WHERE id = ?")
   ->execute([$isNew ? 1 : 0, $value, now(), $exp, $phone, $u['id']]);
-$db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, $value, 'pago', now()]);
+sales_fill_net(); $n = sale_net($value);
+$db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, liquido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, $value, 'pago', now(), $n['bruto'], $n['taxa'], $n['liquido']]);
 $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
 funnel_paid($u, $isNew);
 $log("pago: $email R$ $value");

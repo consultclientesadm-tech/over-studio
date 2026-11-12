@@ -43,6 +43,7 @@ if (!in_array($a, ['resumo', 'alunos', 'admins', 'config', 'webhooks', 'emails',
 
 switch ($a) {
   case 'resumo': {
+    sales_fill_net();
     $days = max(7, min(365, (int)($_GET['dias'] ?? 30)));
     $since = date('Y-m-d', time() - ($days - 1) * 86400);
     $one = fn($sql, $p = []) => (function () use ($db, $sql, $p) { $q = $db->prepare($sql); $q->execute($p); return $q->fetchColumn(); })();
@@ -54,11 +55,11 @@ switch ($a) {
       'reembolsos' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'refunded'"),
       'bloqueados' => (int)$one("SELECT COUNT(*) FROM users WHERE status = 'blocked'"),
       'total_contas' => (int)$one('SELECT COUNT(*) FROM users'),
-      'faturamento_total' => (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales'),
-      'faturamento_periodo' => (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE created_at >= ?', [$since]),
+      'faturamento_total' => (float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales'),
+      'faturamento_periodo' => (float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ?', [$since]),
       'vendas_periodo' => (int)$one("SELECT COUNT(*) FROM sales WHERE status = 'pago' AND created_at >= ?", [$since]),
-      'faturamento_hoje' => (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE created_at >= ?', [date('Y-m-d')]),
-      'faturamento_mes' => (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE created_at >= ?', [date('Y-m-01')]),
+      'faturamento_hoje' => (float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ?', [date('Y-m-d')]),
+      'faturamento_mes' => (float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ?', [date('Y-m-01')]),
       'videos_periodo' => (int)$one('SELECT COUNT(*) FROM usage WHERE created_at >= ?', [$since]),
       'ativos_7d' => (int)$one('SELECT COUNT(*) FROM users WHERE last_seen >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]),
       'testes_periodo' => (int)$one("SELECT COUNT(*) FROM users WHERE source = 'trial' AND created_at >= ?", [$since]),
@@ -66,16 +67,19 @@ switch ($a) {
       'testes_total' => (int)$one("SELECT COUNT(*) FROM users WHERE source = 'trial'"),
     ];
     // saúde financeira (reembolso entra como venda negativa)
-    $tot['bruto_total'] = (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value > 0');
-    $tot['reembolsado_total'] = abs((float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value < 0'));
-    $tot['bruto_periodo'] = (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value > 0 AND created_at >= ?', [$since]);
-    $tot['reembolsado_periodo'] = abs((float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value < 0 AND created_at >= ?', [$since]));
+    $tot['bruto_total'] = (float)$one('SELECT COALESCE(SUM(bruto), 0) FROM sales WHERE value > 0');
+    $tot['taxas_total'] = (float)$one('SELECT COALESCE(SUM(taxa), 0) FROM sales WHERE value > 0');
+    $tot['socio_pct'] = max(0, min(100, brnum(setting('socio_pct'))));
+    $tot['reembolsado_total'] = abs((float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE value < 0'));
+    $tot['bruto_periodo'] = (float)$one('SELECT COALESCE(SUM(bruto), 0) FROM sales WHERE value > 0 AND created_at >= ?', [$since]);
+    $tot['reembolsado_periodo'] = abs((float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE value < 0 AND created_at >= ?', [$since]));
     $tot['reembolsos_periodo'] = (int)$one("SELECT COUNT(*) FROM sales WHERE value < 0 AND created_at >= ?", [$since]);
-    $tot['taxa_reembolso'] = $tot['bruto_total'] > 0 ? $tot['reembolsado_total'] / $tot['bruto_total'] : 0;
-    $tot['carteira_anual'] = (float)$one("SELECT COALESCE(SUM(paid_value), 0) FROM users WHERE status = 'active' AND paid_value > 0 AND (expires_at IS NULL OR expires_at > ?)", [now()]);
+    $liqVendido = (float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE value > 0');
+    $tot['taxa_reembolso'] = $liqVendido > 0 ? $tot['reembolsado_total'] / $liqVendido : 0;
+    $tot['carteira_anual'] = (float)$one("SELECT COALESCE(SUM(s.liquido), 0) FROM sales s JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' AND s.created_at >= ? AND u.status = 'active' AND (u.expires_at IS NULL OR u.expires_at > ?)", [date('Y-m-d H:i:s', time() - 365 * 86400), now()]);
     $tot['mrr'] = $tot['carteira_anual'] / 12;
-    $tot['renova_30d'] = (float)$one("SELECT COALESCE(SUM(paid_value), 0) FROM users WHERE status = 'active' AND paid_value > 0 AND expires_at > ? AND expires_at <= ?", [now(), date('Y-m-d H:i:s', time() + 30 * 86400)]);
-    $tot['fat_mes_anterior'] = (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE created_at >= ? AND created_at < ?', [date('Y-m-01', strtotime('first day of last month')), date('Y-m-01')]);
+    $tot['renova_30d'] = (int)$one("SELECT COUNT(*) FROM users WHERE status = 'active' AND paid_value > 0 AND expires_at > ? AND expires_at <= ?", [now(), date('Y-m-d H:i:s', time() + 30 * 86400)]) * sale_net(brnum(setting('price')))['liquido'];
+    $tot['fat_mes_anterior'] = (float)$one('SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ? AND created_at < ?', [date('Y-m-01', strtotime('first day of last month')), date('Y-m-01')]);
     $tot['emails_ok_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 1 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
     $tot['emails_falha_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 0 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
     $tot['saude'] = json_decode(setting('saude') ?: 'null', true);
@@ -89,12 +93,12 @@ switch ($a) {
       return $out;
     };
     json_out(['ok' => true, 'dias' => $days, 'tot' => $tot,
-      'faturamento' => $series('SELECT substr(created_at, 1, 10) d, SUM(value) v FROM sales WHERE created_at >= ? GROUP BY d'),
+      'faturamento' => $series('SELECT substr(created_at, 1, 10) d, SUM(liquido) v FROM sales WHERE created_at >= ? GROUP BY d'),
       'vendas' => $series("SELECT substr(created_at, 1, 10) d, COUNT(*) v FROM sales WHERE status = 'pago' AND created_at >= ? GROUP BY d"),
       'cadastros' => $series('SELECT substr(created_at, 1, 10) d, COUNT(*) v FROM users WHERE created_at >= ? GROUP BY d'),
       'videos' => $series('SELECT substr(created_at, 1, 10) d, COUNT(*) v FROM usage WHERE created_at >= ? GROUP BY d'),
       'funil' => funnel_counts(),
-      'ultimas_vendas' => $db->query('SELECT s.id, s.created_at, s.email, s.value, s.status, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id DESC LIMIT 8')->fetchAll(),
+      'ultimas_vendas' => $db->query('SELECT s.id, s.created_at, s.email, s.value, s.bruto, s.taxa, s.liquido, s.status, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id DESC LIMIT 8')->fetchAll(),
     ]);
   }
 

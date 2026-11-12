@@ -79,11 +79,11 @@ async function loadGeral() {
     : `<div class="vigia ok"><b>🛰️ Tudo funcionando</b><small>Site, app, checkout, e-mails e Eduzz checados em ${esc(sd.quando)}.</small></div>`;
   $('nums').innerHTML = vigia + `
   <section class="bloco">
-    <div class="bh"><span class="tag y">💰 SAÚDE FINANCEIRA</span><small>só dinheiro de venda pela Eduzz. Cortesia não entra aqui.</small></div>
+    <div class="bh"><span class="tag y">💰 SAÚDE FINANCEIRA</span><small>valores líquidos: o que a Eduzz paga, já sem a taxa. Cortesia não entra aqui.</small></div>
     <div class="hero">
-      <div class="hmain"><small>FATURAMENTO LÍQUIDO TOTAL</small>${N(t.faturamento_total, 'brl')}
-        <span>${t.alunos_pagos} aluno${t.alunos_pagos === 1 ? '' : 's'} pagando · ${brl(t.bruto_total)} vendidos − ${brl(t.reembolsado_total)} reembolsados</span>
-        <div class="socios"><div><small>Leo (50%)</small>${N(t.faturamento_total / 2, 'brl')}</div><div><small>Reinaldo (50%)</small>${N(t.faturamento_total / 2, 'brl')}</div></div>
+      <div class="hmain"><small>LÍQUIDO QUE CAIU PARA OS SÓCIOS</small>${N(t.faturamento_total, 'brl')}
+        <span>${brl(t.bruto_total)} vendidos − ${brl(t.taxas_total)} taxa da Eduzz${t.reembolsado_total ? ` − ${brl(t.reembolsado_total)} reembolsados` : ''} · ${t.alunos_pagos} aluno${t.alunos_pagos === 1 ? '' : 's'} pagando</span>
+        <div class="socios"><div><small>Leo (${100 - t.socio_pct}%)</small>${N(t.faturamento_total * (100 - t.socio_pct) / 100, 'brl')}</div><div><small>Reinaldo (${t.socio_pct}%)</small>${N(t.faturamento_total * t.socio_pct / 100, 'brl')}</div></div>
       </div>
       <div class="hgrid">
         ${card('y', '📅', 'No mês', t.faturamento_mes, 'brl', varMes === null ? `hoje: ${brl0(t.faturamento_hoje)}` : `${varMes >= 0 ? '▲' : '▼'} ${pc(Math.abs(varMes))} vs mês passado · hoje ${brl0(t.faturamento_hoje)}`)}
@@ -123,7 +123,7 @@ async function loadGeral() {
   const parts = [{ v: t.alunos_pagos, c: '#2ee59d', n: 'Pagos' }, { v: t.cortesias, c: '#a77bff', n: 'Cortesia' }, { v: t.em_teste, c: '#ffd400', n: 'Teste' }, { v: t.reembolsos + t.bloqueados, c: '#ff4d5e', n: 'Reembolso/bloqueio' }];
   G.donut($('cBase'), parts);
   $('baseLeg').innerHTML = parts.map((p) => `<span style="color:${p.c}">●</span> ${p.n} ${p.v}`).join(' &nbsp; ');
-  $('ultVendas').innerHTML = j.ultimas_vendas.length ? `<table><tr><th>Quando</th><th>Aluno</th><th>Valor</th><th>Status</th><th></th></tr>${j.ultimas_vendas.map((v) => `<tr><td>${dt(v.created_at)}</td><td>${esc(v.name || '')}<small>${esc(v.email)}</small></td><td>${brl(v.value)}</td><td><span class="st ${esc(v.status)}">${esc(v.status)}</span></td><td><button class="btn sm ghost" data-apagar-venda="${v.id}" title="Apagar venda lançada por engano">Apagar</button></td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda ainda. Elas aparecem aqui assim que a Eduzz avisar.</p>';
+  $('ultVendas').innerHTML = j.ultimas_vendas.length ? `<table><tr><th>Quando</th><th>Aluno</th><th>Venda</th><th>Líquido</th><th>Status</th><th></th></tr>${j.ultimas_vendas.map((v) => `<tr><td>${dt(v.created_at)}</td><td>${esc(v.name || '')}<small>${esc(v.email)}</small></td><td>${brl(v.bruto ?? v.value)}<small>taxa ${brl(Math.abs(v.taxa || 0))}</small></td><td><b>${brl(v.liquido ?? v.value)}</b><small>${brl((v.liquido ?? v.value) / 2)} cada</small></td><td><span class="st ${esc(v.status)}">${esc(v.status)}</span></td><td><button class="btn sm ghost" data-apagar-venda="${v.id}" title="Apagar venda lançada por engano">Apagar</button></td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda ainda. Elas aparecem aqui assim que a Eduzz avisar.</p>';
 }
 $('ultVendas').onclick = async (e) => {
   const b = e.target.closest('[data-apagar-venda]'); if (!b) return;
