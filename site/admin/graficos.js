@@ -7,11 +7,11 @@ window.G = (() => {
   };
   const anim = (draw, ms = 900) => { const t0 = performance.now(); const f = (t) => { const k = Math.min(1, (t - t0) / ms); draw(1 - Math.pow(1 - k, 3)); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); };
   const grid = (g, W, H, pad, max, fmt) => {
-    g.strokeStyle = 'rgba(140,150,200,.09)'; g.fillStyle = '#6b7088'; g.font = '11px Space Grotesk'; g.lineWidth = 1;
+    g.strokeStyle = 'rgba(140,150,200,.09)'; g.fillStyle = '#6b7088'; g.font = '600 11px Sora'; g.lineWidth = 1;
     for (let i = 0; i <= 4; i++) { const y = pad.t + (H - pad.t - pad.b) * i / 4; g.beginPath(); g.moveTo(pad.l, y); g.lineTo(W - pad.r, y); g.stroke(); g.fillText(fmt(max * (1 - i / 4)), 2, y + 4); }
   };
   const label = (d) => d.slice(8, 10) + '/' + d.slice(5, 7);
-  const niceMax = (m) => { if (m <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(m))); return Math.ceil(m / p * 1.15) * p; };
+  const niceMax = (m) => { if (m < 4) return 4; const p = Math.pow(10, Math.floor(Math.log10(m))); return Math.ceil(m / p * 1.15) * p; };
 
   function area(c, series, { color = '#ffd400', fmt = (v) => Math.round(v), second = null, color2 = '#2ee59d' } = {}) {
     const all = [...series.map((s) => s.v), ...(second || []).map((s) => s.v)];
@@ -30,7 +30,7 @@ window.G = (() => {
         const li = s.length - 1; g.fillStyle = col; g.beginPath(); g.arc(X(li), Y(s[li].v), 4, 0, 7); g.fill();
       };
       draw(series, color); if (second) draw(second, color2);
-      g.fillStyle = '#6b7088'; g.font = '11px Space Grotesk';
+      g.fillStyle = '#6b7088'; g.font = '600 11px Sora';
       const step = Math.max(1, Math.ceil(series.length / 7));
       series.forEach((p, i) => { if (i % step === 0 || i === series.length - 1) { g.textAlign = 'center'; g.fillText(label(p.d), X(i), H - 6); } });
       g.textAlign = 'left';
@@ -48,7 +48,7 @@ window.G = (() => {
         const gr = g.createLinearGradient(0, y, 0, H - pad.b); gr.addColorStop(0, color); gr.addColorStop(1, color + '22');
         g.fillStyle = gr; g.shadowColor = color; g.shadowBlur = p.v ? 10 : 0; g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, [4, 4, 0, 0]) : g.rect(x, y, w, h); g.fill(); g.shadowBlur = 0;
       });
-      g.fillStyle = '#6b7088'; g.font = '11px Space Grotesk'; g.textAlign = 'center';
+      g.fillStyle = '#6b7088'; g.font = '600 11px Sora'; g.textAlign = 'center';
       const step = Math.max(1, Math.ceil(series.length / 6));
       series.forEach((p, i) => { if (i % step === 0) g.fillText(label(p.d), pad.l + (i + 0.5) * bw, H - 6); });
       g.textAlign = 'left';
@@ -82,7 +82,7 @@ window.G = (() => {
         a0 = a1;
       }
       g.fillStyle = '#fff'; g.font = '800 28px Orbitron'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(Math.round(tot * k), cx, cy - 6);
-      g.font = '11px Space Grotesk'; g.fillStyle = '#8b8fa3'; g.fillText('CONTAS', cx, cy + 18); g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+      g.font = '600 11px Sora'; g.fillStyle = '#8b8fa3'; g.fillText('CONTAS', cx, cy + 18); g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     });
   }
   return { area, bars, ring, donut };

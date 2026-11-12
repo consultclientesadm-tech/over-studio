@@ -8,8 +8,8 @@
 <title>Comando · Studio Cover</title>
 <link rel="icon" href="/assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=1">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css?v=2">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -54,7 +54,7 @@
     <div class="tab" id="tGeral">
       <header class="th"><div><h2>Visão geral</h2><p class="sub">Saúde financeira e uso do Studio Cover</p></div>
         <div class="seg" id="periodo"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
-      <div class="kpis" id="kpis"></div>
+      <div id="nums"></div>
       <div class="grid2">
         <div class="glass chart big"><div class="ch"><b>Faturamento</b><span id="fatTot"></span></div><canvas id="cFat"></canvas></div>
         <div class="glass chart"><div class="ch"><b>Conversão do teste grátis</b></div><canvas id="cConv"></canvas><p class="legend" id="convLeg"></p></div>
@@ -83,7 +83,7 @@
       <header class="th"><div><h2>Funil de conversão</h2><p class="sub">Quem fez o teste grátis e não comprou recebe e-mail + aviso no app, um passo por vez (das 8h às 21h).</p></div>
         <div class="acts"><button class="btn sm ghost" id="rodarFunil">Rodar agora</button></div></header>
       <div class="glass"><div id="funilFlow" class="flow"></div><p class="sub" id="cronInfo"></p></div>
-      <div class="glass"><div class="ch"><b>Últimos e-mails enviados</b></div><div class="tbl" id="tblEmails"></div></div>
+      <div class="glass"><div class="ch"><b>Últimos e-mails enviados</b><span class="acts"><span id="saudeEmail" class="saude"></span><button class="btn sm ghost" id="reenviarEmails">Reenviar os que falharam</button></span></div><div class="tbl" id="tblEmails"></div></div>
     </div>
 
     <!-- Admins -->
@@ -120,7 +120,7 @@
           <label>Código do produto na Eduzz <small>vazio = aceita todos</small><input name="eduzz_product"></label>
           <label>Chave de assinatura da Eduzz <small>opcional</small><input name="eduzz_secret" autocomplete="off"></label>
         </div>
-        <div class="glass formgrid"><div class="ch"><b>✉️ E-mail</b> <small>(sem SMTP, usa o envio do servidor)</small></div>
+        <div class="glass formgrid"><div class="ch"><b>✉️ E-mail</b> <small>(sem SMTP, usa o servidor de e-mail do próprio site)</small></div>
           <label>E-mail de envio <small>vazio = contato@ do domínio</small><input name="mail_from" placeholder="contato@studiocover.com.br"></label>
           <label>Nome do remetente<input name="mail_name"></label>
           <label>Servidor SMTP<input name="smtp_host" placeholder="smtp.seudominio.com.br"></label>
@@ -128,7 +128,7 @@
           <label>Segurança<select name="smtp_secure"><option value="tls">TLS (587)</option><option value="ssl">SSL (465)</option><option value="">Nenhuma</option></select></label>
           <label>Usuário SMTP<input name="smtp_user" autocomplete="off"></label>
           <label>Senha SMTP<input name="smtp_pass" type="password" autocomplete="new-password"></label>
-          <div class="full acts"><button type="button" class="btn sm ghost" id="testeEmail">Mandar e-mail de teste para mim</button></div>
+          <label class="full">Mandar um e-mail de teste para<div class="copy"><input id="testePara" type="email" placeholder="vazio = o seu e-mail de administrador"><button type="button" class="btn sm ghost" id="testeEmail">Enviar teste</button></div></label>
         </div>
         <div class="salvar"><button class="btn">Salvar configurações</button><span class="msg" id="cfgMsg"></span></div>
       </form>
@@ -141,7 +141,7 @@
 <div id="toast" class="toast" hidden></div>
 
 <script src="/assets/marca.js"></script>
-<script src="graficos.js?v=1"></script>
-<script src="admin.js?v=1"></script>
+<script src="graficos.js?v=2"></script>
+<script src="admin.js?v=2"></script>
 </body>
 </html>

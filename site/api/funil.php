@@ -41,7 +41,7 @@ function funnel_fill(string $s, array $u): string {
 function funnel_send(array $u, string $kind, array $st): void {
   $f = fn($s) => funnel_fill($s, $u);
   if (!(int)$u['unsub']) send_mail($u, $u['email'], $kind, $f($st['assunto']), h($f($st['titulo'])), $f($st['texto']), $st['botao'], $f($st['link']));
-  notify((int)$u['id'], $f($st['titulo']), $f($st['aviso']), $f($st['link']));
+  if (empty($GLOBALS['sc_so_email'])) notify((int)$u['id'], $f($st['titulo']), $f($st['aviso']), $f($st['link'])); // reenvio de e-mail não repete o aviso no app
 }
 
 function funnel_welcome(array $u): void {

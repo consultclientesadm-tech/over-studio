@@ -2,9 +2,10 @@
 // E-mail: SMTP (configurado no painel) ou o mail() do servidor. Modelo de e-mail com a cara do Studio Cover.
 declare(strict_types=1);
 
-function smtp_send(string $to, string $subject, string $html, string $text): ?string {
-  $host = setting('smtp_host'); $port = (int)setting('smtp_port'); $sec = setting('smtp_secure');
-  $from = setting('mail_from'); $fromName = setting('mail_name');
+function smtp_send(string $to, string $subject, string $html, string $text, array $o = []): ?string {
+  $host = $o['host'] ?? setting('smtp_host'); $port = (int)($o['port'] ?? setting('smtp_port')); $sec = $o['secure'] ?? setting('smtp_secure');
+  $user = $o['user'] ?? setting('smtp_user');
+  $from = $o['from'] ?? setting('mail_from'); $fromName = setting('mail_name');
   $remote = ($sec === 'ssl' ? 'ssl://' : 'tcp://') . $host . ':' . $port;
   $s = @stream_socket_client($remote, $errno, $err, 15);
   if (!$s) return "Não conectou no SMTP: $err";
@@ -16,7 +17,7 @@ function smtp_send(string $to, string $subject, string $html, string $text): ?st
     $me = parse_url(site_url(), PHP_URL_HOST) ?: 'localhost';
     $cmd("EHLO $me", [250]);
     if ($sec === 'tls') { $cmd('STARTTLS', [220]); if (!stream_socket_enable_crypto($s, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) throw new RuntimeException('TLS falhou'); $cmd("EHLO $me", [250]); }
-    if (setting('smtp_user') !== '') { $cmd('AUTH LOGIN', [334]); $cmd(base64_encode(setting('smtp_user')), [334]); $cmd(base64_encode(setting('smtp_pass')), [235]); }
+    if ($user !== '') { $cmd('AUTH LOGIN', [334]); $cmd(base64_encode($user), [334]); $cmd(base64_encode(setting('smtp_pass')), [235]); }
     $cmd("MAIL FROM:<$from>", [250]);
     $cmd("RCPT TO:<$to>", [250, 251]);
     $cmd('DATA', [354]);
@@ -49,13 +50,14 @@ function send_mail(?array $u, string $to, string $kind, string $subject, string 
   $text = trim(html_entity_decode(strip_tags(str_replace(['<br>', '</p>'], ["\n", "\n\n"], $bodyHtml)))) . ($btnUrl ? "\n\n$btnText: $btnUrl" : '') . ($unsub ? "\n\nNão quer mais receber? $unsub" : '');
   $err = null;
   if (!$from) $err = 'Configure o e-mail de envio no painel (Configurações).';
-  elseif (setting('smtp_host') !== '') $err = smtp_send($to, $subject, $html, $text);
+  elseif (setting('smtp_host') !== '') $err = smtp_send($to, $subject, $html, $text, ['from' => $from]);
   else {
     $mime = build_mime($to, $subject, $html, $text, $from, setting('mail_name'));
     [$head, $body] = explode("\r\n\r\n", $mime, 2);
     $head = implode("\r\n", array_filter(explode("\r\n", $head), fn($l) => !preg_match('/^(To|Subject):/', $l)));
     $ok = @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $head, '-f' . $from);
-    if (!$ok) $err = 'O servidor recusou o envio (mail).';
+    // mail() do Plesk às vezes recusa: tenta o servidor de e-mail local (porta 25, sem senha)
+    if (!$ok) { $e2 = smtp_send($to, $subject, $html, $text, ['host' => '127.0.0.1', 'port' => 25, 'secure' => '', 'user' => '', 'from' => $from]); if ($e2) $err = 'O servidor recusou o envio: ' . $e2; }
   }
   db()->prepare('INSERT INTO emails (user_id, email, kind, subject, ok, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
     ->execute([$u['id'] ?? null, $to, $kind, $subject, $err ? 0 : 1, $err, now()]);

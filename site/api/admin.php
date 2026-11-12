@@ -65,6 +65,19 @@ switch ($a) {
       'testes_convertidos' => (int)$one("SELECT COUNT(*) FROM users WHERE source = 'trial' AND paid_at IS NOT NULL"),
       'testes_total' => (int)$one("SELECT COUNT(*) FROM users WHERE source = 'trial'"),
     ];
+    // saúde financeira (reembolso entra como venda negativa)
+    $tot['bruto_total'] = (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value > 0');
+    $tot['reembolsado_total'] = abs((float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value < 0'));
+    $tot['bruto_periodo'] = (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value > 0 AND created_at >= ?', [$since]);
+    $tot['reembolsado_periodo'] = abs((float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE value < 0 AND created_at >= ?', [$since]));
+    $tot['reembolsos_periodo'] = (int)$one("SELECT COUNT(*) FROM sales WHERE value < 0 AND created_at >= ?", [$since]);
+    $tot['taxa_reembolso'] = $tot['bruto_total'] > 0 ? $tot['reembolsado_total'] / $tot['bruto_total'] : 0;
+    $tot['carteira_anual'] = (float)$one("SELECT COALESCE(SUM(paid_value), 0) FROM users WHERE status = 'active' AND paid_value > 0 AND (expires_at IS NULL OR expires_at > ?)", [now()]);
+    $tot['mrr'] = $tot['carteira_anual'] / 12;
+    $tot['renova_30d'] = (float)$one("SELECT COALESCE(SUM(paid_value), 0) FROM users WHERE status = 'active' AND paid_value > 0 AND expires_at > ? AND expires_at <= ?", [now(), date('Y-m-d H:i:s', time() + 30 * 86400)]);
+    $tot['fat_mes_anterior'] = (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE created_at >= ? AND created_at < ?', [date('Y-m-01', strtotime('first day of last month')), date('Y-m-01')]);
+    $tot['emails_ok_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 1 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
+    $tot['emails_falha_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 0 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
     $tot['ticket_medio'] = $tot['vendas_periodo'] ? $tot['faturamento_periodo'] / $tot['vendas_periodo'] : 0;
     $tot['conversao_teste'] = $tot['testes_total'] ? $tot['testes_convertidos'] / $tot['testes_total'] : 0;
     $series = function (string $sql) use ($db, $since, $days) {
@@ -210,9 +223,30 @@ switch ($a) {
   case 'webhooks': json_out(['ok' => true, 'items' => $db->query('SELECT id, created_at, ip, result, body FROM webhooks ORDER BY id DESC LIMIT 50')->fetchAll()]);
   case 'emails': json_out(['ok' => true, 'items' => $db->query('SELECT created_at, email, kind, subject, ok, error FROM emails ORDER BY id DESC LIMIT 100')->fetchAll()]);
   case 'email-teste': {
-    $ok = send_mail(null, $me['email'], 'teste', 'Teste de e-mail do Studio Cover', 'O e-mail está funcionando ✅', '<p>Se você recebeu esta mensagem, os e-mails dos alunos e do funil vão chegar.</p>');
+    $para = clean_email((string)arg('para', $me['email'])); if (!valid_email($para)) fail('E-mail inválido.');
+    $ok = send_mail(null, $para, 'teste', 'Teste de e-mail do Studio Cover', 'O e-mail está funcionando ✅', '<p>Se você recebeu esta mensagem, os e-mails dos alunos e do funil vão chegar.</p>');
     $q = $db->query('SELECT error FROM emails ORDER BY id DESC LIMIT 1');
     json_out(['ok' => $ok, 'error' => $ok ? null : $q->fetchColumn()]);
+  }
+  case 'emails-reenviar': { // manda de novo os e-mails que falharam (só o que ainda faz sentido para a pessoa)
+    $fails = $db->query("SELECT e.user_id, e.kind, MAX(e.id) id FROM emails e WHERE e.ok = 0 AND e.user_id IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM emails x WHERE x.user_id = e.user_id AND x.kind = e.kind AND x.ok = 1 AND x.id > e.id)
+      GROUP BY e.user_id, e.kind")->fetchAll();
+    $feitos = 0; $pulados = 0; $GLOBALS['sc_so_email'] = true;
+    $steps = funnel_steps();
+    foreach ($fails as $f) {
+      $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([(int)$f['user_id']]); $u = $q->fetch();
+      if (!$u || (int)$u['unsub']) { $pulados++; continue; }
+      $k = $f['kind']; $ok = null;
+      if ($k === 'boas-vindas' && $u['status'] === 'trial' && (int)$u['trial_left'] > 0) { funnel_welcome($u); $ok = true; }
+      elseif ($k === 'teste-acabou' && $u['status'] === 'trial') { funnel_trial_over($u); $ok = true; }
+      elseif ($k === 'senha' && !$u['pass_hash']) { $link = set_password_link($u, 7);
+        send_mail($u, $u['email'], 'senha', 'Crie a sua senha do Studio Cover', 'Crie a sua senha', '<p>Toque no botão para criar a sua senha e entrar no Studio Cover.</p>', 'Criar minha senha', $link); $ok = true; }
+      elseif (preg_match('/^funil-(\d+)$/', $k, $m) && $u['status'] === 'trial' && isset($steps[(int)$m[1]])) { funnel_send($u, $k, $steps[(int)$m[1]]); $ok = true; }
+      $ok ? $feitos++ : $pulados++;
+    }
+    $falhas = (int)$db->query("SELECT COUNT(*) FROM emails WHERE ok = 0 AND created_at >= '" . date('Y-m-d H:i:s', time() - 120) . "'")->fetchColumn();
+    json_out(['ok' => true, 'reenviados' => $feitos, 'pulados' => $pulados, 'falharam_agora' => $falhas]);
   }
   case 'funil': {
     $steps = []; foreach (funnel_steps() as $i => $s) $steps[] = ['passo' => $i, 'dia' => $s['dia'], 'assunto' => $s['assunto'], 'aviso' => $s['aviso']];

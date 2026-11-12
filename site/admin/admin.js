@@ -49,24 +49,67 @@ function tab(t) {
 }
 document.querySelectorAll('.nav > button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
 
+// ---------- números que contam ----------
+function contar(root) {
+  const fm = { brl: (v) => brl(v), n: (v) => Math.round(v).toLocaleString('pt-BR'), pc: (v) => Math.round(v * 100) + '%' };
+  const els = [...root.querySelectorAll('.cnt')], t0 = performance.now(), ms = 1300;
+  const f = (t) => { const k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 4);
+    els.forEach((el) => (el.textContent = fm[el.dataset.f](+el.dataset.to * e))); if (k < 1) requestAnimationFrame(f); };
+  requestAnimationFrame(f);
+  requestAnimationFrame(() => root.querySelectorAll('.barra').forEach((b) => b.classList.add('on')));
+}
+
 // ---------- visão geral ----------
 let dias = 30;
 $('periodo').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; dias = +b.dataset.d; $('periodo').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadGeral(); };
 async function loadGeral() {
   const j = await api('resumo', null, '&dias=' + dias); if (!j.ok) return;
   const t = j.tot;
-  const k = (cls, label, val, sub) => `<div class="glass kpi ${cls}"><div class="orb" style="color:var(--${cls || 'y'})"></div><small>${label}</small><b data-v="${val}">${val}</b><span>${sub}</span></div>`;
-  $('kpis').innerHTML = [
-    k('y', 'Faturamento no período', brl0(t.faturamento_periodo), `${t.vendas_periodo} vendas · ticket ${brl0(t.ticket_medio)}`),
-    k('g', 'Alunos pagos', t.alunos_pagos, `${t.reembolsos} reembolsos`),
-    k('p', 'Cortesias (convite)', t.cortesias, 'acesso liberado sem pagamento'),
-    k('c', 'Em teste grátis', t.em_teste, `${t.teste_acabou} já usaram tudo`),
-    k('p', 'Conversão do teste', Math.round(t.conversao_teste * 100) + '%', `${t.testes_convertidos} de ${t.testes_total} compraram`),
-    k('y', 'Faturamento no mês', brl0(t.faturamento_mes), `hoje: ${brl0(t.faturamento_hoje)}`),
-    k('g', 'Faturamento total', brl0(t.faturamento_total), `${t.total_contas} contas no total`),
-    k('c', 'Vídeos processados', t.videos_periodo, `no período`),
-    k('p', 'Ativos (7 dias)', t.ativos_7d, 'abriram o app'),
-  ].join('');
+  const pc = (v) => Math.round(v * 100) + '%';
+  const per = { 7: '7 dias', 30: '30 dias', 90: '90 dias', 365: '12 meses' }[dias];
+  const varMes = t.fat_mes_anterior > 0 ? (t.faturamento_mes - t.fat_mes_anterior) / t.fat_mes_anterior : null;
+  // número que conta até o valor: data-to + data-f (brl | n | pc)
+  const N = (v, f = 'n') => `<b class="cnt" data-to="${+v || 0}" data-f="${f}">0</b>`;
+  const card = (cor, ico, rot, v, f, sub, extra = '') => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div>${N(v, f)}<span>${sub}</span>${extra}</div>`;
+  const pessoas = t.alunos_pagos + t.cortesias + t.em_teste + t.reembolsos + t.bloqueados;
+  const fat = (v) => (pessoas ? Math.max(v ? 3 : 0, (v / pessoas) * 100) : 0);
+  $('nums').innerHTML = `
+  <section class="bloco">
+    <div class="bh"><span class="tag y">💰 SAÚDE FINANCEIRA</span><small>só dinheiro de venda pela Eduzz. Cortesia não entra aqui.</small></div>
+    <div class="hero">
+      <div class="hmain"><small>FATURAMENTO LÍQUIDO TOTAL</small>${N(t.faturamento_total, 'brl')}
+        <span>${t.alunos_pagos} aluno${t.alunos_pagos === 1 ? '' : 's'} pagando · ${brl(t.bruto_total)} vendidos − ${brl(t.reembolsado_total)} reembolsados</span>
+        <div class="socios"><div><small>Leo (50%)</small>${N(t.faturamento_total / 2, 'brl')}</div><div><small>Reinaldo (50%)</small>${N(t.faturamento_total / 2, 'brl')}</div></div>
+      </div>
+      <div class="hgrid">
+        ${card('y', '📅', 'No mês', t.faturamento_mes, 'brl', varMes === null ? `hoje: ${brl0(t.faturamento_hoje)}` : `${varMes >= 0 ? '▲' : '▼'} ${pc(Math.abs(varMes))} vs mês passado · hoje ${brl0(t.faturamento_hoje)}`)}
+        ${card('y', '⏱', 'Nos últimos ' + per, t.faturamento_periodo, 'brl', `${t.vendas_periodo} venda${t.vendas_periodo === 1 ? '' : 's'} · ticket ${brl0(t.ticket_medio)}`)}
+        ${card('g', '🔁', 'Receita recorrente / mês', t.mrr, 'brl', `carteira anual ativa: ${brl0(t.carteira_anual)}`)}
+        ${card(t.taxa_reembolso > 0.1 ? 'r' : 'c', '↩', 'Reembolsos', t.reembolsado_total, 'brl', `${pc(t.taxa_reembolso)} do vendido · ${t.reembolsos_periodo} no período`)}
+      </div>
+    </div>
+  </section>
+  <section class="bloco">
+    <div class="bh"><span class="tag p">👥 ALUNOS</span><small>pagos, cortesias e teste grátis separados</small></div>
+    <div class="cards4">
+      ${card('g', '✅', 'Pagos', t.alunos_pagos, 'n', `${t.reembolsos} reembolso${t.reembolsos === 1 ? '' : 's'}`)}
+      ${card('p', '🎟', 'Cortesia', t.cortesias, 'n', 'acesso liberado sem pagar')}
+      ${card('y', '🎁', 'Em teste grátis', t.em_teste, 'n', `${t.teste_acabou} já usaram o teste`)}
+      ${card('c', '🎯', 'Conversão do teste', t.conversao_teste, 'pc', `${t.testes_convertidos} de ${t.testes_total} compraram`)}
+    </div>
+    <div class="barra"><i class="g" style="--w:${fat(t.alunos_pagos)}%"></i><i class="p" style="--w:${fat(t.cortesias)}%"></i><i class="y" style="--w:${fat(t.em_teste)}%"></i><i class="r" style="--w:${fat(t.reembolsos + t.bloqueados)}%"></i></div>
+    <p class="bleg"><span class="g">● Pagos ${t.alunos_pagos}</span><span class="p">● Cortesia ${t.cortesias}</span><span class="y">● Teste ${t.em_teste}</span><span class="r">● Reembolso/bloqueio ${t.reembolsos + t.bloqueados}</span><span>${t.total_contas} contas no total</span></p>
+  </section>
+  <section class="bloco">
+    <div class="bh"><span class="tag c">⚡ USO DO APP</span><small>${per}</small></div>
+    <div class="cards4">
+      ${card('c', '🎬', 'Vídeos processados', t.videos_periodo, 'n', 'no período')}
+      ${card('p', '📲', 'Ativos (7 dias)', t.ativos_7d, 'n', 'abriram o app')}
+      ${card('y', '🆕', 'Cadastros no teste', t.testes_periodo, 'n', 'no período')}
+      ${card(t.emails_falha_7d ? 'r' : 'g', '✉️', 'E-mails (7 dias)', t.emails_ok_7d, 'n', t.emails_falha_7d ? `${t.emails_falha_7d} falharam · veja em Funil` : 'todos entregues ao servidor')}
+    </div>
+  </section>`;
+  contar($('nums'));
   $('fatTot').textContent = brl(t.faturamento_periodo);
   G.area($('cFat'), j.faturamento, { color: '#ffd400', fmt: (v) => (v >= 1000 ? Math.round(v / 1000) + 'k' : Math.round(v)) });
   G.ring($('cConv'), t.conversao_teste, { color: '#a77bff' });
@@ -157,8 +200,16 @@ async function loadFunil() {
   $('funilFlow').innerHTML = `<div class="passo"><span class="d">CADASTRO</span><b>Boas-vindas + ${'teste grátis'}</b><span class="n">${total}</span><small> em teste</small></div>` +
     j.passos.map((p) => `<div class="passo"><span class="d">DIA ${p.dia}</span><b>${esc(p.assunto.replace('{nome}', 'Fulano'))}</b><span class="n">${j.contagem[p.passo] || 0}</span><small> pararam aqui</small></div>`).join('');
   $('cronInfo').textContent = j.cron_last ? `Última rodada automática: ${dt(j.cron_last)}` : 'A tarefa automática ainda não rodou. Configure no Plesk (Tarefas agendadas, a cada hora): php api/cron.php';
-  $('tblEmails').innerHTML = e.items.length ? `<table><tr><th>Quando</th><th>Para</th><th>Tipo</th><th>Assunto</th><th></th></tr>${e.items.map((m) => `<tr><td>${dt(m.created_at)}</td><td>${esc(m.email)}</td><td>${esc(m.kind)}</td><td>${esc(m.subject)}</td><td>${+m.ok ? '<span class="st active">enviado</span>' : `<span class="st blocked" title="${esc(m.error)}">falhou</span>`}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhum e-mail ainda.</p>';
+  const ok = e.items.filter((m) => +m.ok).length, bad = e.items.length - ok;
+  $('saudeEmail').innerHTML = `<span class="st active">${ok} enviados</span> <span class="st ${bad ? 'blocked' : 'active'}">${bad} falharam</span>`;
+  $('tblEmails').innerHTML = e.items.length ? `<table><tr><th>Quando</th><th>Para</th><th>Tipo</th><th>Assunto</th><th></th></tr>${e.items.map((m) => `<tr><td>${dt(m.created_at)}</td><td>${esc(m.email)}</td><td>${esc(m.kind)}</td><td>${esc(m.subject)}</td><td>${+m.ok ? '<span class="st active">enviado</span>' : `<span class="st blocked">falhou</span><small>${esc(m.error)}</small>`}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhum e-mail ainda.</p>';
 }
+$('reenviarEmails').onclick = async (ev) => {
+  if (!confirm('Mandar de novo os e-mails que falharam? Só vai para quem ainda faz sentido (ex.: quem ainda não comprou recebe o "teste terminou").')) return;
+  ev.target.disabled = true; toast('Reenviando…');
+  const j = await api('emails-reenviar', {}); ev.target.disabled = false;
+  toast(j.ok ? `Reenviados: ${j.reenviados}. Pulados: ${j.pulados}.${j.falharam_agora ? ' Falharam agora: ' + j.falharam_agora : ''}` : j.error); loadFunil();
+};
 $('rodarFunil').onclick = async () => { const j = await api('funil-rodar', {}); toast(`Funil rodou: ${j.enviados} envio(s).`); loadFunil(); };
 
 // ---------- admins ----------
@@ -190,6 +241,6 @@ $('fConfig').onsubmit = async (e) => {
 };
 $('copiarWh').onclick = () => { navigator.clipboard.writeText($('whUrl').value); toast('URL copiada.'); };
 $('novoWh').onclick = async () => { if (!confirm('Gerar outra URL? A antiga para de funcionar e você precisa colar a nova na Eduzz.')) return; await api('webhook-novo-token', {}); loadConfig(); };
-$('testeEmail').onclick = async () => { toast('Enviando…'); const j = await api('email-teste', {}); toast(j.ok ? 'E-mail enviado! Confira a sua caixa (e o spam).' : 'Não saiu: ' + j.error); };
+$('testeEmail').onclick = async () => { toast('Enviando…'); const j = await api('email-teste', { para: $('testePara').value.trim() || undefined }); toast(j.ok ? 'E-mail enviado! Confira a sua caixa (e o spam).' : 'Não saiu: ' + j.error); };
 
 boot();
