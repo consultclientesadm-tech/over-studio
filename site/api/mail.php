@@ -57,7 +57,8 @@ function send_mail(?array $u, string $to, string $kind, string $subject, string 
     $head = implode("\r\n", array_filter(explode("\r\n", $head), fn($l) => !preg_match('/^(To|Subject):/', $l)));
     $ok = @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $head, '-f' . $from);
     // mail() do Plesk às vezes recusa: tenta o servidor de e-mail local (porta 25, sem senha)
-    if (!$ok) { $e2 = smtp_send($to, $subject, $html, $text, ['host' => '127.0.0.1', 'port' => 25, 'secure' => '', 'user' => '', 'from' => $from]); if ($e2) $err = 'O servidor recusou o envio: ' . $e2; }
+    if (!$ok) { $e0 = error_get_last()['message'] ?? ''; $ok = @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $head); } // sem -f
+    if (!$ok) { $e2 = smtp_send($to, $subject, $html, $text, ['host' => '127.0.0.1', 'port' => 25, 'secure' => '', 'user' => '', 'from' => $from]); if ($e2) $err = 'O servidor recusou o envio' . ($e0 ? " ($e0)" : '') . ': ' . $e2; }
   }
   db()->prepare('INSERT INTO emails (user_id, email, kind, subject, ok, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
     ->execute([$u['id'] ?? null, $to, $kind, $subject, $err ? 0 : 1, $err, now()]);
