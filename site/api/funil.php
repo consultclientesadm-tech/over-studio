@@ -95,3 +95,41 @@ function run_funnel(bool $force = false): array {
   }
   return ['enviados' => $sent];
 }
+
+// Quem já assina vira afiliado: convite por e-mail + aviso no app (dias depois do pagamento). Pedido do Leo: "um exército de afiliados".
+function af_convite_steps(): array {
+  $lk = site_url() . '/afiliados/?utm_source=funil&utm_medium=email&utm_campaign=cliente-afiliado';
+  return [
+    1 => ['dia' => 3, 'assunto' => '{nome}, quer ganhar com o Studio Cover?', 'titulo' => 'Seu cover pode pagar a sua assinatura',
+      'texto' => '<p>Você já viu o que o Studio Cover faz com a sua voz. Agora dá para ganhar indicando para outros cantores: <b>perto de R$ 140 a cada assinatura</b> que vier pelo seu link, e de novo quando a pessoa renova no ano seguinte.</p><p>Duas indicações e o seu ano já está pago. É só postar o seu antes e depois e deixar o seu link na bio.</p>',
+      'botao' => 'Quero ser afiliado', 'link' => $lk . '&utm_content=d3', 'aviso' => 'Indique o Studio Cover e ganhe perto de R$ 140 por assinatura.'],
+    2 => ['dia' => 10, 'assunto' => 'Você conhece outros cantores?', 'titulo' => 'Todo cantor que você conhece tem esse problema',
+      'texto' => '<p>Amigo que canta na igreja, colega da banda, quem posta cover toda semana: todos sofrem com o áudio do celular. Você já tem a solução no bolso.</p><p>Indica pelo seu link, a pessoa testa grátis no próprio vídeo e, se assinar, a comissão é sua. No painel de afiliado tem roteiros prontos, material para baixar e os seus números em tempo real.</p>',
+      'botao' => 'Ver como funciona', 'link' => $lk . '&utm_content=d10', 'aviso' => 'Conhece outros cantores? Indique e ganhe com cada assinatura.'],
+    3 => ['dia' => 20, 'assunto' => 'Faz a conta: 1 indicação por semana', 'titulo' => 'Uma indicação por semana',
+      'texto' => '<p>Uma indicação por semana dá perto de <b>R$ 600 por mês</b>. E quem renovar no ano seguinte paga de novo, e você recebe de novo.</p><p>É um exemplo: o resultado depende da sua divulgação. Para entrar, use o mesmo e-mail e a mesma senha do app. Leva 1 minuto.</p>',
+      'botao' => 'Virar afiliado agora', 'link' => $lk . '&utm_content=d20', 'aviso' => '1 indicação por semana ≈ R$ 600 por mês. Vire afiliado.'],
+    4 => ['dia' => 35, 'assunto' => 'Último convite para ser nosso afiliado', 'titulo' => 'A porta continua aberta',
+      'texto' => '<p>Este é o último e-mail sobre isso. Se um dia quiser ganhar indicando o Studio Cover, o caminho fica no menu da sua conta no app, em <b>Ganhe como afiliado</b>.</p>',
+      'botao' => 'Conhecer o programa', 'link' => $lk . '&utm_content=d35', 'aviso' => 'O programa de afiliados fica no menu da sua conta.'],
+  ];
+}
+function run_af_convite(bool $force = false): array {
+  if (setting('funnel_enabled') !== '1') return ['enviados' => 0];
+  $h = (int)date('G'); if (!$force && ($h < 8 || $h > 21)) return ['enviados' => 0];
+  $db = af_db();
+  $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
+  if (!in_array('af_step', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN af_step INTEGER NOT NULL DEFAULT 0');
+  if (!in_array('af_at', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN af_at TEXT');
+  $steps = af_convite_steps(); $sent = 0;
+  $users = $db->query("SELECT u.* FROM users u WHERE u.status = 'active' AND u.paid_at IS NOT NULL AND NOT EXISTS (SELECT 1 FROM afiliados a WHERE a.email = u.email)")->fetchAll();
+  foreach ($users as $u) {
+    // um passo de cada vez, na ordem, com pelo menos 3 dias entre um e outro (cliente antigo não recebe tudo de uma vez)
+    $days = (time() - strtotime($u['paid_at'])) / 86400; $due = (int)$u['af_step'] + 1;
+    if (!isset($steps[$due]) || $days < $steps[$due]['dia']) continue;
+    if ($u['af_at'] && time() - strtotime($u['af_at']) < 3 * 86400) continue;
+    $db->prepare('UPDATE users SET af_step = ?, af_at = ? WHERE id = ?')->execute([$due, now(), $u['id']]);
+    funnel_send($u, 'af-convite-' . $due, $steps[$due]); $sent++;
+  }
+  return ['enviados' => $sent];
+}

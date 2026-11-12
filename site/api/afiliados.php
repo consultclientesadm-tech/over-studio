@@ -33,6 +33,7 @@ function af_convite_valido(string $t): ?array {
   if ($t === '') return null;
   $q = af_db()->prepare('SELECT * FROM af_convites WHERE token = ? AND usado_em IS NULL AND exp > ?'); $q->execute([hash('sha256', $t), now()]); return $q->fetch() ?: null;
 }
+function af_e_afiliado(string $email): bool { $q = af_db()->prepare('SELECT 1 FROM afiliados WHERE email = ? AND ativo = 1'); $q->execute([$email]); return (bool)$q->fetch(); }
 function af_codigo_limpo(string $c): string { return mb_strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $c)); }
 function af_by_codigo(string $c): ?array {
   $c = af_codigo_limpo($c); if ($c === '') return null;

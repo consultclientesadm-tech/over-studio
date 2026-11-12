@@ -191,6 +191,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     const n = Math.max(0, me.trial_left);
     sheet(`<h3>${esc(me.name || 'Minha conta')}</h3><p style="margin-top:0">${esc(me.email)}</p>
       ${trial ? `<div class="sc-n nova"><b>Teste grátis: ${n} vídeo${n === 1 ? '' : 's'} restante${n === 1 ? '' : 's'}</b>Libere o acesso completo para fazer quantos covers quiser.<a class="sc-b" href="${esc(me.checkout_url || '/#comprar')}" target="_blank" rel="noopener">LIBERAR ACESSO COMPLETO</a></div>` : me.paid ? `<div class="sc-n"><b style="color:#2ee59d">✓ Acesso completo</b>${me.expires_at ? 'Válido até ' + esc(me.expires_at.slice(0, 10).split('-').reverse().join('/')) : 'Vitalício'}</div>` : ''}
+      ${me.paid ? (me.afiliado ? '<a class="sc-li" href="/afiliado/" target="_blank" rel="noopener"><i>💰</i>Meu painel de afiliado</a>' : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">💰 Ganhe como afiliado</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`) : ''}
       <a class="sc-li" data-m="avisos"><i>🔔</i>Avisos ${unread ? `<b style="color:#ffd400">(${unread})</b>` : ''}</a>
       ${standalone ? '' : '<a class="sc-li" data-m="instalar"><i>📲</i>Instalar na tela de início</a>'}
       ${podePush && !pushLigado() ? '<a class="sc-li" data-m="push"><i>🔕</i>Ligar avisos no celular</a>' : ''}
@@ -248,6 +249,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     const trial = me.trial && !me.paid;
     box.innerHTML = `${!standalone && (deferred || ios || android) ? '<button class="sc-chip y" data-i aria-label="Instalar">📲<span class="sc-it"> Instalar</span></button>' : ''}
       ${trial ? (me.can_use ? `<button class="sc-chip y" data-t title="Teste grátis">🎁 ${Math.max(0, me.trial_left)}</button>` : '<button class="sc-chip y" data-t title="Liberar acesso">🔒 Liberar</button>') : ''}
+      ${me.paid && !me.afiliado ? '<a class="sc-chip" href="/afiliados/?utm_source=app&utm_medium=topo" target="_blank" rel="noopener" style="text-decoration:none;border-color:rgba(46,229,157,.5);color:#2ee59d" title="Ganhe como afiliado">💰<span class="sc-it"> Indique e ganhe</span></a>' : ''}
       <button class="sc-chip" data-c aria-label="Minha conta">${esc((me.name || me.email || '?').trim()[0].toUpperCase())}${unread ? '<span class="sc-dot"></span>' : ''}</button>`;
     box.querySelector('[data-i]')?.addEventListener('click', install);
     box.querySelector('[data-t]')?.addEventListener('click', () => (me.can_use ? menu() : paywall()));

@@ -249,7 +249,7 @@ function checkout_url(?array $u = null): string {
 }
 function public_user(array $u): array {
   return ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'], 'status' => $u['status'], 'expires_at' => $u['expires_at'],
-    'videos_used' => (int)$u['videos_used']] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value')];
+    'videos_used' => (int)$u['videos_used'], 'afiliado' => af_e_afiliado((string)$u['email'])] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value')];
 }
 
 function app_events_db(): PDO {

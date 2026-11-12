@@ -262,6 +262,7 @@ switch ($a) {
     $steps = funnel_steps(); $ord = ['boas-vindas' => 0, 'teste-acabou' => 1];
     $por = array_map(function ($r) use ($nomes, $steps, $ord) {
       $k = $r['kind']; $n = $nomes[$k] ?? $k; $o = $ord[$k] ?? 100;
+      if (preg_match('/^af-convite-(\d+)$/', $k, $m) && isset(af_convite_steps()[(int)$m[1]])) { $n = 'Cliente → afiliado, dia ' . af_convite_steps()[(int)$m[1]]['dia'] . ': ' . str_replace('{nome}', 'Fulano', af_convite_steps()[(int)$m[1]]['assunto']); $o = 50 + (int)$m[1]; }
       if (preg_match('/^funil-(\d+)$/', $k, $m) && isset($steps[(int)$m[1]])) { $n = 'Dia ' . $steps[(int)$m[1]]['dia'] . ': ' . str_replace('{nome}', 'Fulano', $steps[(int)$m[1]]['assunto']); $o = 2 + (int)$m[1]; }
       return ['kind' => $k, 'nome' => $n, 'ordem' => $o, 'funil' => $o < 100, 'enviados' => (int)$r['enviados'], 'abriram' => (int)$r['abriram'], 'clicaram' => (int)$r['clicaram']];
     }, $q->fetchAll());

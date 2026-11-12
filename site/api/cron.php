@@ -10,6 +10,7 @@ if (PHP_SAPI !== 'cli') {
   if ($k === '' || !hash_equals($k, (string)($_GET['chave'] ?? ''))) { http_response_code(403); exit('sem permissão'); }
 }
 $r = run_funnel(in_array('--agora', $argv ?? [], true));
+try { $r['convite_afiliado'] = run_af_convite(in_array('--agora', $argv ?? [], true))['enviados']; } catch (Throwable $e) { $r['convite_afiliado'] = 'erro: ' . $e->getMessage(); }
 set_setting('cron_last', now());
 // LGPD: não guarda dado além do necessário (prazos na Política de privacidade)
 try {
