@@ -39,7 +39,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'hoje', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -91,6 +91,11 @@ switch ($a) {
     }
     $tot['comissoes_total'] = (float)$one('SELECT COALESCE(SUM(comissao), 0) FROM sales WHERE afiliado_id IS NOT NULL');
     $tot['af_comissao_pct'] = brnum(setting('af_comissao_pct'));
+    // ritmo para o medidor de saúde: vendas dos últimos 7 dias contra os 7 anteriores
+    $tot['vendas_7d'] = (int)$one("SELECT COUNT(*) FROM sales WHERE status = 'pago' AND value > 0 AND created_at >= ?", [date('Y-m-d', time() - 6 * 86400)]);
+    $tot['vendas_7d_ant'] = (int)$one("SELECT COUNT(*) FROM sales WHERE status = 'pago' AND value > 0 AND created_at >= ? AND created_at < ?", [date('Y-m-d', time() - 13 * 86400), date('Y-m-d', time() - 6 * 86400)]);
+    $tot['cadastros_7d'] = (int)$one('SELECT COUNT(*) FROM users WHERE created_at >= ?', [date('Y-m-d', time() - 6 * 86400)]);
+    $tot['meta_vendas_dia'] = max(0.1, brnum(setting('meta_vendas_dia')));
     $tot['saude'] = json_decode(setting('saude') ?: 'null', true);
     $tot['ticket_medio'] = $tot['vendas_periodo'] ? $tot['faturamento_periodo'] / $tot['vendas_periodo'] : 0;
     $tot['conversao_teste'] = $tot['testes_total'] ? $tot['testes_convertidos'] / $tot['testes_total'] : 0;
@@ -109,6 +114,19 @@ switch ($a) {
       'funil' => funnel_counts(),
       'ultimas_vendas' => $db->query('SELECT s.id, s.created_at, s.email, s.value, s.bruto, s.taxa, s.liquido, s.status, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id ORDER BY s.id DESC LIMIT 8')->fetchAll(),
     ]);
+  }
+
+  case 'hoje': { // gráfico ao vivo do dia: vendas de hoje e de ontem (para comparar), cadastros por hora
+    sales_fill_net(); af_db();
+    $hoje = date('Y-m-d'); $ontem = date('Y-m-d', time() - 86400);
+    $q = $db->prepare("SELECT s.id, s.created_at, s.value, s.bruto, s.liquido, s.afiliado_id, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.created_at >= ? AND s.created_at < ? AND (s.status = 'pago' OR s.value < 0) ORDER BY s.created_at");
+    $dia = function (string $d) use ($q) { $q->execute([$d, date('Y-m-d', strtotime($d) + 86400 + 3600)]); return array_values(array_filter(array_map(fn($r) => [
+      'id' => (int)$r['id'], 'h' => substr($r['created_at'], 11, 5), 'min' => (int)substr($r['created_at'], 11, 2) * 60 + (int)substr($r['created_at'], 14, 2), 'd' => substr($r['created_at'], 0, 10),
+      'liquido' => (float)$r['liquido'], 'bruto' => (float)$r['bruto'], 'af' => $r['afiliado_id'] ? 1 : 0, 'nome' => explode(' ', trim((string)$r['name']))[0] ?? ''], $q->fetchAll()), fn($x) => $x['d'] === $d)); };
+    $cad = function (string $d) use ($db) { $o = array_fill(0, 24, 0); $q = $db->prepare('SELECT CAST(substr(created_at, 12, 2) AS INTEGER) h, COUNT(*) n FROM users WHERE created_at >= ? AND created_at < ? GROUP BY h'); $q->execute([$d, date('Y-m-d', strtotime($d) + 86400)]); foreach ($q as $r) $o[(int)$r['h']] = (int)$r['n']; return $o; };
+    $q7 = $db->prepare("SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ? AND created_at < ?"); $q7->execute([date('Y-m-d', time() - 7 * 86400), $hoje]);
+    json_out(['ok' => true, 'agora' => date('H:i'), 'agora_min' => (int)date('G') * 60 + (int)date('i'), 'hoje' => $dia($hoje), 'ontem' => $dia($ontem),
+      'cad_hoje' => $cad($hoje), 'cad_ontem' => $cad($ontem), 'media_7d' => round((float)$q7->fetchColumn() / 7, 2)]);
   }
 
   case 'alunos': {

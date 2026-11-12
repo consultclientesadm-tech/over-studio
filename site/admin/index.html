@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=7">
+<link rel="stylesheet" href="admin.css?v=8">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -55,6 +55,7 @@
     <div class="tab" id="tGeral">
       <header class="th"><div><h2>Visão geral</h2><p class="sub">Saúde financeira e uso do Studio Cover</p></div>
         <div class="seg" id="periodo"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
+      <div id="hoje"></div>
       <div id="nums"></div>
       <div id="appSaude"></div>
       <div class="grid2">
@@ -119,6 +120,7 @@
           <label>Taxa da Eduzz por venda (R$) <small>o painel mostra o líquido, já sem ela</small><input name="eduzz_taxa" placeholder="17,04"></label>
           <label>Parte do sócio (Reinaldo) no líquido (%)<input name="socio_pct" placeholder="50"></label>
           <label>Comissão dos afiliados na Eduzz (%) <small>sobre o valor já sem a taxa</small><input name="af_comissao_pct" placeholder="50"></label>
+          <label>Meta de vendas por dia <small>(usada no medidor de saúde)</small><input name="meta_vendas_dia" placeholder="3"></label>
           <label>Vídeo do passo a passo dos afiliados <small>(link .mp4)</small><input name="af_tutorial_url" placeholder="https://..."></label>
           <label class="full">Pixels da Meta (página de vendas) <small>separe por vírgula; vazio = sem pixel</small><input name="meta_pixel" placeholder="1595086872316004, 1631589557846072"></label>
           <label class="full">Pixel que já está no checkout da Eduzz <small>a página de obrigado manda a Compra só para os outros</small><input name="eduzz_pixel" placeholder="1595086872316004"></label>
@@ -155,6 +157,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=7"></script>
+<script src="admin.js?v=8"></script>
 </body>
 </html>

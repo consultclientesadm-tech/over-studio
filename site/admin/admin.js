@@ -59,6 +59,83 @@ function contar(root) {
   requestAnimationFrame(() => root.querySelectorAll('.barra').forEach((b) => b.classList.add('on')));
 }
 
+
+// ---------- gráfico do dia, ao vivo ----------
+let hojeIds = null, hojeDesenhado = false;
+function chime() { try { const C = window.AudioContext || window.webkitAudioContext; const c = chime.c || (chime.c = new C()); [880, 1320].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.value = f; o.type = 'sine'; g.gain.setValueAtTime(0.0001, c.currentTime + i * 0.12); g.gain.exponentialRampToValueAtTime(0.18, c.currentTime + i * 0.12 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + i * 0.12 + 0.5); o.connect(g).connect(c.destination); o.start(c.currentTime + i * 0.12); o.stop(c.currentTime + i * 0.12 + 0.55); }); } catch {} }
+async function loadHoje() {
+  const j = await api('hoje'); if (!j.ok) return;
+  const vendas = j.hoje, ontem = j.ontem, agora = j.agora_min;
+  const cum = (arr, ate = 1440) => arr.filter((v) => v.min <= ate).reduce((a, v) => a + v.liquido, 0);
+  const total = cum(vendas), nV = vendas.filter((v) => v.liquido > 0).length, ontemAte = cum(ontem, agora), ontemTot = cum(ontem);
+  const ymax = Math.max(total, ontemTot, j.media_7d, 280) * 1.18, W = 1000, H = 240;
+  const X = (m) => (m / 1440) * W, Y = (v) => H - (Math.max(0, v) / ymax) * H;
+  const passos = (arr, fim) => { let c = 0, d = `M0 ${H}`; arr.forEach((v) => { if (v.min > fim) return; d += ` L${X(v.min).toFixed(1)} ${Y(c).toFixed(1)}`; c += v.liquido; d += ` L${X(v.min).toFixed(1)} ${Y(c).toFixed(1)}`; }); return { d: d + ` L${X(fim).toFixed(1)} ${Y(c).toFixed(1)}`, c }; };
+  const pt = passos(vendas, agora), po = passos(ontem, 1440);
+  const cadMax = Math.max(1, ...j.cad_hoje, ...j.cad_ontem);
+  const barras = j.cad_hoje.map((n, h) => (h * 60 <= agora && n ? `<rect x="${X(h * 60 + 6).toFixed(1)}" y="${(H - (n / cadMax) * 46).toFixed(1)}" width="${(X(48)).toFixed(1)}" height="${((n / cadMax) * 46).toFixed(1)}" rx="3" class="cb"><title>${h}h: ${n} cadastro${n === 1 ? '' : 's'}</title></rect>` : '')).join('');
+  let c = 0;
+  const pontos = vendas.map((v, i) => { c += v.liquido; return `<i class="pt ${v.af ? 'af' : ''} ${v.liquido < 0 ? 'rb' : ''} ${i === vendas.length - 1 ? 'ult' : ''}" style="left:${(v.min / 14.4).toFixed(2)}%;top:${((1 - Math.max(0, c) / ymax) * 100).toFixed(2)}%" title="${v.h} · ${esc(v.nome || 'cliente')} · ${v.liquido < 0 ? 'reembolso ' : '+'}${brl(Math.abs(v.liquido))}${v.af ? ' (afiliado)' : ''}"></i>`; }).join('');
+  const dif = ontemAte > 0 ? (total - ontemAte) / ontemAte : null;
+  const novas = hojeIds ? vendas.filter((v) => !hojeIds.has(v.id) && v.liquido > 0) : [];
+  hojeIds = new Set(vendas.map((v) => v.id));
+  $('hoje').innerHTML = `<section class="hojeBox glass${novas.length ? ' nova' : ''}">
+    <div class="hh"><div><span class="vivo"><i></i>AO VIVO · VENDAS DE HOJE</span>
+      <div class="hv">${N2(total)}<small>líquido · ${nV} venda${nV === 1 ? '' : 's'}${nV ? ` · última às ${vendas.filter((v) => v.liquido > 0).slice(-1)[0].h}` : ''}</small></div></div>
+      <div class="hcmp">${dif === null ? (ontemTot ? '' : '<span>Ontem: sem vendas</span>') : `<b class="${dif >= 0 ? 'up' : 'dn'}">${dif >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(dif) * 100)}%</b><span>vs ontem até esta hora (${brl0(ontemAte)})</span>`}
+        <span>ontem fechou em ${brl0(ontemTot)} · média dos últimos 7 dias ${brl0(j.media_7d)}/dia</span></div></div>
+    <div class="hg"><div class="hy"><span>${brl0(ymax)}</span><span>${brl0(ymax / 2)}</span><span>R$ 0</span></div>
+      <div class="hc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <defs><linearGradient id="gHoje" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd400" stop-opacity=".45"/><stop offset="1" stop-color="#ffd400" stop-opacity="0"/></linearGradient></defs>
+        ${[0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" class="gr"/>`).join('')}
+        ${barras}
+        ${j.media_7d ? `<line x1="0" x2="${W}" y1="${Y(j.media_7d).toFixed(1)}" y2="${Y(j.media_7d).toFixed(1)}" class="md"/>` : ''}
+        <path d="${po.d}" class="on"/>
+        <path d="${pt.d} L${X(agora).toFixed(1)} ${H} Z" fill="url(#gHoje)" class="ar"/>
+        <path d="${pt.d}" class="tl${hojeDesenhado ? '' : ' draw'}" pathLength="1"/>
+        <line x1="${X(agora).toFixed(1)}" x2="${X(agora).toFixed(1)}" y1="0" y2="${H}" class="nw"/>
+      </svg>${pontos}<span class="agora" style="left:${(agora / 14.4).toFixed(2)}%">agora ${j.agora}</span>
+      ${j.media_7d ? `<span class="mdl" style="top:${((1 - j.media_7d / ymax) * 100).toFixed(1)}%">média/dia</span>` : ''}</div></div>
+    <div class="hx">${[0, 3, 6, 9, 12, 15, 18, 21, 24].map((h) => `<span>${h}h</span>`).join('')}</div>
+    <div class="hl"><span><i class="ly"></i>Hoje (líquido acumulado)</span><span><i class="lo"></i>Ontem</span><span><i class="lp"></i>Venda de afiliado</span><span><i class="lc"></i>Cadastros no teste grátis por hora</span>${j.media_7d ? '<span><i class="lm"></i>Média por dia (7 dias)</span>' : ''}</div>
+  </section>`;
+  hojeDesenhado = true;
+  const hv = $('hoje').querySelector('.hv .cnt'); if (hv) { if (novas.length || !loadHoje.ja) contar($('hoje')); else { hv.textContent = brl(total); } }
+  loadHoje.ja = true;
+  if (novas.length) { chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}${novas.some((v) => v.af) ? ' (afiliado)' : ''}`); }
+}
+const N2 = (v) => `<b class="cnt" data-to="${+v || 0}" data-f="brl">0</b>`;
+setInterval(() => { if (!document.hidden && $('vPainel') && !$('vPainel').hidden && !$('tGeral').hidden) loadHoje(); }, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !$('tGeral').hidden && !$('vPainel').hidden) loadHoje(); });
+
+// ---------- medidor de saúde financeira ----------
+function medidor(t, probs) {
+  const cl = (x) => Math.max(0, Math.min(1, x)), pc = (v) => Math.round(v * 100) + '%';
+  const meta = t.meta_vendas_dia || 3, ritmo = t.vendas_7d / 7;
+  const cresc = t.vendas_7d_ant ? t.vendas_7d / t.vendas_7d_ant : t.vendas_7d ? 1.2 : 0;
+  const F = [
+    ['🎯', 'Conversão do teste grátis', 25, cl(t.conversao_teste / 0.05), `${pc(t.conversao_teste)} de quem testa compra (bom: 5% ou mais)`, 'Reforce o funil: e-mails, avisos no app e a tela de assinatura para quem já testou.'],
+    ['⚡', 'Ritmo de vendas', 20, cl(ritmo / meta), `${ritmo.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} venda${ritmo === 1 ? '' : 's'} por dia nos últimos 7 dias (meta ${meta})`, 'Mais tráfego: anúncios, posts com antes e depois e afiliados.'],
+    ['📈', 'Crescimento', 20, cl((cresc - 0.5) / 0.7), t.vendas_7d_ant ? `${t.vendas_7d} vendas nos últimos 7 dias contra ${t.vendas_7d_ant} nos 7 anteriores` : `${t.vendas_7d} vendas nos últimos 7 dias`, 'As vendas caíram em relação à semana anterior: veja o que mudou nos anúncios.'],
+    ['↩', 'Reembolsos', 20, cl(1 - t.taxa_reembolso / 0.15), `${pc(t.taxa_reembolso)} do vendido voltou (bom: abaixo de 5%)`, 'Muitos reembolsos: veja no "O app está funcionando?" se alguém está travando.'],
+    ['🛰️', 'Sistema funcionando', 15, cl(1 - probs * 0.35), probs ? `${probs} problema${probs === 1 ? '' : 's'} apontado${probs === 1 ? '' : 's'} pelo vigia` : 'Site, app, checkout, e-mails e Eduzz ok', 'Resolva o que o vigia apontou no topo da página.'],
+  ];
+  const nota = Math.round(F.reduce((a, f) => a + f[2] * f[3], 0));
+  const [rot, cor] = nota >= 80 ? ['EXCELENTE', '#2ee59d'] : nota >= 60 ? ['BOA', '#b8f04a'] : nota >= 40 ? ['ATENÇÃO', '#ffb02e'] : ['CRÍTICA', '#ff4d5e'];
+  const pior = F.slice().sort((a, b) => a[3] - b[3])[0];
+  const arco = (a0, a1, c) => { const p = (a) => [100 + 80 * Math.cos(Math.PI * (1 - a)), 100 - 80 * Math.sin(Math.PI * (1 - a))]; const [x0, y0] = p(a0), [x1, y1] = p(a1); return `<path d="M${x0.toFixed(2)} ${y0.toFixed(2)} A80 80 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}" stroke="${c}" />`; };
+  return `<div class="saudeRow">
+    <div class="ncard gauge" style="--cor:${cor}"><div class="nh"><i>🧭</i><small>SAÚDE DO NEGÓCIO</small></div>
+      <svg viewBox="0 0 200 118" class="gz"><g class="seg">${arco(0, 0.4, '#ff4d5e')}${arco(0.4, 0.6, '#ffb02e')}${arco(0.6, 0.8, '#b8f04a')}${arco(0.8, 1, '#2ee59d')}</g>
+        ${[0, 20, 40, 60, 80, 100].map((v) => { const a = Math.PI * (1 - v / 100); return `<text x="${(100 + 98 * Math.cos(a)).toFixed(1)}" y="${(104 - 98 * Math.sin(a)).toFixed(1)}">${v}</text>`; }).join('')}
+        <g class="agulha" style="--rot:${(nota / 100) * 180 - 90}deg"><path d="M97 100 L100 30 L103 100 Z" fill="${cor}"/><circle cx="100" cy="100" r="8" fill="#0b0c16" stroke="${cor}" stroke-width="3"/></g></svg>
+      <div class="gnota"><b class="cnt" data-to="${nota}" data-f="n" style="color:${cor}">0</b><span style="color:${cor}">${rot}</span></div>
+      <p class="gdica">Ponto mais fraco agora: <b>${pior[1]}</b>. ${pior[5]}</p></div>
+    <div class="ncard fatores"><div class="nh"><i>📊</i><small>O QUE ENTRA NA NOTA</small></div>
+      ${F.map(([ic, nome, peso, v, txt]) => { const c2 = v >= 0.8 ? 'var(--g)' : v >= 0.5 ? 'var(--y)' : 'var(--r)'; return `<div class="fat"><div class="ft"><span>${ic} ${nome} <small>peso ${peso}</small></span><b style="color:${c2}">${Math.round(v * 100)}</b></div><div class="fb"><i style="width:${Math.max(3, v * 100)}%;background:${c2}"></i></div><small>${txt}</small></div>`; }).join('')}
+    </div></div>`;
+}
+
 // ---------- visão geral ----------
 let dias = 30;
 $('periodo').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; dias = +b.dataset.d; $('periodo').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadGeral(); };
@@ -83,6 +160,7 @@ async function loadAppSaude() {
   contar($('appSaude'));
 }
 async function loadGeral() {
+  loadHoje();
   const j = await api('resumo', null, '&dias=' + dias); if (!j.ok) return;
   const t = j.tot;
   const pc = (v) => Math.round(v * 100) + '%';
@@ -100,6 +178,7 @@ async function loadGeral() {
   $('nums').innerHTML = vigia + `
   <section class="bloco">
     <div class="bh"><span class="tag y">💰 SAÚDE FINANCEIRA</span><small>valores líquidos: o que a Eduzz paga, já sem a taxa. Cortesia não entra aqui.</small></div>
+    ${medidor(t, probs.length)}
     <div class="hero">
       <div class="hmain"><small>LÍQUIDO QUE CAIU PARA OS SÓCIOS</small>${N(t.faturamento_total, 'brl')}
         <span>${brl(t.bruto_total)} vendidos − ${brl(t.taxas_total)} taxa da Eduzz${t.comissoes_total ? ` − ${brl(t.comissoes_total)} comissão de afiliados` : ''}${t.reembolsado_total ? ` − ${brl(t.reembolsado_total)} reembolsados` : ''} · ${t.alunos_pagos} aluno${t.alunos_pagos === 1 ? '' : 's'} pagando</span>

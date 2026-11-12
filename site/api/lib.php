@@ -121,6 +121,7 @@ const SETTINGS_DEFAULT = [
   'eduzz_taxa' => '17,04',           // taxa que a Eduzz desconta de cada venda (R$). Os juros do parcelamento quem paga é o comprador
   'socio_pct' => '50',               // parte do sócio (Reinaldo) no líquido, em %
   'af_comissao_pct' => '50',         // comissão do afiliado na Eduzz (% do valor já sem a taxa)
+  'meta_vendas_dia' => '3',         // meta de vendas por dia (para o medidor de saúde do painel)
   'af_tutorial_url' => '',           // vídeo do passo a passo no painel do afiliado (https)
 ];
 function setting(string $k): string {

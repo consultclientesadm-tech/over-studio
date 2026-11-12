@@ -164,3 +164,57 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .origem .og .socios { margin-top: 12px; }
 @media (max-width: 760px) { .origem { grid-template-columns: 1fr; } }
 .origem .og .socios b { font-size: clamp(18px, 1.7vw, 26px); white-space: nowrap; }
+
+/* gráfico do dia, ao vivo */
+.hojeBox { padding: 20px 22px 16px; margin-bottom: 22px; }
+.hojeBox.nova { animation: novaVenda 1.6s ease-out; }
+@keyframes novaVenda { 0% { box-shadow: 0 0 0 0 rgba(255,212,0,.7), 0 20px 60px rgba(0,0,0,.45); } 100% { box-shadow: 0 0 0 26px rgba(255,212,0,0), 0 20px 60px rgba(0,0,0,.45); } }
+.hh { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.vivo { display: inline-flex; align-items: center; gap: 8px; font: 800 12px Orbitron; letter-spacing: .16em; color: var(--y); }
+.vivo i { width: 9px; height: 9px; border-radius: 50%; background: var(--r); box-shadow: 0 0 0 0 rgba(255,77,94,.7); animation: vivo 1.6s infinite; }
+@keyframes vivo { to { box-shadow: 0 0 0 10px rgba(255,77,94,0); } }
+.hv { margin-top: 6px; } .hv .cnt { font: 900 clamp(32px, 4.2vw, 56px) Orbitron, sans-serif; color: var(--y); text-shadow: 0 0 30px rgba(255,212,0,.35); letter-spacing: .02em; }
+.hv small { display: block; color: #a9adc0; font-size: 13.5px; margin-top: 2px; }
+.hcmp { text-align: right; display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: #a9adc0; }
+.hcmp b { font: 900 22px Orbitron; } .hcmp b.up { color: var(--g); } .hcmp b.dn { color: var(--r); }
+.hg { display: grid; grid-template-columns: 64px 1fr; gap: 8px; }
+.hy { display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; color: #6f7389; text-align: right; padding: 0 0 2px; }
+.hc { position: relative; height: clamp(200px, 26vw, 300px); }
+.hc svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.hc .gr { stroke: rgba(140,150,200,.12); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.hc .md { stroke: rgba(63,208,255,.55); stroke-width: 1.5; stroke-dasharray: 2 6; vector-effect: non-scaling-stroke; }
+.hc .on { fill: none; stroke: rgba(200,205,230,.45); stroke-width: 2; stroke-dasharray: 6 6; vector-effect: non-scaling-stroke; }
+.hc .tl { fill: none; stroke: var(--y); stroke-width: 3.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 6px rgba(255,212,0,.7)); }
+.hc .tl.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: desenha 1.8s ease-out forwards; }
+@keyframes desenha { to { stroke-dashoffset: 0; } }
+.hc .ar { opacity: 0; animation: aparece 1s .8s ease-out forwards; } @keyframes aparece { to { opacity: 1; } }
+.hc .cb { fill: rgba(63,208,255,.32); }
+.hc .nw { stroke: rgba(255,77,94,.65); stroke-width: 1.5; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+.hc .pt { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--y); border: 3px solid #0b0c16; box-shadow: 0 0 12px rgba(255,212,0,.9); z-index: 2; cursor: default; }
+.hc .pt.af { background: var(--p); box-shadow: 0 0 12px rgba(167,123,255,.9); } .hc .pt.rb { background: var(--r); }
+.hc .pt.ult::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid currentColor; color: var(--y); animation: ping 1.8s infinite; }
+.hc .pt.af.ult::after { color: var(--p); }
+@keyframes ping { from { transform: scale(.6); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+.hc .agora { position: absolute; top: -4px; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--r); background: rgba(3,3,8,.85); padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.hc .mdl { position: absolute; right: 4px; transform: translateY(-120%); font-size: 11px; color: var(--c); }
+.hx { display: flex; justify-content: space-between; margin: 6px 0 0 72px; font-size: 11px; color: #6f7389; }
+.hl { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 12px; color: #a9adc0; }
+.hl i { display: inline-block; width: 14px; height: 4px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+.hl .ly { background: var(--y); } .hl .lo { background: repeating-linear-gradient(90deg, #c8cde6 0 4px, transparent 4px 7px); } .hl .lp { width: 10px; height: 10px; border-radius: 50%; background: var(--p); } .hl .lc { height: 10px; width: 10px; background: rgba(63,208,255,.5); } .hl .lm { background: repeating-linear-gradient(90deg, var(--c) 0 2px, transparent 2px 6px); }
+
+/* medidor de saúde */
+.saudeRow { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 14px; margin-bottom: 14px; }
+.gauge { text-align: center; } .gauge .nh { text-align: left; }
+.gz { width: 100%; max-width: 330px; display: block; margin: 6px auto 0; overflow: visible; }
+.gz .seg path { fill: none; stroke-width: 16; stroke-linecap: butt; filter: drop-shadow(0 0 6px rgba(0,0,0,.4)); opacity: .9; }
+.gz text { font: 700 8px Sora; fill: #6f7389; text-anchor: middle; dominant-baseline: middle; }
+.gz .agulha { transform-origin: 100px 100px; transform: rotate(-90deg); animation: agulha 1.6s cubic-bezier(.3,1.4,.5,1) .2s forwards; }
+@keyframes agulha { to { transform: rotate(var(--rot)); } }
+.gnota { margin-top: -6px; } .gnota b { display: block; font: 900 46px Orbitron; line-height: 1; } .gnota span { font: 800 14px Orbitron; letter-spacing: .2em; }
+.gdica { margin: 12px 0 0; font-size: 13px; color: #a9adc0; line-height: 1.5; text-align: left; } .gdica b { color: var(--ink); }
+.fatores { --cor: var(--c); display: flex; flex-direction: column; gap: 12px; }
+.fat .ft { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; } .fat .ft small { color: #6f7389; font-weight: 500; margin-left: 6px; }
+.fat .ft b { font: 900 16px Orbitron; }
+.fat .fb { height: 7px; border-radius: 6px; background: rgba(255,255,255,.06); margin: 6px 0 4px; overflow: hidden; } .fat .fb i { display: block; height: 100%; border-radius: 6px; transition: width 1s; }
+.fat > small { color: #a9adc0; font-size: 12.5px; }
+@media (max-width: 860px) { .saudeRow { grid-template-columns: 1fr; } .hcmp { text-align: left; } .hg { grid-template-columns: 48px 1fr; } .hx { margin-left: 56px; } }
