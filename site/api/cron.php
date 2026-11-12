@@ -4,10 +4,12 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
+require __DIR__ . '/saude.php';
 if (PHP_SAPI !== 'cli') {
   $k = (string)cfg('cron_key');
   if ($k === '' || !hash_equals($k, (string)($_GET['chave'] ?? ''))) { http_response_code(403); exit('sem permissão'); }
 }
 $r = run_funnel(in_array('--agora', $argv ?? [], true));
 set_setting('cron_last', now());
+$r['vigia'] = health_run();
 echo json_encode($r, JSON_UNESCAPED_UNICODE), "\n";

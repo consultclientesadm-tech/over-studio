@@ -78,6 +78,7 @@ switch ($a) {
     $tot['fat_mes_anterior'] = (float)$one('SELECT COALESCE(SUM(value), 0) FROM sales WHERE created_at >= ? AND created_at < ?', [date('Y-m-01', strtotime('first day of last month')), date('Y-m-01')]);
     $tot['emails_ok_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 1 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
     $tot['emails_falha_7d'] = (int)$one('SELECT COUNT(*) FROM emails WHERE ok = 0 AND created_at >= ?', [date('Y-m-d H:i:s', time() - 7 * 86400)]);
+    $tot['saude'] = json_decode(setting('saude') ?: 'null', true);
     $tot['ticket_medio'] = $tot['vendas_periodo'] ? $tot['faturamento_periodo'] / $tot['vendas_periodo'] : 0;
     $tot['conversao_teste'] = $tot['testes_total'] ? $tot['testes_convertidos'] / $tot['testes_total'] : 0;
     $series = function (string $sql) use ($db, $since, $days) {

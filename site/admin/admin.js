@@ -73,7 +73,11 @@ async function loadGeral() {
   const card = (cor, ico, rot, v, f, sub, extra = '') => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div>${N(v, f)}<span>${sub}</span>${extra}</div>`;
   const pessoas = t.alunos_pagos + t.cortesias + t.em_teste + t.reembolsos + t.bloqueados;
   const fat = (v) => (pessoas ? Math.max(v ? 3 : 0, (v / pessoas) * 100) : 0);
-  $('nums').innerHTML = `
+  const sd = t.saude, probs = sd && sd.problemas ? Object.values(sd.problemas) : [];
+  const vigia = !sd ? '<div class="vigia"><b>🛰️ Vigia</b> ainda não rodou. Ele roda junto com a tarefa de hora em hora.</div>'
+    : probs.length ? `<div class="vigia mal"><b>⚠️ O vigia encontrou ${probs.length === 1 ? 'um problema' : probs.length + ' problemas'}</b><ul>${probs.map((m) => '<li>' + esc(m) + '</li>').join('')}</ul><small>Checado em ${esc(sd.quando)}. Os administradores recebem aviso por e-mail.</small></div>`
+    : `<div class="vigia ok"><b>🛰️ Tudo funcionando</b><small>Site, app, checkout, e-mails e Eduzz checados em ${esc(sd.quando)}.</small></div>`;
+  $('nums').innerHTML = vigia + `
   <section class="bloco">
     <div class="bh"><span class="tag y">💰 SAÚDE FINANCEIRA</span><small>só dinheiro de venda pela Eduzz. Cortesia não entra aqui.</small></div>
     <div class="hero">
