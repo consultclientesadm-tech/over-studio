@@ -255,3 +255,16 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .hl .lcy { background: #6ff3ff; } .hl .lco { height: 10px; width: 10px; border: 1px dashed rgba(111,243,255,.6); background: none; }
 @media (max-width: 860px) { .cadG { grid-template-columns: 1fr; } }
 .hc .cbn { position: absolute; transform: translate(-50%, -125%); font: 700 11px 'JetBrains Mono', monospace; color: #bff8ff; pointer-events: none; z-index: 1; }
+/* compacto: os dois gráficos ao vivo cabem numa tela só (pedido do Leo) */
+.hojeBox { padding: 12px 18px 10px; margin-bottom: 12px; }
+.hh { margin-bottom: 6px; align-items: center; }
+.hv { margin-top: 2px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.hv .cnt { font-size: clamp(24px, 2.6vw, 36px); }
+.hv small { display: inline; margin-top: 0; font-size: 12.5px; }
+.hcmp { gap: 1px; font-size: 12px; } .hcmp b { font-size: 17px; }
+.hc, .cadBox .hc { height: clamp(110px, 11vw, 150px); }
+.hl { margin-top: 6px; font-size: 11.5px; gap: 4px 14px; }
+.hx { margin-top: 3px; }
+.cadUlt { padding: 8px 10px; gap: 3px; max-height: calc(clamp(110px, 11vw, 150px) + 22px); overflow-y: auto; scrollbar-width: thin; }
+.cadUlt > div { padding: 3px 7px; font-size: 12.5px; }
+.cadUlt small { margin-bottom: 0; }
