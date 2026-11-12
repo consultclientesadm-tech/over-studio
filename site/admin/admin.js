@@ -372,7 +372,7 @@ async function loadAfiliados() {
     ${card('g', '💰', 'Vendas de afiliados', soma('compraram'), 'n', `${brl(soma('vendido'))} vendidos`)}</div>`;
   contar($('afNums'));
   $('tblAf').innerHTML = L.length ? `<table><tr><th>Afiliado</th><th>Link</th><th>Cliques</th><th>Cadastros</th><th>Testaram</th><th>Compraram</th><th>Vendido</th><th>Eduzz</th><th></th></tr>${L.map((a) => `<tr${+a.ativo ? '' : ' style="opacity:.5"'}>
-    <td>${esc(a.nome || '—')}<small>${esc(a.email)}${+a.tem_senha ? '' : ' · <span style="color:#ff9d00">sem senha ainda</span>'}</small></td>
+    <td>${esc(a.nome || '—')}<small>${esc(a.email)} · ${({ convite: 'convite', assinante: 'assinante', cadastro: 'cadastro aberto', admin: 'criado no painel' })[a.origem] || ''}${+a.tem_senha ? '' : ' · <span style="color:#ff9d00">sem senha ainda</span>'}</small></td>
     <td><button class="btn sm ghost" data-cp="${esc(a.link)}" title="${esc(a.link)}">?af=${esc(a.codigo)} ⧉</button></td>
     <td>${a.cliques}<small>${a.cliques_30d} em 30d</small></td><td>${a.cadastros}<small>${pc(a.cadastros, a.cliques)}</small></td><td>${a.testaram}</td>
     <td><b style="color:#2ee59d">${a.compraram}</b><small>${pc(a.compraram, a.cadastros)} dos cadastros</small></td><td>${brl(+a.vendido)}</td>
@@ -385,6 +385,15 @@ async function loadAfiliados() {
 const afCampos = (a = {}) => `<label>Nome<input id="fNome" value="${esc(a.nome || '')}"></label>
   <label>Link de afiliado da Eduzz <small>a compra dos leads dele vai por aqui (o afiliado também pode colar no painel dele)</small><input id="fLink" value="${esc(a.link_eduzz || '')}" placeholder="https://chk.eduzz.com/..."></label>
   <label>ID de afiliado na Eduzz <small>opcional: reconhece vendas dele que não passaram pelo teste</small><input id="fEid" value="${esc(a.eduzz_id || '')}"></label>`;
+$('convAf').onclick = () => modal(`<h3>Convite de afiliado</h3><p class="sub">Quem recebe este link cria a conta de afiliado direto, sem precisar assinar o Studio Cover. Vale 30 dias e serve para 1 pessoa.</p>
+  <label>Nome de quem vai receber <small>opcional, já aparece preenchido para ele</small><input id="cvNome" autocomplete="off"></label>
+  <div class="acts"><button class="btn sm" id="cvOk">Gerar link de convite</button></div><p class="msg" id="cvMsg"></p><div id="cvOut"></div>`, () => {
+  $('cvOk').onclick = async () => {
+    const j = await api('afiliado-convite', { nome: $('cvNome').value }); if (!j.ok) return ($('cvMsg').textContent = j.error);
+    $('cvOut').innerHTML = `<label>Link do convite (mande pelo WhatsApp)<div class="copy"><input value="${esc(j.link)}" readonly></div></label>`;
+    try { await navigator.clipboard.writeText(j.link); $('cvMsg').textContent = 'Link copiado.'; } catch {}
+  };
+});
 $('novoAf').onclick = () => modal(`<h3>Novo afiliado</h3><p class="sub">Ele recebe um e-mail para criar a senha do painel dele.</p>
   <label>E-mail<input id="fEmail" type="email" autocomplete="off"></label>${afCampos()}
   <label>Código do link <small>vira studiocover.com.br/?af=codigo (vazio = parte do e-mail)</small><input id="fCod" placeholder="joao"></label>

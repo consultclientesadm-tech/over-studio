@@ -328,7 +328,7 @@ switch ($a) {
     $db = af_db(); sales_fill_net();
     $n = af_numeros(); $n30 = af_numeros(null, date('Y-m-d', time() - 29 * 86400));
     $out = [];
-    foreach ($db->query('SELECT id, nome, email, codigo, link_eduzz, eduzz_id, ativo, created_at, last_login, pass_hash IS NOT NULL AS tem_senha FROM afiliados ORDER BY id DESC') as $r) {
+    foreach ($db->query('SELECT id, nome, email, codigo, link_eduzz, eduzz_id, ativo, origem, created_at, last_login, pass_hash IS NOT NULL AS tem_senha FROM afiliados ORDER BY id DESC') as $r) {
       $i = (int)$r['id'];
       foreach (['cliques', 'cadastros', 'testaram', 'compraram', 'vendido', 'reembolsos'] as $k) { $r[$k] = $n[$k][$i] ?? 0; $r[$k . '_30d'] = $n30[$k][$i] ?? 0; }
       $r['link'] = site_url() . '/?af=' . $r['codigo'];
@@ -349,6 +349,10 @@ switch ($a) {
     af_db()->prepare('UPDATE afiliados SET nome = ?, link_eduzz = ?, eduzz_id = ?, ativo = ? WHERE id = ?')
       ->execute([trim((string)($in['nome'] ?? $af['nome'])), $link, trim((string)($in['eduzz_id'] ?? $af['eduzz_id'])), !empty($in['ativo']) ? 1 : 0, $af['id']]);
     json_out(['ok' => true]);
+  }
+  case 'afiliado-convite': { // link de convite: quem recebe vira afiliado sem precisar assinar (vale 30 dias, 1 uso)
+    $in = input(); $nome = trim((string)($in['nome'] ?? ''));
+    json_out(['ok' => true, 'link' => af_convite_criar($nome, (int)$me['id'])]);
   }
   case 'afiliado-acesso': { // novo link de senha (e-mail opcional)
     $in = input(); $af = af_by_id((int)($in['id'] ?? 0)); if (!$af) fail('Afiliado não encontrado.');

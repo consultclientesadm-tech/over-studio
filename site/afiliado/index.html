@@ -58,6 +58,8 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 .tabs button { flex: none; background: rgba(255,255,255,.03); border: 1px solid var(--line); color: var(--mut); border-radius: 30px; padding: 11px 16px; font: 700 13px Sora, sans-serif; cursor: pointer; }
 .tabs button.on { background: linear-gradient(180deg, #ffe34d, #ffc400); color: #000; border-color: transparent; }
 .aba[hidden] { display: none !important; }
+.aviso { margin: 4px 0 6px; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(255,212,0,.35); background: rgba(255,212,0,.06); font-size: 13.5px; line-height: 1.5; color: #d8d9e2; }
+.aviso b:first-child { display: block; color: var(--y); margin-bottom: 4px; } .aviso.ok { border-color: rgba(46,229,157,.4); background: rgba(46,229,157,.06); } .aviso.ok b:first-child { color: var(--g); } .aviso[hidden] { display: none; }
 .video { position: relative; border-radius: 16px; overflow: hidden; background: #000; aspect-ratio: 16 / 9; border: 1px solid var(--line); }
 .video video { width: 100%; height: 100%; display: block; }
 .prog { display: flex; align-items: center; gap: 10px; margin: 16px 0 6px; font-size: 13px; color: var(--mut); }
@@ -99,11 +101,13 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 
   <div class="box" id="vCadastro" hidden style="max-width:460px"><div class="card">
     <h1>Seja afiliado</h1><p class="sub">Indique o Studio Cover para cantores e ganhe <b style="color:var(--y)">50% de comissão</b> em cada venda, também nas renovações. Leva 1 minuto para criar a conta, e lá dentro tem o passo a passo para começar.</p>
+    <div class="aviso" id="cExcl"><b>🔒 Exclusivo para assinantes</b>O programa de afiliados é para quem usa o Studio Cover. Use o <b>mesmo e-mail e a mesma senha</b> que você usa para entrar no app.<a class="btn sm ghost" id="cAssinar" href="/#oferta" style="display:flex;width:fit-content;margin-top:10px">Ainda não assino: quero assinar</a></div>
+    <div class="aviso ok" id="cConv" hidden><b>🎟️ Você foi convidado</b><span id="cConvTx">Com este convite você cria a sua conta de afiliado direto, sem precisar assinar.</span></div>
     <form id="fCad"><input class="hp" name="site" id="cSite" tabindex="-1" autocomplete="off" aria-hidden="true">
       <label>Seu nome<input id="cNome" autocomplete="name" required></label>
       <label>E-mail <small>(de preferência o mesmo que você vai usar na Eduzz)</small><input type="email" id="cEmail" autocomplete="email" required></label>
       <label>WhatsApp com DDD<input id="cWhats" inputmode="tel" autocomplete="tel" placeholder="(11) 91234-5678" required></label>
-      <label>Senha <small>(8 ou mais, com letras e números)</small><input type="password" id="cSenha" autocomplete="new-password" required></label>
+      <label><span id="cSenhaRot">Senha do app Studio Cover <small>(a mesma que você usa para entrar no app)</small></span><input type="password" id="cSenha" autocomplete="current-password" required></label>
       <label>Seu código no link <small>(opcional)</small><input id="cCodigo" placeholder="ex.: joaocovers" maxlength="20" autocapitalize="off"></label>
       <p class="sub" style="margin:6px 0 0;font-size:12.5px">Seu link vai ficar: <b style="color:var(--y)" id="cPrev">studiocover.com.br/?af=…</b></p>
       <label class="check"><input type="checkbox" id="cAceito"> <span>Li e aceito as regras: não prometo seguidores, fama ou números de visualização, não faço spam, não uso o nome Studio Cover como se fosse o perfil oficial e não ofereço desconto que não existe. Também aceito os <a href="/termos/" target="_blank" style="color:#ffd400">Termos de uso</a> e a <a href="/privacidade/" target="_blank" style="color:#ffd400">Política de privacidade</a>.</span></label>
@@ -335,17 +339,25 @@ const prev = () => { const c = $('cCodigo').value.toLowerCase().replace(/[^a-z0-
 $('cCodigo').oninput = prev; $('cNome').oninput = prev;
 $('fCad').onsubmit = async (e) => {
   e.preventDefault(); const b = $('fCad').querySelector('.btn'); b.disabled = true; $('cMsg').textContent = '';
-  const j = await api('cadastro', { nome: $('cNome').value, email: $('cEmail').value, whats: $('cWhats').value, senha: $('cSenha').value, codigo: $('cCodigo').value, aceito: $('cAceito').checked ? 1 : 0, site: $('cSite').value });
+  const j = await api('cadastro', { nome: $('cNome').value, email: $('cEmail').value, whats: $('cWhats').value, senha: $('cSenha').value, codigo: $('cCodigo').value, aceito: $('cAceito').checked ? 1 : 0, site: $('cSite').value, convite: CONVITE });
   b.disabled = false;
-  if (j.ok) { history.replaceState(null, '', '/afiliado/#comece'); painel(); } else { $('cMsg').className = 'msg erro'; $('cMsg').textContent = j.error; }
+  if (j.ok) { history.replaceState(null, '', '/afiliado/#comece'); painel(); } else { $('cMsg').className = 'msg erro'; $('cMsg').innerHTML = esc(j.error) + (j.comprar ? `<a class="btn full" href="${esc(j.comprar)}" style="margin-top:12px">ASSINAR O STUDIO COVER</a>` : ''); }
 };
 $('fLogin').onsubmit = async (e) => { e.preventDefault(); $('lMsg').textContent = ''; const j = await api('login', { email: $('lEmail').value, senha: $('lSenha').value }); if (j.ok) painel(); else { $('lMsg').className = 'msg erro'; $('lMsg').textContent = j.error; } };
 $('esqueci').onclick = async () => { if (!$('lEmail').value) { $('lMsg').className = 'msg erro'; $('lMsg').textContent = 'Digite o seu e-mail acima.'; return; } await api('esqueci', { email: $('lEmail').value }); $('lMsg').className = 'msg ok'; $('lMsg').textContent = 'Se este e-mail for de um afiliado, o link para criar a senha chegou na sua caixa.'; };
 $('sair').onclick = async () => { await api('sair', {}); location.href = '/afiliado/'; };
 const tk = new URLSearchParams(location.search).get('criar');
+let CONVITE = new URLSearchParams(location.search).get('convite') || '';
+fetch('/api/conta.php?a=oferta').then((r) => r.json()).then((o) => { if (o && o.checkout_url) $('cAssinar').href = o.checkout_url; }).catch(() => {});
 if (tk) {
   api('token&t=' + encodeURIComponent(tk)).then((j) => { ver('vSenha'); if (!j.ok) { $('sMsg').className = 'msg erro'; $('sMsg').textContent = 'Este link venceu. Volte e toque em "Esqueci a senha".'; } else $('sSub').textContent = `Olá${j.nome ? ', ' + j.nome.split(' ')[0] : ''}! Crie a senha do painel (${j.email}).`; });
   $('fSenha').onsubmit = async (e) => { e.preventDefault(); const j = await api('criar-senha', { t: tk, senha: $('sSenha').value }); if (j.ok) { history.replaceState(null, '', '/afiliado/'); painel(); } else { $('sMsg').className = 'msg erro'; $('sMsg').textContent = j.error; } };
+} else if (CONVITE) {
+  api('convite&t=' + encodeURIComponent(CONVITE)).then((j) => {
+    ver('vCadastro');
+    if (j.ok) { $('cExcl').hidden = true; $('cConv').hidden = false; if (j.nome) $('cNome').value = j.nome; $('cSenhaRot').innerHTML = 'Crie uma senha <small>(8 ou mais, com letras e números)</small>'; $('cSenha').autocomplete = 'new-password'; }
+    else { CONVITE = ''; $('cMsg').className = 'msg erro'; $('cMsg').textContent = 'Este convite venceu ou já foi usado. Peça um novo para quem te convidou.'; }
+  });
 } else if (new URLSearchParams(location.search).has('cadastro')) { api('painel').then((j) => (j.ok ? painel() : ver('vCadastro'))); } else painel();
 </script>
 </body>

@@ -18,7 +18,20 @@ function af_db(): PDO {
   if (!in_array('origem', $cols, true)) $db->exec("ALTER TABLE afiliados ADD COLUMN origem TEXT NOT NULL DEFAULT 'admin'");
   $cols = array_column($db->query('PRAGMA table_info(sales)')->fetchAll(), 'name');
   if (!in_array('afiliado_id', $cols, true)) $db->exec('ALTER TABLE sales ADD COLUMN afiliado_id INTEGER');
+  // convites: quem a gente convida vira afiliado sem precisar assinar (o cadastro aberto é só para assinantes)
+  $db->exec('CREATE TABLE IF NOT EXISTS af_convites (id INTEGER PRIMARY KEY AUTOINCREMENT, token TEXT NOT NULL UNIQUE, nome TEXT NOT NULL DEFAULT \'\',
+    criado_por INTEGER, created_at TEXT NOT NULL, exp TEXT NOT NULL, usado_em TEXT, afiliado_id INTEGER)');
   $ok = true; return $db;
+}
+function af_convite_criar(string $nome, ?int $adminId, int $dias = 30): string {
+  $t = token();
+  af_db()->prepare('INSERT INTO af_convites (token, nome, criado_por, created_at, exp) VALUES (?, ?, ?, ?, ?)')
+    ->execute([hash('sha256', $t), trim($nome), $adminId, now(), date('Y-m-d H:i:s', time() + $dias * 86400)]);
+  return site_url() . '/afiliado/?convite=' . $t;
+}
+function af_convite_valido(string $t): ?array {
+  if ($t === '') return null;
+  $q = af_db()->prepare('SELECT * FROM af_convites WHERE token = ? AND usado_em IS NULL AND exp > ?'); $q->execute([hash('sha256', $t), now()]); return $q->fetch() ?: null;
 }
 function af_codigo_limpo(string $c): string { return mb_strtolower(preg_replace('/[^a-zA-Z0-9_-]/', '', $c)); }
 function af_by_codigo(string $c): ?array {
