@@ -581,6 +581,12 @@ function closePop(fromBack) {
 }
 addEventListener('popstate', () => closePop(true));
 addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(); });
+// computador: barra de espaço dá play/pause no estúdio (fora de campos de texto)
+const spaceOk = (e) => (e.code === 'Space' || e.key === ' ') && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey
+  && !(e.target.closest && e.target.closest('input:not([type=range]):not([type=checkbox]),textarea,select,[contenteditable]'))
+  && $('studio') && $('studio').offsetParent !== null && !$('play').disabled;
+addEventListener('keydown', (e) => { if (!spaceOk(e)) return; e.preventDefault(); $('play').click(); });
+addEventListener('keyup', (e) => { if ((e.code === 'Space' || e.key === ' ') && spaceOk(e)) e.preventDefault(); }); // sem o "clique" do botão em foco
 $('expandBtn').onclick = () => (isPop() ? closePop() : openPop());
 $('popClose').onclick = () => closePop();
 $('popPlay').onclick = () => $('play').click();
