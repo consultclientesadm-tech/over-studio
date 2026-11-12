@@ -12,7 +12,8 @@
   window.scLog = (k, d) => {
     if (++nLog > 60) return;
     const c = navigator.connection || {};
-    const body = JSON.stringify({ k, d: { ...d, mem: navigator.deviceMemory || 0, net: c.effectiveType || '' } });
+    const cp = (window.scCompat && window.scCompat.info) || {};
+    const body = JSON.stringify({ k, d: { ...d, mem: navigator.deviceMemory || 0, net: c.effectiveType || '', forca: cp.score || 0, compat: cp.nivel || '', modelo: cp.modelo || '' } });
     try { fetch('/api/conta.php?a=evento', { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-SC': '1' }, body }).catch(() => {}); } catch {}
   };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -20,6 +21,7 @@
 .sc-conta{display:flex;align-items:center;gap:6px;margin-left:4px}
 .sc-chip{height:30px;min-width:30px;border-radius:20px;border:1px solid #33333c;background:#111116;color:#fff;font:700 12px 'Space Grotesk',sans-serif;display:inline-flex;align-items:center;gap:6px;padding:0 9px;cursor:pointer;position:relative}
 .sc-chip.y{border-color:#ffd400;color:#ffd400}
+@media(max-width:430px){.sc-it{display:none}.sc-conta{gap:4px}}
 .sc-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 8px #ff4d5e}
 .sc-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:end center;padding:12px;animation:scf .2s}
 @media(min-width:700px){.sc-ov{place-items:center}}
@@ -66,7 +68,9 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   const shareIcon = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3b9cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
   const addIcon = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>';
   async function install() {
-    if (deferred) { deferred.prompt(); const r = await deferred.userChoice; deferred = null; render(); if (r.outcome === 'accepted') toast('Pronto!', 'O Studio Cover está na sua tela de início.'); return; }
+    if (deferred) { // o Chrome só abre a janela de instalar com um toque da pessoa; sem toque cai nas instruções abaixo
+      try { await deferred.prompt(); const r = await deferred.userChoice; deferred = null; render(); if (r.outcome === 'accepted') toast('Pronto!', 'O Studio Cover está na sua tela de início.'); return; } catch (e) {}
+    }
     if (ios) {
       const safari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|Instagram|FBAN|FBAV/.test(navigator.userAgent);
       sheet(`<h3>Instalar no iPhone</h3><p>Deixe o Studio Cover na tela de início, igual a um aplicativo.</p>
@@ -116,6 +120,17 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   }
   window.scGate = async (file) => {
     if (!me) return false;
+    if (window.scCompat && !(await window.scCompat.confirmar())) return false; // aparelho incompatível: avisa antes de gastar o teste
+    if (window.scCompat && window.scCompat.inApp && !(() => { try { return sessionStorage.getItem('sc-inapp-ok'); } catch (e) { return null; } })()) { // navegador do Instagram/Facebook: costuma fechar no meio e não deixa baixar
+      const ok = await new Promise((res) => {
+        const nav = ios ? 'Safari' : 'Chrome';
+        const s = sheet(`<h3>Abra no ${nav} antes de começar</h3><p>Você está no navegador do ${esc(window.scCompat.inApp)}. Ele tem pouca memória (o vídeo pode parar no meio) e não deixa baixar o vídeo pronto.</p>
+          <button class="sc-b" data-fora>ABRIR NO ${nav.toUpperCase()}</button><button class="sc-b2" data-mesmo>Tentar aqui mesmo assim</button>`, () => res(false));
+        s.el.querySelector('[data-fora]').onclick = () => { s.close(); window.scCompat.abrirFora(); };
+        s.el.querySelector('[data-mesmo]').onclick = () => { try { sessionStorage.setItem('sc-inapp-ok', '1'); } catch (e) {} s.el.remove(); res(true); };
+      });
+      if (!ok) return false;
+    }
     const audio = /^audio\//.test(file.type) || /\.(mp3|m4a|aac|wav|ogg|flac|opus)$/i.test(file.name || '');
     try {
       const j = await api('usar', { tipo: audio ? 'audio' : 'video', mb: Math.round(file.size / 1048576) });
@@ -180,6 +195,8 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       ${standalone ? '' : '<a class="sc-li" data-m="instalar"><i>📲</i>Instalar na tela de início</a>'}
       ${podePush && !pushLigado() ? '<a class="sc-li" data-m="push"><i>🔕</i>Ligar avisos no celular</a>' : ''}
       ${whats ? `<a class="sc-li" href="https://wa.me/${esc(whats.replace(/\D/g, ''))}" target="_blank" rel="noopener"><i>💬</i>Suporte no WhatsApp</a>` : ''}
+      <a class="sc-li" data-m="aparelho"><i>📱</i>Meu aparelho é compatível?</a>
+      <a class="sc-li" data-m="dados"><i>🔒</i>Privacidade e meus dados</a>
       <a class="sc-li" data-m="sair"><i>↩</i>Sair da conta</a>`);
     document.querySelectorAll('.sc-li[data-m]').forEach((a) => (a.onclick = async () => {
       document.querySelector('.sc-ov')?.remove();
@@ -187,7 +204,41 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       if (a.dataset.m === 'instalar') install();
       if (a.dataset.m === 'push') ativarPush();
       if (a.dataset.m === 'sair') { await api('sair', {}); location.href = '/entrar/'; }
+      if (a.dataset.m === 'aparelho') aparelho();
+      if (a.dataset.m === 'dados') meusDados();
     }));
+  }
+
+  async function aparelho() {
+    const c = window.scCompat; if (!c) return;
+    const i = await c.ready.catch(() => c.info);
+    if (i.nivel !== 'ok') return c.modal();
+    sheet(`<h3>✓ Aparelho compatível</h3><p>Testamos este aparelho e ele dá conta do Studio Cover. Dica: feche outros apps antes de processar vídeos longos.</p><button class="sc-b2" data-fechar>Fechar</button>`);
+  }
+  // LGPD: ver a política, baixar uma cópia dos dados, sair dos e-mails, apagar a conta
+  function meusDados() {
+    const s = sheet(`<h3>Privacidade e meus dados</h3>
+      <p>Seus vídeos nunca saem do seu aparelho: todo o processamento acontece aqui. Guardamos só o necessário para a sua conta funcionar (nome, e-mail, compras e o uso do app).</p>
+      <a class="sc-li" href="/privacidade/" target="_blank"><i>📄</i>Política de privacidade</a>
+      <a class="sc-li" href="/termos/" target="_blank"><i>📜</i>Termos de uso</a>
+      <a class="sc-li" href="/api/conta.php?a=meus-dados" download="meus-dados-studio-cover.json"><i>⬇️</i>Baixar uma cópia dos meus dados</a>
+      <a class="sc-li" data-apagar><i>🗑️</i><span style="color:#ff8a95">Apagar minha conta</span></a>`);
+    s.el.querySelector('[data-apagar]').onclick = () => { s.close(); apagar(); };
+  }
+  function apagar() {
+    const s = sheet(`<h3>Apagar minha conta</h3>
+      <p>Isto apaga o seu nome, e-mail, senha, avisos e o histórico do app, e você perde o acesso na hora. Não dá para desfazer.</p>
+      ${me.paid ? '<p><b>Você tem a assinatura ativa.</b> Apagar a conta não cancela a cobrança: cancele a renovação na Eduzz (no e-mail da compra, ou em "Minhas compras" da Eduzz) antes de apagar.</p>' : ''}
+      <p style="font-size:12.5px">Os registros de compra ficam guardados pelo prazo da lei (obrigação fiscal), sem o seu nome.</p>
+      <input type="password" id="scApSenha" placeholder="Digite a sua senha para confirmar" autocomplete="current-password" style="width:100%;height:48px;border-radius:14px;border:1px solid #33333c;background:#0b0b0f;color:#fff;font:500 16px 'Space Grotesk',sans-serif;padding:0 14px;margin-top:8px">
+      <p id="scApMsg" style="color:#ff8a95;min-height:18px"></p>
+      <button class="sc-b" data-ok style="background:#ff4d5e;color:#fff">APAGAR MINHA CONTA</button><button class="sc-b2" data-fechar>Cancelar</button>`);
+    s.el.querySelector('[data-ok]').onclick = async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try { const j = await api('apagar-conta', { senha: s.el.querySelector('#scApSenha').value }); if (j.ok) { location.href = '/entrar/?apagada'; return; } s.el.querySelector('#scApMsg').textContent = j.error || 'Não deu certo.'; }
+      catch { s.el.querySelector('#scApMsg').textContent = 'Sem conexão.'; }
+      b.disabled = false;
+    };
   }
 
   function render() {
@@ -195,7 +246,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     let box = document.querySelector('.sc-conta');
     if (!box) { box = document.createElement('div'); box.className = 'sc-conta'; top.appendChild(box); }
     const trial = me.trial && !me.paid;
-    box.innerHTML = `${!standalone && (deferred || ios || android) ? '<button class="sc-chip y" data-i>📲 Instalar</button>' : ''}
+    box.innerHTML = `${!standalone && (deferred || ios || android) ? '<button class="sc-chip y" data-i aria-label="Instalar">📲<span class="sc-it"> Instalar</span></button>' : ''}
       ${trial ? (me.can_use ? `<button class="sc-chip y" data-t title="Teste grátis">🎁 ${Math.max(0, me.trial_left)}</button>` : '<button class="sc-chip y" data-t title="Liberar acesso">🔒 Liberar</button>') : ''}
       <button class="sc-chip" data-c aria-label="Minha conta">${esc((me.name || me.email || '?').trim()[0].toUpperCase())}${unread ? '<span class="sc-dot"></span>' : ''}</button>`;
     box.querySelector('[data-i]')?.addEventListener('click', install);

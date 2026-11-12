@@ -309,11 +309,13 @@ switch ($a) {
     foreach ($ev as $e) {
       $k = $e['kind']; $cnt[$k] = ($cnt[$k] ?? 0) + 1; $d = json_decode((string)$e['data'], true) ?: [];
       $ap = ua_short((string)$e['ua']);
-      $disp[$ap] ??= ['aparelho' => $ap, 'inicio' => 0, 'abriu' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0];
+      if (!empty($d['modelo'])) $ap = preg_replace('/^[^·]+/', mb_substr((string)$d['modelo'], 0, 40) . ' ', $ap, 1); // o Chrome esconde o modelo no user agent ("K"); o app manda o modelo de verdade
+      $disp[$ap] ??= ['aparelho' => $ap, 'inicio' => 0, 'abriu' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0, 'forca' => 0, 'compat' => ''];
+      if (!empty($d['forca'])) { $disp[$ap]['forca'] = max($disp[$ap]['forca'], (int)$d['forca']); $disp[$ap]['compat'] = (string)($d['compat'] ?? ''); }
       if (isset($disp[$ap][$k])) $disp[$ap][$k]++;
       if ($k === 'abriu' && !empty($d['seg'])) $seg[] = (int)$d['seg'];
       if ($k === 'inicio') $pessoas[$e['user_id']] = 1;
-      if (($k === 'erro' || $k === 'fechou') && count($prob) < 30) $prob[] = ['quando' => $e['created_at'], 'tipo' => $k, 'nome' => $e['name'], 'email' => $e['email'], 'aparelho' => $ap, 'etapa' => $d['etapa'] ?? '', 'msg' => $d['msg'] ?? '', 'mb' => $d['mb'] ?? '', 'mem' => $d['mem'] ?? ''];
+      if (($k === 'erro' || $k === 'fechou') && count($prob) < 30) $prob[] = ['quando' => $e['created_at'], 'tipo' => $k, 'nome' => $e['name'], 'email' => $e['email'], 'aparelho' => $ap, 'etapa' => $d['etapa'] ?? '', 'msg' => $d['msg'] ?? '', 'mb' => $d['mb'] ?? '', 'mem' => $d['mem'] ?? '', 'forca' => $d['forca'] ?? '', 'compat' => $d['compat'] ?? ''];
     }
     sort($seg); $med = $seg ? $seg[intdiv(count($seg), 2)] : 0;
     usort($disp, fn($a, $b) => $b['inicio'] <=> $a['inicio']);

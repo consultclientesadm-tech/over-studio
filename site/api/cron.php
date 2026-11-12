@@ -11,5 +11,11 @@ if (PHP_SAPI !== 'cli') {
 }
 $r = run_funnel(in_array('--agora', $argv ?? [], true));
 set_setting('cron_last', now());
+// LGPD: não guarda dado além do necessário (prazos na Política de privacidade)
+try {
+  app_events_db()->prepare('DELETE FROM app_events WHERE created_at < ?')->execute([date('Y-m-d H:i:s', time() - 180 * 86400)]);
+  db()->prepare('DELETE FROM webhooks WHERE created_at < ?')->execute([date('Y-m-d H:i:s', time() - 365 * 86400)]);
+  db()->prepare('DELETE FROM attempts WHERE at < ?')->execute([time() - 2 * 86400]);
+} catch (Throwable $e) {}
 $r['vigia'] = health_run();
 echo json_encode($r, JSON_UNESCAPED_UNICODE), "\n";

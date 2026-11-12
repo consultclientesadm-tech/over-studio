@@ -363,6 +363,7 @@ footer a { color: #888; }
 .cookies{position:fixed;left:12px;right:12px;bottom:84px;z-index:60;max-width:520px;margin:0 auto;background:rgba(10,10,18,.94);border:1px solid rgba(255,212,0,.25);border-radius:14px;padding:12px 14px;font-size:13px;color:#cfcfd8;display:flex;flex-wrap:wrap;align-items:center;gap:8px;backdrop-filter:blur(8px)}.cookies[hidden]{display:none}.cookies button{border:0;border-radius:999px;padding:7px 14px;font:600 13px 'Space Grotesk',sans-serif;background:var(--y);color:#000;cursor:pointer}.cookies .nao{background:transparent;color:#9a9aa6;border:1px solid #333}
 </style>
 <script>document.documentElement.classList.add('js');</script>
+<script src="/assets/compat.js?v=1" defer></script>
 </head>
 <body>
 <div class="bg"><canvas id="ceu"></canvas><i></i></div>
@@ -528,7 +529,7 @@ footer a { color: #888; }
       <li>Todas as atualizações do período</li>
     </ul>
     <div class="preco" id="preco" hidden><span class="de" id="precoDe"></span><span class="por" id="precoPor"></span><span class="vista" id="precoVista" hidden></span><span class="mini" id="precoObs">assinatura anual · acesso por 12 meses</span></div>
-    <a class="btn full" href="#" id="comprar" style="margin-top:18px">Quero o Studio Cover</a>
+    <a class="btn full" href="#" id="comprar" data-compat style="margin-top:18px">Quero o Studio Cover</a>
     <p class="mini" style="margin:12px 0 0">🔒 Compra segura pela Eduzz · Pix, cartão ou boleto · Acesso chega no seu e-mail</p>
     <div class="garantia"><div class="selo">7<small>DIAS</small></div><p><b>Garantia incondicional de 7 dias.</b> Testou e não gostou? Devolvemos 100% do seu dinheiro. Sem perguntas.</p></div>
     <a class="presente em-oferta" href="/entrar/?teste" data-teste hidden><span class="laco" aria-hidden="true">🎁</span><span class="ptx"><small>Presente para você</small><b>Você ganhou um teste grátis!</b><i>Teste o Studio Cover com <span data-tv>2</span> <span data-tvp>vídeos seus</span>. Sem cartão.</i></span><span class="pir">Resgatar meu teste grátis →</span></a>
@@ -539,7 +540,8 @@ footer a { color: #888; }
 <section><div class="w">
   <div class="c rv"><h2 class="h2">Perguntas frequentes</h2></div>
   <div class="faq">
-    <details><summary>Preciso de computador ou de algum equipamento?</summary><p>Não. Funciona direto no navegador do celular (iPhone 13 ou mais novo, ou Android com 4 GB de memória) e também no computador. Dá para instalar na tela de início como um app.</p></details>
+    <details><summary>Preciso de computador ou de algum equipamento?</summary><p>Não. Funciona direto no navegador do celular e também no computador. Dá para instalar na tela de início como um app.</p></details>
+    <details id="faqAparelho"><summary>Meu celular é compatível?</summary><p>A inteligência artificial roda dentro do seu aparelho, então ele precisa ter força. Funciona bem em: iPhone 13 ou mais novo (com o iOS atualizado); Android intermediário ou top de linha, com 6 GB de memória ou mais (ex.: Galaxy A54, S21 ou mais novos); e computador com Chrome, Edge ou Safari. Celulares de entrada (ex.: Galaxy A03, A12, A13, J e M de entrada) não dão conta. <b id="meuAparelho">Esta página testa o seu aparelho sozinha e avisa se ele não for compatível.</b></p></details>
     <details><summary>A voz vai ficar com efeito robô?</summary><p>Não. A afinação é nota por nota, mantendo o seu vibrato e o seu jeito de cantar. Você ainda pode ajustar cada nota no painel.</p></details>
     <details><summary>Funciona com violão, teclado ou playback?</summary><p>Sim. A IA separa a sua voz da base, seja violão, teclado, banda ou playback. Também dá para usar uma gravação só de voz.</p></details>
     <details><summary>O vídeo perde qualidade?</summary><p>Não. O vídeo sai na mesma resolução e qualidade do original, com o som tratado e a cor que você escolher.</p></details>
@@ -557,9 +559,9 @@ footer a { color: #888; }
   <a class="btn" href="#oferta" data-cta style="margin-top:18px">Quero o Studio Cover</a>
 </div></section>
 
-<footer><div class="w"><div class="afil"><b>Quer ganhar dinheiro com o Studio Cover?</b><p>Seja afiliado: divulgue no seu Instagram e ganhe 50% de comissão em cada venda.</p><a class="ba" href="/afiliados/">Quero ser afiliado →</a></div>Studio Cover · <a href="/entrar/">Área do aluno</a><br><span id="suporte"></span><p style="margin:14px auto 0;max-width:640px;font-size:11.5px;color:#4a4a55">Instagram, TikTok e YouTube são marcas de seus respectivos donos. O Studio Cover não é afiliado, patrocinado nem endossado por essas empresas.</p></div></footer>
-<div class="cookies" id="cookies" hidden>Usamos cookies e o Pixel da Meta para medir os anúncios. <button id="ckOk">Ok</button><button id="ckNao" class="nao">Não aceito</button></div>
-<div class="fixa" id="fixa"><a class="btn gift" href="/entrar/?teste" data-teste hidden>🎁 Teste grátis</a><a class="btn" href="#oferta">Quero o Studio Cover</a></div>
+<footer><div class="w"><div class="afil"><b>Quer ganhar dinheiro com o Studio Cover?</b><p>Seja afiliado: divulgue no seu Instagram e ganhe 50% de comissão em cada venda.</p><a class="ba" href="/afiliados/">Quero ser afiliado →</a></div>Studio Cover · <a href="/entrar/">Área do aluno</a> · <a href="/termos/">Termos de uso</a> · <a href="/privacidade/">Privacidade</a><br><span id="suporte"></span><p style="margin:14px auto 0;max-width:640px;font-size:11.5px;color:#4a4a55">Instagram, TikTok e YouTube são marcas de seus respectivos donos. O Studio Cover não é afiliado, patrocinado nem endossado por essas empresas.</p></div></footer>
+<div class="cookies" id="cookies" hidden><span>Usamos cookies e o Pixel da Meta para medir os anúncios. <a href="/privacidade/" style="color:inherit">Saiba mais</a></span> <button id="ckOk">Ok</button><button id="ckNao" class="nao">Não aceito</button></div>
+<div class="fixa" id="fixa"><a class="btn gift" href="/entrar/?teste" data-teste data-compat hidden>🎁 Teste grátis</a><a class="btn" href="#oferta">Quero o Studio Cover</a></div>
 
 <script>
 (() => {
@@ -669,6 +671,10 @@ footer a { color: #888; }
     vw.querySelector('.capa').remove(); $('play').remove(); vw.appendChild(v); v.play().catch(() => {});
   };
 
+  // FAQ do aparelho: mostra o resultado do teste deste celular
+  addEventListener('load', () => { const c = window.scCompat; if (!c) return; c.ready.then((i) => { const b = $('meuAparelho'); if (!b) return;
+    b.textContent = i.nivel === 'ok' ? '✓ Testamos o seu aparelho: ele é compatível.' : i.nivel === 'fraco' ? '⚠️ Testamos o seu aparelho: ele está no limite, pode demorar ou fechar no meio. Se puder, use o computador.' : '⛔ Testamos o seu aparelho: ele não é compatível. Use pelo computador ou por um celular mais novo.';
+    b.style.color = i.nivel === 'ok' ? '#2ee59d' : i.nivel === 'fraco' ? '#ffd400' : '#ff8a95'; }); });
   // oferta: preço e checkout vêm do painel
   // link de afiliado (?af=CODIGO): conta o clique, guarda 60 dias e a compra vai pelo link de afiliado dele
   let af = '';

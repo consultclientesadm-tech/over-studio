@@ -96,6 +96,10 @@ CREATE TABLE IF NOT EXISTS attempts (key TEXT NOT NULL, at INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS attempts_key ON attempts(key, at);
 CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT NOT NULL);
 SQL);
+  // LGPD: quando e em qual versão dos termos/política a pessoa deu o aceite
+  $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
+  if (!in_array('aceite_at', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN aceite_at TEXT');
+  if (!in_array('aceite_ver', $cols, true)) $db->exec("ALTER TABLE users ADD COLUMN aceite_ver TEXT NOT NULL DEFAULT ''");
 }
 
 // ---------- configurações editáveis no painel ----------
@@ -123,6 +127,9 @@ const SETTINGS_DEFAULT = [
   'af_comissao_pct' => '50',         // comissão do afiliado na Eduzz (% do valor já sem a taxa)
   'meta_vendas_dia' => '3',         // meta de vendas por dia (para o medidor de saúde do painel)
   'af_tutorial_url' => '',           // vídeo do passo a passo no painel do afiliado (https)
+  'empresa_nome' => '',              // LGPD: razão social ou nome de quem vende (aparece na Política de privacidade e nos Termos)
+  'empresa_doc' => '',               // CNPJ ou CPF de quem vende
+  'dpo_email' => 'contato@studiocover.com.br', // e-mail do encarregado de dados (LGPD): pedidos de acesso, correção e exclusão
 ];
 function setting(string $k): string {
   static $cache = null;
@@ -309,3 +316,37 @@ function set_password_link(array $u, int $days = 7): string {
 require_once __DIR__ . '/mail.php';
 require_once __DIR__ . '/push.php';
 require_once __DIR__ . '/afiliados.php';
+
+// ---------- LGPD ----------
+const LGPD_VERSAO = '2026-11-12'; // mude quando os Termos ou a Política mudarem de verdade
+function registra_aceite(int $uid): void {
+  db()->prepare('UPDATE users SET aceite_at = ?, aceite_ver = ? WHERE id = ?')->execute([now(), LGPD_VERSAO, $uid]);
+}
+// cópia dos dados da pessoa (direito de acesso e portabilidade, art. 18 da LGPD)
+function lgpd_exportar(array $u): array {
+  $db = db(); $id = (int)$u['id'];
+  $rows = function (string $sql) use ($db, $id) { try { $q = $db->prepare($sql); $q->execute([$id]); return $q->fetchAll(); } catch (Throwable $e) { return []; } };
+  $conta = array_diff_key($u, array_flip(['pass_hash', 'token', 'token_exp', 'unsub_token']));
+  return ['gerado_em' => now(), 'controlador' => setting('empresa_nome') ?: 'Studio Cover', 'contato' => setting('dpo_email'),
+    'conta' => $conta,
+    'compras' => $rows('SELECT trans, product, value, status, created_at FROM sales WHERE user_id = ? ORDER BY id'),
+    'videos_processados' => $rows('SELECT kind, mb, created_at FROM usage WHERE user_id = ? ORDER BY id'),
+    'diario_do_app' => $rows('SELECT kind, data, ua, created_at FROM app_events WHERE user_id = ? ORDER BY id'),
+    'avisos' => $rows('SELECT title, body, created_at, read_at FROM notifications WHERE user_id = ? ORDER BY id'),
+    'emails_enviados' => $rows('SELECT kind, subject, created_at FROM emails WHERE user_id = ? ORDER BY id'),
+    'aparelhos_com_notificacao' => $rows('SELECT ua, created_at FROM push_subs WHERE user_id = ?'),
+    'observacao' => 'Seus vídeos e áudios nunca foram enviados para nós: todo o processamento acontece no seu aparelho.'];
+}
+// apaga a conta: some com nome, e-mail, senha, avisos, diário e notificações. As vendas ficam guardadas
+// (obrigação legal e fiscal, art. 16 da LGPD), presas a uma conta sem nome.
+function lgpd_apagar(array $u): void {
+  $db = db(); $id = (int)$u['id']; $email = (string)$u['email'];
+  $db->beginTransaction();
+  $db->prepare("UPDATE users SET email = ?, name = 'Conta apagada (LGPD)', phone = '', pass_hash = NULL, token = NULL, token_exp = NULL, unsub_token = NULL, unsub = 1, status = 'blocked', funnel_step = 999 WHERE id = ?")
+    ->execute(["apagado-$id@apagado.invalid", $id]);
+  foreach (['DELETE FROM notifications WHERE user_id = ?', 'UPDATE emails SET email = NULL WHERE user_id = ?'] as $sql) $db->prepare($sql)->execute([$id]);
+  foreach (['DELETE FROM app_events WHERE user_id = ?', 'DELETE FROM push_subs WHERE user_id = ?'] as $sql) { try { $db->prepare($sql)->execute([$id]); } catch (Throwable $e) {} }
+  $db->prepare('DELETE FROM attempts WHERE key LIKE ?')->execute(['%:' . $email]);
+  $db->commit();
+}
+

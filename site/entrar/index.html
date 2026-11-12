@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex">
 <title>Entrar · Studio Cover</title>
 <link rel="icon" href="/assets/logo.svg">
+<script src="/assets/compat.js?v=1" defer></script>
 <link rel="apple-touch-icon" href="/assets/icon-180.png">
 <link rel="manifest" href="/app/manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,6 +43,10 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
 .teste b { color: var(--y); }
 [hidden] { display: none !important; }
 .rodape { text-align: center; color: #55555f; font-size: 12px; margin-top: 22px; }
+.rodape a { color: #8a8a96; }
+.aceite { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 0; font-size: 12.5px; color: var(--mut); line-height: 1.45; letter-spacing: 0; cursor: pointer; }
+.aceite input { width: 20px; height: 20px; flex: none; margin: 0; accent-color: #ffd400; padding: 0; }
+.aceite a { color: var(--y); }
 .card { animation: sobe .6s cubic-bezier(.2,.8,.2,1) both .15s; } .marca, h1, .tag { animation: sobe .6s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes sobe { from { opacity: 0; transform: translateY(18px); } }
 </style>
@@ -72,6 +77,7 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
     <label for="cNome">Seu nome</label><input id="cNome" autocomplete="name" required>
     <label for="cEmail">E-mail</label><input id="cEmail" type="email" autocomplete="email" inputmode="email" required>
     <label for="cSenha">Crie uma senha</label><div class="senha"><input id="cSenha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver">mostrar</button></div>
+    <label class="aceite"><input type="checkbox" id="cAceite"> <span>Li e aceito os <a href="/termos/" target="_blank">Termos de uso</a> e a <a href="/privacidade/" target="_blank">Política de privacidade</a>, inclusive receber e-mails e avisos sobre a minha conta (posso sair quando quiser).</span></label>
     <button class="btn" type="submit">COMEÇAR O TESTE</button>
     <div class="msg" role="status"></div>
     <div class="links"><button type="button" class="link" data-ir="fLogin">← Já tenho conta</button></div>
@@ -84,6 +90,7 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
     <label for="nSenha">Nova senha</label><div class="senha"><input id="nSenha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver">mostrar</button></div>
     <label for="nSenha2">Repita a senha</label><input id="nSenha2" type="password" autocomplete="new-password" required>
     <p class="sub" style="margin:10px 0 0">Mínimo de 8 caracteres, com letras e números.</p>
+    <label class="aceite"><input type="checkbox" id="nAceite"> <span>Li e aceito os <a href="/termos/" target="_blank">Termos de uso</a> e a <a href="/privacidade/" target="_blank">Política de privacidade</a>, inclusive receber e-mails e avisos sobre a minha conta (posso sair quando quiser).</span></label>
     <button class="btn" type="submit">CRIAR E ENTRAR</button>
     <div class="msg" role="status"></div>
   </form>
@@ -98,6 +105,7 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
     <div class="links"><button type="button" class="link" data-ir="fLogin">← Voltar</button></div>
   </form>
   <p class="rodape" id="suporte"></p>
+  <p class="rodape"><a href="/termos/">Termos de uso</a> · <a href="/privacidade/">Privacidade</a></p>
 </div></main>
 <script src="/assets/marca.js"></script>
 <script>
@@ -123,13 +131,19 @@ async function send(form, action, body, after) {
   btn.disabled = false;
 }
 $('fLogin').onsubmit = (e) => { e.preventDefault(); send('fLogin', 'login', { email: $('lEmail').value, senha: $('lSenha').value }, go); };
-$('fCadastro').onsubmit = (e) => { e.preventDefault(); send('fCadastro', 'cadastro', { nome: $('cNome').value, email: $('cEmail').value, senha: $('cSenha').value }, go); };
+$('fCadastro').onsubmit = async (e) => {
+  e.preventDefault();
+  if (!$('cAceite').checked) return msg('fCadastro', 'Marque que leu e aceita os Termos e a Política de privacidade.');
+  if (window.scCompat && !(await window.scCompat.confirmar())) return;
+  send('fCadastro', 'cadastro', { nome: $('cNome').value, email: $('cEmail').value, senha: $('cSenha').value, aceite: 1 }, go);
+};
 $('fEsqueci').onsubmit = (e) => { e.preventDefault(); send('fEsqueci', 'esqueci', { email: $('eEmail').value }, () => msg('fEsqueci', 'Se este e-mail tiver cadastro, o link chega em alguns minutos. Olhe também o spam.', true)); };
 const params = new URLSearchParams(location.search), tok = params.get('criar');
 $('fCriar').onsubmit = (e) => {
   e.preventDefault();
   if ($('nSenha').value !== $('nSenha2').value) return msg('fCriar', 'As duas senhas não são iguais.');
-  send('fCriar', 'criar-senha', { t: tok, senha: $('nSenha').value }, () => { history.replaceState(null, '', '/entrar/'); go(); });
+  if (!$('nAceite').checked) return msg('fCriar', 'Marque que leu e aceita os Termos e a Política de privacidade.');
+  send('fCriar', 'criar-senha', { t: tok, senha: $('nSenha').value, aceite: 1 }, () => { history.replaceState(null, '', '/entrar/'); go(); });
 };
 (async () => {
   const me = await api('me');
@@ -140,6 +154,7 @@ $('fCriar').onsubmit = (e) => {
     else { msg('fCriar', 'Este link venceu ou já foi usado. Peça um novo em "Esqueci a senha".'); $('fCriar').querySelector('.btn').disabled = true; }
     return;
   }
+  if (params.has('apagada')) msg('fLogin', 'Sua conta foi apagada. Obrigado por ter usado o Studio Cover.', true);
   if (me.user) return go();
   if (me.trial_enabled) {
     $('irTeste').hidden = false; $('boxTeste').hidden = false;

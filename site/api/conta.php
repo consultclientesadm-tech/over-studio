@@ -36,11 +36,13 @@ switch ($a) {
     if (!valid_email($email)) fail('Confira o seu e-mail.');
     if ($name === '') fail('Digite o seu nome.');
     if ($e = strong_password($pass)) fail($e);
+    if (!arg('aceite')) fail('Marque que leu e aceita os Termos e a Política de privacidade.');
     $q = db()->prepare('SELECT * FROM users WHERE email = ?'); $q->execute([$email]);
     if ($q->fetch()) fail('Este e-mail já tem cadastro. Entre com a sua senha ou use "Esqueci a senha".');
     $u = upsert_user($email, $name, ['status' => 'trial', 'source' => 'trial', 'trial_left' => (int)setting('trial_videos')]);
     db()->prepare('UPDATE users SET pass_hash = ?, last_login = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), now(), $u['id']]);
     if ($af = af_visitante()) af_db()->prepare('UPDATE users SET afiliado_id = ? WHERE id = ?')->execute([$af['id'], $u['id']]); // lead do afiliado
+    registra_aceite((int)$u['id']);
     $q->execute([$email]); $u = $q->fetch();
     login_user($u);
     funnel_welcome($u);
@@ -79,6 +81,7 @@ switch ($a) {
     if ($e = strong_password($pass)) fail($e);
     $hash = password_hash($pass, PASSWORD_DEFAULT);
     db()->prepare('UPDATE users SET pass_hash = ?, token = NULL, token_exp = NULL, last_login = ? WHERE id = ?')->execute([$hash, now(), $u['id']]);
+    if (arg('aceite')) registra_aceite((int)$u['id']);
     $u['pass_hash'] = $hash;
     login_user($u);
     json_out(['ok' => true, 'user' => public_user($u)]);
@@ -100,6 +103,7 @@ switch ($a) {
     if ($e = strong_password($pass)) fail($e);
     $hash = password_hash($pass, PASSWORD_DEFAULT);
     db()->prepare('UPDATE users SET pass_hash = ?, last_login = ? WHERE id = ?')->execute([$hash, now(), $u['id']]);
+    if (arg('aceite')) registra_aceite((int)$u['id']);
     $u['pass_hash'] = $hash;
     login_user($u);
     json_out(['ok' => true, 'user' => public_user($u)]);
@@ -165,6 +169,25 @@ switch ($a) {
     json_out(['ok' => true]);
   }
 
+  case 'legal': { // quem é o controlador dos dados (Política de privacidade e Termos)
+    header('Cache-Control: public, max-age=300');
+    json_out(['ok' => true, 'empresa' => setting('empresa_nome'), 'doc' => setting('empresa_doc'), 'email' => setting('dpo_email') ?: setting('mail_from'), 'whatsapp' => setting('support_whatsapp'), 'versao' => LGPD_VERSAO]);
+  }
+  case 'meus-dados': { // LGPD: baixar uma cópia dos meus dados
+    $u = current_user(); if (!$u) fail('Entre na sua conta.', 401);
+    throttle('dados:' . $u['id'], 10, 3600);
+    header('Content-Disposition: attachment; filename="meus-dados-studio-cover.json"');
+    json_out(['ok' => true] + lgpd_exportar($u));
+  }
+  case 'apagar-conta': { // LGPD: apagar a minha conta (pede a senha de novo)
+    require_post();
+    $u = current_user(); if (!$u) fail('Entre na sua conta.', 401);
+    throttle('apagar:' . $u['id'], 5, 3600);
+    if (!password_verify((string)arg('senha'), (string)$u['pass_hash'])) fail('Senha errada.');
+    lgpd_apagar($u);
+    session(); unset($_SESSION['uid'], $_SESSION['uver']);
+    json_out(['ok' => true]);
+  }
   case 'sair-lista': { // link de descadastro do e-mail (GET)
     $t = (string)($_GET['t'] ?? '');
     if ($t !== '') db()->prepare('UPDATE users SET unsub = 1 WHERE unsub_token = ?')->execute([$t]);

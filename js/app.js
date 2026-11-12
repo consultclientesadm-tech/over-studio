@@ -178,7 +178,7 @@ try {
 try {
   const ua = navigator.userAgent, ios = ua.match(/OS (\d+)_\d+.* like Mac OS X/), mem = navigator.deviceMemory;
   const old = (ios && +ios[1] < 15) || (/Android/.test(ua) && mem && mem < 4);
-  if (old) { const r = $('req'); r.classList.add('warn'); r.textContent = 'Este aparelho parece abaixo do mínimo (iPhone 13 ou Android com 4 GB). Pode fechar no meio. Se puder, use um celular mais novo ou o computador.'; }
+  if (old && !window.scCompat) { const r = $('req'); r.classList.add('warn'); r.textContent = 'Este aparelho parece abaixo do mínimo (iPhone 13 ou Android com 4 GB). Pode fechar no meio. Se puder, use um celular mais novo ou o computador.'; }
 } catch {}
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
