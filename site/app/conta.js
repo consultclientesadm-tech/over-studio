@@ -7,6 +7,14 @@
     return r.json();
   };
   let me = null, unread = 0, whats = '';
+  // diário do app para o painel (vídeo começou, abriu, exportou, erro, fechou no meio)
+  let nLog = 0;
+  window.scLog = (k, d) => {
+    if (++nLog > 60) return;
+    const c = navigator.connection || {};
+    const body = JSON.stringify({ k, d: { ...d, mem: navigator.deviceMemory || 0, net: c.effectiveType || '' } });
+    try { fetch('/api/conta.php?a=evento', { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-SC': '1' }, body }).catch(() => {}); } catch {}
+  };
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const css = `
 .sc-conta{display:flex;align-items:center;gap:6px;margin-left:4px}

@@ -16,6 +16,12 @@ function health_check(): array {
   // venda paga na Eduzz sem aluno liberado
   $sem = (int)$one("SELECT COUNT(*) FROM sales s JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' AND s.created_at >= ? AND u.status <> 'active' AND NOT EXISTS (SELECT 1 FROM sales r WHERE r.user_id = s.user_id AND r.value < 0)", [$h24]);
   if ($sem) $p['acesso'] = "$sem venda(s) paga(s) nas últimas 24h com aluno sem acesso liberado.";
+  // app: vídeos que começam e não abrem no estúdio (o app avisa cada etapa)
+  $edb = app_events_db(); $h6 = date('Y-m-d H:i:s', time() - 6 * 3600);
+  $ini = (int)$one('SELECT COUNT(*) FROM app_events WHERE kind = ? AND created_at >= ?', ['inicio', $h6]);
+  $abr = (int)$one('SELECT COUNT(*) FROM app_events WHERE kind = ? AND created_at >= ?', ['abriu', $h6]);
+  $err = (int)$one("SELECT COUNT(*) FROM app_events WHERE kind IN ('erro', 'fechou') AND created_at >= ?", [$h6]);
+  if ($ini >= 3 && $abr < $ini * 0.5) $p['app'] = "No app, só $abr de $ini vídeos começados nas últimas 6h chegaram ao estúdio ($err erros ou travamentos). Veja \"O app está funcionando?\" no painel.";
   // checkout
   if (setting('checkout_url') === '') $p['checkout'] = 'O link do checkout da Eduzz está vazio nas Configurações. Ninguém consegue comprar.';
   // disco

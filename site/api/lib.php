@@ -239,6 +239,23 @@ function public_user(array $u): array {
     'videos_used' => (int)$u['videos_used']] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value')];
 }
 
+function app_events_db(): PDO {
+  static $ok = false; $db = db();
+  if (!$ok) { $db->exec('CREATE TABLE IF NOT EXISTS app_events (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, kind TEXT NOT NULL, data TEXT, ua TEXT, created_at TEXT NOT NULL); CREATE INDEX IF NOT EXISTS app_events_day ON app_events(created_at)'); $ok = true; }
+  return $db;
+}
+// aparelho legível a partir do user agent
+function ua_short(string $ua): string {
+  if (preg_match('/iPhone OS (\d+)_/', $ua, $m)) $d = 'iPhone · iOS ' . $m[1];
+  elseif (preg_match('/iPad/', $ua)) $d = 'iPad';
+  elseif (preg_match('/Android (\d+)[^;]*;\s*([^;)]+)/', $ua, $m)) $d = trim($m[2]) . ' · Android ' . $m[1];
+  elseif (preg_match('/Windows/', $ua)) $d = 'Windows';
+  elseif (preg_match('/Mac OS X/', $ua)) $d = 'Mac';
+  else $d = 'Outro';
+  $b = preg_match('/Instagram/', $ua) ? 'Instagram' : (preg_match('/FBAN|FBAV/', $ua) ? 'Facebook' : (preg_match('/CriOS|Chrome/', $ua) ? 'Chrome' : (preg_match('/Safari/', $ua) ? 'Safari' : '')));
+  return $d . ($b ? " · $b" : '');
+}
+
 // ---------- valores de venda: bruto (preço), taxa da Eduzz e líquido que cai para os sócios ----------
 function brnum(string $v): float { $v = preg_replace('/[^\d,.\-]/', '', $v); if (str_contains($v, ',')) $v = str_replace(['.', ','], ['', '.'], $v); return (float)$v; }
 function sale_net(float $value): array {

@@ -62,6 +62,26 @@ function contar(root) {
 // ---------- visão geral ----------
 let dias = 30;
 $('periodo').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; dias = +b.dataset.d; $('periodo').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadGeral(); };
+async function loadAppSaude() {
+  const j = await api('app-saude', null, '&dias=7'); if (!j.ok) return;
+  const c = j.cont, pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
+  const card = (cor, ico, rot, v, sub) => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div><b class="cnt" data-to="${+v || 0}" data-f="n">0</b><span>${sub}</span></div>`;
+  const tx = c.inicio ? c.abriu / c.inicio : 1, ruim = c.inicio >= 3 && tx < 0.7;
+  const min = (s) => (s >= 60 ? Math.floor(s / 60) + ' min ' + (s % 60) + ' s' : s + ' s');
+  $('appSaude').innerHTML = `<section class="bloco">
+    <div class="bh"><span class="tag ${ruim ? 'r' : 'g'}">🩺 O APP ESTÁ FUNCIONANDO?</span><small>últimos 7 dias · o próprio app avisa o que aconteceu com cada vídeo${j.desde ? ' (desde ' + dt(j.desde) + ')' : ''}</small></div>
+    ${!c.inicio ? `<div class="vigia"><b>Ainda sem dados do app.</b><small>${j.usos} vídeo${j.usos === 1 ? '' : 's'} começado${j.usos === 1 ? '' : 's'} nos últimos 7 dias. O diário de cada vídeo começa a chegar a partir de agora.</small></div>` : ''}
+    <div class="cards4">
+      ${card('y', '🎬', 'Vídeos começados', c.inicio, `${j.pessoas} pessoa${j.pessoas === 1 ? '' : 's'}`)}
+      ${card(ruim ? 'r' : 'g', '✅', 'Abriram no estúdio', c.abriu, `${pc(c.abriu, c.inicio)} dos começados · tempo típico ${min(j.tempo_mediano)}`)}
+      ${card('c', '⬇️', 'Vídeos exportados', c.exportou, `${c.pronto} usaram o "tudo automático"`)}
+      ${card(c.erro + c.fechou ? 'r' : 'g', '⚠️', 'Erros e travamentos', c.erro + c.fechou, `${c.erro} erro${c.erro === 1 ? '' : 's'} · ${c.fechou} vez${c.fechou === 1 ? '' : 'es'} o celular fechou o app`)}
+    </div>
+    ${j.aparelhos.length ? `<div class="glass tbl"><table><tr><th>Aparelho</th><th>Começou</th><th>Abriu</th><th>Exportou</th><th>Erros</th></tr>${j.aparelhos.map((a) => `<tr><td>${esc(a.aparelho)}</td><td>${a.inicio}</td><td>${a.abriu}</td><td>${a.exportou}</td><td>${a.erro + a.fechou ? `<b style="color:#ff6b6b">${a.erro + a.fechou}</b>` : '0'}</td></tr>`).join('')}</table></div>` : ''}
+    ${j.problemas.length ? `<div class="glass tbl"><table><tr><th>Quando</th><th>Aluno</th><th>Aparelho</th><th>O que houve</th></tr>${j.problemas.map((p) => `<tr><td>${dt(p.quando)}</td><td>${esc(p.nome || '')}<small>${esc(p.email || '')}</small></td><td>${esc(p.aparelho)}${p.mem ? `<small>${esc(p.mem)} GB de memória</small>` : ''}</td><td>${p.tipo === 'fechou' ? '📵 O celular fechou o app' : '❌ Erro'} em <b>${esc(p.etapa)}</b>${p.mb ? ` · vídeo de ${esc(p.mb)} MB` : ''}<small>${esc(p.msg)}</small></td></tr>`).join('')}</table></div>` : ''}
+  </section>`;
+  contar($('appSaude'));
+}
 async function loadGeral() {
   const j = await api('resumo', null, '&dias=' + dias); if (!j.ok) return;
   const t = j.tot;
@@ -113,7 +133,7 @@ async function loadGeral() {
       ${card(t.emails_falha_7d ? 'r' : 'g', '✉️', 'E-mails (7 dias)', t.emails_ok_7d, 'n', t.emails_falha_7d ? `${t.emails_falha_7d} falharam · veja em Funil` : 'todos entregues ao servidor')}
     </div>
   </section>`;
-  contar($('nums'));
+  contar($('nums')); loadAppSaude();
   $('fatTot').textContent = brl(t.faturamento_periodo);
   G.area($('cFat'), j.faturamento, { color: '#ffd400', fmt: (v) => (v >= 1000 ? Math.round(v / 1000) + 'k' : Math.round(v)) });
   G.ring($('cConv'), t.conversao_teste, { color: '#a77bff' });

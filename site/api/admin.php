@@ -39,7 +39,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'app-saude', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -256,6 +256,29 @@ switch ($a) {
   case 'funil': {
     $steps = []; foreach (funnel_steps() as $i => $s) $steps[] = ['passo' => $i, 'dia' => $s['dia'], 'assunto' => $s['assunto'], 'aviso' => $s['aviso']];
     json_out(['ok' => true, 'passos' => $steps, 'contagem' => funnel_counts(), 'cron_last' => setting('cron_last')]);
+  }
+  case 'app-saude': { // o app está funcionando? (diário que o app manda: começou, abriu, exportou, erro, fechou no meio)
+    $days = max(1, min(90, (int)($_GET['dias'] ?? 7)));
+    $since = date('Y-m-d H:i:s', time() - $days * 86400);
+    $edb = app_events_db();
+    $q = $edb->prepare('SELECT e.*, u.email, u.name FROM app_events e LEFT JOIN users u ON u.id = e.user_id WHERE e.created_at >= ? ORDER BY e.id DESC'); $q->execute([$since]);
+    $ev = $q->fetchAll();
+    $cnt = ['inicio' => 0, 'abriu' => 0, 'pronto' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0]; $seg = []; $disp = []; $prob = []; $pessoas = [];
+    foreach ($ev as $e) {
+      $k = $e['kind']; $cnt[$k] = ($cnt[$k] ?? 0) + 1; $d = json_decode((string)$e['data'], true) ?: [];
+      $ap = ua_short((string)$e['ua']);
+      $disp[$ap] ??= ['aparelho' => $ap, 'inicio' => 0, 'abriu' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0];
+      if (isset($disp[$ap][$k])) $disp[$ap][$k]++;
+      if ($k === 'abriu' && !empty($d['seg'])) $seg[] = (int)$d['seg'];
+      if ($k === 'inicio') $pessoas[$e['user_id']] = 1;
+      if (($k === 'erro' || $k === 'fechou') && count($prob) < 30) $prob[] = ['quando' => $e['created_at'], 'tipo' => $k, 'nome' => $e['name'], 'email' => $e['email'], 'aparelho' => $ap, 'etapa' => $d['etapa'] ?? '', 'msg' => $d['msg'] ?? '', 'mb' => $d['mb'] ?? '', 'mem' => $d['mem'] ?? ''];
+    }
+    sort($seg); $med = $seg ? $seg[intdiv(count($seg), 2)] : 0;
+    usort($disp, fn($a, $b) => $b['inicio'] <=> $a['inicio']);
+    $q = $db->prepare('SELECT COUNT(*) FROM usage WHERE created_at >= ?'); $q->execute([$since]); $usos = (int)$q->fetchColumn();
+    $q = $edb->query('SELECT MIN(created_at) FROM app_events'); $desde = $q->fetchColumn();
+    json_out(['ok' => true, 'dias' => $days, 'cont' => $cnt, 'pessoas' => count($pessoas), 'tempo_mediano' => $med, 'tempo_max' => $seg ? max($seg) : 0,
+      'usos' => $usos, 'desde' => $desde, 'aparelhos' => array_slice(array_values($disp), 0, 12), 'problemas' => $prob]);
   }
   case 'funil-rodar': json_out(['ok' => true] + run_funnel(true));
 }

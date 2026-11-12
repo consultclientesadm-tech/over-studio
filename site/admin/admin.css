@@ -158,3 +158,5 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .vigia.ok{border-color:rgba(60,220,140,.35);background:rgba(60,220,140,.07)}
 .vigia.mal{border-color:rgba(255,80,80,.5);background:rgba(255,80,80,.1);flex-direction:column}
 .vigia ul{margin:0;padding-left:20px}
+.tag.g { color: #2ee59d; background: rgba(46,229,157,.08); } .tag.r { color: #ff6b6b; background: rgba(255,107,107,.08); }
+#appSaude .glass.tbl { margin-top: 14px; } #appSaude td small { display: block; color: var(--mut); }

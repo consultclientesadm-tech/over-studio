@@ -140,6 +140,8 @@ async function videoReady() {
 }
 // Diário da última tentativa: se o celular fechar a página no meio, na volta o app conta em que ponto foi
 const RUN = 'sc-run';
+// diário enviado ao painel (só no domínio com conta): começou, abriu, exportou, erro, fechou no meio
+const ev = (k, d = {}) => { try { window.scLog && window.scLog(k, d); } catch {} };
 let runInfo = null;
 function note(patch) { if (!runInfo) return; Object.assign(runInfo, patch); try { localStorage.setItem(RUN, JSON.stringify(runInfo)); } catch {} }
 function endRun() { runInfo = null; forget(); try { localStorage.removeItem(RUN); localStorage.removeItem('sc-last'); } catch {} }
@@ -148,6 +150,7 @@ try {
   if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
   else if (last) {
     localStorage.removeItem(RUN);
+    ev('fechou', { etapa: last.stage, pct: last.pct, mb: last.mb, dur: last.dur, msg: last.erro || '' });
     const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v37`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
@@ -182,6 +185,7 @@ async function start(f, tries = 1) {
   // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar
   if (tries === 1 && window.scGate && !(await window.scGate(f))) { $('file').value = ''; $('audioFile').value = ''; return; }
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
+  ev('inicio', { mb: Math.round(f.size / 1048576), audio: isAudio(f) ? 1 : 0, tries });
   if (tries === 1) await Promise.race([keep(f, refFile), new Promise((r) => setTimeout(r, 5000))]);
   file = f;
   audioOnly = isAudio(f); app.classList.toggle('audio', audioOnly);
@@ -202,9 +206,10 @@ async function start(f, tries = 1) {
     if (!audioOnly && (!video.videoWidth || video.error)) await convertVideo();
     note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
+    ev('abriu', { seg: Math.round((performance.now() - t0) / 1000), dur: Math.round(state.duration || 0), mb: Math.round(f.size / 1048576) });
     endRun();
   } catch (e) {
-    console.error(e); endRun();
+    console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576) });
     app.dataset.screen = 'home';
     toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(e.duration || video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
       : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);
@@ -297,7 +302,7 @@ $('quickAll').onclick = async () => {
   busy(true, 'Mixando e masterizando…'); await doMaster(false);
   if (!audioOnly) { busy(true, 'Colorista ajustando a cor…'); try { auto = await autoGrade(video); } catch (e) { console.warn(e); } }
   look = FILTERS[0]; busy(false); // pronto já sai com o visual de câmera de cinema
-  go(5); toast('Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.', 6000);
+  go(5); ev('pronto', {}); toast('Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.', 6000);
 };
 
 // Etapas
@@ -493,7 +498,7 @@ async function doTune() {
     if (mastered) await doMaster(false);
     editor.load(state); refreshChips(); side = 'B'; refreshAB();
     toast(`Afinado: ${state.after.band}% da voz na faixa verde. Compare no ANTES | DEPOIS.`);
-  } catch (e) { console.error(e); toast('Deu erro: ' + e.message, 6000); }
+  } catch (e) { console.error(e); ev('erro', { etapa: 'afinar', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 6000); }
   busy(false);
 }
 $('tuneAuto').onclick = doTune;
@@ -543,7 +548,7 @@ async function runAuto() {
       tracks.raw = cover.rawMix(state); fresh('raw');
       if (mastered) masterStale = true;
       editor.draw(); refreshChips();
-    } catch (e) { console.error(e); toast('Deu erro: ' + e.message, 6000); }
+    } catch (e) { console.error(e); ev('erro', { etapa: 'automático', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 6000); }
     $('popBar')?.classList.remove('working');
     seek(t); if (was) play();
   })();
@@ -737,8 +742,8 @@ $('exportBtn').onclick = async () => {
     a.download = `${(file.name || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.${out.ext}`;
     $('readyInfo').textContent = `${out.width} × ${out.height} · ${out.ext.toUpperCase()} · ${Math.max(1, Math.round(out.blob.size / 1048576))} MB, com o som e a cor que você escolheu.`;
     $('ready').hidden = false; $('ready').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    toast('Vídeo pronto!');
-  } catch (e) { console.error(e); toast('Deu erro: ' + e.message, 7000); }
+    toast('Vídeo pronto!'); ev('exportou', { mb: Math.round(out.blob.size / 1048576), w: out.width, h: out.height, ext: out.ext });
+  } catch (e) { console.error(e); ev('erro', { etapa: 'exportar', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 7000); }
   $('exportBtn').disabled = false;
   seek(0);
 };
@@ -762,8 +767,8 @@ $('helpBtn').onclick = () => {
 };
 
 // Qualquer erro aparece na tela (e fica no diário), para a gente saber exatamente o que houve num aparelho real
-addEventListener('error', (e) => { note({ erro: String(e.message).slice(0, 120) }); toast('Erro: ' + e.message, 9000); });
-addEventListener('unhandledrejection', (e) => { const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); toast('Erro: ' + m, 9000); });
+addEventListener('error', (e) => { note({ erro: String(e.message).slice(0, 120) }); ev('erro', { etapa: 'app', msg: String(e.message).slice(0, 160), em: String(e.filename || '').split('/').pop() + ':' + e.lineno }); toast('Erro: ' + e.message, 9000); });
+addEventListener('unhandledrejection', (e) => { const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); ev('erro', { etapa: 'app', msg: m }); toast('Erro: ' + m, 9000); });
 
 // Só a voz / só a música (WAV), no mesmo trecho do vídeo final
 function dlStem(ch, nome) {
