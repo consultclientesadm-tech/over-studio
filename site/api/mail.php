@@ -41,12 +41,32 @@ function build_mime(string $to, string $subject, string $html, string $text, str
   return implode("\r\n", $h) . "\r\n\r\n" . $body;
 }
 
+// Rastreio de abertura (imagem 1x1) e de clique (links passam por /api/e.php e voltam para o destino)
+function email_track_db(): PDO {
+  static $ok = false; $db = db(); if ($ok) return $db;
+  $cols = array_column($db->query('PRAGMA table_info(emails)')->fetchAll(), 'name');
+  foreach (['tok' => 'TEXT', 'opened_at' => 'TEXT', 'opens' => 'INTEGER NOT NULL DEFAULT 0', 'clicked_at' => 'TEXT', 'clicks' => 'INTEGER NOT NULL DEFAULT 0'] as $c => $t)
+    if (!in_array($c, $cols, true)) $db->exec("ALTER TABLE emails ADD COLUMN $c $t");
+  $db->exec('CREATE INDEX IF NOT EXISTS emails_tok ON emails(tok)');
+  $ok = true; return $db;
+}
+function email_secret(): string { $s = setting('email_secret'); if ($s === '') { $s = bin2hex(random_bytes(16)); set_setting('email_secret', $s); } return $s; }
+function email_link(string $tok, string $url): string {
+  if (!preg_match('#^https?://#i', $url)) return $url;
+  $u = rtrim(strtr(base64_encode($url), '+/', '-_'), '=');
+  return site_url() . '/api/e.php?c=' . $tok . '&u=' . $u . '&s=' . substr(hash_hmac('sha256', $tok . '|' . $url, email_secret()), 0, 16);
+}
+
 // Manda e registra. $kind: senha | esqueci | funil-N | teste-acabou | boas-vindas | teste
 function send_mail(?array $u, string $to, string $kind, string $subject, string $title, string $bodyHtml, string $btnText = '', string $btnUrl = ''): bool {
   $from = setting('mail_from');
   if (!$from) { $host = preg_replace('/^www\./', '', (string)parse_url(site_url(), PHP_URL_HOST)); if ($host && str_contains($host, '.') && !preg_match('/^[\d.]+$/', $host)) $from = 'contato@' . $host; }
   $unsub = $u && !empty($u['unsub_token']) ? site_url() . '/api/conta.php?a=sair-lista&t=' . $u['unsub_token'] : '';
-  $html = mail_template($title, $bodyHtml, $btnText, $btnUrl, $unsub);
+  email_track_db(); $tok = bin2hex(random_bytes(12));
+  $trk = fn($url) => email_link($tok, $url);
+  $bodyT = preg_replace_callback('#href="(https?://[^"]+)"#i', fn($m) => 'href="' . h($trk(html_entity_decode($m[1]))) . '"', $bodyHtml);
+  $html = mail_template($title, $bodyT, $btnText, $btnUrl ? $trk($btnUrl) : '', $unsub);
+  $html = str_replace('</body>', '<img src="' . h(site_url() . '/api/e.php?o=' . $tok) . '" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0"></body>', $html);
   $text = trim(html_entity_decode(strip_tags(str_replace(['<br>', '</p>'], ["\n", "\n\n"], $bodyHtml)))) . ($btnUrl ? "\n\n$btnText: $btnUrl" : '') . ($unsub ? "\n\nNão quer mais receber? $unsub" : '');
   $err = null;
   if (!$from) $err = 'Configure o e-mail de envio no painel (Configurações).';
@@ -60,8 +80,8 @@ function send_mail(?array $u, string $to, string $kind, string $subject, string 
     if (!$ok) { $e0 = error_get_last()['message'] ?? ''; $ok = @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $head); } // sem -f
     if (!$ok) { $e2 = smtp_send($to, $subject, $html, $text, ['host' => '127.0.0.1', 'port' => 25, 'secure' => '', 'user' => '', 'from' => $from]); if ($e2) $err = 'O servidor recusou o envio' . ($e0 ? " ($e0)" : '') . ': ' . $e2; }
   }
-  db()->prepare('INSERT INTO emails (user_id, email, kind, subject, ok, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    ->execute([$u['id'] ?? null, $to, $kind, $subject, $err ? 0 : 1, $err, now()]);
+  db()->prepare('INSERT INTO emails (user_id, email, kind, subject, ok, error, created_at, tok) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    ->execute([$u['id'] ?? null, $to, $kind, $subject, $err ? 0 : 1, $err, now(), $tok]);
   return $err === null;
 }
 

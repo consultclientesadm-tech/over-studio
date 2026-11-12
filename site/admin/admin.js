@@ -325,7 +325,31 @@ async function loadFunil() {
   $('cronInfo').textContent = j.cron_last ? `Última rodada automática: ${dt(j.cron_last)}` : 'A tarefa automática ainda não rodou. Configure no Plesk (Tarefas agendadas, a cada hora): php api/cron.php';
   const ok = e.items.filter((m) => +m.ok).length, bad = e.items.length - ok;
   $('saudeEmail').innerHTML = `<span class="st active">${ok} enviados</span> <span class="st ${bad ? 'blocked' : 'active'}">${bad} falharam</span>`;
-  $('tblEmails').innerHTML = e.items.length ? `<table><tr><th>Quando</th><th>Para</th><th>Tipo</th><th>Assunto</th><th></th></tr>${e.items.map((m) => `<tr><td>${dt(m.created_at)}</td><td>${esc(m.email)}</td><td>${esc(m.kind)}</td><td>${esc(m.subject)}</td><td>${+m.ok ? '<span class="st active">enviado</span>' : `<span class="st blocked">falhou</span><small>${esc(m.error)}</small>`}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhum e-mail ainda.</p>';
+  emailStats(e);
+  emailTabela(e.items);
+}
+let emFiltro = 'todos';
+function emailTabela(items) {
+  const L = items.filter((m) => emFiltro === 'todos' || (emFiltro === 'abriram' ? m.opened_at : emFiltro === 'clicaram' ? m.clicked_at : +m.ok && +m.rastreado && !m.opened_at));
+  const vis = (m) => !+m.ok ? `<span class="st blocked">falhou</span><small>${esc(m.error)}</small>` : !+m.rastreado ? '<span class="st">enviado</span><small>antes do rastreio</small>'
+    : m.clicked_at ? `<span class="st active">🖱 clicou</span><small>${dt(m.clicked_at)}${+m.clicks > 1 ? ` · ${m.clicks} cliques` : ''}</small>`
+    : m.opened_at ? `<span class="st trial">👁 abriu</span><small>${dt(m.opened_at)}${+m.opens > 1 ? ` · ${m.opens} vezes` : ''}</small>` : '<span class="st nao">não abriu ainda</span>';
+  $('tblEmails').innerHTML = `<div class="seg emf">${[['todos', 'Todos'], ['abriram', '👁 Abriram'], ['clicaram', '🖱 Clicaram'], ['nao', 'Não abriram']].map(([k, r]) => `<button data-f="${k}" class="${emFiltro === k ? 'on' : ''}">${r}</button>`).join('')}</div>` +
+    (L.length ? `<table><tr><th>Quando</th><th>Para</th><th>E-mail</th><th>Viu?</th></tr>${L.map((m) => `<tr><td>${dt(m.created_at)}</td><td>${esc(m.name || '')}<small>${esc(m.email)}</small></td><td>${esc(m.subject)}<small>${esc(m.kind)}</small></td><td>${vis(m)}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhum e-mail neste filtro.</p>');
+  $('tblEmails').querySelectorAll('.emf button').forEach((b) => (b.onclick = () => { emFiltro = b.dataset.f; emailTabela(items); }));
+}
+function emailStats(e) {
+  const P = e.por_email || [], fun = P.filter((p) => p.funil), soma = (L, k) => L.reduce((a, p) => a + p[k], 0);
+  const env = soma(P, 'enviados'), ab = soma(P, 'abriram'), cl = soma(P, 'clicaram'), pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
+  const card = (cor, ico, rot, v, f, sub) => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div><b class="cnt" data-to="${+v || 0}" data-f="${f}">0</b><span>${sub}</span></div>`;
+  const barra = (p) => `<div class="emb"><div class="emn"><b>${esc(p.nome)}</b><small>${p.enviados} enviado${p.enviados === 1 ? '' : 's'} · ${p.abriram} abriram (${pc(p.abriram, p.enviados)}) · ${p.clicaram} clicaram (${pc(p.clicaram, p.enviados)})</small></div>
+    <div class="emt"><i class="e" style="--w:100%"></i><i class="a" style="--w:${p.enviados ? (p.abriram / p.enviados) * 100 : 0}%"></i><i class="c" style="--w:${p.enviados ? (p.clicaram / p.enviados) * 100 : 0}%"></i></div></div>`;
+  $('emStats').innerHTML = `<section class="bloco"><div class="bh"><span class="tag c">📬 QUEM ABRIU E CLICOU</span><small>${e.rastreio_desde ? 'contando desde ' + dt(e.rastreio_desde) : 'começa a contar a partir dos próximos e-mails enviados'} · iPhone pode marcar como aberto sozinho, o clique é o número mais confiável</small></div>
+    <div class="cards4">${card('c', '📤', 'E-mails rastreados', env, 'n', `${fun.length} tipo${fun.length === 1 ? '' : 's'} do funil com envio`)}${card('y', '👁', 'Taxa de abertura', env ? ab / env : 0, 'pc', `${ab} de ${env} abriram`)}${card('g', '🖱', 'Taxa de clique', env ? cl / env : 0, 'pc', `${cl} clicaram no botão`)}${card('p', '🎯', 'Clique de quem abriu', ab ? cl / ab : 0, 'pc', 'de quem abriu, quantos clicaram')}</div>
+    ${P.length ? `<div class="glass embox"><div class="ch"><b>Cada e-mail do funil</b><span class="emleg"><span><i class="e"></i>Enviados</span><span><i class="a"></i>Abriram</span><span><i class="c"></i>Clicaram</span></span></div>${(fun.length ? fun : P).map(barra).join('')}
+      ${fun.length && P.length > fun.length ? `<details><summary>Outros e-mails (senha, acesso, afiliados)</summary>${P.filter((p) => !p.funil).map(barra).join('')}</details>` : ''}</div>` : '<div class="vigia"><b>Ainda sem e-mails rastreados.</b><small>Os próximos e-mails do funil já saem com o rastreio, e os números aparecem aqui.</small></div>'}
+  </section>`;
+  contar($('emStats')); requestAnimationFrame(() => $('emStats').querySelectorAll('.emt').forEach((x) => x.classList.add('on')));
 }
 $('reenviarEmails').onclick = async (ev) => {
   if (!confirm('Mandar de novo os e-mails que falharam? Só vai para quem ainda faz sentido (ex.: quem ainda não comprou recebe o "teste terminou").')) return;

@@ -254,7 +254,21 @@ switch ($a) {
   }
   case 'webhook-novo-token': { set_setting('webhook_token', bin2hex(random_bytes(16))); json_out(['ok' => true]); }
   case 'webhooks': json_out(['ok' => true, 'items' => $db->query('SELECT id, created_at, ip, result, body FROM webhooks ORDER BY id DESC LIMIT 50')->fetchAll()]);
-  case 'emails': json_out(['ok' => true, 'items' => $db->query('SELECT created_at, email, kind, subject, ok, error FROM emails ORDER BY id DESC LIMIT 100')->fetchAll()]);
+  case 'emails': {
+    email_track_db();
+    $rast = (string)$db->query('SELECT MIN(created_at) FROM emails WHERE tok IS NOT NULL')->fetchColumn();
+    $q = $db->query("SELECT kind, COUNT(*) enviados, SUM(opened_at IS NOT NULL) abriram, SUM(clicked_at IS NOT NULL) clicaram, MAX(subject) assunto FROM emails WHERE ok = 1 AND tok IS NOT NULL AND kind NOT IN ('alerta', 'teste') GROUP BY kind");
+    $nomes = ['boas-vindas' => 'Boas-vindas (cadastro)', 'teste-acabou' => 'Seu teste terminou', 'senha' => 'Acesso liberado / criar senha', 'esqueci' => 'Esqueci a senha', 'liberado' => 'Acesso completo liberado', 'afiliado' => 'Boas-vindas do afiliado', 'afiliado-senha' => 'Senha do afiliado'];
+    $steps = funnel_steps(); $ord = ['boas-vindas' => 0, 'teste-acabou' => 1];
+    $por = array_map(function ($r) use ($nomes, $steps, $ord) {
+      $k = $r['kind']; $n = $nomes[$k] ?? $k; $o = $ord[$k] ?? 100;
+      if (preg_match('/^funil-(\d+)$/', $k, $m) && isset($steps[(int)$m[1]])) { $n = 'Dia ' . $steps[(int)$m[1]]['dia'] . ': ' . str_replace('{nome}', 'Fulano', $steps[(int)$m[1]]['assunto']); $o = 2 + (int)$m[1]; }
+      return ['kind' => $k, 'nome' => $n, 'ordem' => $o, 'funil' => $o < 100, 'enviados' => (int)$r['enviados'], 'abriram' => (int)$r['abriram'], 'clicaram' => (int)$r['clicaram']];
+    }, $q->fetchAll());
+    usort($por, fn($a, $b) => $a['ordem'] <=> $b['ordem'] ?: strcmp($a['nome'], $b['nome']));
+    json_out(['ok' => true, 'rastreio_desde' => $rast, 'por_email' => $por,
+      'items' => $db->query('SELECT e.created_at, e.email, e.kind, e.subject, e.ok, e.error, e.tok IS NOT NULL rastreado, e.opened_at, e.opens, e.clicked_at, e.clicks, u.name FROM emails e LEFT JOIN users u ON u.id = e.user_id ORDER BY e.id DESC LIMIT 150')->fetchAll()]);
+  }
   case 'email-teste': {
     $para = clean_email((string)arg('para', $me['email'])); if (!valid_email($para)) fail('E-mail inválido.');
     $ok = send_mail(null, $para, 'teste', 'Teste de e-mail do Studio Cover', 'O e-mail está funcionando ✅', '<p>Se você recebeu esta mensagem, os e-mails dos alunos e do funil vão chegar.</p>');
