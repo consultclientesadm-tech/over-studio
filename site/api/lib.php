@@ -110,7 +110,7 @@ const SETTINGS_DEFAULT = [
   'installments' => '10',              // parcelas mostradas na página (0 ou 1 = só o preço à vista)
   'installment_value' => '35,69',      // valor de cada parcela com os juros da Eduzz (copiar do checkout)
   'trial_enabled' => '1',        // teste grátis ligado
-  'trial_videos' => '2',         // quantos vídeos no teste
+  'trial_videos' => '1',         // quantos vídeos no teste
   'access_days' => '365',        // dias de acesso depois de pagar (0 = vitalício)
   'eduzz_product' => '',         // código do produto na Eduzz (vazio = aceita qualquer um)
   'eduzz_secret' => '',          // segredo de assinatura do webhook (se a Eduzz mandar)
