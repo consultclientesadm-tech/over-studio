@@ -101,6 +101,8 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
 </div></main>
 <script src="/assets/marca.js"></script>
 <script>
+try { const af = new URLSearchParams(location.search).get('af'); if (af) fetch('/api/conta.php?a=clique&af=' + encodeURIComponent(af), { credentials: 'same-origin' }); } catch (e) {} // link de afiliado direto no cadastro
+
 Marca.montar();
 const $ = (id) => document.getElementById(id);
 const api = async (a, body) => {

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050506">
+<meta name="robots" content="noindex">
+<title>Painel do Afiliado · Studio Cover</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --y: #ffd400; --g: #2ee59d; --r: #ff4d5e; --c: #3fd0ff; --p: #a77bff; --ink: #f4f4f7; --mut: #a0a3b5; --line: #262833; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: #050506; color: var(--ink); font: 500 15px Sora, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+body { background: radial-gradient(ellipse at 50% -10%, rgba(255,212,0,.12), transparent 55%), #050506; }
+.w { max-width: 1080px; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 16px 40px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.marca { font: 900 15px Orbitron, sans-serif; letter-spacing: .14em; } .marca em { font-style: normal; color: var(--y); }
+.marca small { display: block; font: 600 11px Sora; letter-spacing: .2em; color: var(--mut); margin-top: 3px; }
+.sair { background: none; border: 1px solid var(--line); color: var(--mut); border-radius: 20px; padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer; }
+.card { background: rgba(14,14,20,.85); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
+.box { max-width: 400px; margin: 8vh auto 0; }
+h1 { font: 900 22px Orbitron, sans-serif; letter-spacing: .06em; margin: 0 0 6px; }
+h2 { font: 800 13px Orbitron, sans-serif; letter-spacing: .14em; color: var(--y); margin: 0 0 12px; }
+p.sub { color: var(--mut); margin: 0 0 16px; line-height: 1.5; font-size: 14px; }
+label { display: block; font-size: 12px; color: var(--mut); margin: 12px 0 6px; letter-spacing: .04em; }
+input { width: 100%; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: #0b0b10; color: var(--ink); font: 500 15px Sora, sans-serif; padding: 0 14px; outline: none; }
+input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12); }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 48px; padding: 0 20px; border: 0; border-radius: 30px; background: linear-gradient(180deg, #ffe34d, #ffc400); color: #000; font: 900 13px Orbitron, sans-serif; letter-spacing: .06em; cursor: pointer; text-decoration: none; }
+.btn.full { width: 100%; margin-top: 18px; } .btn.sm { height: 40px; font-size: 11.5px; padding: 0 14px; }
+.btn.ghost { background: none; border: 1px solid var(--line); color: var(--ink); font-family: Sora; font-weight: 600; letter-spacing: 0; }
+.msg { margin-top: 12px; font-size: 13.5px; min-height: 18px; } .msg.erro { color: var(--r); } .msg.ok { color: var(--g); }
+.link { color: var(--y); background: none; border: 0; font: inherit; cursor: pointer; padding: 0; font-size: 13.5px; margin-top: 14px; }
+.ola { margin: 0 0 18px; } .ola b { font: 900 clamp(20px, 3vw, 28px) Orbitron, sans-serif; letter-spacing: .03em; }
+.links { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; margin-bottom: 14px; }
+.copy { display: flex; gap: 8px; margin-top: 8px; } .copy input { height: 44px; font-size: 13.5px; color: var(--y); }
+.nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0; }
+.n { position: relative; overflow: hidden; background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+.n::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--k, var(--y)); }
+.n small { display: block; font: 700 11px Sora; letter-spacing: .14em; color: var(--mut); text-transform: uppercase; }
+.n b { display: block; font: 900 clamp(28px, 4vw, 40px) Orbitron, sans-serif; color: var(--k, var(--y)); margin: 8px 0 4px; }
+.n span { color: var(--mut); font-size: 12.5px; }
+.funil { display: flex; gap: 6px; align-items: center; margin: 4px 0 14px; color: var(--mut); font-size: 13px; flex-wrap: wrap; }
+.funil i { font-style: normal; color: var(--ink); font-weight: 700; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; } th { text-align: left; font: 700 11px Sora; letter-spacing: .12em; color: var(--mut); text-transform: uppercase; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 10px 6px; border-bottom: 1px solid #191a22; } td small { display: block; color: var(--mut); }
+.et { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.et.cadastrou { background: rgba(63,208,255,.12); color: var(--c); } .et.testou { background: rgba(255,212,0,.12); color: var(--y); } .et.comprou { background: rgba(46,229,157,.14); color: var(--g); } .et.reembolso { background: rgba(255,77,94,.14); color: var(--r); }
+.tbl { overflow-x: auto; } .grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-top: 14px; }
+.barras { display: flex; align-items: flex-end; gap: 3px; height: 120px; margin-top: 8px; }
+.barras div { flex: 1; display: flex; flex-direction: column-reverse; gap: 1px; height: 100%; }
+.barras i { display: block; border-radius: 3px 3px 0 0; background: var(--c); min-height: 0; } .barras i.c { background: var(--y); }
+.leg { display: flex; gap: 14px; font-size: 12px; color: var(--mut); margin-top: 8px; } .leg i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font-size: 14px; } ol.dicas li { margin-bottom: 6px; }
+@media (max-width: 760px) { .nums { grid-template-columns: 1fr 1fr; } .links, .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="w">
+  <header><div class="marca">STUDIO <em>COVER</em><small>PAINEL DO AFILIADO</small></div><button class="sair" id="sair" hidden>Sair</button></header>
+
+  <div class="box" id="vLogin" hidden><div class="card">
+    <h1>Entrar</h1><p class="sub">Acompanhe os seus cliques, cadastros e vendas.</p>
+    <form id="fLogin"><label>E-mail<input type="email" id="lEmail" autocomplete="email" required></label><label>Senha<input type="password" id="lSenha" autocomplete="current-password" required></label>
+    <button class="btn full">ENTRAR</button></form>
+    <button class="link" id="esqueci">Esqueci a senha</button><div class="msg" id="lMsg"></div>
+  </div></div>
+
+  <div class="box" id="vSenha" hidden><div class="card">
+    <h1>Criar senha</h1><p class="sub" id="sSub">Crie a senha do seu painel de afiliado.</p>
+    <form id="fSenha"><label>Nova senha <small>(8 ou mais, com letras e números)</small><input type="password" id="sSenha" autocomplete="new-password" required></label>
+    <button class="btn full">CRIAR SENHA E ENTRAR</button></form><div class="msg" id="sMsg"></div>
+  </div></div>
+
+  <div id="vPainel" hidden>
+    <p class="ola">Olá, <b id="nome"></b></p>
+    <div class="links">
+      <div class="card"><h2>🔗 SEU LINK DE DIVULGAÇÃO</h2><p class="sub" style="margin:0">Página de vendas com o vídeo. Quem entrar fica marcado como seu por 60 dias.</p><div class="copy"><input id="lkVendas" readonly><button class="btn sm" data-copy="lkVendas">COPIAR</button></div></div>
+      <div class="card"><h2>🎁 LINK DIRETO DO TESTE GRÁTIS</h2><p class="sub" style="margin:0">Leva direto para o cadastro do teste grátis (ótimo para anúncio).</p><div class="copy"><input id="lkTeste" readonly><button class="btn sm" data-copy="lkTeste">COPIAR</button></div></div>
+    </div>
+    <div class="card" id="cEduzz"><h2>💳 SEU LINK DE AFILIADO DA EDUZZ</h2>
+      <p class="sub" style="margin-bottom:0">Todo mundo que entra pelo seu link e todos os e-mails e avisos do funil levam a compra para este link, e a comissão cai para você na Eduzz. Cole aqui o link de afiliado que a Eduzz te deu para o Studio Cover.</p>
+      <div class="copy"><input id="lkEduzz" placeholder="https://chk.eduzz.com/..." style="color:var(--ink)"><button class="btn sm" id="salvarEduzz">SALVAR</button></div><div class="msg" id="eMsg"></div>
+    </div>
+    <div class="nums">
+      <div class="n" style="--k:var(--c)"><small>Cliques</small><b id="nCl">0</b><span id="sCl"></span></div>
+      <div class="n" style="--k:var(--p)"><small>Cadastros grátis</small><b id="nCa">0</b><span id="sCa"></span></div>
+      <div class="n" style="--k:var(--y)"><small>Testaram o app</small><b id="nTe">0</b><span id="sTe"></span></div>
+      <div class="n" style="--k:var(--g)"><small>Compraram</small><b id="nCo">0</b><span id="sCo"></span></div>
+    </div>
+    <div class="funil" id="funil"></div>
+    <div class="grid2">
+      <div class="card"><h2>📈 ÚLTIMOS 30 DIAS</h2><div class="barras" id="barras"></div><div class="leg"><span><i style="background:var(--c)"></i>Cliques</span><span><i style="background:var(--y)"></i>Cadastros</span></div></div>
+      <div class="card"><h2>💡 COMO VENDER MAIS</h2><ol class="dicas">
+        <li>Mostre um antes e depois de um cover: o mesmo trecho cru e depois afinado.</li>
+        <li>Chame para o teste grátis. Quem testa no próprio vídeo compra muito mais.</li>
+        <li>Não precisa vender na hora: quem se cadastra pelo seu link recebe o nosso funil de e-mails e avisos no app, sempre com o seu link de compra.</li>
+        <li>Nada de prometer seguidores, views ou fama. O Studio Cover entrega som de estúdio no celular.</li></ol></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h2>👥 SEUS LEADS</h2><div class="tbl" id="leads"></div></div>
+  </div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const dt = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + ' ' + s.slice(11, 16) : '');
+async function api(a, body) {
+  const r = await fetch('/api/afiliado.php?a=' + a, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-SC': '1' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin', cache: 'no-store' });
+  return r.json().catch(() => ({ ok: false, error: 'Sem conexão. Tente de novo.' }));
+}
+const ver = (v) => ['vLogin', 'vSenha', 'vPainel'].forEach((x) => ($(x).hidden = x !== v));
+function conta(el, to) { const t0 = performance.now(); const f = (t) => { const p = Math.min(1, (t - t0) / 1100); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))).toLocaleString('pt-BR'); if (p < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
+const pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
+async function painel() {
+  const j = await api('painel');
+  if (!j.ok) { ver('vLogin'); $('sair').hidden = true; return; }
+  ver('vPainel'); $('sair').hidden = false;
+  $('nome').textContent = (j.afiliado.nome || j.afiliado.email).split(' ')[0];
+  $('lkVendas').value = j.links.vendas; $('lkTeste').value = j.links.teste; $('lkEduzz').value = j.afiliado.link_eduzz || '';
+  if (!j.afiliado.link_eduzz) $('eMsg').innerHTML = '<span class="erro" style="color:var(--r)">Falta o seu link de afiliado da Eduzz. Sem ele a comissão das vendas do funil pode não cair para você.</span>';
+  const t = j.total, m = j.mes;
+  [['nCl', 'sCl', 'cliques'], ['nCa', 'sCa', 'cadastros'], ['nTe', 'sTe', 'testaram'], ['nCo', 'sCo', 'compraram']].forEach(([n, s, k]) => { conta($(n), t[k]); $(s).textContent = `${m[k]} nos últimos 30 dias · hoje ${j.hoje[k]}`; });
+  $('funil').innerHTML = `Clique → cadastro <i>${pc(t.cadastros, t.cliques)}</i> · cadastro → testou <i>${pc(t.testaram, t.cadastros)}</i> · cadastro → comprou <i>${pc(t.compraram, t.cadastros)}</i>${t.vendido ? ` · vendido pelo seu link <i>R$ ${t.vendido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</i>` : ''}`;
+  const mx = Math.max(1, ...j.serie.map((d) => d.cliques + d.cadastros));
+  $('barras').innerHTML = j.serie.map((d) => `<div title="${d.d.split('-').reverse().join('/')}: ${d.cliques} cliques, ${d.cadastros} cadastros"><i style="height:${(d.cliques / mx) * 100}%"></i><i class="c" style="height:${(d.cadastros / mx) * 100}%"></i></div>`).join('');
+  const nomes = { cadastrou: 'Cadastrou', testou: 'Testou o app', comprou: 'Comprou ✓', reembolso: 'Reembolso' };
+  $('leads').innerHTML = j.leads.length ? `<table><tr><th>Quando</th><th>Pessoa</th><th>Etapa</th></tr>${j.leads.map((l) => `<tr><td>${dt(l.quando)}</td><td>${esc(l.nome)}<small>${esc(l.email)}</small></td><td><span class="et ${l.etapa}">${nomes[l.etapa]}</span></td></tr>`).join('')}</table>` : '<p class="sub" style="margin:0">Ainda sem leads. Compartilhe o seu link e eles aparecem aqui na hora.</p>';
+}
+document.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = async () => { const i = $(b.dataset.copy); try { await navigator.clipboard.writeText(i.value); } catch { i.select(); document.execCommand('copy'); } b.textContent = 'COPIADO ✓'; setTimeout(() => (b.textContent = 'COPIAR'), 1800); }));
+$('salvarEduzz').onclick = async () => { const j = await api('salvar-link', { link_eduzz: $('lkEduzz').value.trim() }); $('eMsg').className = 'msg ' + (j.ok ? 'ok' : 'erro'); $('eMsg').textContent = j.ok ? 'Salvo! As compras dos seus leads vão por este link.' : j.error; };
+$('fLogin').onsubmit = async (e) => { e.preventDefault(); $('lMsg').textContent = ''; const j = await api('login', { email: $('lEmail').value, senha: $('lSenha').value }); if (j.ok) painel(); else { $('lMsg').className = 'msg erro'; $('lMsg').textContent = j.error; } };
+$('esqueci').onclick = async () => { if (!$('lEmail').value) { $('lMsg').className = 'msg erro'; $('lMsg').textContent = 'Digite o seu e-mail acima.'; return; } await api('esqueci', { email: $('lEmail').value }); $('lMsg').className = 'msg ok'; $('lMsg').textContent = 'Se este e-mail for de um afiliado, o link para criar a senha chegou na sua caixa.'; };
+$('sair').onclick = async () => { await api('sair', {}); location.href = '/afiliado/'; };
+const tk = new URLSearchParams(location.search).get('criar');
+if (tk) {
+  api('token&t=' + encodeURIComponent(tk)).then((j) => { ver('vSenha'); if (!j.ok) { $('sMsg').className = 'msg erro'; $('sMsg').textContent = 'Este link venceu. Volte e toque em "Esqueci a senha".'; } else $('sSub').textContent = `Olá${j.nome ? ', ' + j.nome.split(' ')[0] : ''}! Crie a senha do painel (${j.email}).`; });
+  $('fSenha').onsubmit = async (e) => { e.preventDefault(); const j = await api('criar-senha', { t: tk, senha: $('sSenha').value }); if (j.ok) { history.replaceState(null, '', '/afiliado/'); painel(); } else { $('sMsg').className = 'msg erro'; $('sMsg').textContent = j.error; } };
+} else painel();
+</script>
+</body>
+</html>

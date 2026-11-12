@@ -39,7 +39,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'app-saude', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -279,6 +279,37 @@ switch ($a) {
     $q = $edb->query('SELECT MIN(created_at) FROM app_events'); $desde = $q->fetchColumn();
     json_out(['ok' => true, 'dias' => $days, 'cont' => $cnt, 'pessoas' => count($pessoas), 'tempo_mediano' => $med, 'tempo_max' => $seg ? max($seg) : 0,
       'usos' => $usos, 'desde' => $desde, 'aparelhos' => array_slice(array_values($disp), 0, 12), 'problemas' => $prob]);
+  }
+  case 'afiliados': {
+    $db = af_db(); sales_fill_net();
+    $n = af_numeros(); $n30 = af_numeros(null, date('Y-m-d', time() - 29 * 86400));
+    $out = [];
+    foreach ($db->query('SELECT id, nome, email, codigo, link_eduzz, eduzz_id, ativo, created_at, last_login, pass_hash IS NOT NULL AS tem_senha FROM afiliados ORDER BY id DESC') as $r) {
+      $i = (int)$r['id'];
+      foreach (['cliques', 'cadastros', 'testaram', 'compraram', 'vendido', 'reembolsos'] as $k) { $r[$k] = $n[$k][$i] ?? 0; $r[$k . '_30d'] = $n30[$k][$i] ?? 0; }
+      $r['link'] = site_url() . '/?af=' . $r['codigo'];
+      $out[] = $r;
+    }
+    json_out(['ok' => true, 'afiliados' => $out, 'link_site' => site_url() . '/']);
+  }
+  case 'afiliado-criar': {
+    $in = input();
+    $af = af_create((string)($in['nome'] ?? ''), (string)($in['email'] ?? ''), (string)($in['codigo'] ?? ''), trim((string)($in['link_eduzz'] ?? '')), trim((string)($in['eduzz_id'] ?? '')));
+    $sent = !empty($in['enviar']) ? af_boas_vindas($af) : null;
+    json_out(['ok' => true, 'link' => site_url() . '/?af=' . $af['codigo'], 'senha' => $sent === null ? af_senha_link($af) : null, 'email_enviado' => $sent]);
+  }
+  case 'afiliado-editar': {
+    $in = input(); $af = af_by_id((int)($in['id'] ?? 0)); if (!$af) fail('Afiliado não encontrado.');
+    $link = trim((string)($in['link_eduzz'] ?? $af['link_eduzz']));
+    if ($link !== '' && !preg_match('#^https://[a-z0-9.-]*eduzz\.com/#i', $link)) fail('O link de afiliado precisa ser um link da Eduzz.');
+    af_db()->prepare('UPDATE afiliados SET nome = ?, link_eduzz = ?, eduzz_id = ?, ativo = ? WHERE id = ?')
+      ->execute([trim((string)($in['nome'] ?? $af['nome'])), $link, trim((string)($in['eduzz_id'] ?? $af['eduzz_id'])), !empty($in['ativo']) ? 1 : 0, $af['id']]);
+    json_out(['ok' => true]);
+  }
+  case 'afiliado-acesso': { // novo link de senha (e-mail opcional)
+    $in = input(); $af = af_by_id((int)($in['id'] ?? 0)); if (!$af) fail('Afiliado não encontrado.');
+    if (!empty($in['enviar'])) json_out(['ok' => true, 'email_enviado' => af_boas_vindas($af)]);
+    json_out(['ok' => true, 'link' => af_senha_link($af)]);
   }
   case 'funil-rodar': json_out(['ok' => true] + run_funnel(true));
 }

@@ -662,7 +662,14 @@ footer a { color: #888; }
   };
 
   // oferta: preço e checkout vêm do painel
-  fetch('/api/conta.php?a=oferta').then((r) => r.json()).then((o) => {
+  // link de afiliado (?af=CODIGO): conta o clique, guarda 60 dias e a compra vai pelo link de afiliado dele
+  let af = '';
+  try {
+    const q = new URLSearchParams(location.search).get('af') || '';
+    if (q) { af = q; localStorage.setItem('sc-af', JSON.stringify({ c: q, t: Date.now() })); fetch('/api/conta.php?a=clique&af=' + encodeURIComponent(q), { credentials: 'same-origin' }).catch(() => {}); }
+    else { const g = JSON.parse(localStorage.getItem('sc-af') || 'null'); if (g && Date.now() - g.t < 60 * 864e5) af = g.c; }
+  } catch (e) {}
+  fetch('/api/conta.php?a=oferta' + (af ? '&af=' + encodeURIComponent(af) : '')).then((r) => r.json()).then((o) => {
     pixelLiga(window.SC_PIXEL || o.pixel);
     if (o.checkout_url) $('comprar').href = o.checkout_url;
     else $('comprar').href = '/entrar/?teste';

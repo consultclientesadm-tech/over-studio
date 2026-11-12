@@ -39,13 +39,13 @@ $('fPrimeiro').onsubmit = (e) => { e.preventDefault(); sub($('fPrimeiro'), 'prim
 $('sair').onclick = async () => { await api('sair', {}); boot(); };
 
 // ---------- abas ----------
-const TABS = { geral: 'tGeral', alunos: 'tAlunos', funil: 'tFunil', admins: 'tAdmins', config: 'tConfig' };
+const TABS = { geral: 'tGeral', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', admins: 'tAdmins', config: 'tConfig' };
 function tab(t) {
   if (!TABS[t]) t = 'geral';
   document.querySelectorAll('.nav > button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   Object.entries(TABS).forEach(([k, id]) => ($(id).hidden = k !== t));
   history.replaceState(null, '', '#' + t);
-  ({ geral: loadGeral, alunos: loadAlunos, funil: loadFunil, admins: loadAdmins, config: loadConfig })[t]();
+  ({ geral: loadGeral, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, admins: loadAdmins, config: loadConfig })[t]();
 }
 document.querySelectorAll('.nav > button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
 
@@ -235,6 +235,55 @@ $('reenviarEmails').onclick = async (ev) => {
   toast(j.ok ? `Reenviados: ${j.reenviados}. Pulados: ${j.pulados}.${j.falharam_agora ? ' Falharam agora: ' + j.falharam_agora : ''}` : j.error); loadFunil();
 };
 $('rodarFunil').onclick = async () => { const j = await api('funil-rodar', {}); toast(`Funil rodou: ${j.enviados} envio(s).`); loadFunil(); };
+
+// ---------- afiliados ----------
+async function loadAfiliados() {
+  const j = await api('afiliados'); if (!j.ok) return;
+  const L = j.afiliados, soma = (k) => L.reduce((t, a) => t + (+a[k] || 0), 0);
+  const pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
+  const card = (cor, ico, rot, v, f, sub) => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div><b class="cnt" data-to="${+v || 0}" data-f="${f}">0</b><span>${sub}</span></div>`;
+  $('afNums').innerHTML = `<div class="cards4" style="margin-bottom:16px">
+    ${card('c', '🤝', 'Afiliados ativos', L.filter((a) => +a.ativo).length, 'n', `${L.length} no total`)}
+    ${card('p', '👆', 'Cliques nos links', soma('cliques'), 'n', `${soma('cliques_30d')} nos últimos 30 dias`)}
+    ${card('y', '🎁', 'Cadastros grátis', soma('cadastros'), 'n', `${soma('testaram')} testaram · ${pc(soma('cadastros'), soma('cliques'))} dos cliques`)}
+    ${card('g', '💰', 'Vendas de afiliados', soma('compraram'), 'n', `${brl(soma('vendido'))} vendidos`)}</div>`;
+  contar($('afNums'));
+  $('tblAf').innerHTML = L.length ? `<table><tr><th>Afiliado</th><th>Link</th><th>Cliques</th><th>Cadastros</th><th>Testaram</th><th>Compraram</th><th>Vendido</th><th>Eduzz</th><th></th></tr>${L.map((a) => `<tr${+a.ativo ? '' : ' style="opacity:.5"'}>
+    <td>${esc(a.nome || '—')}<small>${esc(a.email)}${+a.tem_senha ? '' : ' · <span style="color:#ff9d00">sem senha ainda</span>'}</small></td>
+    <td><button class="btn sm ghost" data-cp="${esc(a.link)}" title="${esc(a.link)}">?af=${esc(a.codigo)} ⧉</button></td>
+    <td>${a.cliques}<small>${a.cliques_30d} em 30d</small></td><td>${a.cadastros}<small>${pc(a.cadastros, a.cliques)}</small></td><td>${a.testaram}</td>
+    <td><b style="color:#2ee59d">${a.compraram}</b><small>${pc(a.compraram, a.cadastros)} dos cadastros</small></td><td>${brl(+a.vendido)}</td>
+    <td>${a.link_eduzz ? '<span style="color:#2ee59d">✓ link</span>' : '<span style="color:#ff6b6b">sem link</span>'}${a.eduzz_id ? `<small>id ${esc(a.eduzz_id)}</small>` : ''}</td>
+    <td><button class="btn sm ghost" data-ed="${a.id}">Editar</button></td></tr>`).join('')}</table>`
+    : '<p class="sub">Nenhum afiliado ainda. Toque em "+ Novo afiliado" para criar o primeiro.</p>';
+  $('tblAf').querySelectorAll('[data-cp]').forEach((b) => (b.onclick = () => { navigator.clipboard.writeText(b.dataset.cp); toast('Link do afiliado copiado.'); }));
+  $('tblAf').querySelectorAll('[data-ed]').forEach((b) => (b.onclick = () => editarAf(L.find((a) => a.id == b.dataset.ed))));
+}
+const afCampos = (a = {}) => `<label>Nome<input id="fNome" value="${esc(a.nome || '')}"></label>
+  <label>Link de afiliado da Eduzz <small>a compra dos leads dele vai por aqui (o afiliado também pode colar no painel dele)</small><input id="fLink" value="${esc(a.link_eduzz || '')}" placeholder="https://chk.eduzz.com/..."></label>
+  <label>ID de afiliado na Eduzz <small>opcional: reconhece vendas dele que não passaram pelo teste</small><input id="fEid" value="${esc(a.eduzz_id || '')}"></label>`;
+$('novoAf').onclick = () => modal(`<h3>Novo afiliado</h3><p class="sub">Ele recebe um e-mail para criar a senha do painel dele.</p>
+  <label>E-mail<input id="fEmail" type="email" autocomplete="off"></label>${afCampos()}
+  <label>Código do link <small>vira studiocover.com.br/?af=codigo (vazio = parte do e-mail)</small><input id="fCod" placeholder="joao"></label>
+  <label class="sw"><input type="checkbox" id="fEnv" checked><span></span> Enviar o e-mail de acesso agora</label>
+  <div class="acts"><button class="btn sm" id="fOk">Criar afiliado</button></div><p class="msg" id="fMsg"></p><div id="fOut"></div>`, () => {
+  $('fOk').onclick = async () => {
+    const j = await api('afiliado-criar', { email: $('fEmail').value, nome: $('fNome').value, codigo: $('fCod').value, link_eduzz: $('fLink').value, eduzz_id: $('fEid').value, enviar: $('fEnv').checked });
+    if (!j.ok) return ($('fMsg').textContent = j.error);
+    loadAfiliados();
+    $('fMsg').textContent = j.email_enviado === false ? 'Afiliado criado, mas o e-mail não saiu.' : 'Afiliado criado' + (j.email_enviado ? ' e e-mail enviado.' : '.');
+    $('fOut').innerHTML = `<label>Link de divulgação<div class="copy"><input value="${esc(j.link)}" readonly></div></label>${j.senha ? `<label>Link para ele criar a senha (vale 7 dias)<div class="copy"><input value="${esc(j.senha)}" readonly></div></label>` : ''}`;
+  };
+});
+function editarAf(a) {
+  modal(`<h3>${esc(a.nome || a.email)}</h3><p class="sub">${esc(a.email)} · link ${esc(a.link)}</p>${afCampos(a)}
+    <label class="sw"><input type="checkbox" id="fAt" ${+a.ativo ? 'checked' : ''}><span></span> Ativo (desligado: o link para de valer e ele não entra no painel)</label>
+    <div class="acts"><button class="btn sm" id="fSalvar">Salvar</button><button class="btn sm ghost" id="fAcesso">Reenviar acesso por e-mail</button><button class="btn sm ghost" id="fLinkS">Gerar link de senha</button></div><p class="msg" id="fMsg"></p><div id="fOut"></div>`, () => {
+    $('fSalvar').onclick = async () => { const j = await api('afiliado-editar', { id: a.id, nome: $('fNome').value, link_eduzz: $('fLink').value, eduzz_id: $('fEid').value, ativo: $('fAt').checked }); if (j.ok) { closeModal(); toast('Afiliado salvo.'); loadAfiliados(); } else $('fMsg').textContent = j.error; };
+    $('fAcesso').onclick = async () => { const j = await api('afiliado-acesso', { id: a.id, enviar: true }); $('fMsg').textContent = j.ok && j.email_enviado ? 'E-mail enviado.' : 'O e-mail não saiu.'; };
+    $('fLinkS').onclick = async () => { const j = await api('afiliado-acesso', { id: a.id }); if (j.ok) $('fOut').innerHTML = `<div class="copy"><input value="${esc(j.link)}" readonly></div>`; };
+  });
+}
 
 // ---------- admins ----------
 async function loadAdmins() {

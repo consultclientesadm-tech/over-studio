@@ -11,6 +11,15 @@ switch ($a) {
     header('Cache-Control: public, max-age=300');
     json_out(['ok' => true, 'checkout_url' => checkout_url(), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value'), 'trial' => setting('trial_enabled') === '1', 'trial_videos' => (int)setting('trial_videos'), 'whatsapp' => setting('support_whatsapp'), 'pixel' => setting('meta_pixel'), 'eduzz_pixel' => setting('eduzz_pixel')]);
 
+  case 'clique': { // visita pelo link do afiliado (?af=CODIGO): guarda 60 dias e conta o clique
+    $af = af_by_codigo((string)($_GET['af'] ?? ''));
+    if (!$af) json_out(['ok' => false]);
+    af_marca_cookie($af['codigo']);
+    $q = af_db()->prepare('SELECT 1 FROM af_cliques WHERE afiliado_id = ? AND ip = ? AND created_at >= ?'); $q->execute([$af['id'], client_ip(), date('Y-m-d H:i:s', time() - 1800)]);
+    if (!$q->fetch()) af_db()->prepare('INSERT INTO af_cliques (afiliado_id, ip, created_at) VALUES (?, ?, ?)')->execute([$af['id'], client_ip(), now()]);
+    json_out(['ok' => true]);
+  }
+
   case 'me': {
     $u = current_user();
     if (!$u) json_out(['ok' => true, 'user' => null, 'trial_enabled' => setting('trial_enabled') === '1', 'trial_videos' => (int)setting('trial_videos')]);
@@ -31,6 +40,7 @@ switch ($a) {
     if ($q->fetch()) fail('Este e-mail já tem cadastro. Entre com a sua senha ou use "Esqueci a senha".');
     $u = upsert_user($email, $name, ['status' => 'trial', 'source' => 'trial', 'trial_left' => (int)setting('trial_videos')]);
     db()->prepare('UPDATE users SET pass_hash = ?, last_login = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), now(), $u['id']]);
+    if ($af = af_visitante()) af_db()->prepare('UPDATE users SET afiliado_id = ? WHERE id = ?')->execute([$af['id'], $u['id']]); // lead do afiliado
     $q->execute([$email]); $u = $q->fetch();
     login_user($u);
     funnel_welcome($u);

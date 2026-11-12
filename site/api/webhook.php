@@ -51,13 +51,13 @@ if (!valid_email($email)) { $log('ignorado: sem e-mail'); json_out(['ok' => true
 $only = setting('eduzz_product');
 if ($only !== '' && $product !== '' && $product !== $only) { $log("ignorado: produto $product"); json_out(['ok' => true, 'ignorado' => 'outro produto']); }
 
-$db = db();
+$db = db(); af_db();
 if ($back) {
   $q = $db->prepare('SELECT * FROM users WHERE email = ?'); $q->execute([$email]);
   if ($u = $q->fetch()) {
     $db->prepare("UPDATE users SET status = 'refunded' WHERE id = ?")->execute([$u['id']]);
     sales_fill_net(); $n = sale_net(-abs($value));
-    $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, liquido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, -abs($value), 'reembolso', now(), $n['bruto'], $n['taxa'], $n['liquido']]);
+    $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, liquido, afiliado_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, -abs($value), 'reembolso', now(), $n['bruto'], $n['taxa'], $n['liquido'], $u['afiliado_id'] ?? null]);
   }
   $log("reembolso/cancelamento: $email"); json_out(['ok' => true, 'acao' => 'bloqueado']);
 }
@@ -73,7 +73,10 @@ $exp = $days > 0 ? date('Y-m-d H:i:s', time() + $days * 86400) : null;
 $db->prepare("UPDATE users SET status = 'active', source = CASE WHEN source = 'trial' AND ? = 0 THEN 'trial' ELSE source END, paid_value = paid_value + ?, paid_at = ?, expires_at = ?, phone = CASE WHEN phone = '' THEN ? ELSE phone END WHERE id = ?")
   ->execute([$isNew ? 1 : 0, $value, now(), $exp, $phone, $u['id']]);
 sales_fill_net(); $n = sale_net($value);
-$db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, liquido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, $value, 'pago', now(), $n['bruto'], $n['taxa'], $n['liquido']]);
+$q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
+$afId = af_da_venda($data, $u);
+if ($afId && empty($u['afiliado_id'])) $db->prepare('UPDATE users SET afiliado_id = ? WHERE id = ?')->execute([$afId, $u['id']]);
+$db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, liquido, afiliado_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, $value, 'pago', now(), $n['bruto'], $n['taxa'], $n['liquido'], $afId]);
 $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
 funnel_paid($u, $isNew);
 $log("pago: $email R$ $value");

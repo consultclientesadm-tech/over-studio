@@ -231,6 +231,9 @@ function access(array $u): array {
 }
 function checkout_url(?array $u = null): string {
   $url = setting('checkout_url');
+  // lead de afiliado (ou visitante que veio pelo link dele): compra pelo link de afiliado da Eduzz
+  $af = $u ? af_by_id(isset($u['afiliado_id']) ? (int)$u['afiliado_id'] : null) : af_visitante();
+  if ($af && $af['ativo']) $url = af_checkout($af, $url);
   if (!$url) return '';
   return strtr($url, ['{email}' => rawurlencode($u['email'] ?? ''), '{nome}' => rawurlencode($u['name'] ?? '')]);
 }
@@ -300,3 +303,4 @@ function set_password_link(array $u, int $days = 7): string {
 
 require_once __DIR__ . '/mail.php';
 require_once __DIR__ . '/push.php';
+require_once __DIR__ . '/afiliados.php';

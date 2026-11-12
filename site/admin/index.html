@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=5">
+<link rel="stylesheet" href="admin.css?v=6">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -44,6 +44,7 @@
     <button data-tab="geral" class="on"><i>◈</i><span>Visão geral</span></button>
     <button data-tab="alunos"><i>◉</i><span>Alunos</span></button>
     <button data-tab="funil"><i>⟴</i><span>Funil</span></button>
+    <button data-tab="afiliados"><i>🤝</i><span>Afiliados</span></button>
     <button data-tab="admins"><i>⛨</i><span>Administradores</span></button>
     <button data-tab="config"><i>⚙</i><span>Configurações</span></button>
     <div class="eu"><small id="euNome"></small><button id="sair" class="lnk">Sair</button></div>
@@ -85,6 +86,13 @@
         <div class="acts"><button class="btn sm ghost" id="rodarFunil">Rodar agora</button></div></header>
       <div class="glass"><div id="funilFlow" class="flow"></div><p class="sub" id="cronInfo"></p></div>
       <div class="glass"><div class="ch"><b>Últimos e-mails enviados</b><span class="acts"><span id="saudeEmail" class="saude"></span><button class="btn sm ghost" id="reenviarEmails">Reenviar os que falharam</button></span></div><div class="tbl" id="tblEmails"></div></div>
+    </div>
+
+    <!-- Afiliados -->
+    <div class="tab" id="tAfiliados" hidden>
+      <header class="th"><div><h2>Afiliados</h2><p class="sub">Cada afiliado tem link próprio, painel próprio (<a href="/afiliado/" target="_blank" style="color:var(--y)">studiocover.com.br/afiliado</a>) e os leads dele recebem o funil com o link de compra dele.</p></div><div class="acts"><button class="btn sm" id="novoAf">+ Novo afiliado</button></div></header>
+      <div id="afNums"></div>
+      <div class="glass"><div class="tbl" id="tblAf"></div></div>
     </div>
 
     <!-- Admins -->
@@ -145,6 +153,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=5"></script>
+<script src="admin.js?v=6"></script>
 </body>
 </html>
