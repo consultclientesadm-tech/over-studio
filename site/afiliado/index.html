@@ -54,6 +54,35 @@ td { padding: 10px 6px; border-bottom: 1px solid #191a22; } td small { display: 
 .leg { display: flex; gap: 14px; font-size: 12px; color: var(--mut); margin-top: 8px; } .leg i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
 ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font-size: 14px; } ol.dicas li { margin-bottom: 6px; }
 @media (max-width: 760px) { .nums { grid-template-columns: 1fr 1fr; } .links, .grid2 { grid-template-columns: 1fr; } }
+.tabs { display: flex; gap: 6px; margin: 0 0 16px; overflow-x: auto; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; }
+.tabs button { flex: none; background: rgba(255,255,255,.03); border: 1px solid var(--line); color: var(--mut); border-radius: 30px; padding: 11px 16px; font: 700 13px Sora, sans-serif; cursor: pointer; }
+.tabs button.on { background: linear-gradient(180deg, #ffe34d, #ffc400); color: #000; border-color: transparent; }
+.aba[hidden] { display: none !important; }
+.video { position: relative; border-radius: 16px; overflow: hidden; background: #000; aspect-ratio: 16 / 9; border: 1px solid var(--line); }
+.video video { width: 100%; height: 100%; display: block; }
+.prog { display: flex; align-items: center; gap: 10px; margin: 16px 0 6px; font-size: 13px; color: var(--mut); }
+.prog div { flex: 1; height: 8px; border-radius: 8px; background: #1a1b24; overflow: hidden; } .prog i { display: block; height: 100%; background: linear-gradient(90deg, var(--y), var(--g)); border-radius: 8px; transition: width .6s; }
+.passo { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 18px 0; border-top: 1px solid #191a22; }
+.passo:first-of-type { border-top: 0; }
+.passo .num { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 900 16px Orbitron, sans-serif; border: 2px solid var(--line); color: var(--mut); }
+.passo.feito .num { background: var(--g); border-color: var(--g); color: #000; } .passo.atual .num { border-color: var(--y); color: var(--y); box-shadow: 0 0 0 5px rgba(255,212,0,.12); }
+.passo h3 { margin: 2px 0 6px; font: 700 16px Sora, sans-serif; } .passo p { margin: 0 0 10px; color: #c9cad6; line-height: 1.55; font-size: 14px; }
+.passo .acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ok-check { display: inline-flex; align-items: center; gap: 8px; color: var(--mut); font-size: 13px; cursor: pointer; margin: 0; } .ok-check input { width: 18px; height: 18px; accent-color: var(--g); }
+.caminho { display: inline-block; background: #12131a; border: 1px solid var(--line); border-radius: 8px; padding: 2px 8px; font-size: 13px; color: var(--ink); }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.fmt { background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.fmt b { display: block; font-size: 15px; margin: 6px 0; } .fmt p { margin: 0; color: #c9cad6; font-size: 13.5px; line-height: 1.5; } .fmt i { font-style: normal; font-size: 24px; }
+.rot { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 12px; background: rgba(255,255,255,.02); }
+.rot h3 { margin: 0 0 10px; font: 700 15px Sora; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.rot dl { margin: 0; display: grid; grid-template-columns: 110px 1fr; gap: 8px 12px; font-size: 14px; line-height: 1.5; }
+.rot dt { color: var(--y); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding-top: 2px; } .rot dd { margin: 0; color: #dcdde6; }
+.regras { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .regras ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.6; font-size: 14px; color: #d8d9e2; }
+.mats { display: flex; flex-wrap: wrap; gap: 8px; }
+.sec { margin-top: 14px; }
+.check { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; font-size: 13px; color: var(--mut); line-height: 1.5; } .check input { width: 18px; height: 18px; flex: none; margin-top: 1px; accent-color: var(--y); }
+.hp { position: absolute; left: -9999px; }
+@media (max-width: 760px) { .grid3, .regras { grid-template-columns: 1fr; } .rot dl { grid-template-columns: 1fr; gap: 2px; } .rot dd { margin-bottom: 8px; } .passo { grid-template-columns: 36px 1fr; gap: 10px; } .passo .num { width: 36px; height: 36px; font-size: 14px; } }
 </style>
 </head>
 <body>
@@ -65,6 +94,22 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
     <form id="fLogin"><label>E-mail<input type="email" id="lEmail" autocomplete="email" required></label><label>Senha<input type="password" id="lSenha" autocomplete="current-password" required></label>
     <button class="btn full">ENTRAR</button></form>
     <button class="link" id="esqueci">Esqueci a senha</button><div class="msg" id="lMsg"></div>
+    <p class="sub" style="margin:16px 0 0">Ainda não é afiliado? <a class="link" href="/afiliado/?cadastro" style="text-decoration:none">Criar minha conta de afiliado</a></p>
+  </div></div>
+
+  <div class="box" id="vCadastro" hidden style="max-width:460px"><div class="card">
+    <h1>Seja afiliado</h1><p class="sub">Indique o Studio Cover para cantores e ganhe <b style="color:var(--y)">50% de comissão</b> em cada venda, também nas renovações. Leva 1 minuto para criar a conta, e lá dentro tem o passo a passo para começar.</p>
+    <form id="fCad"><input class="hp" name="site" id="cSite" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label>Seu nome<input id="cNome" autocomplete="name" required></label>
+      <label>E-mail <small>(de preferência o mesmo que você vai usar na Eduzz)</small><input type="email" id="cEmail" autocomplete="email" required></label>
+      <label>WhatsApp com DDD<input id="cWhats" inputmode="tel" autocomplete="tel" placeholder="(11) 91234-5678" required></label>
+      <label>Senha <small>(8 ou mais, com letras e números)</small><input type="password" id="cSenha" autocomplete="new-password" required></label>
+      <label>Seu código no link <small>(opcional)</small><input id="cCodigo" placeholder="ex.: joaocovers" maxlength="20" autocapitalize="off"></label>
+      <p class="sub" style="margin:6px 0 0;font-size:12.5px">Seu link vai ficar: <b style="color:var(--y)" id="cPrev">studiocover.com.br/?af=…</b></p>
+      <label class="check"><input type="checkbox" id="cAceito"> <span>Li e aceito as regras: não prometo seguidores, fama ou números de visualização, não faço spam, não uso o nome Studio Cover como se fosse o perfil oficial e não ofereço desconto que não existe.</span></label>
+      <button class="btn full">CRIAR MINHA CONTA</button></form>
+    <div class="msg" id="cMsg"></div>
+    <p class="sub" style="margin:14px 0 0">Já tem conta? <a class="link" href="/afiliado/" style="text-decoration:none">Entrar</a></p>
   </div></div>
 
   <div class="box" id="vSenha" hidden><div class="card">
@@ -75,6 +120,41 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 
   <div id="vPainel" hidden>
     <p class="ola">Olá, <b id="nome"></b></p>
+    <nav class="tabs" id="tabs"><button data-aba="comece">🚀 Comece aqui</button><button data-aba="resultados">📊 Meus resultados</button><button data-aba="conteudo">🎬 Conteúdo e roteiros</button></nav>
+
+    <section class="aba" id="aba-comece">
+      <div class="card">
+        <div id="vidBox" hidden><h2>🎥 ASSISTA PRIMEIRO</h2>
+        <div class="video"><video id="tutorial" controls playsinline preload="none"></video></div></div>
+        <div class="prog" style="margin-top:0"><span id="progTxt">0 de 5</span><div><i id="progBar" style="width:0"></i></div></div>
+      </div>
+      <div class="card sec" id="passos">
+        <h2>✅ PASSO A PASSO PARA COMEÇAR A VENDER</h2>
+        <div class="passo" data-p="1"><div class="num">1</div><div>
+          <h3>Crie a sua conta grátis na Eduzz</h3>
+          <p>A Eduzz é a plataforma que processa as vendas e paga a sua comissão. Toque em <b>Começar gratuitamente</b>, crie a conta com o seu e-mail, complete o cadastro e coloque a sua conta bancária (é para lá que a comissão vai).</p>
+          <div class="acoes"><a class="btn sm" href="https://www.eduzz.com/" target="_blank" rel="noopener">ABRIR A EDUZZ</a><label class="ok-check"><input type="checkbox" data-manual="1"> Já tenho conta na Eduzz</label></div></div></div>
+        <div class="passo" data-p="2"><div class="num">2</div><div>
+          <h3>Afilie-se ao Studio Cover</h3>
+          <p>Já logado na Eduzz, abra a página do Studio Cover e toque em <b>Quero me afiliar</b> (ou <b>Afiliar-se</b>) e aceite os termos. A aprovação é <b>automática</b> e a comissão é de <b><span class="pct">50</span>% por venda</b>, também nas renovações anuais.</p>
+          <p style="font-size:13px;color:var(--mut)">Se o botão não abrir a página, procure <span class="caminho">3149410</span> na <span class="caminho">Vitrine</span> da Eduzz.</p>
+          <div class="acoes"><a class="btn sm" id="lkVitrine" href="https://my2.eduzz.com/showcase/product/details/3149410" target="_blank" rel="noopener">ABRIR O STUDIO COVER NA EDUZZ</a><label class="ok-check"><input type="checkbox" data-manual="2"> Já me afiliei</label></div></div></div>
+        <div class="passo" data-p="3"><div class="num">3</div><div>
+          <h3>Copie o seu link de afiliado e cole aqui</h3>
+          <p>Na Eduzz, vá em <span class="caminho">Produtos</span> → <span class="caminho">Afiliações</span>, abra o Studio Cover e copie o seu link de divulgação (o link de checkout com o seu código). Cole no campo abaixo e toque em Salvar.</p>
+          <div id="cEduzzSlot"></div></div></div>
+        <div class="passo" data-p="4"><div class="num">4</div><div>
+          <h3>Pronto: as suas páginas de venda já estão geradas</h3>
+          <p>Estes são os seus links. Quem entrar por eles fica marcado como seu por 60 dias: vê a nossa página com o vídeo, faz o teste grátis, recebe os nossos e-mails e avisos e, quando compra, a compra vai pelo <b>seu</b> link da Eduzz.</p>
+          <div id="linksSlot"></div></div></div>
+        <div class="passo" data-p="5"><div class="num">5</div><div>
+          <h3>Teste o app e poste o seu primeiro conteúdo</h3>
+          <p>Faça o teste grátis com um vídeo seu: o seu próprio antes e depois é o melhor material de divulgação que existe. Depois escolha um roteiro pronto na aba <b>Conteúdo e roteiros</b> e poste com o seu link na bio ou nos stories.</p>
+          <div class="acoes"><a class="btn sm" href="/entrar/?teste" target="_blank" rel="noopener">FAZER MEU TESTE GRÁTIS</a><button class="btn sm ghost" data-ir="conteudo">VER ROTEIROS</button><label class="ok-check"><input type="checkbox" data-manual="5"> Já postei</label></div></div></div>
+      </div>
+    </section>
+
+    <section class="aba" id="aba-resultados" hidden>
     <div class="links">
       <div class="card"><h2>🔗 SEU LINK DE DIVULGAÇÃO</h2><p class="sub" style="margin:0">Página de vendas com o vídeo. Quem entrar fica marcado como seu por 60 dias.</p><div class="copy"><input id="lkVendas" readonly><button class="btn sm" data-copy="lkVendas">COPIAR</button></div></div>
       <div class="card"><h2>🎁 LINK DIRETO DO TESTE GRÁTIS</h2><p class="sub" style="margin:0">Leva direto para o cadastro do teste grátis (ótimo para anúncio).</p><div class="copy"><input id="lkTeste" readonly><button class="btn sm" data-copy="lkTeste">COPIAR</button></div></div>
@@ -99,6 +179,89 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
         <li>Nada de prometer seguidores, views ou fama. O Studio Cover entrega som de estúdio no celular.</li></ol></div>
     </div>
     <div class="card" style="margin-top:14px"><h2>👥 SEUS LEADS</h2><div class="tbl" id="leads"></div></div>
+    </section>
+    <section class="aba" id="aba-conteudo" hidden>
+      <div class="card">
+        <h2>🎙️ O QUE VOCÊ ESTÁ VENDENDO (EM 20 SEGUNDOS)</h2>
+        <ol class="dicas">
+          <li>O Studio Cover é um <b>estúdio de gravação no celular</b>: o cantor grava o cover, envia o vídeo e recebe o vídeo de volta com a voz afinada, mixada e com cor de cinema.</li>
+          <li>O app separa a voz da música, afina nota por nota (automático ou ajustando no painel) e faz mix e master. Sem computador, sem estúdio, sem saber mixar.</li>
+          <li>Funciona no navegador do celular (iPhone 13 em diante e a maioria dos Android atuais).</li>
+          <li>Tem <b>teste grátis</b> com 1 vídeo, sem cartão. Depois é R$ 297 por ano (em até 10x). Uma única mixagem em estúdio costuma custar de R$ 100 a R$ 300.</li>
+        </ol>
+      </div>
+
+      <div class="card sec">
+        <h2>📱 COMO USAR O APP PARA CRIAR O SEU CONTEÚDO</h2>
+        <ol class="dicas">
+          <li>Grave um trecho de cover no celular (30 a 60 segundos já bastam). Pode ser no quarto, no carro, onde for.</li>
+          <li>Entre em <span class="caminho">studiocover.com.br/entrar</span>, faça o teste grátis e envie o vídeo.</li>
+          <li>Espere separar voz e música, escolha a afinação automática e, se quiser, ajuste as notas no painel.</li>
+          <li>Exporte o vídeo pronto. Guarde também o vídeo original: o antes e depois é o seu melhor criativo.</li>
+          <li>Grave a tela do celular enquanto usa o app (gravação de tela do iPhone ou do Android). Mostrar o app funcionando passa confiança.</li>
+        </ol>
+      </div>
+
+      <div class="card sec">
+        <h2>🧠 FORMATOS DE CRIATIVO QUE MAIS VENDEM</h2>
+        <div class="grid3">
+          <div class="fmt"><i>🔁</i><b>Antes e depois</b><p>O mesmo trecho do cover: primeiro cru, depois afinado e mixado. Corte seco no meio. É o formato número 1.</p></div>
+          <div class="fmt"><i>😮</i><b>Reação</b><p>Você ouvindo o resultado pela primeira vez. A cara de surpresa vende sozinha.</p></div>
+          <div class="fmt"><i>⚡</i><b>Tutorial de 30 segundos</b><p>Gravação de tela: envia o vídeo, afina, exporta. Mostra que é fácil e rápido.</p></div>
+          <div class="fmt"><i>💸</i><b>Estúdio x celular</b><p>Quanto custa uma mixagem no estúdio comparado a um ano inteiro de Studio Cover.</p></div>
+          <div class="fmt"><i>🎯</i><b>Desafio</b><p>"Mandem uma música que eu gravo e afino aqui no celular agora." Gera comentário e conversa.</p></div>
+          <div class="fmt"><i>🗣️</i><b>Dor do cantor</b><p>Fale de quem grava, ouve uma nota fora e apaga o vídeo. Quem canta se reconhece na hora.</p></div>
+        </div>
+      </div>
+
+      <div class="card sec">
+        <h2>🎬 ROTEIROS PRONTOS (É SÓ GRAVAR)</h2>
+        <p class="sub" style="margin:0">Cada roteiro tem o gancho (os primeiros 3 segundos), o meio e a chamada. Toque em Copiar para levar o texto inteiro.</p>
+        <div id="roteiros"></div>
+      </div>
+
+      <div class="card sec">
+        <h2>✍️ CHAMADAS PARA A LEGENDA E OS STORIES</h2>
+        <ol class="dicas">
+          <li>"Testa grátis no seu próprio vídeo, sem cartão. Link na bio."</li>
+          <li>"Comenta COVER que eu te mando o link do teste grátis."</li>
+          <li>"Se você canta e nunca posta porque não gosta do som, faz o teste: é grátis."</li>
+          <li>"Um ano de estúdio no bolso custa menos que uma mixagem."</li>
+          <li>"Nos stories: caixinha de pergunta 'quer o link?' e manda o link para quem responder."</li>
+        </ol>
+      </div>
+
+      <div class="card sec">
+        <h2>📦 MATERIAL PARA BAIXAR</h2>
+        <p class="sub">Pode usar nos seus posts, stories e anúncios. O melhor material continua sendo o seu próprio antes e depois.</p>
+        <div class="mats">
+          <a class="btn sm ghost" href="/assets/lp/vsl.mp4" download>🎬 Vídeo de vendas</a>
+          <a class="btn sm ghost" href="/assets/lp/antes.mp3" download>🔈 Áudio antes</a>
+          <a class="btn sm ghost" href="/assets/lp/depois.mp3" download>🔊 Áudio depois</a>
+          <a class="btn sm ghost" href="/assets/produto-capa.jpg" download>🖼️ Imagem do produto</a>
+          <a class="btn sm ghost" href="/assets/lp/painel.webp" download>🖼️ Tela do painel</a>
+          <a class="btn sm ghost" href="/assets/lp/antes.webp" download>🖼️ Tela antes</a>
+          <a class="btn sm ghost" href="/assets/lp/depois.webp" download>🖼️ Tela depois</a>
+        </div>
+      </div>
+
+      <div class="card sec">
+        <h2>⚖️ PODE E NÃO PODE</h2>
+        <div class="regras">
+          <div><b style="color:var(--g)">Pode</b><ul>
+            <li>Mostrar os seus covers antes e depois, sempre reais.</li>
+            <li>Fazer anúncio com o seu link de divulgação.</li>
+            <li>Usar o material desta página.</li>
+            <li>Falar do teste grátis e do preço real (R$ 297 por ano, em até 10x).</li></ul></div>
+          <div><b style="color:var(--r)">Não pode</b><ul>
+            <li>Prometer seguidores, fama, contrato ou número de visualizações.</li>
+            <li>Mandar mensagem em massa ou spam.</li>
+            <li>Criar perfil ou página como se fosse o Studio Cover oficial.</li>
+            <li>Inventar desconto, cupom ou bônus que não existe.</li>
+            <li>Mostrar antes e depois que não foi feito no app.</li></ul></div>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
 <script>
@@ -109,13 +272,52 @@ async function api(a, body) {
   const r = await fetch('/api/afiliado.php?a=' + a, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-SC': '1' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin', cache: 'no-store' });
   return r.json().catch(() => ({ ok: false, error: 'Sem conexão. Tente de novo.' }));
 }
-const ver = (v) => ['vLogin', 'vSenha', 'vPainel'].forEach((x) => ($(x).hidden = x !== v));
+const ver = (v) => ['vLogin', 'vSenha', 'vCadastro', 'vPainel'].forEach((x) => ($(x).hidden = x !== v));
+const ROTEIROS = [
+  { t: 'Antes e depois (o clássico)', g: '"Esse é o meu cover gravado no celular... e esse é o MESMO vídeo depois do Studio Cover."', m: 'Toca 5 segundos do vídeo cru. Corte seco. Toca o mesmo trecho afinado e mixado. Deixa o som falar.', c: '"Fiz no celular, em poucos minutos. Tem teste grátis no link da bio."', l: 'Mesmo vídeo, mesma voz, só passei no Studio Cover 🎙️ Testa grátis no seu próprio vídeo, link na bio.' },
+  { t: 'A nota que fez você apagar o vídeo', g: '"Quantas vezes você gravou um cover, ouviu UMA nota fora e apagou tudo?"', m: 'Mostra um trecho com a nota desafinada. Depois mostra a mesma nota corrigida no painel do app, nota por nota, sem voz de robô.', c: '"Agora eu arrumo isso no celular. Comenta COVER que eu te mando o link do teste grátis."', l: 'Nunca mais apaguei um cover por causa de uma nota 😅 Comenta COVER que te mando o link.' },
+  { t: 'Estúdio x celular', g: '"Uma mixagem no estúdio custa de 100 a 300 reais. Por música."', m: 'Mostra na tela: estúdio, R$ 100 a R$ 300 por música. Studio Cover, R$ 297 por ano, quantas músicas quiser. Mostra o app trabalhando.', c: '"Faz as contas e testa grátis primeiro. Link na bio."', l: 'Um ano de estúdio no bolso custa menos que uma mixagem 🎧 Teste grátis no link da bio.' },
+  { t: 'Reação ao ouvir o resultado', g: '"Vou ouvir pela primeira vez como ficou o meu cover depois do Studio Cover."', m: 'Grava a sua reação real com o fone, ouvindo o resultado. Depois mostra um trecho do vídeo final.', c: '"Se você canta, testa no seu vídeo. É grátis, link na bio."', l: 'Minha cara ouvindo meu cover com som de estúdio 😮 Testa grátis, link na bio.' },
+  { t: 'Tutorial de 30 segundos', g: '"Como eu deixo o meu cover com som de estúdio usando só o celular."', m: 'Gravação de tela: 1) envia o vídeo, 2) o app separa a voz da música, 3) afinação automática, 4) exporta. Narração rápida em cada passo.', c: '"Salva esse vídeo e faz o teste grátis pelo link da bio."', l: 'Passo a passo para deixar o cover com som de estúdio no celular 📱 Salva e testa grátis.' },
+  { t: 'Desafio nos comentários', g: '"Comenta uma música que eu gravo agora no celular e deixo com som de estúdio."', m: 'No vídeo seguinte, responde ao comentário escolhido: grava o trecho, mostra o cru e o resultado do app.', c: '"Quer fazer o mesmo com a sua voz? Teste grátis no link da bio."', l: 'Pedido de vocês, gravado no celular e finalizado no Studio Cover 🎤 Manda a próxima nos comentários.' },
+];
+function rotTxt(r) { return `${r.t}\n\nGANCHO: ${r.g}\nMEIO: ${r.m}\nCHAMADA: ${r.c}\nLEGENDA: ${r.l}`; }
+function copiar(txt, b, rot) { (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).catch(() => { const t = document.createElement('textarea'); t.value = txt; document.body.append(t); t.select(); document.execCommand('copy'); t.remove(); }).finally(() => { b.textContent = 'COPIADO ✓'; setTimeout(() => (b.textContent = rot), 1800); }); }
+$('roteiros').innerHTML = ROTEIROS.map((r, i) => `<div class="rot"><h3><span>${i + 1}. ${esc(r.t)}</span><button class="btn sm ghost" data-rot="${i}">COPIAR</button></h3><dl><dt>Gancho</dt><dd>${esc(r.g)}</dd><dt>Meio</dt><dd>${esc(r.m)}</dd><dt>Chamada</dt><dd>${esc(r.c)}</dd><dt>Legenda</dt><dd>${esc(r.l)}</dd></dl></div>`).join('');
+document.querySelectorAll('[data-rot]').forEach((b) => (b.onclick = () => copiar(rotTxt(ROTEIROS[+b.dataset.rot]), b, 'COPIAR')));
+function aba(n) {
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.aba === n));
+  document.querySelectorAll('.aba').forEach((x) => (x.hidden = x.id !== 'aba-' + n));
+  try { localStorage.setItem('sc-af-aba', n); } catch {}
+  if (location.hash !== '#' + n) history.replaceState(null, '', '#' + n);
+}
+document.querySelectorAll('#tabs button, [data-ir]').forEach((b) => (b.onclick = () => { aba(b.dataset.aba || b.dataset.ir); scrollTo({ top: 0, behavior: 'smooth' }); }));
+let AF = null;
+const feitos = () => { try { return JSON.parse(localStorage.getItem('sc-af-passos-' + (AF?.codigo || '')) || '{}'); } catch { return {}; } };
+function passos() {
+  const f = feitos(), temLink = !!(AF && AF.link_eduzz);
+  const ok = { 1: f[1] || temLink, 2: f[2] || temLink, 3: temLink, 4: temLink, 5: f[5] };
+  let atual = 0;
+  document.querySelectorAll('.passo').forEach((el) => { const p = +el.dataset.p; el.classList.toggle('feito', !!ok[p]); el.classList.remove('atual'); if (!ok[p] && !atual) { atual = p; el.classList.add('atual'); } const c = el.querySelector('[data-manual]'); if (c) c.checked = !!ok[p]; });
+  const n = Object.values(ok).filter(Boolean).length;
+  $('progTxt').textContent = n === 5 ? 'Tudo pronto! 🎉' : `${n} de 5 passos`; $('progBar').style.width = (n / 5) * 100 + '%';
+  return n;
+}
+document.querySelectorAll('[data-manual]').forEach((c) => (c.onchange = () => { const f = feitos(); f[c.dataset.manual] = c.checked; try { localStorage.setItem('sc-af-passos-' + AF.codigo, JSON.stringify(f)); } catch {} passos(); }));
 function conta(el, to) { const t0 = performance.now(); const f = (t) => { const p = Math.min(1, (t - t0) / 1100); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))).toLocaleString('pt-BR'); if (p < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
 const pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
 async function painel() {
   const j = await api('painel');
   if (!j.ok) { ver('vLogin'); $('sair').hidden = true; return; }
-  ver('vPainel'); $('sair').hidden = false;
+  ver('vPainel'); $('sair').hidden = false; AF = j.afiliado;
+  if (!$('cEduzzSlot').firstChild) { $('cEduzzSlot').append($('cEduzz')); $('cEduzz').classList.remove('card'); $('cEduzz').querySelector('h2').remove(); $('cEduzz').querySelector('.sub').remove(); }
+  $('linksSlot').innerHTML = `<label style="margin-top:0">Página de vendas com o vídeo (use na bio e nos posts)</label><div class="copy"><input id="lkV2" readonly value="${esc(j.links.vendas)}"><button class="btn sm" data-c2="lkV2">COPIAR</button></div><label>Direto para o teste grátis (ótimo para anúncio e stories)</label><div class="copy"><input id="lkT2" readonly value="${esc(j.links.teste)}"><button class="btn sm" data-c2="lkT2">COPIAR</button></div>`;
+  document.querySelectorAll('[data-c2]').forEach((b) => (b.onclick = () => copiar($(b.dataset.c2).value, b, 'COPIAR')));
+  document.querySelectorAll('.pct').forEach((x) => (x.textContent = (j.eduzz && j.eduzz.comissao) || '50'));
+  if (j.eduzz && j.eduzz.vitrine) $('lkVitrine').href = j.eduzz.vitrine;
+  if (j.tutorial && !$('tutorial').src) { $('tutorial').src = j.tutorial; $('tutorial').poster = '/afiliado/tut/f1a.jpg'; $('vidBox').hidden = false; }
+  const n = passos(); let ab = ''; try { ab = localStorage.getItem('sc-af-aba') || ''; } catch {}
+  const h = location.hash.slice(1); aba(['comece', 'resultados', 'conteudo'].includes(h) ? h : n < 4 ? 'comece' : ab || 'resultados');
   $('nome').textContent = (j.afiliado.nome || j.afiliado.email).split(' ')[0];
   $('lkVendas').value = j.links.vendas; $('lkTeste').value = j.links.teste; $('lkEduzz').value = j.afiliado.link_eduzz || '';
   if (!j.afiliado.link_eduzz) $('eMsg').innerHTML = '<span class="erro" style="color:var(--r)">Falta o seu link de afiliado da Eduzz. Sem ele a comissão das vendas do funil pode não cair para você.</span>';
@@ -128,7 +330,15 @@ async function painel() {
   $('leads').innerHTML = j.leads.length ? `<table><tr><th>Quando</th><th>Pessoa</th><th>Etapa</th></tr>${j.leads.map((l) => `<tr><td>${dt(l.quando)}</td><td>${esc(l.nome)}<small>${esc(l.email)}</small></td><td><span class="et ${l.etapa}">${nomes[l.etapa]}</span></td></tr>`).join('')}</table>` : '<p class="sub" style="margin:0">Ainda sem leads. Compartilhe o seu link e eles aparecem aqui na hora.</p>';
 }
 document.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = async () => { const i = $(b.dataset.copy); try { await navigator.clipboard.writeText(i.value); } catch { i.select(); document.execCommand('copy'); } b.textContent = 'COPIADO ✓'; setTimeout(() => (b.textContent = 'COPIAR'), 1800); }));
-$('salvarEduzz').onclick = async () => { const j = await api('salvar-link', { link_eduzz: $('lkEduzz').value.trim() }); $('eMsg').className = 'msg ' + (j.ok ? 'ok' : 'erro'); $('eMsg').textContent = j.ok ? 'Salvo! As compras dos seus leads vão por este link.' : j.error; };
+$('salvarEduzz').onclick = async () => { const v = $('lkEduzz').value.trim(); const j = await api('salvar-link', { link_eduzz: v }); $('eMsg').className = 'msg ' + (j.ok ? 'ok' : 'erro'); $('eMsg').textContent = j.ok ? 'Salvo! As compras dos seus leads vão por este link.' : j.error; if (j.ok && AF) { AF.link_eduzz = v; passos(); } };
+const prev = () => { const c = $('cCodigo').value.toLowerCase().replace(/[^a-z0-9_-]/g, ''); const n = $('cNome').value.normalize('NFD').replace(/[^a-zA-Z0-9]/g, ' ').trim().split(' ')[0].toLowerCase(); $('cPrev').textContent = 'studiocover.com.br/?af=' + (c || n || '…'); };
+$('cCodigo').oninput = prev; $('cNome').oninput = prev;
+$('fCad').onsubmit = async (e) => {
+  e.preventDefault(); const b = $('fCad').querySelector('.btn'); b.disabled = true; $('cMsg').textContent = '';
+  const j = await api('cadastro', { nome: $('cNome').value, email: $('cEmail').value, whats: $('cWhats').value, senha: $('cSenha').value, codigo: $('cCodigo').value, aceito: $('cAceito').checked ? 1 : 0, site: $('cSite').value });
+  b.disabled = false;
+  if (j.ok) { history.replaceState(null, '', '/afiliado/#comece'); painel(); } else { $('cMsg').className = 'msg erro'; $('cMsg').textContent = j.error; }
+};
 $('fLogin').onsubmit = async (e) => { e.preventDefault(); $('lMsg').textContent = ''; const j = await api('login', { email: $('lEmail').value, senha: $('lSenha').value }); if (j.ok) painel(); else { $('lMsg').className = 'msg erro'; $('lMsg').textContent = j.error; } };
 $('esqueci').onclick = async () => { if (!$('lEmail').value) { $('lMsg').className = 'msg erro'; $('lMsg').textContent = 'Digite o seu e-mail acima.'; return; } await api('esqueci', { email: $('lEmail').value }); $('lMsg').className = 'msg ok'; $('lMsg').textContent = 'Se este e-mail for de um afiliado, o link para criar a senha chegou na sua caixa.'; };
 $('sair').onclick = async () => { await api('sair', {}); location.href = '/afiliado/'; };
@@ -136,7 +346,7 @@ const tk = new URLSearchParams(location.search).get('criar');
 if (tk) {
   api('token&t=' + encodeURIComponent(tk)).then((j) => { ver('vSenha'); if (!j.ok) { $('sMsg').className = 'msg erro'; $('sMsg').textContent = 'Este link venceu. Volte e toque em "Esqueci a senha".'; } else $('sSub').textContent = `Olá${j.nome ? ', ' + j.nome.split(' ')[0] : ''}! Crie a senha do painel (${j.email}).`; });
   $('fSenha').onsubmit = async (e) => { e.preventDefault(); const j = await api('criar-senha', { t: tk, senha: $('sSenha').value }); if (j.ok) { history.replaceState(null, '', '/afiliado/'); painel(); } else { $('sMsg').className = 'msg erro'; $('sMsg').textContent = j.error; } };
-} else painel();
+} else if (new URLSearchParams(location.search).has('cadastro')) { api('painel').then((j) => (j.ok ? painel() : ver('vCadastro'))); } else painel();
 </script>
 </body>
 </html>

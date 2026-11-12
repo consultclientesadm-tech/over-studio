@@ -229,6 +229,7 @@ switch ($a) {
       if ($k === 'meta_pixel' || $k === 'eduzz_pixel') $v = implode(',', array_filter(preg_split('/\D+/', $v)));
       if ($k === 'installments') $v = (string)max(0, min(12, (int)$v));
       if ($k === 'checkout_url' && $v !== '' && !preg_match('#^https://#', $v)) fail('O link do checkout precisa começar com https://');
+      if ($k === 'af_tutorial_url' && $v !== '' && !preg_match('#^https://[^\s"<>]+$#', $v)) fail('O link do vídeo dos afiliados precisa começar com https://');
       set_setting($k, $v);
     }
     json_out(['ok' => true]);

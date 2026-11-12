@@ -117,10 +117,11 @@ const SETTINGS_DEFAULT = [
   'smtp_host' => '', 'smtp_port' => '587', 'smtp_user' => '', 'smtp_pass' => '', 'smtp_secure' => 'tls',
   'support_whatsapp' => '',
   'meta_pixel' => '1595086872316004,1631589557846072', // Pixels da Meta na página de vendas, separados por vírgula (vazio = sem pixel)
-  'eduzz_pixel' => '1595086872316004',
+  'eduzz_pixel' => '1595086872316004', // pixel já cadastrado no checkout da Eduzz (a página de obrigado não repete a Compra dele)
   'eduzz_taxa' => '17,04',           // taxa que a Eduzz desconta de cada venda (R$). Os juros do parcelamento quem paga é o comprador
-  'socio_pct' => '50',
-  'af_comissao_pct' => '50',         // comissão do afiliado na Eduzz (% do valor já sem a taxa)               // parte do sócio (Reinaldo) no líquido, em % // pixel já cadastrado no checkout da Eduzz (a página de obrigado não repete a Compra dele)
+  'socio_pct' => '50',               // parte do sócio (Reinaldo) no líquido, em %
+  'af_comissao_pct' => '50',         // comissão do afiliado na Eduzz (% do valor já sem a taxa)
+  'af_tutorial_url' => '',           // vídeo do passo a passo no painel do afiliado (https)
 ];
 function setting(string $k): string {
   static $cache = null;

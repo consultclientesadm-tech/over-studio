@@ -13,6 +13,9 @@ function af_db(): PDO {
     CREATE INDEX IF NOT EXISTS af_cliques_af ON af_cliques(afiliado_id, created_at);');
   $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
   if (!in_array('afiliado_id', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN afiliado_id INTEGER');
+  $cols = array_column($db->query('PRAGMA table_info(afiliados)')->fetchAll(), 'name');
+  if (!in_array('whats', $cols, true)) $db->exec("ALTER TABLE afiliados ADD COLUMN whats TEXT NOT NULL DEFAULT ''");
+  if (!in_array('origem', $cols, true)) $db->exec("ALTER TABLE afiliados ADD COLUMN origem TEXT NOT NULL DEFAULT 'admin'");
   $cols = array_column($db->query('PRAGMA table_info(sales)')->fetchAll(), 'name');
   if (!in_array('afiliado_id', $cols, true)) $db->exec('ALTER TABLE sales ADD COLUMN afiliado_id INTEGER');
   $ok = true; return $db;
@@ -65,6 +68,12 @@ function af_boas_vindas(array $af): bool {
   return send_mail(null, $af['email'], 'afiliado', 'Seu painel de afiliado do Studio Cover', 'Bem-vindo, parceiro! 🤝',
     '<p>Sua conta de afiliado do Studio Cover está pronta. No painel você pega o seu link, acompanha quantas pessoas entraram, fizeram o teste grátis e compraram.</p><p>Todo mundo que entrar pelo seu link recebe o nosso funil de e-mails e avisos, e a compra vai pelo seu link de afiliado da Eduzz.</p>',
     'Criar minha senha', $link);
+}
+// avisa os administradores que um afiliado novo se cadastrou sozinho
+function af_avisa_admins(array $af): void {
+  $html = '<p><b>' . h($af['nome']) . '</b> (' . h($af['email']) . (!empty($af['whats']) ? ' · WhatsApp ' . h($af['whats']) : '') . ') acabou de criar a conta de afiliado pelo link de cadastro.</p><p>Código: <b>' . h($af['codigo']) . '</b> · link de divulgação: ' . h(site_url() . '/?af=' . $af['codigo']) . '</p><p>Ele já está vendo o passo a passo no painel. Você pode desativar a conta na aba Afiliados se precisar.</p>';
+  foreach (db()->query('SELECT email FROM admins')->fetchAll(PDO::FETCH_COLUMN) as $to)
+    send_mail(null, $to, 'alerta', '🤝 Novo afiliado no Studio Cover: ' . $af['nome'], 'Novo afiliado cadastrado', $html, 'Ver afiliados', site_url() . '/admin/#afiliados');
 }
 // números de um afiliado (ou de todos, agrupados)
 function af_numeros(?int $id = null, ?string $since = null): array {
