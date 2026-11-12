@@ -124,9 +124,15 @@ switch ($a) {
       'id' => (int)$r['id'], 'h' => substr($r['created_at'], 11, 5), 'min' => (int)substr($r['created_at'], 11, 2) * 60 + (int)substr($r['created_at'], 14, 2), 'd' => substr($r['created_at'], 0, 10),
       'liquido' => (float)$r['liquido'], 'bruto' => (float)$r['bruto'], 'af' => $r['afiliado_id'] ? 1 : 0, 'nome' => explode(' ', trim((string)$r['name']))[0] ?? ''], $q->fetchAll()), fn($x) => $x['d'] === $d)); };
     $cad = function (string $d) use ($db) { $o = array_fill(0, 24, 0); $q = $db->prepare('SELECT CAST(substr(created_at, 12, 2) AS INTEGER) h, COUNT(*) n FROM users WHERE created_at >= ? AND created_at < ? GROUP BY h'); $q->execute([$d, date('Y-m-d', strtotime($d) + 86400)]); foreach ($q as $r) $o[(int)$r['h']] = (int)$r['n']; return $o; };
+    // cadastros de hoje, um por um (hora, primeiro nome, se veio de afiliado, se já testou/comprou) para o gráfico ao vivo de cadastros
+    $cadLista = function (string $d) use ($db) { $q = $db->prepare('SELECT id, created_at, name, afiliado_id, status, videos_used FROM users WHERE created_at >= ? AND created_at < ? ORDER BY created_at');
+      $q->execute([$d, date('Y-m-d', strtotime($d) + 86400 + 3600)]);
+      return array_values(array_filter(array_map(fn($r) => ['id' => (int)$r['id'], 'd' => substr($r['created_at'], 0, 10), 'h' => substr($r['created_at'], 11, 5), 'min' => (int)substr($r['created_at'], 11, 2) * 60 + (int)substr($r['created_at'], 14, 2),
+        'nome' => explode(' ', trim((string)$r['name']))[0] ?? '', 'af' => $r['afiliado_id'] ? 1 : 0, 'testou' => (int)$r['videos_used'] > 0 ? 1 : 0, 'comprou' => $r['status'] === 'active' ? 1 : 0], $q->fetchAll()), fn($x) => $x['d'] === $d)); };
+    $q7c = $db->prepare('SELECT COUNT(*) FROM users WHERE created_at >= ? AND created_at < ?'); $q7c->execute([date('Y-m-d', time() - 7 * 86400), $hoje]); $cad7 = round((int)$q7c->fetchColumn() / 7, 1);
     $q7 = $db->prepare("SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ? AND created_at < ?"); $q7->execute([date('Y-m-d', time() - 7 * 86400), $hoje]);
     json_out(['ok' => true, 'agora' => date('H:i'), 'agora_min' => (int)date('G') * 60 + (int)date('i'), 'hoje' => $dia($hoje), 'ontem' => $dia($ontem),
-      'cad_hoje' => $cad($hoje), 'cad_ontem' => $cad($ontem), 'media_7d' => round((float)$q7->fetchColumn() / 7, 2)]);
+      'cad_hoje' => $cad($hoje), 'cad_ontem' => $cad($ontem), 'media_7d' => round((float)$q7->fetchColumn() / 7, 2), 'cad_lista' => $cadLista($hoje), 'cad_ontem_lista' => $cadLista($ontem), 'cad_media_7d' => $cad7]);
   }
 
   case 'alunos': {

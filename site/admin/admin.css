@@ -230,3 +230,28 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .embox details { margin-top: 10px; } .embox summary { cursor: pointer; color: #a9adc0; font-size: 13px; }
 .seg.emf { margin-bottom: 10px; display: inline-flex; }
 .st.nao { color: #a9adc0; border-color: rgba(140,150,200,.3); background: rgba(140,150,200,.08); }
+/* cadastros ao vivo (abaixo das vendas) */
+.cadBox { border-color: rgba(111,243,255,.18); }
+.vivo.c { color: var(--c); }
+.cadBox .hv b { color: var(--c); text-shadow: 0 0 24px rgba(63,208,255,.45); }
+.cadG { display: grid; grid-template-columns: 1fr 230px; gap: 16px; align-items: stretch; }
+.cadBox .hc { height: clamp(170px, 20vw, 240px); }
+.hc .cbh { fill: url(#gCad); }
+.hc .cbo { fill: none; stroke: rgba(111,243,255,.35); stroke-width: 1.2; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.hc .tl.c { stroke: #6ff3ff; filter: drop-shadow(0 0 6px rgba(111,243,255,.75)); }
+.hc .cp { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #6ff3ff; border: 2px solid #0b0c16; box-shadow: 0 0 10px rgba(111,243,255,.9); z-index: 2; }
+.hc .cp.af { background: var(--p); box-shadow: 0 0 10px rgba(167,123,255,.9); }
+.hc .cp.cmp { outline: 2px solid var(--g); outline-offset: 1px; }
+.hc .cp.ult::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #6ff3ff; animation: ping 1.8s infinite; }
+.cadUlt { background: rgba(255,255,255,.025); border: 1px solid rgba(140,150,200,.12); border-radius: 14px; padding: 12px; overflow: hidden; display: flex; flex-direction: column; gap: 6px; }
+.cadUlt small { font: 800 10.5px Orbitron; letter-spacing: .14em; color: #8d92ad; margin-bottom: 2px; }
+.cadUlt > div { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 8px; border-radius: 9px; background: rgba(255,255,255,.03); }
+.cadUlt > div b { color: var(--c); font: 700 12px 'JetBrains Mono', monospace; }
+.cadUlt > div span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cadUlt > div em { font-style: normal; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 8px; }
+.cadUlt em.g { color: var(--g); background: rgba(46,229,157,.12); } .cadUlt em.y { color: var(--y); background: rgba(255,212,0,.1); } .cadUlt em.p { color: var(--p); background: rgba(167,123,255,.14); }
+.cadUlt > div.novo { animation: cadNovo 2.4s ease-out; } @keyframes cadNovo { 0% { background: rgba(111,243,255,.35); } 100% { background: rgba(255,255,255,.03); } }
+.cadUlt p { margin: 0; color: #8d92ad; font-size: 13px; }
+.hl .lcy { background: #6ff3ff; } .hl .lco { height: 10px; width: 10px; border: 1px dashed rgba(111,243,255,.6); background: none; }
+@media (max-width: 860px) { .cadG { grid-template-columns: 1fr; } }
+.hc .cbn { position: absolute; transform: translate(-50%, -125%); font: 700 11px 'JetBrains Mono', monospace; color: #bff8ff; pointer-events: none; z-index: 1; }

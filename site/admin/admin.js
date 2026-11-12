@@ -86,8 +86,6 @@ async function loadHoje() {
     return { d, c };
   };
   const pt = curva(vendas, agora), po = curva(ontem, 1440);
-  const cadMax = Math.max(1, ...j.cad_hoje, ...j.cad_ontem);
-  const barras = j.cad_hoje.map((n, h) => (h * 60 <= agora && n ? `<rect x="${X(h * 60 + 6).toFixed(1)}" y="${(H - (n / cadMax) * 46).toFixed(1)}" width="${(X(48)).toFixed(1)}" height="${((n / cadMax) * 46).toFixed(1)}" rx="3" class="cb"><title>${h}h: ${n} cadastro${n === 1 ? '' : 's'}</title></rect>` : '')).join('');
   let c = 0;
   const pontos = vendas.map((v, i) => { c += v.liquido; return `<i class="pt ${v.af ? 'af' : ''} ${v.liquido < 0 ? 'rb' : ''} ${i === vendas.length - 1 ? 'ult' : ''}" style="left:${(v.min / 14.4).toFixed(2)}%;top:${((1 - Math.max(0, c) / ymax) * 100).toFixed(2)}%" title="${v.h} · ${esc(v.nome || 'cliente')} · ${v.liquido < 0 ? 'reembolso ' : '+'}${brl(Math.abs(v.liquido))}${v.af ? ' (afiliado)' : ''}"></i>`; }).join('');
   const dif = ontemAte > 0 ? (total - ontemAte) / ontemAte : null;
@@ -102,7 +100,6 @@ async function loadHoje() {
       <div class="hc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
         <defs><linearGradient id="gHoje" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd400" stop-opacity=".45"/><stop offset="1" stop-color="#ffd400" stop-opacity="0"/></linearGradient></defs>
         ${[0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" class="gr"/>`).join('')}
-        ${barras}
         ${j.media_7d ? `<line x1="0" x2="${W}" y1="${Y(j.media_7d).toFixed(1)}" y2="${Y(j.media_7d).toFixed(1)}" class="md"/>` : ''}
         <path d="${po.d}" class="on"/>
         <path d="${pt.d} L${X(agora).toFixed(1)} ${H} Z" fill="url(#gHoje)" class="ar"/>
@@ -111,12 +108,67 @@ async function loadHoje() {
       </svg>${pontos}<span class="agora" style="left:${(agora / 14.4).toFixed(2)}%">agora ${j.agora}</span>
       ${j.media_7d ? `<span class="mdl" style="top:${((1 - j.media_7d / ymax) * 100).toFixed(1)}%">média/dia</span>` : ''}</div></div>
     <div class="hx">${[0, 3, 6, 9, 12, 15, 18, 21, 24].map((h) => `<span>${h}h</span>`).join('')}</div>
-    <div class="hl"><span><i class="ly"></i>Hoje (líquido acumulado)</span><span><i class="lo"></i>Ontem</span><span><i class="lp"></i>Venda de afiliado</span><span><i class="lc"></i>Cadastros no teste grátis por hora</span>${j.media_7d ? '<span><i class="lm"></i>Média por dia (7 dias)</span>' : ''}</div>
+    <div class="hl"><span><i class="ly"></i>Hoje (líquido acumulado)</span><span><i class="lo"></i>Ontem</span><span><i class="lp"></i>Venda de afiliado</span>${j.media_7d ? '<span><i class="lm"></i>Média por dia (7 dias)</span>' : ''}</div>
   </section>`;
   hojeDesenhado = true;
   const hv = $('hoje').querySelector('.hv .cnt'); if (hv) { if (novas.length || !loadHoje.ja) contar($('hoje')); else { hv.textContent = brl(total); } }
   loadHoje.ja = true;
   if (novas.length) { chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}${novas.some((v) => v.af) ? ' (afiliado)' : ''}`); }
+  loadCad(j);
+}
+// curva suave que nunca desce (monotone cubic) por pontos [x, y] já em pixels
+function suave(P) {
+  const n = P.length; if (n < 2) return n ? `M${P[0][0]} ${P[0][1]}` : '';
+  const xs = P.map((p) => p[0]), ys = P.map((p) => p[1]), dx = [], m = [], t = [];
+  for (let i = 0; i < n - 1; i++) { dx[i] = xs[i + 1] - xs[i] || 0.01; m[i] = (ys[i + 1] - ys[i]) / dx[i]; }
+  t[0] = m[0]; t[n - 1] = m[n - 2];
+  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]);
+  let d = `M${xs[0].toFixed(1)} ${ys[0].toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) { const h = dx[i] / 3; d += ` C${(xs[i] + h).toFixed(1)} ${(ys[i] + t[i] * h).toFixed(1)} ${(xs[i + 1] - h).toFixed(1)} ${(ys[i + 1] - t[i + 1] * h).toFixed(1)} ${xs[i + 1].toFixed(1)} ${ys[i + 1].toFixed(1)}`; }
+  return d;
+}
+// ---------- cadastros ao vivo (logo abaixo das vendas) ----------
+let cadIds = null, cadDesenhado = false;
+function loadCad(j) {
+  const L = j.cad_lista || [], LO = j.cad_ontem_lista || [], agora = j.agora_min, W = 1000, H = 200;
+  const tot = L.length, ontemAte = LO.filter((c) => c.min <= agora).length, ontemTot = LO.length;
+  const hmax = Math.max(2, ...j.cad_hoje, ...j.cad_ontem), cmax = Math.max(4, tot, ontemTot) * 1.15;
+  const X = (m) => (m / 1440) * W, Yb = (n) => H - (n / hmax) * H * 0.62, Yc = (n) => H - (n / cmax) * H;
+  const bar = (n, h, cls) => (n ? `<rect x="${X(h * 60 + 5).toFixed(1)}" y="${Yb(n).toFixed(1)}" width="${X(50).toFixed(1)}" height="${(H - Yb(n)).toFixed(1)}" rx="4" class="${cls}"><title>${h}h: ${n} cadastro${n === 1 ? '' : 's'}${cls === 'cbo' ? ' (ontem)' : ''}</title></rect>` : '');
+  const barsO = j.cad_ontem.map((n, h) => bar(n, h, 'cbo')).join('');
+  const barsH = j.cad_hoje.map((n, h) => (h * 60 <= agora ? bar(n, h, 'cbh') : '')).join('');
+  const acum = (arr, fim) => { const P = [[0, Yc(0)]]; arr.forEach((c, i) => { if (c.min <= fim) P.push([Math.max(X(c.min), P[P.length - 1][0] + 0.5), Yc(i + 1)]); }); P.push([X(fim), P[P.length - 1][1]]); return P; };
+  const PH = acum(L, agora), dH = suave(PH), dO = suave(acum(LO, 1440));
+  const pontos = L.map((c, i) => `<i class="cp ${c.af ? 'af' : ''} ${c.comprou ? 'cmp' : ''} ${i === L.length - 1 ? 'ult' : ''}" style="left:${(c.min / 14.4).toFixed(2)}%;top:${((1 - (i + 1) / cmax) * 100).toFixed(2)}%" title="${c.h} · ${esc(c.nome || 'sem nome')}${c.af ? ' · veio de afiliado' : ''}${c.comprou ? ' · já comprou' : c.testou ? ' · já testou' : ''}"></i>`).join('');
+  const rotH = j.cad_hoje.map((n, h) => (h * 60 <= agora && n ? `<span class="cbn" style="left:${((h * 60 + 30) / 14.4).toFixed(2)}%;top:${((Yb(n) / H) * 100).toFixed(2)}%">${n}</span>` : '')).join('');
+  const dif = ontemAte > 0 ? (tot - ontemAte) / ontemAte : null;
+  const novos = cadIds ? L.filter((c) => !cadIds.has(c.id)) : [];
+  cadIds = new Set(L.map((c) => c.id));
+  const pico = j.cad_hoje.reduce((b, n, h) => (n > b[0] ? [n, h] : b), [0, 0]);
+  const ult = L.slice(-8).reverse();
+  $('cadHoje').innerHTML = `<section class="hojeBox cadBox glass${novos.length ? ' nova' : ''}">
+    <div class="hh"><div><span class="vivo c"><i></i>AO VIVO · CADASTROS DE HOJE</span>
+      <div class="hv"><b class="cnt" data-to="${tot}" data-f="n">0</b><small>cadastro${tot === 1 ? '' : 's'} no teste grátis${tot ? ` · último às ${L[L.length - 1].h}` : ''}${pico[0] ? ` · pico às ${pico[1]}h (${pico[0]})` : ''}</small></div></div>
+      <div class="hcmp">${dif === null ? (ontemTot ? '' : '<span>Ontem: sem cadastros</span>') : `<b class="${dif >= 0 ? 'up' : 'dn'}">${dif >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(dif) * 100)}%</b><span>vs ontem até esta hora (${ontemAte})</span>`}
+        <span>ontem fechou com ${ontemTot} · média dos últimos 7 dias ${String(j.cad_media_7d).replace('.', ',')}/dia</span></div></div>
+    <div class="cadG"><div><div class="hg"><div class="hy"><span>${Math.round(cmax)}</span><span>${Math.round(cmax / 2)}</span><span>0</span></div>
+      <div class="hc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <defs><linearGradient id="gCad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ff3ff" stop-opacity=".9"/><stop offset="1" stop-color="#3fd0ff" stop-opacity=".25"/></linearGradient>
+          <linearGradient id="gCadA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ff3ff" stop-opacity=".22"/><stop offset="1" stop-color="#6ff3ff" stop-opacity="0"/></linearGradient></defs>
+        ${[0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" class="gr"/>`).join('')}
+        ${barsO}${barsH}
+        <path d="${dO}" class="on"/>
+        <path d="${dH} L${X(agora).toFixed(1)} ${H} L0 ${H} Z" fill="url(#gCadA)" class="ar"/>
+        <path d="${dH}" class="tl c${cadDesenhado ? '' : ' draw'}" pathLength="1"/>
+        <line x1="${X(agora).toFixed(1)}" x2="${X(agora).toFixed(1)}" y1="0" y2="${H}" class="nw"/>
+      </svg>${rotH}${pontos}<span class="agora" style="left:${(agora / 14.4).toFixed(2)}%">agora ${j.agora}</span></div></div>
+      <div class="hx">${[0, 3, 6, 9, 12, 15, 18, 21, 24].map((h) => `<span>${h}h</span>`).join('')}</div></div>
+      <div class="cadUlt"><small>ÚLTIMOS CADASTROS</small>${ult.length ? ult.map((c) => `<div${novos.some((n) => n.id === c.id) ? ' class="novo"' : ''}><b>${c.h}</b><span>${esc(c.nome || 'sem nome')}</span>${c.comprou ? '<em class="g">comprou</em>' : c.testou ? '<em class="y">testou</em>' : ''}${c.af ? '<em class="p">afiliado</em>' : ''}</div>`).join('') : '<p>Nenhum cadastro hoje ainda.</p>'}</div></div>
+    <div class="hl"><span><i class="lcy"></i>Cadastros acumulados hoje</span><span><i class="lc"></i>Cadastros por hora (número em cima)</span><span><i class="lco"></i>Por hora ontem</span><span><i class="lo"></i>Acumulado ontem</span><span><i class="lp"></i>Veio de afiliado</span></div>
+  </section>`;
+  cadDesenhado = true;
+  contar($('cadHoje'));
+  if (novos.length) toast(`🎁 ${novos.length === 1 ? 'Novo cadastro: ' + (novos[0].nome || 'sem nome') + ' às ' + novos[0].h : novos.length + ' cadastros novos'}`);
 }
 const N2 = (v) => `<b class="cnt" data-to="${+v || 0}" data-f="brl">0</b>`;
 setInterval(() => { if (!document.hidden && $('vPainel') && !$('vPainel').hidden && !$('tGeral').hidden) loadHoje(); }, 30000);
