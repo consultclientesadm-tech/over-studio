@@ -124,6 +124,13 @@ switch ($a) {
     json_out(['ok' => true, 'user' => public_user($u)]);
   }
 
+  case 'push-chave': json_out(['ok' => true, 'chave' => vapid_public()]);
+  case 'push-salvar': {
+    require_post();
+    $u = current_user(); if (!$u) fail('Entre na sua conta.', 401);
+    push_save((int)$u['id'], (array)arg('sub', []), (string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
+    json_out(['ok' => true]);
+  }
   case 'avisos': {
     $u = current_user(); if (!$u) fail('Entre na sua conta.', 401);
     $q = db()->prepare('SELECT id, title, body, url, created_at, read_at FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 30'); $q->execute([$u['id']]);

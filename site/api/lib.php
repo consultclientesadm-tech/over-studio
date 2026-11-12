@@ -234,11 +234,12 @@ function checkout_url(?array $u = null): string {
 }
 function public_user(array $u): array {
   return ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'], 'status' => $u['status'], 'expires_at' => $u['expires_at'],
-    'videos_used' => (int)$u['videos_used']] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price')];
+    'videos_used' => (int)$u['videos_used']] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value')];
 }
 
 function notify(int $uid, string $title, string $body, string $url = ''): void {
   db()->prepare('INSERT INTO notifications (user_id, title, body, url, created_at) VALUES (?, ?, ?, ?, ?)')->execute([$uid, $title, $body, $url, now()]);
+  try { push_user($uid, $title, $body, $url); } catch (Throwable $e) {} // celular de quem instalou e deixou avisar
 }
 
 // cria (ou acha) a pessoa e devolve o registro
@@ -261,3 +262,4 @@ function set_password_link(array $u, int $days = 7): string {
 }
 
 require_once __DIR__ . '/mail.php';
+require_once __DIR__ . '/push.php';

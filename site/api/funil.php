@@ -5,37 +5,42 @@ declare(strict_types=1);
 
 // dia = dias depois do cadastro. {nome} = primeiro nome. {app} = link do app. {checkout} = link de compra.
 function funnel_steps(): array {
+  // {acao} = app (se ainda tem teste) ou checkout (se já usou). Copy na dor do cantor; nada de algoritmo/viralizar.
   return [
-    1 => ['dia' => 1, 'assunto' => '{nome}, seu primeiro cover já está pronto?', 'titulo' => 'Seu teste está te esperando',
-      'texto' => '<p>Ontem você entrou no Studio Cover. Se ainda não subiu o seu vídeo, faz agora: escolhe aquele cover que você gravou no celular e deixa o app separar a voz, afinar e mixar.</p><p>Leva poucos minutos e você ouve o antes e depois na hora.</p>',
-      'botao' => 'Afinar meu cover agora', 'link' => '{app}', 'aviso' => 'Suba o seu primeiro cover e ouça o antes e depois.'],
-    2 => ['dia' => 3, 'assunto' => 'O segredo dos covers que viralizam (não é a voz perfeita)', 'titulo' => 'Os 2 primeiros segundos decidem tudo',
-      'texto' => '<p>Quem rola o feed decide em 2 segundos se fica ou se passa. Uma nota desafinada ou um som embolado no comecinho e o vídeo morre, por melhor que você cante.</p><p>Não é falta de talento. É acabamento. É isso que o Studio Cover faz por você: afinação natural, voz na frente da base, volume das redes e cor de cinema.</p>',
-      'botao' => 'Testar no meu vídeo', 'link' => '{app}', 'aviso' => 'Os 2 primeiros segundos decidem se o seu cover viraliza.'],
-    3 => ['dia' => 7, 'assunto' => '{nome}, uma semana depois: o que ficou parado?', 'titulo' => 'Quantos covers ficaram na galeria esta semana?',
-      'texto' => '<p>Faz uma semana que você testou o Studio Cover. Pensa em quantos vídeos você gravou e não postou porque "não ficou bom".</p><p>Cada vídeo parado é alcance que foi para outro artista. Com o acesso completo você afina, mixa e exporta quantos covers quiser, direto do celular.</p>',
-      'botao' => 'Liberar meu acesso completo', 'link' => '{checkout}', 'aviso' => 'Libere o acesso completo e poste todos os seus covers.'],
-    4 => ['dia' => 9, 'assunto' => 'Estúdio cobra R$ 150 por música. Faz as contas.', 'titulo' => 'Seu estúdio no bolso',
-      'texto' => '<p>Uma mixagem simples num estúdio sai por R$ 100 a R$ 300 por música, e você ainda espera dias.</p><p>No Studio Cover você faz quantas quiser, na hora, sem sair de casa. Um cover a mais por semana já paga o app.</p>',
-      'botao' => 'Quero o meu estúdio no bolso', 'link' => '{checkout}', 'aviso' => 'Um estúdio cobra por música. Aqui é ilimitado.'],
-    5 => ['dia' => 12, 'assunto' => 'Você arrasta a nota e ela fica no tom', 'titulo' => 'Afinação que respeita o seu jeito de cantar',
-      'texto' => '<p>O Studio Cover não deixa voz de robô. Ele lê o tom e os acordes da base e afina cada nota mantendo o seu vibrato.</p><p>E se quiser mexer, é só arrastar a nota: as linhas verdes são as notas da escala, a amarela é a tônica.</p>',
-      'botao' => 'Liberar o Studio Cover', 'link' => '{checkout}', 'aviso' => 'Arraste a nota para a linha verde e pronto: no tom.'],
-    6 => ['dia' => 15, 'assunto' => 'O algoritmo não espera, {nome}', 'titulo' => 'Constância vence talento escondido',
-      'texto' => '<p>Quem cresce no Instagram e no TikTok posta com frequência e com qualidade. Sem estúdio, isso era impossível. Agora é um app.</p><p>Libere o acesso e transforme a sua galeria em uma semana de posts prontos.</p>',
-      'botao' => 'Começar a postar com qualidade', 'link' => '{checkout}', 'aviso' => 'Transforme a galeria em uma semana de posts prontos.'],
-    7 => ['dia' => 21, 'assunto' => 'Posso te ajudar a decidir?', 'titulo' => 'Ficou alguma dúvida?',
-      'texto' => '<p>Se alguma coisa te travou no teste, me responde este e-mail. Leio todas as respostas.</p><p>E se já decidiu, o seu acesso está a um toque daqui.</p>',
-      'botao' => 'Liberar meu acesso', 'link' => '{checkout}', 'aviso' => 'Ficou alguma dúvida? Estamos aqui para ajudar.'],
-    8 => ['dia' => 30, 'assunto' => 'Último lembrete sobre o seu Studio Cover', 'titulo' => 'Seu próximo cover pode ser o que muda tudo',
-      'texto' => '<p>Este é o último lembrete. Não vou mais encher a sua caixa.</p><p>Se a música é séria para você, dê ao seu talento o acabamento que ele merece.</p>',
-      'botao' => 'Quero o Studio Cover', 'link' => '{checkout}', 'aviso' => 'Dê ao seu talento o acabamento que ele merece.'],
+    1 => ['dia' => 1, 'assunto' => '{nome}, aquele cover vai ficar na galeria de novo?', 'titulo' => 'Você grava, ouve e apaga',
+      'texto' => '<p>Você conhece a cena: grava o cover, ouve de volta e aquela nota escapa. A voz fica embolada na base. Você apaga, ou pior, guarda e nunca posta.</p><p>Não é falta de talento. É falta de acabamento. Foi isso que você viu no Studio Cover: a sua voz afinada, mixada e com som de estúdio, saindo do próprio celular.</p>',
+      'botao' => 'Quero o meu próximo cover afinado', 'link' => '{acao}', 'aviso' => 'Aquele cover não precisa ficar parado na galeria.'],
+    2 => ['dia' => 2, 'assunto' => 'Você ouviu a diferença. Vai voltar para o áudio cru?', 'titulo' => 'Depois que você ouve, não tem volta',
+      'texto' => '<p>Depois que você escuta a sua voz no tom, com a base no lugar e o som cheio, o áudio cru do celular fica difícil de engolir.</p><p>Amanhã você vai postar mais um cover desafinado, ou vai postar com som de estúdio? A escolha é sua, e ela custa menos do que uma mixagem.</p>',
+      'botao' => 'Liberar meu acesso', 'link' => '{acao}', 'aviso' => 'Amanhã você posta desafinado ou com som de estúdio?'],
+    3 => ['dia' => 3, 'assunto' => '"Desafinou aqui" dói, né?', 'titulo' => 'O comentário que ninguém quer ler',
+      'texto' => '<p>Você posta com o coração e aparece aquele comentário: "desafinou aqui", "o som tá ruim". Uma nota tira a atenção do vídeo inteiro.</p><p>O Studio Cover lê o tom da música e afina cada nota mantendo o seu vibrato. Sem voz de robô. Ninguém percebe que passou por um app, só que ficou bom.</p>',
+      'botao' => 'Afinar os meus covers', 'link' => '{acao}', 'aviso' => 'Uma nota fora tira a atenção do vídeo inteiro.'],
+    4 => ['dia' => 5, 'assunto' => 'Estúdio cobra R$ 150 por música. Faz as contas.', 'titulo' => 'Seu estúdio no bolso',
+      'texto' => '<p>Uma mixagem simples num estúdio sai por R$ 100 a R$ 300 por música, e você ainda espera dias para receber.</p><p>No Studio Cover você faz quantos covers quiser, na hora, sem sair de casa. Dois covers já pagam o ano inteiro.</p>',
+      'botao' => 'Quero o meu estúdio no bolso', 'link' => '{acao}', 'aviso' => 'Estúdio cobra por música. Aqui é ilimitado.'],
+    5 => ['dia' => 7, 'assunto' => '{nome}, uma semana. Quantos covers ficaram parados?', 'titulo' => 'A galeria cheia e o perfil parado',
+      'texto' => '<p>Faz uma semana que você testou o Studio Cover. Pensa em quantos vídeos você gravou e não postou porque "não ficou bom".</p><p>Cada cover parado é um momento que você não mostrou para ninguém. Com o acesso completo, você afina, mixa e posta tudo, direto do celular.</p>',
+      'botao' => 'Postar os meus covers', 'link' => '{acao}', 'aviso' => 'Quantos covers ficaram parados esta semana?'],
+    6 => ['dia' => 10, 'assunto' => 'Você não é desafinado. Falta acabamento.', 'titulo' => 'Talento você já tem',
+      'texto' => '<p>Os cantores que você admira não gravam perfeito de primeira. Eles têm um estúdio que afina, equaliza e mixa antes de qualquer pessoa ouvir.</p><p>Agora você tem o mesmo acabamento no seu celular. A diferença entre o seu vídeo e o deles não é a voz, é o tratamento.</p>',
+      'botao' => 'Dar acabamento na minha voz', 'link' => '{acao}', 'aviso' => 'A diferença não é a voz. É o acabamento.'],
+    7 => ['dia' => 14, 'assunto' => 'Quem cresce na música posta toda semana', 'titulo' => 'Constância com qualidade',
+      'texto' => '<p>Quem está crescendo na música não é quem canta melhor. É quem aparece toda semana com um som bom.</p><p>Sem estúdio isso era impossível. Com o Studio Cover é um app: grava, afina, mixa e posta no mesmo dia.</p>',
+      'botao' => 'Começar a postar toda semana', 'link' => '{acao}', 'aviso' => 'Grava, afina, mixa e posta no mesmo dia.'],
+    8 => ['dia' => 21, 'assunto' => 'Posso te ajudar a decidir?', 'titulo' => 'Ficou alguma dúvida?',
+      'texto' => '<p>Se alguma coisa te travou, me responde este e-mail. Leio todas as respostas.</p><p>E se já decidiu, o seu acesso está a um toque daqui.</p>',
+      'botao' => 'Liberar meu acesso', 'link' => '{acao}', 'aviso' => 'Ficou alguma dúvida? Estamos aqui para ajudar.'],
+    9 => ['dia' => 30, 'assunto' => 'Último lembrete sobre o seu Studio Cover', 'titulo' => 'Seu próximo cover pode ser o que muda tudo',
+      'texto' => '<p>Este é o último lembrete. Não vou mais encher a sua caixa.</p><p>Se a música é séria para você, dê ao seu talento o acabamento que ele merece. Chega de postar desafinado.</p>',
+      'botao' => 'Quero o Studio Cover', 'link' => '{acao}', 'aviso' => 'Chega de postar desafinado.'],
   ];
 }
 
 function funnel_fill(string $s, array $u): string {
   $first = trim(explode(' ', trim($u['name'] ?: ''))[0] ?? '') ?: 'artista';
-  return strtr($s, ['{nome}' => $first, '{app}' => site_url() . '/app/', '{checkout}' => checkout_url($u) ?: site_url() . '/#comprar']);
+  return strtr($s, ['{nome}' => $first, '{app}' => site_url() . '/app/', '{checkout}' => checkout_url($u) ?: site_url() . '/#comprar',
+    '{acao}' => ($u['status'] === 'trial' && (int)$u['trial_left'] > 0) ? site_url() . '/app/' : (checkout_url($u) ?: site_url() . '/#comprar')]);
 }
 
 function funnel_send(array $u, string $kind, array $st): void {
@@ -54,8 +59,8 @@ function funnel_welcome(array $u): void {
 
 function funnel_trial_over(array $u): void {
   funnel_send($u, 'teste-acabou', ['assunto' => '{nome}, seu teste grátis terminou', 'titulo' => 'Gostou do resultado?',
-    'texto' => '<p>Você usou o teste grátis. Agora é só liberar o acesso completo para afinar, mixar e exportar quantos covers quiser.</p>',
-    'botao' => 'Liberar meu acesso completo', 'link' => '{checkout}', 'aviso' => 'Seu teste terminou. Libere o acesso completo.']);
+    'texto' => '<p>Você ouviu como a sua voz fica afinada e mixada. Sem o Studio Cover, o próximo vídeo volta a ser o áudio cru do celular: a nota que escapa, a voz embolada na base.</p><p><b>Amanhã você vai postar mais um cover desafinado, ou vai postar com som de estúdio?</b></p><p>Libere o acesso completo e faça quantos covers quiser.</p>',
+    'botao' => 'Liberar meu acesso completo', 'link' => '{checkout}', 'aviso' => 'Seu próximo cover está travado. Libere o acesso completo.']);
 }
 
 // pagou: manda o link para criar a senha (ou avisa que liberou, se já tem senha)
