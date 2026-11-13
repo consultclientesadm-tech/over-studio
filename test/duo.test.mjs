@@ -21,7 +21,7 @@ try {
     await page.setInputFiles('#file', vid);
     await page.waitForFunction(() => document.getElementById('app').dataset.screen === 'studio', null, { timeout: 600000 });
     await page.waitForTimeout(800);
-    const v = await page.evaluate(() => ({ n: window.studio.state.parts?.length, voices: window.studio.state.voices, bar: !document.getElementById('voiceBar').hidden, tabs: document.querySelectorAll('#voiceBar .vtab').length, vols: document.querySelectorAll('#mVoices input, #eVoices input').length }));
+    const v = await page.evaluate(() => ({ n: window.studio.state.parts?.length, voices: window.studio.state.voices, bar: !!document.querySelector('#voiceBar .vtab'), tabs: document.querySelectorAll('#voiceBar .vtab').length, vols: document.querySelectorAll('#mVoices input, #eVoices input').length }));
     console.log(name, JSON.stringify(v));
     check(v.n === 2 && v.bar && v.tabs === 2, `${name}: achou a dupla e mostra as abas Voz 1 e Voz 2`);
     check(v.vols === 4, `${name}: volume da Voz 1 e da Voz 2 na Mix e no Exportar`);
@@ -42,7 +42,7 @@ try {
     check(sel.on === '1' && sel.plan, `${name}: tocar na Voz 2 abre as notas dela no painel`);
     await page.screenshot({ path: `${dir}/${name}-dupla-voz2-mudo.png` });
     if (name === 'celular') {
-      await page.click('#editor'); await page.waitForTimeout(500);
+      await page.click('#panelBtn'); await page.waitForTimeout(500);
       await page.screenshot({ path: `${dir}/${name}-dupla-painel-grande.png` });
       const pop = await page.evaluate(() => ({ h: Math.round(document.getElementById('editor').getBoundingClientRect().height), bar: document.getElementById('voiceBar').getBoundingClientRect().height }));
       check(pop.h > 350 && pop.bar > 30, `celular: painel grande com as abas das vozes (${pop.h}px de notas)`);
@@ -62,15 +62,21 @@ try {
     await page.screenshot({ path: `${dir}/${name}-dupla-exportar.png` });
     // "É uma voz só"
     await page.click('#stepper button[data-step="2"]'); await page.waitForTimeout(300);
-    await page.click('#vJoin');
+    await page.click('#voiceBar .vpick button[data-k="1"]');
     await page.waitForFunction(() => document.getElementById('busy').hidden && !window.studio.state.parts, null, { timeout: 600000 });
-    const j = await page.evaluate(() => ({ bar: document.getElementById('voiceBar').hidden, vols: document.querySelectorAll('#mVoices input').length }));
+    const j = await page.evaluate(() => ({ bar: !document.querySelector('#voiceBar .vtab'), vols: document.querySelectorAll('#mVoices input').length }));
     check(j.bar && j.vols === 0, `${name}: "É uma voz só" junta as vozes e some com as abas`);
     // escolher dupla na mão (Ajustes)
-    await page.evaluate(() => { document.getElementById('more').hidden = false; });
-    await page.click('#voicePick button[data-k="2"]');
+    await page.click('#voiceBar .vpick button[data-k="2"]');
     await page.waitForFunction(() => document.getElementById('busy').hidden && window.studio.state.parts?.length === 2, null, { timeout: 600000 });
-    check(!(await page.isHidden('#voiceBar')), `${name}: "Dupla" em Ajustes separa as vozes de novo`);
+    check(await page.evaluate(() => document.querySelectorAll('#voiceBar .vtab').length === 2), `${name}: "Dupla" em Quem canta separa as vozes de novo`);
+    await page.screenshot({ path: `${dir}/${name}-dupla-afinacao-v2.png` });
+    await page.click('#panelBtn'); await page.waitForTimeout(600);
+    await page.click('#voiceBar .vsel[data-i="1"]'); await page.waitForTimeout(400);
+    const pv = await page.evaluate(() => ({ pop: document.getElementById('studio').classList.contains('pop'), tabs: [...document.querySelectorAll('#voiceBar .vtab')].every((t) => { const r = t.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), ed: Math.round(document.getElementById('editor').getBoundingClientRect().height) }));
+    check(pv.pop && pv.tabs && pv.ed > 250, `${name}: dentro do painel, trocar de voz deixa as vozes à vista em cima (${pv.ed}px de notas)`);
+    await page.screenshot({ path: `${dir}/${name}-dupla-painel-v2.png` });
+    await page.click('#popClose'); await page.waitForTimeout(300);
     await ctx.close();
   }
 } finally { await browser.close(); srv.kill(); }

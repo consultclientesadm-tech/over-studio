@@ -41,7 +41,7 @@ try {
       await page.screenshot({ path: `${dir}/${name}-8-telacheia.png` });
       await page.click('#fsBtn'); await page.click('#stepper button[data-step="2"]'); await page.waitForTimeout(600);
       await page.screenshot({ path: `${dir}/${name}-3-afinacao.png` });
-      await page.click('#editor'); await page.waitForTimeout(500);
+      await page.click('#panelBtn'); await page.waitForTimeout(500);
       const pop = await page.evaluate(() => { const r = document.getElementById('editor').getBoundingClientRect(), st = document.querySelector('.step[data-step="2"]').getBoundingClientRect(); return { pop: document.getElementById('studio').classList.contains('pop'), h: Math.round(r.height), full: st.top <= 1 && st.height >= innerHeight - 2 }; });
       check(pop.pop && pop.full && pop.h > 450, `celular: tocar no painel abre o painel de notas em tela cheia (${pop.h}px de altura)`);
       await page.click('#popPlay'); await page.waitForTimeout(1200);

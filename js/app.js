@@ -742,15 +742,15 @@ $('mRefFile').onchange = async () => {
 const ORD = ['primeira', 'segunda', 'terceira', 'quarta'];
 const volTxt = (v) => (v <= -15 ? 'mudo' : (v > 0 ? '+' : '') + (+v).toFixed(v % 1 ? 1 : 0) + ' dB');
 function voiceBar() {
-  const box = $('voiceBar'), K = state.parts ? state.parts.length : 0;
-  $('voicePick').querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.k === Math.max(1, K)));
+  const box = $('voiceBar'), K = state.parts ? state.parts.length : 1;
   $('studio').classList.toggle('multi', K > 1);
-  if (K < 2) { box.hidden = true; box.innerHTML = ''; return; }
-  box.hidden = false;
-  const tipo = K === 2 ? 'dupla' : K === 3 ? 'trio' : `${K} vozes`;
-  box.innerHTML = `<div class="vbinfo"><b>${tipo[0].toUpperCase() + tipo.slice(1)}: ${K} vozes</b>, cada uma afinada separada<span class="hidesm">. A Voz 1 é a mais aguda. Toque numa voz para mexer nas notas dela; 🔊 liga e desliga a voz na prévia, para ouvir quem é quem</span>.</div>
-    <div class="vbtabs">${state.parts.map((p, i) => `<div class="vtab${i === cur ? ' on' : ''}${muted.has(i) ? ' muted' : ''}"><button type="button" class="vsel" data-i="${i}" data-help="Abre as notas da ${p.name} no painel. A afinação de uma voz não mexe nas outras.">${p.name}<small class="hidesm">${ORD[i] || ''} voz</small></button><button type="button" class="vmute${muted.has(i) ? ' on' : ''}" data-m="${i}" aria-label="${muted.has(i) ? 'Ligar' : 'Deixar muda'} a ${p.name}" data-help="Deixa a ${p.name} muda na prévia (ou liga de novo). Serve para ouvir só uma voz e saber quem é quem. Não muda o vídeo final: lá vale o volume de cada voz.">${muted.has(i) ? '🔇' : '🔊'}</button></div>`).join('')}
-    <button type="button" class="pill vjoin" id="vJoin" data-help="Se o app achou mais de uma voz, mas no vídeo canta uma pessoa só, toque aqui: as vozes voltam a ser uma.">É uma voz só</button></div>`;
+  const pick = [[1, '👤', '1 voz'], [2, '👥', 'Dupla'], [3, '👥', 'Trio']].map(([k, ic, t]) => `<button type="button" data-k="${k}" class="${K === k ? 'on' : ''}" data-help="${k === 1 ? 'Uma pessoa cantando: a voz é afinada inteira.' : `${t}: o app separa ${k} vozes (a Voz 1 é a mais aguda) e afina cada uma por conta própria, com mudo e volume de cada voz.`}"><i>${ic}${k === 3 ? '👤' : ''}</i>${t}</button>`).join('');
+  let html = `<div class="vqrow"><span class="vqlbl">Quem canta?</span><div class="vpick" role="group" aria-label="Quantas pessoas cantam">${pick}</div></div>`;
+  if (K > 1) {
+    html += `<div class="vbinfo">Toque numa voz para afinar só ela. Use <b>🔊/🔇</b> para ouvir só uma e saber quem é quem.</div>
+    <div class="vbtabs">${state.parts.map((p, i) => `<div class="vtab${i === cur ? ' on' : ''}${muted.has(i) ? ' muted' : ''}"><button type="button" class="vsel" data-i="${i}" data-help="Escolhe a ${p.name}: o painel de afinação mostra e mexe só nas notas dela.">${p.name}<small>${ORD[i] || ''} voz${i === 0 ? ' · mais aguda' : ''}</small></button><button type="button" class="vmute${muted.has(i) ? ' on' : ''}" data-m="${i}" aria-label="${muted.has(i) ? 'Ligar' : 'Deixar muda'} a ${p.name}" data-help="Liga ou deixa muda a ${p.name} na prévia, para ouvir só uma voz e saber quem é quem. Não muda o vídeo final: lá vale o volume de cada voz (na Mix).">${muted.has(i) ? '🔇<small>muda</small>' : '🔊<small>ouvindo</small>'}</button></div>`).join('')}</div>`;
+  }
+  box.innerHTML = html;
 }
 async function pickVoice(i) {
   if (!state.parts || i === cur) return;
@@ -767,7 +767,7 @@ $('voiceBar').addEventListener('click', async (e) => {
     toast(on.length ? `Tocando só: ${on.join(' e ')}` : 'Todas as vozes mudas na prévia.');
     return;
   }
-  if (e.target.closest('#vJoin')) setVoices(1);
+  const pk = e.target.closest('.vpick button'); if (pk) setVoices(+pk.dataset.k);
 });
 // Quantas pessoas cantam, escolhido na mão (Ajustes): 1 junta as vozes; 2, 3 ou 4 separa nessa quantidade
 async function setVoices(K) {
@@ -788,17 +788,18 @@ async function setVoices(K) {
     ev('vozes', { k: K, auto: state.voices?.count || 1 });
   } catch (err) { console.error(err); busy(false); toast('Deu erro: ' + err.message, 6000); }
 }
-$('voicePick').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setVoices(+b.dataset.k); });
+$('panelBtn').onclick = () => openPop();
 // Volume de cada voz (Mix e Exportar andam juntos). No mínimo (−15 dB) a voz fica muda no vídeo final.
 function voiceVols() {
   for (const pre of ['m', 'e']) $(pre + 'Voice').previousElementSibling.textContent = state.parts ? 'Volume de todas as vozes' : 'Volume da voz';
   for (const pre of ['m', 'e']) {
     const box = $(pre + 'Voices'); box.innerHTML = '';
     if (!state.parts) continue;
+    box.insertAdjacentHTML('beforeend', '<div class="vvhead"><b>Volume de cada voz</b><small>Toda para a esquerda = a voz fica muda no vídeo final</small></div>');
     state.parts.forEach((p, i) => {
       const l = document.createElement('label'); l.className = 'row vol';
       l.dataset.help = `Volume só da ${p.name} (${ORD[i] || ''} voz) em relação às outras e à música. Toda para a esquerda = ${p.name} muda no vídeo final.`;
-      l.innerHTML = `<span>Volume da ${p.name}</span><input type="range" id="${pre}V${i}" min="-15" max="9" step="0.5" value="0"><output>0 dB</output>`;
+      l.innerHTML = `<span>${p.name} <small>${ORD[i] || ''}</small></span><input type="range" id="${pre}V${i}" min="-15" max="9" step="0.5" value="0"><output>0 dB</output>`;
       box.appendChild(l);
       const r = l.querySelector('input'), o = l.querySelector('output');
       r.addEventListener('input', () => {
