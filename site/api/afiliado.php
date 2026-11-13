@@ -74,6 +74,21 @@ switch ($a) {
     if ($af = $q->fetch()) send_mail(null, $af['email'], 'afiliado-senha', 'Crie uma nova senha do painel de afiliado', 'Nova senha', '<p>Toque no botão para criar a sua nova senha do painel de afiliado do Studio Cover. O link vale por 24 horas.</p>', 'Criar nova senha', af_senha_link($af, 1));
     json_out(['ok' => true]);
   }
+  // aviso de venda no celular do afiliado (guardado em push_subs com user_id = -1000000 - id do afiliado)
+  case 'push-chave': json_out(['ok' => true, 'chave' => vapid_public()]);
+  case 'push-salvar': {
+    require_post(); $af = af_atual(); if (!$af) fail('Entre na sua conta de afiliado.', 401);
+    push_save(-1000000 - (int)$af['id'], (array)arg('sub', []), (string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
+    json_out(['ok' => true]);
+  }
+  case 'push-teste': {
+    require_post(); $af = af_atual(); if (!$af) fail('Entre na sua conta de afiliado.', 401);
+    $nm = trim(explode(' ', trim((string)$af['nome']))[0] ?? '');
+    $com = (float)(sale_net(brnum(setting('price')) ?: 297.0, true)['comissao'] ?? 0);
+    $n = push_user(-1000000 - (int)$af['id'], '💰 Parabéns' . ($nm !== '' ? " $nm" : '') . ', mais uma venda do Studio Cover!', 'Sua comissão: R$ ' . number_format($com, 2, ',', '.') . "\nTeste do aviso: é assim que cada venda sua vai chegar. 🙏", '/afiliado/');
+    json_out(['ok' => true, 'enviados' => $n]);
+  }
+
   case 'painel': {
     $af = af_atual(); if (!$af) fail('Entre na sua conta de afiliado.', 401);
     $id = (int)$af['id']; sales_fill_net();

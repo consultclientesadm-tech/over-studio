@@ -7,6 +7,10 @@
 <meta name="robots" content="noindex">
 <title>Painel do Afiliado · Studio Cover</title>
 <link rel="icon" href="/assets/logo.svg">
+<link rel="manifest" href="/afiliado/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/afiliado/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SC Afiliado">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -18,6 +22,7 @@ body { background: radial-gradient(ellipse at 50% -10%, rgba(255,212,0,.12), tra
 header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
 .marca { font: 900 15px Orbitron, sans-serif; letter-spacing: .14em; } .marca em { font-style: normal; color: var(--y); }
 .marca small { display: block; font: 600 11px Sora; letter-spacing: .2em; color: var(--mut); margin-top: 3px; }
+.hacts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; } .sair.aviso { border-color: rgba(255,212,0,.5); color: var(--y); }
 .sair { background: none; border: 1px solid var(--line); color: var(--mut); border-radius: 20px; padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer; }
 .card { background: rgba(14,14,20,.85); border: 1px solid var(--line); border-radius: 20px; padding: 20px; }
 .box { max-width: 400px; margin: 8vh auto 0; }
@@ -89,7 +94,7 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 </head>
 <body>
 <div class="w">
-  <header><div class="marca">STUDIO <em>COVER</em><small>PAINEL DO AFILIADO</small></div><button class="sair" id="sair" hidden>Sair</button></header>
+  <header><div class="marca">STUDIO <em>COVER</em><small>PAINEL DO AFILIADO</small></div><span class="hacts"><button class="sair aviso" id="avisoBtn" hidden>💰 Aviso de venda</button><button class="sair" id="sair" hidden>Sair</button></span></header>
 
   <div class="box" id="vLogin" hidden><div class="card">
     <h1>Entrar</h1><p class="sub">Acompanhe os seus cliques, cadastros e vendas.</p>
@@ -313,7 +318,7 @@ const pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
 async function painel() {
   const j = await api('painel');
   if (!j.ok) { ver('vLogin'); $('sair').hidden = true; return; }
-  ver('vPainel'); $('sair').hidden = false; AF = j.afiliado;
+  ver('vPainel'); $('sair').hidden = false; $('avisoBtn').hidden = false; AF = j.afiliado;
   if (!$('cEduzzSlot').firstChild) { $('cEduzzSlot').append($('cEduzz')); $('cEduzz').classList.remove('card'); $('cEduzz').querySelector('h2').remove(); $('cEduzz').querySelector('.sub').remove(); }
   $('linksSlot').innerHTML = `<label style="margin-top:0">Página de vendas com o vídeo (use na bio e nos posts)</label><div class="copy"><input id="lkV2" readonly value="${esc(j.links.vendas)}"><button class="btn sm" data-c2="lkV2">COPIAR</button></div><label>Direto para o teste grátis (ótimo para anúncio e stories)</label><div class="copy"><input id="lkT2" readonly value="${esc(j.links.teste)}"><button class="btn sm" data-c2="lkT2">COPIAR</button></div>`;
   document.querySelectorAll('[data-c2]').forEach((b) => (b.onclick = () => copiar($(b.dataset.c2).value, b, 'COPIAR')));
@@ -345,6 +350,26 @@ $('fCad').onsubmit = async (e) => {
 };
 $('fLogin').onsubmit = async (e) => { e.preventDefault(); $('lMsg').textContent = ''; const j = await api('login', { email: $('lEmail').value, senha: $('lSenha').value }); if (j.ok) painel(); else { $('lMsg').className = 'msg erro'; $('lMsg').textContent = j.error; } };
 $('esqueci').onclick = async () => { if (!$('lEmail').value) { $('lMsg').className = 'msg erro'; $('lMsg').textContent = 'Digite o seu e-mail acima.'; return; } await api('esqueci', { email: $('lEmail').value }); $('lMsg').className = 'msg ok'; $('lMsg').textContent = 'Se este e-mail for de um afiliado, o link para criar a senha chegou na sua caixa.'; };
+// aviso de venda no celular: cada venda sua chega como notificação, com o seu nome e a sua comissão
+const iosAf = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+const instAf = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+$('avisoBtn').onclick = async () => {
+  if (iosAf && !instAf) return alert('No iPhone o aviso só funciona com o painel na tela de início:\n\n1. Abra studiocover.com.br/afiliado no Safari.\n2. Toque em Compartilhar e em "Adicionar à Tela de Início".\n3. Abra pelo ícone novo e toque de novo em 💰 Aviso de venda.');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return alert('Este navegador não recebe avisos. Use o Chrome ou o Safari.');
+  const b = $('avisoBtn'), rot = b.textContent; b.disabled = true; b.textContent = 'Ligando…';
+  try {
+    if ((await Notification.requestPermission()) !== 'granted') throw new Error('sem permissão de notificação');
+    const reg = await navigator.serviceWorker.register('/afiliado/push-sw.js', { scope: '/afiliado/' }); await navigator.serviceWorker.ready;
+    const { chave } = await api('push-chave');
+    const key = Uint8Array.from(atob(chave.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (chave.length % 4)) % 4)), (c) => c.charCodeAt(0));
+    const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+    const j = await api('push-salvar', { sub: sub.toJSON() }); if (!j.ok) throw new Error(j.error || 'erro');
+    try { localStorage.setItem('sc-af-push', '1'); } catch {}
+    await api('push-teste', {}); b.textContent = '✓ Aviso ligado';
+  } catch (e) { b.textContent = rot; alert('Não deu para ligar o aviso: ' + e.message); }
+  b.disabled = false;
+};
+(async () => { try { if (localStorage.getItem('sc-af-push') !== '1' || Notification.permission !== 'granted') return; const reg = await navigator.serviceWorker.getRegistration('/afiliado/'); const sub = reg && (await reg.pushManager.getSubscription()); if (sub) api('push-salvar', { sub: sub.toJSON() }); } catch {} })();
 $('sair').onclick = async () => { await api('sair', {}); location.href = '/afiliado/'; };
 const tk = new URLSearchParams(location.search).get('criar');
 let CONVITE = new URLSearchParams(location.search).get('convite') || '';

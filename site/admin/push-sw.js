@@ -4,7 +4,7 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('push', (e) => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data && e.data.text() }; }
   e.waitUntil(Promise.all([
-    self.registration.showNotification(d.title || '💰 Venda no Studio Cover!', {
+    self.registration.showNotification(d.title || '💰 Mais uma venda do Studio Cover!', {
       body: d.body || '', icon: '/admin/icon-192.png', badge: '/admin/badge-96.png', data: { url: d.url || '/admin/' },
       tag: 'sc-venda-' + Date.now(), renotify: true, silent: false, vibrate: [120, 60, 120, 60, 400],
     }),
