@@ -463,3 +463,15 @@ body, .app, .app * { -webkit-user-select: none; user-select: none; -webkit-touch
 }
 /* com as abas das vozes, o painel de notas continua com o espaço que sobra */
 #studio.multi:not(.pop) .step[data-step="2"].on { grid-template-rows: auto auto auto minmax(140px, 1fr) auto auto auto; }
+
+/* avisos que explicam o que fazer (antes de subir o vídeo e quando dá erro) */
+.av-ov { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.72); display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: calc(16px + var(--safe-b, 0px)); }
+.av-sh { width: 100%; max-width: 440px; max-height: 88vh; overflow: auto; background: #111117; border: 1px solid rgba(255,212,0,.45); border-radius: 18px; padding: 20px 18px 16px; color: var(--ink, #fff); box-shadow: 0 0 40px rgba(255,212,0,.15); }
+.av-sh h3 { margin: 0 0 8px; font-size: 18px; }
+.av-sh p { margin: 0 0 10px; font-size: 14px; line-height: 1.5; color: #c9c9d2; }
+.av-sh ul { margin: 0 0 14px; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.av-sh li { margin: 6px 0; }
+.av-b, .av-b2 { display: block; width: 100%; padding: 13px; border-radius: 12px; font: inherit; font-weight: 700; margin-top: 8px; cursor: pointer; }
+.av-b { background: #ffd400; color: #000; border: 0; }
+.av-b2 { background: transparent; color: var(--ink, #fff); border: 1px solid rgba(255,255,255,.25); font-weight: 600; }
+@media (min-width: 700px) { .av-ov { align-items: center; } }
