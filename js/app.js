@@ -305,7 +305,7 @@ $('quickAll').onclick = async () => {
   busy(true, 'Mixando e masterizando…'); await doMaster(false);
   if (!audioOnly) { busy(true, 'Colorista ajustando a cor…'); try { auto = await autoGrade(video); } catch (e) { console.warn(e); } }
   look = FILTERS[0]; busy(false); // pronto já sai com o visual de câmera de cinema
-  go(5); ev('pronto', {}); toast('Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.', 6000);
+  go(5); ev('pronto', {}); if (window.scPronto) window.scPronto(); toast('Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.', 6000);
 };
 
 // Etapas
@@ -739,6 +739,7 @@ function refreshSummary() {
 }
 $('exportBtn').onclick = async () => {
   pause();
+  if (window.scAntesExportar && !(await window.scAntesExportar())) return;
   if (pending) toast('Você tem edições de afinação que ainda não foram aplicadas.');
   $('exportBtn').disabled = true; $('exportBar').hidden = false; $('ready').hidden = true;
   try {
@@ -756,7 +757,7 @@ $('exportBtn').onclick = async () => {
   $('exportBtn').disabled = false;
   seek(0);
 };
-$('dlWav').onclick = () => { if (window.scOk) window.scOk(); ev('exportou', { audio: 1 }); const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = `${((file && file.name) || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.wav`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
+$('dlWav').onclick = async () => { if (window.scAntesExportar && !(await window.scAntesExportar())) return; if (window.scOk) window.scOk(); ev('exportou', { audio: 1 }); const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = `${((file && file.name) || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.wav`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
 
 window.studio = { audio: () => ({ currentTime: aTime() }), get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go, get editor() { return editor; } };
 
