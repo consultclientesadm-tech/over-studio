@@ -13,6 +13,7 @@ import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v
 import { referenceNotes, applyReference } from './reference.js?v=37';
 import { decodeVideoAudio } from './demux.js?v=38';
 import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=37';
+import { findVoices, splitVoices } from './voices.js?v=1';
 
 export const SR = STUDIO_SR;
 
@@ -249,14 +250,30 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
     }
     voice = r.voice; bed = r.bed; if (r.orig) orig = r.orig;
   }
+  // Dupla, trio, backing vocal: quantas vozes cantam? Com mais de uma, cada voz vira uma faixa própria
+  let multi = null, parts = null;
+  if (o.multi !== false) {
+    onStep('voices', 0);
+    multi = await findVoices(voice, SR, (p) => onStep('voices', p * 0.5));
+    if (multi.count >= 2 && o.voices !== 1) parts = await splitVoices(voice, SR, multi, (p) => onStep('voices', 0.5 + 0.5 * p));
+    onStep('voices', 1);
+  }
   onStep('notes', 0);
-  const track = await pitchTrack(voice, SR, (p) => onStep('notes', p));
-  const raw = notesFrom(track);
+  let track, raw;
+  if (parts) {
+    parts = await partsFrom(parts, multi, (p) => onStep('notes', p));
+    track = parts[0].track; raw = parts.flatMap((p) => p.rawNotes);
+  } else {
+    track = await pitchTrack(voice, SR, (p) => onStep('notes', p));
+    raw = notesFrom(track);
+  }
   const cf = bed ? await chromaFrames(bed, SR) : null;
   const chroma = cf ? cf.frames.reduce((a, f) => { for (let i = 0; i < 12; i++) a[i] += f[i]; return a; }, new Array(12).fill(0)) : null;
   const key = detectKey(raw, chroma);
   const chords = cf ? chordTrack(cf, key) : null; // acordes da base, dentro do campo harmônico
-  const state = { orig, voice, bed, key, chords, track, rawNotes: raw, duration: orig[0].length / SR, cortado };
+  const duration = orig[0].length / SR;
+  const state = { orig, voice, bed, key, chords, track, rawNotes: parts ? parts[0].rawNotes : raw, duration, cortado, voices: multi ? { count: multi.count, together: multi.together, range: multi.range } : null };
+  if (parts) { for (const p of parts) Object.assign(p, { key, chords, duration }); state.parts = parts; }
   if (o.reference) await setReference(state, o.reference, onStep);
   if (o.autoTune === false) untune(state, o); else await retune(state, o, onStep);
   return state;
@@ -265,6 +282,7 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
 // Volta a voz para como o artista cantou (desfaz a afinação). O plano continua calculado, para a tela
 // mostrar onde a voz original sai da faixa.
 export function untune(state, opts = {}) {
+  if (state.parts) { for (const p of state.parts) untune(p, opts); return sumUp(state, opts); }
   const o = { ...DEFAULTS, ...opts };
   state.edits = state.edits || {};
   state.plan = planTuning(state.rawNotes, state.key, { ...o, chords: state.chords }, state.edits);
@@ -278,9 +296,62 @@ export function untune(state, opts = {}) {
   return state;
 }
 
+// ---------- Várias vozes ----------
+// Melodia de cada voz separada: a do YIN, conferida com a da detecção de várias vozes (onde a detecção
+// diz que a voz está calada, não tem nota; onde o YIN se perdeu no meio das duas, vale a da detecção).
+async function partsFrom(voices, multi, onProgress) {
+  const K = voices.length, out = [];
+  for (let i = 0; i < K; i++) {
+    const v = [voices[i]];
+    const tr = await pitchTrack(v, SR, (p) => onProgress((i + p) / K));
+    const f = multi.f0[i];
+    for (const fr of tr) {
+      const k = Math.round(((fr.t + 0.032) * SR) / (multi.dt * SR)), e = k >= 0 && k < f.length ? f[k] : NaN;
+      if (isNaN(e)) fr.midi = null;
+      else if (fr.midi == null || Math.abs(fr.midi - e) > 0.7) fr.midi = e;
+    }
+    out.push({ name: `Voz ${i + 1}`, voice: v, track: tr, rawNotes: notesFrom(tr) });
+  }
+  return out;
+}
+// Resumo da dupla: números das vozes juntos (pesados pela quantidade de notas de cada uma)
+function sumUp(state, opts) {
+  const ps = state.parts, w = ps.map((p) => Math.max(1, (p.plan || p.rawNotes).length)), W = w.reduce((a, b) => a + b, 0);
+  const avg = (get) => { const xs = ps.map(get); if (xs.some((x) => x == null)) return undefined; return Math.round((xs.reduce((a, x, i) => a + x * w[i], 0) / W) * 10) / 10; };
+  const mix = (k) => (ps.every((p) => p[k]) ? { band: avg((p) => p[k].band), avgCents: Math.round(avg((p) => p[k].avgCents)), inTune: Math.round(avg((p) => p[k].inTune)), count: ps.reduce((a, p) => a + (p[k].count || 0), 0) } : undefined);
+  state.before = mix('before'); state.after = mix('after');
+  state.plan = ps[0].plan; state.edits = ps[0].edits;
+  if (opts) state.opts = { ...DEFAULTS, ...opts };
+  return state;
+}
+const dbGain = (db) => (db == null ? 1 : db <= -15 ? 0 : 10 ** (db / 20)); // −15 dB na régua = voz desligada
+// A voz que vai para a mix: com várias vozes, a soma delas, cada uma no volume escolhido
+// (gains = um número por voz: ganho direto; ou dB com inDb). before = sem a afinação.
+export function voiceMix(state, gains = null, before = false, inDb = false) {
+  if (!state.parts) return before ? state.voice : state.tuned || state.voice;
+  const len = state.parts[0].voice[0].length, out = new Float32Array(len);
+  state.parts.forEach((p, i) => {
+    const g = gains ? (inDb ? dbGain(gains[i]) : gains[i] ?? 1) : 1;
+    if (!g) return;
+    const v = (before ? p.voice : p.tuned || p.voice)[0];
+    for (let j = 0; j < len; j++) out[j] += v[j] * g;
+  });
+  return [out];
+}
+// "É uma voz só": junta as vozes de volta e trata como uma voz (afinação volta para o começo)
+export async function joinVoices(state, opts = {}) {
+  if (!state.parts) return state;
+  state.parts = null; state.voices = { ...(state.voices || {}), joined: true };
+  state.track = await pitchTrack(state.voice, SR);
+  state.rawNotes = notesFrom(state.track);
+  state.edits = {}; state.ref = null;
+  return untune(state, opts);
+}
+
 // Prévia da afinação, antes da mix: voz (afinada ou não) + instrumental, somados sem tratamento
-export function rawMix(state) {
-  const v = state.tuned || state.voice, b = state.bed;
+// gains: volume de cada voz (dupla/trio; 0 = mudo). before = vozes sem afinar.
+export function rawMix(state, gains = null, before = false) {
+  const v = voiceMix(state, gains, before), b = state.bed;
   const len = v[0].length;
   const out = [0, 1].map((c) => { const o = new Float32Array(len), vc = v[c] || v[0]; for (let i = 0; i < len; i++) o[i] = vc[i] + (b ? (b[c] || b[0])[i] : 0); return o; });
   let peak = 0; for (const c of out) for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(c[i]));
@@ -294,6 +365,8 @@ export async function setReference(state, file, onStep = () => {}) {
   onStep('ref', 0);
   const ch = file instanceof Blob ? await audioFromVideo(file) : file;
   const notes = await referenceNotes(ch, SR, notesFrom, onStep);
+  // dupla: a melodia da original é a da primeira voz
+  if (state.parts) { state.ref = applyReference(state.parts[0], notes); return state.ref; }
   return applyReference(state, notes);
 }
 
@@ -301,6 +374,11 @@ export async function setReference(state, file, onStep = () => {}) {
 // ainda saiu da faixa verde, aumenta a correção daquele trecho e afina de novo, sempre a partir da voz
 // original (o áudio passa uma vez só pelo afinador, então não perde qualidade). Até 4 rodadas.
 export async function retune(state, opts = {}, onStep = () => {}) {
+  if (state.parts) {
+    const K = state.parts.length;
+    for (let i = 0; i < K; i++) await retune(state.parts[i], opts, (s, p) => onStep(s, (i + p) / K));
+    return sumUp(state, opts);
+  }
   const o = { ...DEFAULTS, ...opts };
   state.edits = state.edits || {};
   const plan = planTuning(state.rawNotes, state.key, { ...o, chords: state.chords }, state.edits);
@@ -379,6 +457,7 @@ export async function retuneLocal(state, opts = {}, idxs = []) {
 
 // Resumo do antes e depois (a medição da voz afinada já foi feita no retune)
 export async function verify(state) {
+  if (state.parts) { for (const p of state.parts) await verify(p); sumUp(state); return state.after; }
   if (!state.tuned) return state.after;
   const after = notesFrom(state.afterTrack);
   state.after = { ...tuningStats(after), band: state.check.pct };
@@ -473,7 +552,7 @@ export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1,
 export async function render(state, opts = {}) {
   const o = { ...DEFAULTS, ...opts };
   const len = state.orig[0].length;
-  let mix = await mixMaster(state.tuned || state.voice, state.bed, SR, o.reverb, { voiceDb: o.voiceDb || 0, bedDb: o.bedDb || 0, eq: o.eq, comp: o.comp });
+  let mix = await mixMaster(voiceMix(state, o.voiceGains, false, true), state.bed, SR, o.reverb, { voiceDb: o.voiceDb || 0, bedDb: o.bedDb || 0, eq: o.eq, comp: o.comp });
   const info = { lufs: mix.lufs, comp: mix.comp };
   mix = mix.map((c) => c.subarray(0, len)); // mesma duração do vídeo (a cauda do reverb fica no fade)
   const { start, end } = o.trim ? findTrim(state.orig, SR) : { start: 0, end: len / SR };

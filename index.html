@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=38">
+<link rel="stylesheet" href="css/app.css?v=39">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -83,6 +83,7 @@
       <li data-s="audio">Lendo o áudio do vídeo</li>
       <li data-s="download">Baixando a IA (só na primeira vez)</li>
       <li data-s="separate">Separando a voz do instrumental</li>
+      <li data-s="voices">Vendo se é dupla ou trio</li>
       <li data-s="notes">Achando as notas e o tom</li>
       <li data-s="refsep" class="refstep">Lendo a melodia da música original</li>
     </ol>
@@ -130,6 +131,7 @@
             <label class="refcard mini" data-help="Suba o MP3 ou vídeo da música original. O app pega a melodia dela no seu tom e afina cada nota sua por ela."><input type="file" id="mRefFile" accept="audio/*,video/*" hidden><svg class="upic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l5 5h-3v6h-4V8H7l5-5zM5 17h14v4H5z"/></svg><span><b id="mRefTxt">Subir música original</b><small>afina pela melodia do cantor</small></span></label>
           </div>
         </div>
+        <div class="voicebar" id="voiceBar" hidden></div>
         <div class="editor"><canvas id="editor"></canvas></div>
         <div class="selinfo" id="selInfo">Toque numa nota e arraste para qualquer nota. Zoom: pinça com dois dedos ou rodinha do mouse. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.</div>
         <div class="toolbar">
@@ -165,6 +167,7 @@
           </div>
         </div>
         <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="mVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        <div class="voicevols" id="mVoices"></div>
         <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="mBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <div class="mixsec"><b>Equalizador</b><button class="pill" id="eqReset" data-help="Volta grave, médio e agudo para o zero.">Zerar</button></div>
         <label class="row eq" data-help="Grave (abaixo de 100 Hz): corpo, peso do violão e do bumbo. Muito grave embola no celular."><span>Grave</span><input type="range" id="mLow" min="-6" max="6" step="0.5" value="0"><output></output></label>
@@ -193,6 +196,7 @@
         <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai na mesma resolução, quadros por segundo e qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
         <div class="summary" id="summary"></div>
         <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="eVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        <div class="voicevols" id="eVoices"></div>
         <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="eBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <button class="pill big" id="watchBtn">▶ Assistir a prévia em tela cheia</button>
         <button class="prime" id="exportBtn" data-help="Grava o vídeo final na qualidade do original, com o som e a cor escolhidos.">Gerar vídeo final</button>
@@ -228,7 +232,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=48"></script>
+<script type="module" src="js/app.js?v=49"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
