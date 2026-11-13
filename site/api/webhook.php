@@ -87,8 +87,12 @@ try {
   $sl = $db->query("SELECT liquido, or_pagina, or_fonte, or_campanha, or_caminho FROM sales WHERE status = 'pago' ORDER BY id DESC LIMIT 1")->fetch() ?: [];
   $hoje = $db->prepare("SELECT COUNT(*), COALESCE(SUM(liquido), 0) FROM sales WHERE status = 'pago' AND created_at >= ?"); $hoje->execute([date('Y-m-d')]); [$nh, $lh] = $hoje->fetch(PDO::FETCH_NUM);
   $de = trim(implode(' · ', array_filter([($sl['or_pagina'] ?? '') === 'vsl' ? '/vsl' : (($sl['or_pagina'] ?? '') === 'home' ? 'página do teste' : ''), $sl['or_fonte'] ?? '', $sl['or_campanha'] ?? '', $sl['or_caminho'] ?? ''])));
-  $corpo = 'R$ ' . number_format((float)($sl['liquido'] ?? $value), 2, ',', '.') . ' líquido · ' . ($name ?: $email) . ($de ? "\n$de" : '') . "\nHoje: $nh venda" . ($nh == 1 ? '' : 's') . ' · R$ ' . number_format((float)$lh, 2, ',', '.') . ' 🙏';
-  foreach ($db->query('SELECT id FROM admins')->fetchAll() as $ad) push_user(-(int)$ad['id'], '💰 Cha-ching! Mais uma venda no Studio Cover', $corpo, '/admin/');
+  $bruto = (float)($sl['liquido'] ?? 0) > 0 ? (brnum(setting('price')) ?: abs($value)) : $value;
+  $corpo = 'Venda de R$ ' . number_format($bruto, 2, ',', '.') . ' · líquido R$ ' . number_format((float)($sl['liquido'] ?? $value), 2, ',', '.') . "\n" . ($name ?: $email) . ($de ? " · $de" : '') . "\nHoje: $nh venda" . ($nh == 1 ? '' : 's') . ' · R$ ' . number_format((float)$lh, 2, ',', '.') . ' 🙏';
+  foreach ($db->query('SELECT id, name FROM admins')->fetchAll() as $ad) {
+    $nome = trim(explode(' ', trim((string)$ad['name']))[0] ?? '');
+    push_user(-(int)$ad['id'], '💰 Parabéns' . ($nome !== '' ? " $nome" : '') . ', mais uma venda concluída!', $corpo, '/admin/');
+  }
 } catch (Throwable $e) {}
 $log("pago: $email R$ $value");
 json_out(['ok' => true, 'acao' => 'liberado']);
