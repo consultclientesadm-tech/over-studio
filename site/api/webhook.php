@@ -5,6 +5,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
+require_once __DIR__ . '/origem.php';
 
 $raw = file_get_contents('php://input') ?: '';
 $data = json_decode($raw, true);
@@ -77,6 +78,7 @@ $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); 
 $afId = af_da_venda($data, $u); $n = sale_net($value, (bool)$afId);
 if ($afId && empty($u['afiliado_id'])) $db->prepare('UPDATE users SET afiliado_id = ? WHERE id = ?')->execute([$afId, $u['id']]);
 $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, comissao, liquido, afiliado_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute([$u['id'], $email, $trans, $product, $value, 'pago', now(), $n['bruto'], $n['taxa'], $n['comissao'], $n['liquido'], $afId]);
+try { or_marca_venda((int)$db->lastInsertId(), or_da_venda($data, $u, $afId)); } catch (Throwable $e) {} // de qual página/canal veio a venda
 $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
 funnel_paid($u, $isNew);
 $log("pago: $email R$ $value");

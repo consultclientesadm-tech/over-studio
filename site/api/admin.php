@@ -5,6 +5,7 @@ require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
 require_once __DIR__ . '/vigia_erros.php';
 require_once __DIR__ . '/depo_lib.php';
+require_once __DIR__ . '/origem.php';
 header('X-Robots-Tag: noindex');
 $a = (string)($_GET['a'] ?? '');
 $db = db();
@@ -41,7 +42,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'origens', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -362,6 +363,7 @@ switch ($a) {
     json_out(['ok' => true, 'dias' => $days, 'cont' => $cnt, 'pessoas' => count($pessoas), 'tempo_mediano' => $med, 'tempo_max' => $seg ? max($seg) : 0,
       'usos' => $usos, 'desde' => $desde, 'aparelhos' => array_slice(array_values($disp), 0, 12), 'problemas' => $prob]);
   }
+  case 'origens': json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))))); // de qual página e canal vêm visitas, testes e vendas
   case 'vigia-erros': { // vistoria de 10 em 10 min: tipos de erro do app, alertas e quando rodou
     json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista()]);
   }

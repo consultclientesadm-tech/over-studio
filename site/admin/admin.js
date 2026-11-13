@@ -39,14 +39,14 @@ $('fPrimeiro').onsubmit = (e) => { e.preventDefault(); sub($('fPrimeiro'), 'prim
 $('sair').onclick = async () => { await api('sair', {}); boot(); };
 
 // ---------- abas ----------
-const TABS = { geral: 'tGeral', financas: 'tFin', vistoria: 'tVist', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', depoimentos: 'tDepo', admins: 'tAdmins', config: 'tConfig' };
+const TABS = { geral: 'tGeral', origens: 'tOrig', financas: 'tFin', vistoria: 'tVist', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', depoimentos: 'tDepo', admins: 'tAdmins', config: 'tConfig' };
 function tab(t) {
   if (!TABS[t]) t = 'geral';
   document.querySelectorAll('.nav > button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   Object.entries(TABS).forEach(([k, id]) => ($(id).hidden = k !== t));
   history.replaceState(null, '', '#' + t);
   $('vistBtn').hidden = t === 'vistoria';
-  ({ geral: loadGeral, financas: loadFin, vistoria: loadVist, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, depoimentos: loadDepo, admins: loadAdmins, config: loadConfig })[t]();
+  ({ geral: loadGeral, origens: loadOrigens, financas: loadFin, vistoria: loadVist, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, depoimentos: loadDepo, admins: loadAdmins, config: loadConfig })[t]();
 }
 document.querySelectorAll('.nav > button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
 
@@ -607,6 +607,33 @@ async function loadDepo() {
 }
 
 // ---------- afiliados ----------
+// ---------- origens: de qual página e canal vêm as vendas ----------
+let orDias = 7;
+$('segOr').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; orDias = +b.dataset.d; $('segOr').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadOrigens(); };
+const PAG = { home: '🎁 Página com teste grátis', vsl: '🎬 /vsl (compra direta)', 'link-afiliado': '🤝 Link de afiliado', 'sem-rastreio': '❔ Sem rastreio (antes de 13/11)' };
+async function loadOrigens() {
+  const j = await api('origens', null, '&dias=' + orDias); if (!j.ok) return;
+  const L = j.linhas, pc = (a, b) => (b ? (Math.round((a / b) * 1000) / 10).toLocaleString('pt-BR') + '%' : '—');
+  const soma = (arr, k) => arr.reduce((t, r) => t + (+r[k] || 0), 0);
+  const agrupa = (fk) => { const m = {}; L.forEach((r) => { const k = fk(r); m[k] ??= { k, visitas: 0, cadastros: 0, vendas: 0, liquido: 0, direta: 0, teste: 0, afiliado: 0 }; ['visitas', 'cadastros', 'vendas', 'liquido', 'direta', 'teste', 'afiliado'].forEach((x) => (m[k][x] += +r[x] || 0)); }); return Object.values(m).sort((a, b) => b.vendas - a.vendas || b.liquido - a.liquido || b.visitas - a.visitas); };
+  const card = (cor, ico, rot, v, f, sub) => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div><b class="cnt" data-to="${+v || 0}" data-f="${f}">0</b><span>${sub}</span></div>`;
+  const V = soma(L, 'visitas'), C = soma(L, 'cadastros'), N = soma(L, 'vendas');
+  $('orNums').innerHTML = `<div class="cards4" style="margin-bottom:16px">
+    ${card('c', '👀', 'Visitas nas páginas', V, 'n', 'pessoas diferentes a cada 30 min')}
+    ${card('y', '🎁', 'Testes grátis', C, 'n', `${pc(C, V)} das visitas`)}
+    ${card('g', '💰', 'Vendas', N, 'n', `${pc(N, V)} das visitas`)}
+    ${card('p', '💵', 'Líquido', soma(L, 'liquido'), 'brl', 'o que a Eduzz paga')}</div>`;
+  contar($('orNums'));
+  const cam = (r) => [r.direta && `${r.direta} direta${r.direta > 1 ? 's' : ''}`, r.teste && `${r.teste} depois do teste`, r.afiliado && `${r.afiliado} de afiliado`].filter(Boolean).join(' · ');
+  const tabela = (rows, nome) => rows.length ? `<table><tr><th>${nome}</th><th>Visitas</th><th>Testes grátis</th><th>Vendas</th><th>Conversão</th><th>Líquido</th></tr>${rows.map((r) => `<tr>
+    <td>${r.k}</td><td>${r.visitas}</td><td>${r.cadastros}<small>${pc(r.cadastros, r.visitas)} das visitas</small></td>
+    <td><b style="color:#2ee59d">${r.vendas}</b><small>${cam(r)}</small></td><td><b>${pc(r.vendas, r.visitas)}</b><small>visita → venda</small></td><td>${brl(r.liquido)}${r.vendas ? `<small>${brl(r.liquido / r.vendas)} por venda</small>` : ''}</td></tr>`).join('')}</table>` : '<p class="sub">Ainda sem dados neste período.</p>';
+  $('orPag').innerHTML = tabela(agrupa((r) => PAG[r.pagina] || esc(r.pagina)), 'Página');
+  $('orCan').innerHTML = tabela(agrupa((r) => r.pagina === 'sem-rastreio' && !r.fonte ? PAG['sem-rastreio'] : `<b>${esc(r.fonte || 'direto')}</b>${r.campanha ? `<small>${esc(r.campanha)}</small>` : '<small>sem campanha</small>'}`), 'Canal · campanha');
+  $('orUlt').innerHTML = j.ultimas.length ? `<table><tr><th>Quando</th><th>Aluno</th><th>Página</th><th>Canal · campanha</th><th>Caminho</th><th>Líquido</th></tr>${j.ultimas.map((v) => `<tr><td>${dt(v.created_at)}</td><td>${esc(v.name || '—')}</td><td>${PAG[v.or_pagina || 'sem-rastreio'] || esc(v.or_pagina)}</td><td>${v.or_fonte ? `<b>${esc(v.or_fonte)}</b>` : '—'}${v.or_campanha ? `<small>${esc(v.or_campanha)}</small>` : ''}</td><td>${esc(v.or_caminho || '—')}</td><td>${brl(v.liquido)}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda ainda.</p>';
+  $('orNota').textContent = `Como ler: "compra direta" é quem clicou em comprar na página; "depois do teste" é quem fez o teste grátis e comprou pelo app ou pelo e-mail do funil (a venda fica com a página e o canal do cadastro). Use links com ?utm_source=canal&utm_campaign=nome (ex.: whatsapp, reinaldo-vsl) para separar cada anúncio.${j.desde_rastreio ? ' Visitas contadas desde ' + dt(j.desde_rastreio) + '.' : ''}`;
+}
+
 async function loadAfiliados() {
   const j = await api('afiliados'); if (!j.ok) return;
   const L = j.afiliados, soma = (k) => L.reduce((t, a) => t + (+a[k] || 0), 0);

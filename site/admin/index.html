@@ -44,6 +44,7 @@
     <button data-tab="geral" class="on"><i>◈</i><span>Visão geral</span></button>
     <button data-tab="financas"><i>💰</i><span>Saúde financeira</span></button>
     <button data-tab="alunos"><i>◉</i><span>Alunos</span></button>
+    <button data-tab="origens"><i>📍</i><span>Origens</span></button>
     <button data-tab="funil"><i>⟴</i><span>Funil</span></button>
     <button data-tab="depoimentos"><i>💬</i><span>Depoimentos</span><em class="nbadge" id="depoBadge" hidden></em></button>
     <button data-tab="afiliados"><i>🤝</i><span>Afiliados</span></button>
@@ -78,6 +79,17 @@
         <div class="glass chart"><div class="ch"><b>Base de alunos</b></div><canvas id="cBase"></canvas><p class="legend" id="baseLeg"></p></div>
       </div>
       <div class="glass"><div class="ch"><b>Últimas vendas</b></div><div class="tbl" id="ultVendas"></div></div>
+    </div>
+
+    <!-- Origens -->
+    <div class="tab" id="tOrig" hidden>
+      <header class="th"><div><h2>Origens das vendas</h2><p class="sub">De qual página (com teste grátis ou /vsl de compra direta) e de qual canal e campanha (utm_source e utm_campaign do link) vieram as visitas, os testes e as vendas.</p></div>
+        <div class="seg" id="segOr"><button data-d="1">Hoje</button><button data-d="7" class="on">7d</button><button data-d="30">30d</button><button data-d="90">90d</button></div></header>
+      <div id="orNums"></div>
+      <div class="glass"><div class="ch"><b>Por página</b></div><div class="tbl" id="orPag"></div></div>
+      <div class="glass" style="margin-top:16px"><div class="ch"><b>Por canal e campanha</b></div><div class="tbl" id="orCan"></div></div>
+      <div class="glass" style="margin-top:16px"><div class="ch"><b>Últimas vendas e o caminho de cada uma</b></div><div class="tbl" id="orUlt"></div></div>
+      <p class="sub" id="orNota" style="margin-top:12px"></p>
     </div>
 
     <!-- Vistoria de erros -->
@@ -188,6 +200,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=19"></script>
+<script src="admin.js?v=20"></script>
 </body>
 </html>

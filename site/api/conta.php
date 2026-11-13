@@ -3,6 +3,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
+require_once __DIR__ . '/origem.php';
 
 $a = (string)($_GET['a'] ?? '');
 
@@ -17,6 +18,11 @@ switch ($a) {
     af_marca_cookie($af['codigo']);
     $q = af_db()->prepare('SELECT 1 FROM af_cliques WHERE afiliado_id = ? AND ip = ? AND created_at >= ?'); $q->execute([$af['id'], client_ip(), date('Y-m-d H:i:s', time() - 1800)]);
     if (!$q->fetch()) af_db()->prepare('INSERT INTO af_cliques (afiliado_id, ip, created_at) VALUES (?, ?, ?)')->execute([$af['id'], client_ip(), now()]);
+    json_out(['ok' => true]);
+  }
+
+  case 'visita': { // página de vendas aberta: de qual página e de qual canal/campanha (para o quadro Origens do painel)
+    or_registra_visita((string)($_GET['p'] ?? ''), (string)($_GET['f'] ?? ''), (string)($_GET['c'] ?? ''));
     json_out(['ok' => true]);
   }
 
@@ -43,6 +49,7 @@ switch ($a) {
     db()->prepare('UPDATE users SET pass_hash = ?, last_login = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), now(), $u['id']]);
     if ($af = af_visitante()) af_db()->prepare('UPDATE users SET afiliado_id = ? WHERE id = ?')->execute([$af['id'], $u['id']]); // lead do afiliado
     registra_aceite((int)$u['id']);
+    if ($or = or_visitante()) origem_db()->prepare('UPDATE users SET origem = ? WHERE id = ?')->execute([$or, $u['id']]); // de qual página/canal veio o teste
     $q->execute([$email]); $u = $q->fetch();
     login_user($u);
     funnel_welcome($u);
