@@ -214,7 +214,7 @@ const bedOf = (src, voice) => voice.map((v, c) => { const s = src[c] || src[0], 
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=37', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=39', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now(), sent = false;
     const send = () => {
       if (sent) return; sent = true;
@@ -246,8 +246,10 @@ export async function separate(channels, { onDownload = () => {}, onProgress = (
     // para o aparelho antes de abrir a imagem do vídeo (sem isso o iPhone fechava o app nessa hora).
     if (typeof window !== 'undefined' && window.Worker && !separate.noWorker) {
       try { return await separateInWorker(channels, { onDownload, onProgress }); } catch (e) {
-        if (e.lost || channels[0].length === 0) throw new Error('A separação da voz parou no meio. Toque em Novo vídeo e tente de novo.');
-        console.warn('ajudante da IA falhou, rodando direto:', e.message); separate.noWorker = true;
+        // o ajudante caiu (pouca memória no celular) e levou o áudio junto: quem chamou relê o áudio e tenta direto
+        separate.noWorker = true;
+        if (e.lost || channels[0].length === 0) { const x = new Error('A separação da voz parou no meio. Toque em Novo vídeo e tente de novo.'); x.lost = true; x.causa = String(e.message || '').slice(0, 80); throw x; }
+        console.warn('ajudante da IA falhou, rodando direto:', e.message);
       }
     }
     return separateLite(channels, { onDownload, onProgress });

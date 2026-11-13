@@ -2,8 +2,8 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=38';
-import { prefetchModel } from './studio.js?v=37';
+import * as cover from './pipeline.js?v=39';
+import { prefetchModel } from './studio.js?v=39';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
 import { exportVideo, exportType } from './export.js?v=38';
@@ -112,7 +112,8 @@ const LABEL = { audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'S
 const MAX_SEC = 180; // limite de duração (3 minutos)
 let t0 = 0, lastEta = 0;
 function progress(st, p) {
-  note({ stage: LABEL[st] || st, pct: Math.round(((W[st] || [0, 0])[0]) + ((W[st] || [0, 0])[1]) * p) });
+  // download em 100% = a IA já baixou e está sendo ligada (é aí que pesa na memória): registra separado
+  note({ stage: st === 'download' && p >= 1 ? 'Ligando a IA' : LABEL[st] || st, pct: Math.round(((W[st] || [0, 0])[0]) + ((W[st] || [0, 0])[1]) * p) });
   const [a, w] = W[st] || [0, 0];
   const v = Math.min(100, Math.round(a + w * p));
   // tempo que falta, pela velocidade da separação (a parte que demora)
@@ -212,7 +213,7 @@ async function start(f, tries = 1) {
     if (state.cortado) toast(`Seu vídeo tem ${fmt(state.cortado)}. Usei os primeiros ${MAX_SEC / 60} minutos (o limite por vídeo). Se quiser outro trecho, corte no celular e suba de novo.`, 9000);
     endRun();
   } catch (e) {
-    console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '' });
+    console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '', causa: e.causa || '' });
     app.dataset.screen = 'home';
     toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(e.duration || video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
       : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);

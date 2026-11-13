@@ -8,7 +8,7 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=37';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=39';
 import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=37';
 import { referenceNotes, applyReference } from './reference.js?v=37';
 import { decodeVideoAudio } from './demux.js?v=38';
@@ -235,7 +235,18 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   if (o.maxSec && orig[0].length / SR > o.maxSec) { cortado = orig[0].length / SR; const n = Math.round(o.maxSec * SR); orig = orig.map((c) => c.slice(0, n)); }
   let voice = orig, bed = null;
   if (o.separate) {
-    const r = await separate(orig, { onDownload: (p) => onStep('download', p), onProgress: (p) => onStep('separate', p) });
+    const sepOpts = { onDownload: (p) => onStep('download', p), onProgress: (p) => onStep('separate', p) };
+    let r;
+    try { r = await separate(orig, sepOpts); } catch (e) {
+      // o ajudante da IA caiu no meio e o áudio foi junto: lê o áudio de novo do arquivo e separa direto (sem ajudante)
+      if (!e.lost || !(file instanceof Blob)) throw e;
+      console.warn('separação de novo, sem ajudante:', e.causa);
+      orig = null; onStep('audio', 0);
+      orig = await audioFromVideo(file);
+      if (cortado) { const n = Math.round(o.maxSec * SR); orig = orig.map((c) => c.slice(0, n)); }
+      onStep('separate', 0);
+      try { r = await separate(orig, sepOpts); } catch (e2) { if (!e2.causa) e2.causa = e.causa; throw e2; }
+    }
     voice = r.voice; bed = r.bed; if (r.orig) orig = r.orig;
   }
   onStep('notes', 0);
