@@ -49,6 +49,7 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
 .aceite a { color: var(--y); }
 .card { animation: sobe .6s cubic-bezier(.2,.8,.2,1) both .15s; } .marca, h1, .tag { animation: sobe .6s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes sobe { from { opacity: 0; transform: translateY(18px); } }
+.reqmini { margin: 4px 0 14px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,212,0,.5); background: rgba(255,212,0,.07); font-size: 13px; line-height: 1.45; color: #d8d8e2; } .reqmini a { color: #ffd400; }
 </style>
 </head>
 <body>
@@ -74,6 +75,7 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
   <form class="card" id="fCadastro" novalidate hidden>
     <h2>Teste grátis</h2>
     <p class="sub" id="cadSub">Crie a sua conta e teste com os seus vídeos. Sem cartão.</p>
+    <div class="reqmini">📱 Funciona em <b>iPhone 13 ou mais novo</b>, <b>Android com 6 GB de memória ou mais</b> e no <b>computador</b>. Vídeos de <b>até 3 minutos</b>. Abra no Safari ou no Chrome. <a href="/#requisitos" target="_blank">Ver aparelhos compatíveis</a></div>
     <label for="cNome">Seu nome</label><input id="cNome" autocomplete="name" required>
     <label for="cEmail">E-mail</label><input id="cEmail" type="email" autocomplete="email" inputmode="email" required>
     <label for="cSenha">Crie uma senha</label><div class="senha"><input id="cSenha" type="password" autocomplete="new-password" minlength="8" required><button type="button" class="ver">mostrar</button></div>

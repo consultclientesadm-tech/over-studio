@@ -180,6 +180,8 @@ try {
   const old = (ios && +ios[1] < 15) || (/Android/.test(ua) && mem && mem < 4);
   if (old && !window.scCompat) { const r = $('req'); r.classList.add('warn'); r.textContent = 'Este aparelho parece abaixo do mínimo (iPhone 13 ou Android com 4 GB). Pode fechar no meio. Se puder, use um celular mais novo ou o computador.'; }
 } catch {}
+// resultado do teste deste aparelho no cartão de requisitos da tela inicial
+try { const c = window.scCompat, el = $('reqMeuApp'); if (c && el) c.ready.then((i) => { el.className = 'reqmeu ' + i.nivel; el.textContent = i.nivel === 'ok' ? '✓ Testamos o seu aparelho: ele é compatível.' : i.nivel === 'fraco' ? '⚠️ Seu aparelho está no limite: use vídeos curtos (até 1 minuto) ou o computador.' : '⛔ Seu aparelho não é compatível: use o computador ou um celular mais novo.'; }); } catch {}
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
   // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar

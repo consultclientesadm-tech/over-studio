@@ -425,3 +425,10 @@ body, .app, .app * { -webkit-user-select: none; user-select: none; -webkit-touch
 #noImg { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 22px; text-align: center; background: rgba(8, 8, 10, .92); border-radius: 12px; color: #ddd; font: 500 14px/1.5 'Space Grotesk', sans-serif; }
 #noImg > b { color: var(--y); font-size: 16px; }
 #noImg button { margin-top: 4px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--y); background: transparent; color: var(--y); font: 600 13px 'Space Grotesk', sans-serif; cursor: pointer; }
+/* requisitos bem visíveis na tela inicial (pedido do Leo, 2026-11-13) */
+.reqcard { margin: 14px 0; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--y, #ffd400); background: rgba(255,212,0,.07); text-align: left; font-size: 14px; }
+.reqcard > b { color: var(--y, #ffd400); font-size: 15px; }
+.reqcard ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 5px; }
+.reqcard .reqmeu { margin: 10px 0 0; font-weight: 700; }
+.reqcard .reqmeu:empty { display: none; }
+.reqcard .reqmeu.ok { color: #2ee59d; } .reqcard .reqmeu.fraco { color: #ffd400; } .reqcard .reqmeu.incompativel { color: #ff8a95; }
