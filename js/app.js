@@ -111,6 +111,73 @@ setTimeout(async () => {
 ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, () => drop.classList.remove('over')));
 drop.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) start(f); });
+
+// ---------- Avisos que explicam (em vez de o app só travar ou mostrar um erro seco) ----------
+const MAX_SEC = 180; // limite de duração (3 minutos): o áudio inteiro fica na memória várias vezes (original, voz, base, afinada, mix)
+const MIN = MAX_SEC / 60;
+const CEL = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+const MB_OK = 300; // vídeo de até 3 min em 1080p fica bem abaixo disso; acima, no celular, costuma ser 4K ou longo demais
+const escH = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+// janela com título, texto, lista de passos e botões [{ t, v, b (principal) }]; devolve o v do botão tocado (ou null)
+function aviso(titulo, texto, passos = [], botoes = [{ t: 'Entendi', v: true, b: 1 }]) {
+  return new Promise((res) => {
+    const ov = document.createElement('div'); ov.className = 'av-ov';
+    ov.innerHTML = `<div class="av-sh" role="dialog" aria-modal="true"><h3>${titulo}</h3>${texto ? `<p>${texto}</p>` : ''}
+      ${passos.length ? `<ul>${passos.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}
+      ${botoes.map((b, i) => `<button type="button" class="${b.b ? 'av-b' : 'av-b2'}" data-i="${i}">${b.t}</button>`).join('')}</div>`;
+    const fim = (v) => { ov.remove(); res(v); };
+    ov.addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (b) fim(botoes[+b.dataset.i].v); else if (e.target === ov) fim(null); });
+    document.body.appendChild(ov);
+  });
+}
+const DICAS = [
+  `<b>Vídeo de até ${MIN} minutos</b> (se for maior, o app usa só os ${MIN} primeiros)`,
+  `<b>Até ${MB_OK} MB</b>, gravado em <b>1080p</b> (4K pesa 3 vezes mais e pode travar o celular)`,
+  'Feche os outros apps e deixe o Studio Cover aberto na tela até terminar',
+  'Use pelo <b>ícone da tela de início</b> ou no Safari/Chrome (não no navegador do Instagram)',
+];
+// toda vez que a pessoa vai escolher o vídeo: lembra o que roda sem travar
+drop.addEventListener('click', async (e) => {
+  if (e.target.closest('input') || drop.dataset.liberado) return;
+  e.preventDefault();
+  const ok = await aviso('🎬 Antes de escolher o vídeo', 'Para o seu cover sair rápido e sem travar:', DICAS,
+    [{ t: 'ESCOLHER O VÍDEO', v: true, b: 1 }, { t: 'Cancelar', v: false }]);
+  if (!ok) return;
+  drop.dataset.liberado = '1'; $('file').click(); setTimeout(() => delete drop.dataset.liberado, 500);
+});
+// duração do vídeo sem abrir ele inteiro (só o cabeçalho); 0 se não der para saber em poucos segundos
+function duracaoDe(f) {
+  return new Promise((res) => {
+    const v = document.createElement('video'), u = URL.createObjectURL(f);
+    const fim = (d) => { clearTimeout(t); v.removeAttribute('src'); try { v.load(); } catch {} URL.revokeObjectURL(u); res(isFinite(d) ? d : 0); };
+    const t = setTimeout(() => fim(0), 4000);
+    v.preload = 'metadata'; v.muted = true; v.onloadedmetadata = () => fim(v.duration); v.onerror = () => fim(0); v.src = u;
+  });
+}
+// depois de escolher: vídeo longo ou pesado demais? explica antes de começar (e antes de gastar o teste grátis)
+async function conferirVideo(f) {
+  if (isAudio(f)) return true;
+  const mb = Math.round(f.size / 1048576), dur = await duracaoDe(f);
+  const longo = dur > MAX_SEC + 5, pesado = CEL && mb > MB_OK;
+  if (!longo && !pesado) return true;
+  const txt = [longo ? `Seu vídeo tem <b>${fmt(dur)}</b>. O limite é de <b>${MAX_SEC / 60} minutos</b>: o app vai usar só os ${MAX_SEC / 60} primeiros.` : '',
+    pesado ? `Ele tem <b>${mb} MB</b>. Acima de ${MB_OK} MB o celular pode ficar sem memória e fechar o app no meio (não é defeito do app, é o limite do aparelho).` : ''].filter(Boolean).join(' ');
+  const passos = [longo ? 'Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar' : '',
+    pesado ? 'Grave em <b>1080p</b> em vez de 4K (Ajustes › Câmera › Gravar vídeo, no iPhone)' : '',
+    pesado ? 'Ou use <b>"Ou suba só o áudio"</b> ou o computador' : ''].filter(Boolean);
+  return !!(await aviso(longo ? `⏱️ Vídeo maior que ${MIN} minutos` : '⚠️ Vídeo pesado para o celular', txt, passos,
+    [{ t: 'Escolher outro vídeo', v: false, b: 1 }, { t: longo ? `Continuar com os ${MAX_SEC / 60} primeiros minutos` : 'Tentar mesmo assim', v: true }]));
+}
+// erro: em vez de um aviso seco, explica o que fazer
+function ajudaErro(titulo, texto, mb) {
+  const passos = [
+    'Feche os outros apps e abas e tente de novo',
+    `Use vídeo de <b>até ${MIN} minutos</b> e <b>até ${MB_OK} MB</b>${mb ? ` (o seu tinha ${mb} MB)` : ''}, gravado em <b>1080p</b>`,
+    'Abra pelo <b>ícone da tela de início</b> (ou no Safari/Chrome), nunca pelo navegador do Instagram',
+    'Se continuar, use <b>"Ou suba só o áudio"</b> ou o computador',
+  ];
+  return aviso(titulo, texto, passos);
+}
 $('newBtn').onclick = () => location.reload();
 // IA já vai para o aparelho enquanto a pessoa escolhe o vídeo (direto para o armazenamento, sem pesar na memória)
 setTimeout(() => { prefetchModel(); }, 1500);
@@ -118,7 +185,6 @@ $('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refN
 
 const W = { audio: [0, 4], download: [4, 16], separate: [20, 58], voices: [78, 4], notes: [82, 6], ref: [88, 1], refsep: [88, 9], refnotes: [97, 3] };
 const LABEL = { audio: 'Lendo o áudio', download: 'Baixando a IA', separate: 'Separando a voz', voices: 'Vendo se é dupla ou trio', notes: 'Achando as notas', ref: 'Lendo a original', refsep: 'Lendo a melodia da original', refnotes: 'Lendo a melodia da original' };
-const MAX_SEC = 180; // limite de duração (3 minutos)
 let t0 = 0, lastEta = 0;
 function progress(st, p) {
   // download em 100% = a IA já baixou e está sendo ligada (é aí que pesa na memória): registra separado
@@ -163,7 +229,7 @@ try {
     ev('fechou', { etapa: last.stage, pct: last.pct, mb: last.mb, dur: last.dur, msg: last.erro || '' });
     const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v37`;
     try { localStorage.setItem('sc-last', msg); } catch {}
-    setTimeout(() => toast(`Na última tentativa o aparelho fechou o app em "${last.stage}" (${last.pct}%)${last.erro ? " · " + last.erro : ""}. Vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''}. ${last.mb > 300 ? 'Vídeo muito pesado: grave em 1080p (não 4K) ou corte antes de subir.' : 'Feche outros apps e abas e tente de novo.'}`, 12000), 400);
+    setTimeout(() => ajudaErro('O celular fechou o app no meio', `Na última tentativa o celular ficou sem memória e fechou o app em "${escH(last.stage)}". Isso acontece com vídeo longo ou pesado, ou com muitos apps abertos. Para dar certo:`, last.mb), 600);
   }
 } catch {}
 // ---- Guarda o vídeo no aparelho enquanto processa: se o celular recarregar a página no meio, o app continua sozinho ----
@@ -195,6 +261,7 @@ try { const c = window.scCompat, el = $('reqMeuApp'); if (c && el) c.ready.then(
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
   // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar
+  if (tries === 1 && !(await conferirVideo(f))) { $('file').value = ''; $('audioFile').value = ''; return; }
   if (tries === 1 && window.scGate && !(await window.scGate(f))) { $('file').value = ''; $('audioFile').value = ''; return; }
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
   ev('inicio', { mb: Math.round(f.size / 1048576), audio: isAudio(f) ? 1 : 0, tries });
@@ -228,8 +295,10 @@ async function start(f, tries = 1) {
   } catch (e) {
     console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '', causa: e.causa || '' });
     app.dataset.screen = 'home';
-    toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(e.duration || video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
-      : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);
+    const mbE = Math.round(f.size / 1048576);
+    if (e.message === 'LIMITE') aviso(`⏱️ Vídeo maior que ${MIN} minutos`, `Esse vídeo tem ${fmt(e.duration || video.duration)}. O limite é de ${MAX_SEC / 60} minutos.`, ['Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar e suba de novo']);
+    else if (/decod|Unable|EncodingError|não é AAC|não tem áudio/i.test(e.message)) aviso('Não consegui ler o áudio desse vídeo', escH(e.message), ['Grave com a câmera do próprio celular (MP4 ou MOV)', 'Se o vídeo veio de outro app ou do WhatsApp, salve o original e suba de novo', 'Ou use <b>"Ou suba só o áudio"</b>']);
+    else ajudaErro('Não deu certo desta vez', escH(e.message), mbE);
   }
 }
 
