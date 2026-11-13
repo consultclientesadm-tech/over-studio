@@ -68,27 +68,43 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; try { e.userChoice.catch(() => {}); } catch {} render(); });
   const shareIcon = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3b9cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
   const addIcon = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>';
-  async function install() {
+  // por que instalar: instalado, o app abre sozinho (sem o navegador do Instagram, tradutor, extensões ou outras
+  // abas disputando a memória), que é de onde vem a maioria dos travamentos que a vistoria pega
+  const porque = '<div class="sc-dor" style="margin:10px 0">💡 Pelo ícone da tela de início o Studio Cover <b>trava bem menos</b>: abre sozinho, com a memória do celular só para ele, sem o navegador do Instagram, tradutor ou outras abas atrapalhando.</div>';
+  const mobile = ios || android;
+  async function install(forte) {
+    forte = forte === true;
     // o Chrome só abre a janela de instalar com um toque da pessoa; sem toque (oferta automática) cai nas instruções abaixo
     const toque = !navigator.userActivation || navigator.userActivation.isActive;
     if (deferred && toque) {
-      try { await deferred.prompt(); const r = await deferred.userChoice; deferred = null; render(); if (r.outcome === 'accepted') toast('Pronto!', 'O Studio Cover está na sua tela de início.'); return; } catch (e) {}
+      try { await deferred.prompt(); const r = await deferred.userChoice; deferred = null; render(); if (r.outcome === 'accepted') toast('Pronto!', 'O Studio Cover está na sua tela de início. Use sempre pelo ícone.'); return; } catch (e) {}
     }
+    const titulo = (onde) => forte ? `<h3>📲 Importante: instale o app ${onde}</h3>` : `<h3>Instalar ${onde}</h3>`;
     if (ios) {
       const safari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|Instagram|FBAN|FBAV/.test(navigator.userAgent);
-      sheet(`<h3>Instalar no iPhone</h3><p>Deixe o Studio Cover na tela de início, igual a um aplicativo.</p>
-        ${safari ? '' : '<p style="color:#ffd400">Abra este link no <b>Safari</b> para instalar (no navegador do Instagram ou do Chrome o iPhone não deixa).</p>'}
+      sheet(`${titulo('no iPhone')}<p>Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.</p>${porque}
+        ${safari ? '' : '<p style="color:#ffd400">Abra este link no <b>Safari</b> para instalar (copie o endereço <b>studiocover.com.br/app</b> e cole no Safari).</p>'}
         <div class="sc-ios"><div><span>1</span>${shareIcon}<p style="margin:0">Toque em <b>Compartilhar</b> na barra do Safari</p></div>
         <div><span>2</span>${addIcon}<p style="margin:0">Role e toque em <b>Adicionar à Tela de Início</b></p></div>
-        <div><span>3</span><img src="/assets/icon-180.png" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Toque em <b>Adicionar</b>. Pronto!</p></div></div>
+        <div><span>3</span><img src="/assets/icon-180.png" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Toque em <b>Adicionar</b> e abra pelo ícone novo. Pronto!</p></div></div>
         <button class="sc-b2" data-fechar>Entendi</button>`);
       return;
     }
-    sheet(`<h3>Instalar no Android</h3><p>Escolha um jeito:</p>
-      <a class="sc-b" href="/app/studio-cover.apk" download>BAIXAR O APLICATIVO (APK)</a>
-      <p style="font-size:12.5px">Depois de baixar, abra o arquivo e permita "instalar apps desta fonte".</p>
-      <p>Ou no Chrome: toque nos <b>⋮ três pontinhos</b> e em <b>Instalar app</b> / <b>Adicionar à tela inicial</b>.</p>
-      <button class="sc-b2" data-fechar>Fechar</button>`);
+    const chrome = /Chrome\//.test(navigator.userAgent) && !/SamsungBrowser|Instagram|FBAN|FBAV|; wv\)|EdgA|OPR|MiuiBrowser/.test(navigator.userAgent);
+    const abrirChrome = 'intent://' + location.host + '/app/?instalar=1#Intent;scheme=https;package=com.android.chrome;end';
+    sheet(`${titulo('no Android')}<p>Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.</p>${porque}
+      ${chrome ? '' : `<p style="color:#ffd400">Para instalar, abra no <b>Chrome</b>:</p><a class="sc-b" href="${abrirChrome}">ABRIR NO CHROME</a>`}
+      <div class="sc-ios"><div><span>1</span><p style="margin:0">No Chrome, toque nos <b>⋮ três pontinhos</b> (em cima, à direita)</p></div>
+      <div><span>2</span>${addIcon}<p style="margin:0">Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b></p></div>
+      <div><span>3</span><img src="/assets/icon-180.png" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Confirme e abra pelo ícone novo. Pronto!</p></div></div>
+      <button class="sc-b2" data-fechar>Entendi</button>`);
+  }
+  // cliente pago usando pelo navegador do celular: lembra de instalar (bem visível), no máximo 1 vez a cada 12 h
+  function lembraInstalar(ja) {
+    if (standalone || !mobile || !me || !me.paid) return;
+    try { const t = +localStorage.getItem('sc-inst-pago') || 0; if (!ja && Date.now() - t < 12 * 3600e3) return; localStorage.setItem('sc-inst-pago', String(Date.now())); } catch {}
+    if (document.querySelector('.sc-ov') || document.querySelector('[data-screen="work"]')) return;
+    install(true);
   }
 
   // ---------- teste grátis e cobrança ----------
@@ -191,6 +207,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     if (ofertaAberta()) return; // a própria oferta troca para o botão de baixar
     if (document.getElementById('viewer') && document.querySelector('[data-screen="studio"]')) toast('Acesso liberado! 🎉', 'Agora é só tocar em Baixar: o seu vídeo sai na hora.');
     else if (window.scVideoGuardado) guardadoDepoisDaCompra();
+    setTimeout(() => lembraInstalar(true), 2500); // acabou de comprar: ensina a instalar (se nada estiver aberto na tela)
   }
   function ofertaBaixar(oQue) {
     return new Promise((res) => {
@@ -373,11 +390,11 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     // primeira vez no app: oferece instalar
     try {
       const pede = new URLSearchParams(location.search).has('instalar');
-      if (!standalone && (pede || ((ios || android) && !localStorage.getItem('sc-inst')))) { localStorage.setItem('sc-inst', '1'); setTimeout(install, pede ? 700 : 1500); }
+      if (!standalone && (pede || ((ios || android) && !localStorage.getItem('sc-inst')))) { localStorage.setItem('sc-inst', '1'); try { localStorage.setItem('sc-inst-pago', String(Date.now())); } catch {} setTimeout(() => install(!!(me && me.paid)), pede ? 700 : 1500); }
     } catch {}
     const preso = me.trial && !me.paid && !me.can_use;
     if (preso && !me.blocked) setTimeout(paywall, 1200); // terminou o teste: toda vez que abre o app
-    else if (me.paid) setTimeout(guardadoDepoisDaCompra, 1500); // comprou e o vídeo do teste ficou guardado: oferece fazer e baixar
+    else if (me.paid) { setTimeout(guardadoDepoisDaCompra, 1500); setTimeout(() => lembraInstalar(false), 3500); } // comprou e o vídeo do teste ficou guardado: oferece fazer e baixar; depois lembra de instalar
     else if (standalone || android) setTimeout(convitePush, 4000);
     pushRenova();
     document.addEventListener('visibilitychange', async () => { // voltou para o app depois de um tempo: confere se pagou e lembra
