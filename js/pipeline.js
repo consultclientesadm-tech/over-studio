@@ -13,7 +13,7 @@ import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v
 import { referenceNotes, applyReference } from './reference.js?v=39';
 import { decodeVideoAudio } from './demux.js?v=39';
 import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=37';
-import { findVoices, splitVoices } from './voices.js?v=1';
+import { findVoices, splitVoices, forceVoices } from './voices.js?v=3';
 
 export const SR = STUDIO_SR;
 
@@ -274,6 +274,7 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   const duration = orig[0].length / SR;
   const state = { orig, voice, bed, key, chords, track, rawNotes: parts ? parts[0].rawNotes : raw, duration, cortado, voices: multi ? { count: multi.count, together: multi.together, range: multi.range } : null };
   if (parts) { for (const p of parts) Object.assign(p, { key, chords, duration }); state.parts = parts; }
+  state.multi = multi; // para separar na mão depois (botão Separar as vozes)
   if (o.reference) await setReference(state, o.reference, onStep);
   if (o.autoTune === false) untune(state, o); else await retune(state, o, onStep);
   return state;
@@ -338,6 +339,18 @@ export function voiceMix(state, gains = null, before = false, inDb = false) {
   });
   return [out];
 }
+// Separar na mão: a pessoa diz quantas vozes cantam (2, 3 ou 4) e o app separa assim
+export async function splitInto(state, K, opts = {}, onStep = () => {}) {
+  if (!state.multi) throw new Error('Este vídeo foi aberto sem a análise de vozes. Suba de novo.');
+  forceVoices(state.multi, state.voice, SR, K);
+  const pv = await splitVoices(state.voice, SR, state.multi, (p) => onStep('voices', p));
+  const parts = await partsFrom(pv, state.multi, (p) => onStep('notes', p));
+  for (const p of parts) Object.assign(p, { key: state.key, chords: state.chords, duration: state.duration });
+  state.parts = parts; state.edits = {}; state.ref = null;
+  state.voices = { ...(state.voices || {}), count: K, manual: true, range: state.multi.range };
+  return untune(state, opts);
+}
+
 // "É uma voz só": junta as vozes de volta e trata como uma voz (afinação volta para o começo)
 export async function joinVoices(state, opts = {}) {
   if (!state.parts) return state;
