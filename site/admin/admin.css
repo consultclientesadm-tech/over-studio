@@ -268,3 +268,16 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .cadUlt { padding: 8px 10px; gap: 3px; max-height: calc(clamp(110px, 11vw, 150px) + 22px); overflow-y: auto; scrollbar-width: thin; }
 .cadUlt > div { padding: 3px 7px; font-size: 12.5px; }
 .cadUlt small { margin-bottom: 0; }
+/* gráfico dia a dia do período (ao vivo) */
+.hojeBox .vista { display: inline-flex; margin-left: 12px; vertical-align: middle; transform: scale(.88); transform-origin: left center; }
+.hc .vb { fill: url(#gVb); }
+.hc .vb.hj { fill: var(--y); filter: drop-shadow(0 0 8px rgba(255,212,0,.85)); animation: hjPisca 2.2s ease-in-out infinite; }
+@keyframes hjPisca { 50% { opacity: .65; } }
+.hc .vba { fill: rgba(167,123,255,.85); }
+.hc .vbn { position: absolute; transform: translate(-50%, -125%); font-size: 10px; font-weight: 700; color: #ffe46b; white-space: nowrap; pointer-events: none; }
+.hc .vbt { position: absolute; top: 0; bottom: 0; z-index: 3; }
+.hc .vbt:hover { background: rgba(255,255,255,.05); }
+.vx { position: relative; height: 16px; margin: 6px 0 0 72px; font-size: 11px; color: #6f7389; }
+.vx span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.hl .lh { width: 10px; height: 10px; border-radius: 2px; background: var(--y); box-shadow: 0 0 6px var(--y); }
+@media (max-width: 860px) { .vx { margin-left: 56px; } .hc .vbn { font-size: 9px; } }

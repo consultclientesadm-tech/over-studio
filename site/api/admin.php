@@ -39,7 +39,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'hoje', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'hoje', 'serie', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -133,6 +133,24 @@ switch ($a) {
     $q7 = $db->prepare("SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ? AND created_at < ?"); $q7->execute([date('Y-m-d', time() - 7 * 86400), $hoje]);
     json_out(['ok' => true, 'agora' => date('H:i'), 'agora_min' => (int)date('G') * 60 + (int)date('i'), 'hoje' => $dia($hoje), 'ontem' => $dia($ontem),
       'cad_hoje' => $cad($hoje), 'cad_ontem' => $cad($ontem), 'media_7d' => round((float)$q7->fetchColumn() / 7, 2), 'cad_lista' => $cadLista($hoje), 'cad_ontem_lista' => $cadLista($ontem), 'cad_media_7d' => $cad7]);
+  }
+
+  case 'serie': { // gráfico ao vivo do painel: vendas dia a dia (ou semana a semana no 1 ano) no período escolhido + período anterior
+    sales_fill_net(); af_db();
+    $days = max(1, min(366, (int)($_GET['dias'] ?? 30)));
+    $ini = date('Y-m-d', time() - ($days - 1) * 86400); $antIni = date('Y-m-d', strtotime($ini) - $days * 86400);
+    $q = $db->prepare("SELECT substr(created_at, 1, 10) d, SUM(liquido) l, SUM(CASE WHEN status = 'pago' AND value > 0 THEN 1 ELSE 0 END) n, SUM(CASE WHEN afiliado_id IS NOT NULL THEN liquido ELSE 0 END) af FROM sales WHERE created_at >= ? AND (status = 'pago' OR value < 0) GROUP BY d");
+    $q->execute([$ini]); $m = []; foreach ($q as $r) $m[$r['d']] = $r;
+    $semana = $days > 120; $out = [];
+    for ($i = $days - 1; $i >= 0; $i--) {
+      $d = date('Y-m-d', time() - $i * 86400); $r = $m[$d] ?? null;
+      $k = $semana ? date('Y-m-d', strtotime($d) - ((int)date('N', strtotime($d)) - 1) * 86400) : $d;
+      if (!isset($out[$k])) $out[$k] = ['d' => $k, 'l' => 0.0, 'n' => 0, 'af' => 0.0, 'fim' => $d];
+      $out[$k]['fim'] = $d;
+      if ($r) { $out[$k]['l'] += (float)$r['l']; $out[$k]['n'] += (int)$r['n']; $out[$k]['af'] += (float)$r['af']; }
+    }
+    $qa = $db->prepare("SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ? AND created_at < ? AND (status = 'pago' OR value < 0)"); $qa->execute([$antIni, $ini]);
+    json_out(['ok' => true, 'dias' => $days, 'semana' => $semana, 'hoje' => date('Y-m-d'), 'agora' => date('H:i'), 'pontos' => array_values($out), 'anterior' => (float)$qa->fetchColumn()]);
   }
 
   case 'alunos': {

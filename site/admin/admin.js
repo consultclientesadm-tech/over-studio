@@ -63,8 +63,9 @@ function contar(root) {
 // ---------- gráfico do dia, ao vivo ----------
 let hojeIds = null, hojeDesenhado = false;
 function chime() { try { const C = window.AudioContext || window.webkitAudioContext; const c = chime.c || (chime.c = new C()); [880, 1320].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.value = f; o.type = 'sine'; g.gain.setValueAtTime(0.0001, c.currentTime + i * 0.12); g.gain.exponentialRampToValueAtTime(0.18, c.currentTime + i * 0.12 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + i * 0.12 + 0.5); o.connect(g).connect(c.destination); o.start(c.currentTime + i * 0.12); o.stop(c.currentTime + i * 0.12 + 0.55); }); } catch {} }
+let vista = 'periodo'; // 'periodo' (dia a dia do período escolhido) ou 'hora' (só hoje, por hora)
 async function loadHoje() {
-  const j = await api('hoje'); if (!j.ok) return;
+  const [j, sr] = await Promise.all([api('hoje'), api('serie', null, '&dias=' + dias)]); if (!j.ok) return;
   const vendas = j.hoje, ontem = j.ontem, agora = j.agora_min;
   const cum = (arr, ate = 1440) => arr.filter((v) => v.min <= ate).reduce((a, v) => a + v.liquido, 0);
   const total = cum(vendas), nV = vendas.filter((v) => v.liquido > 0).length, ontemAte = cum(ontem, agora), ontemTot = cum(ontem);
@@ -91,8 +92,10 @@ async function loadHoje() {
   const dif = ontemAte > 0 ? (total - ontemAte) / ontemAte : null;
   const novas = hojeIds ? vendas.filter((v) => !hojeIds.has(v.id) && v.liquido > 0) : [];
   hojeIds = new Set(vendas.map((v) => v.id));
-  $('hoje').innerHTML = `<section class="hojeBox glass${novas.length ? ' nova' : ''}">
-    <div class="hh"><div><span class="vivo"><i></i>AO VIVO · VENDAS DE HOJE</span>
+  const abas = `<div class="seg vista"><button data-v="periodo" class="${vista === 'periodo' ? 'on' : ''}">Dia a dia</button><button data-v="hora" class="${vista === 'hora' ? 'on' : ''}">Hoje por hora</button></div>`;
+  if (vista === 'periodo' && sr && sr.ok) $('hoje').innerHTML = periodoHtml(sr, total, novas.length, abas);
+  else $('hoje').innerHTML = `<section class="hojeBox glass${novas.length ? ' nova' : ''}">
+    <div class="hh"><div><span class="vivo"><i></i>AO VIVO · VENDAS DE HOJE</span>${abas}
       <div class="hv">${N2(total)}<small>líquido · ${nV} venda${nV === 1 ? '' : 's'}${nV ? ` · última às ${vendas.filter((v) => v.liquido > 0).slice(-1)[0].h}` : ''}</small></div></div>
       <div class="hcmp">${dif === null ? (ontemTot ? '' : '<span>Ontem: sem vendas</span>') : `<b class="${dif >= 0 ? 'up' : 'dn'}">${dif >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(dif) * 100)}%</b><span>vs ontem até esta hora (${brl0(ontemAte)})</span>`}
         <span>ontem fechou em ${brl0(ontemTot)} · média dos últimos 7 dias ${brl0(j.media_7d)}/dia</span></div></div>
@@ -111,10 +114,42 @@ async function loadHoje() {
     <div class="hl"><span><i class="ly"></i>Hoje (líquido acumulado)</span><span><i class="lo"></i>Ontem</span><span><i class="lp"></i>Venda de afiliado</span>${j.media_7d ? '<span><i class="lm"></i>Média por dia (7 dias)</span>' : ''}</div>
   </section>`;
   hojeDesenhado = true;
-  const hv = $('hoje').querySelector('.hv .cnt'); if (hv) { if (novas.length || !loadHoje.ja) contar($('hoje')); else { hv.textContent = brl(total); } }
+  $('hoje').querySelectorAll('.vista button').forEach((b) => (b.onclick = () => { vista = b.dataset.v; hojeDesenhado = false; loadHoje.ja = false; loadHoje(); }));
+  const hv = $('hoje').querySelector('.hv .cnt'); if (hv) { if (novas.length || !loadHoje.ja) contar($('hoje')); else { hv.textContent = brl(+hv.dataset.to); } }
   loadHoje.ja = true;
   if (novas.length) { chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}${novas.some((v) => v.af) ? ' (afiliado)' : ''}`); }
   loadCad(j);
+}
+// vendas dia a dia (ou semana a semana no 1 ano) do período escolhido, atualizando ao vivo
+function periodoHtml(sr, hojeTot, nova, abas) {
+  const P = sr.pontos, n = P.length, tot = P.reduce((a, p) => a + p.l, 0), nv = P.reduce((a, p) => a + p.n, 0);
+  const media = tot / Math.max(1, sr.dias) * (sr.semana ? 7 : 1);
+  const ymax = Math.max(...P.map((p) => p.l), media, 200) * 1.18, W = 1000, H = 240, bw = W / n;
+  const Y = (v) => H - (Math.max(0, v) / ymax) * H;
+  const dif = sr.anterior > 0 ? (tot - sr.anterior) / sr.anterior : null;
+  const per = { 7: 'últimos 7 dias', 30: 'últimos 30 dias', 90: 'últimos 90 dias', 365: 'últimos 12 meses' }[sr.dias] || `últimos ${sr.dias} dias`;
+  const dm = (d) => d.slice(8, 10) + '/' + d.slice(5, 7);
+  const barras = P.map((p, i) => { const x = i * bw + bw * 0.14, w = bw * 0.72, hj = p.fim === sr.hoje;
+    return `<rect x="${x.toFixed(1)}" y="${Y(p.l).toFixed(1)}" width="${w.toFixed(1)}" height="${(H - Y(p.l)).toFixed(1)}" rx="${Math.min(4, w / 3).toFixed(1)}" class="vb${hj ? ' hj' : ''}"/>`
+      + (p.af > 0 ? `<rect x="${x.toFixed(1)}" y="${Y(p.af).toFixed(1)}" width="${w.toFixed(1)}" height="${(H - Y(p.af)).toFixed(1)}" rx="${Math.min(4, w / 3).toFixed(1)}" class="vba"/>` : ''); }).join('');
+  const rotulos = n <= 31 ? P.map((p, i) => p.l > 0 ? `<span class="vbn" style="left:${((i + 0.5) / n * 100).toFixed(2)}%;top:${((1 - p.l / ymax) * 100).toFixed(2)}%">${p.l >= 1000 ? (p.l / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'k' : Math.round(p.l)}</span>` : '').join('') : '';
+  const tips = P.map((p, i) => `<i class="vbt" style="left:${(i / n * 100).toFixed(3)}%;width:${(100 / n).toFixed(3)}%" title="${sr.semana ? 'Semana de ' + dm(p.d) : dm(p.d)}${p.fim === sr.hoje ? ' (hoje)' : ''} · ${brl(p.l)} · ${p.n} venda${p.n === 1 ? '' : 's'}${p.af ? ' · afiliados ' + brl(p.af) : ''}"></i>`).join('');
+  const passo = Math.ceil(n / (innerWidth < 600 ? 4 : 8)), eixo = P.map((p, i) => (i % passo === 0 || i === n - 1) ? `<span style="left:${((i + 0.5) / n * 100).toFixed(2)}%">${p.fim === sr.hoje && !sr.semana ? 'hoje' : dm(p.d)}</span>` : '').join('');
+  return `<section class="hojeBox glass${nova ? ' nova' : ''}">
+    <div class="hh"><div><span class="vivo"><i></i>AO VIVO · VENDAS DOS ${per.toUpperCase()}</span>${abas}
+      <div class="hv">${N2(tot)}<small>líquido · ${nv} venda${nv === 1 ? '' : 's'} · hoje ${brl0(hojeTot)} até ${sr.agora}</small></div></div>
+      <div class="hcmp">${dif === null ? '<span>Período anterior: sem vendas</span>' : `<b class="${dif >= 0 ? 'up' : 'dn'}">${dif >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(dif) * 100)}%</b><span>vs os ${sr.dias} dias anteriores (${brl0(sr.anterior)})</span>`}
+        <span>média de ${brl0(media)} por ${sr.semana ? 'semana' : 'dia'}</span></div></div>
+    <div class="hg"><div class="hy"><span>${brl0(ymax)}</span><span>${brl0(ymax / 2)}</span><span>R$ 0</span></div>
+      <div class="hc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <defs><linearGradient id="gVb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd400" stop-opacity=".95"/><stop offset="1" stop-color="#ffd400" stop-opacity=".25"/></linearGradient></defs>
+        ${[0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" class="gr"/>`).join('')}
+        ${barras}
+        ${media ? `<line x1="0" x2="${W}" y1="${Y(media).toFixed(1)}" y2="${Y(media).toFixed(1)}" class="md"/>` : ''}
+      </svg>${rotulos}${tips}${media ? `<span class="mdl" style="top:${((1 - media / ymax) * 100).toFixed(1)}%">média/${sr.semana ? 'semana' : 'dia'}</span>` : ''}</div></div>
+    <div class="vx">${eixo}</div>
+    <div class="hl"><span><i class="ly"></i>Vendas (líquido)${sr.semana ? ' por semana' : ' por dia'}</span><span><i class="lp"></i>Parte de afiliados</span><span><i class="lh"></i>Hoje, ao vivo</span><span><i class="lm"></i>Média</span></div>
+  </section>`;
 }
 // curva suave que nunca desce (monotone cubic) por pontos [x, y] já em pixels
 function suave(P) {
