@@ -145,6 +145,31 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   // baixou o vídeo (ou o áudio) pronto: agora sim desconta o vídeo do teste grátis
   window.scOk = async () => { try { const j = await api('consumir', {}); if (j.user) { me = j.user; render(); if (me.trial && !me.paid && !me.can_use) setTimeout(() => { if (!document.querySelector('.sc-ov')) paywall(); }, 6000); } } catch (e) {} };
 
+  // vídeo ficou pronto (prévia na tela): quem está no teste já vê a oferta, sem esperar baixar
+  window.scPronto = () => {
+    if (!me || !me.trial || me.paid) return;
+    setTimeout(() => {
+      if (document.querySelector('.sc-ov')) return;
+      const url = me.checkout_url || '/#comprar';
+      sheet(`<h3>Ficou com som de estúdio 🎧</h3>
+        <p>Essa é a sua voz afinada e mixada, do jeito que vai para o ar. Com o acesso completo, todo cover que você gravar sai assim: sem limite de vídeos, sem pagar estúdio.</p>
+        <ul class="sc-ul"><li>Covers ilimitados, direto do celular</li><li>Afinação natural, sem voz de robô</li><li>Mix, master e cor de cinema na hora</li></ul>
+        ${precoHtml()}<a class="sc-b" href="${esc(url)}" target="_blank" rel="noopener">QUERO TODOS OS MEUS COVERS ASSIM</a>
+        <button class="sc-b2" data-fechar>Primeiro quero baixar este vídeo</button>`);
+    }, 9000);
+  };
+  // antes de exportar no navegador do Instagram/Facebook: ele costuma não deixar baixar
+  window.scAntesExportar = () => new Promise((res) => {
+    const app = window.scCompat && window.scCompat.inApp;
+    if (!app) return res(true);
+    const nav = ios ? 'Safari' : 'Chrome';
+    const s = sheet(`<h3>Baixe pelo ${nav}</h3><p>O navegador do ${esc(app)} costuma não deixar salvar o vídeo pronto no celular.</p>
+      <p>Abra o Studio Cover no ${nav} e faça de novo: <b>o seu teste grátis só conta quando o vídeo é baixado</b>, então você não perde nada.</p>
+      <button class="sc-b" data-fora>ABRIR NO ${nav.toUpperCase()}</button><button class="sc-b2" data-aqui>Tentar baixar aqui mesmo</button>`, () => res(false));
+    s.el.querySelector('[data-fora]').onclick = () => { s.el.remove(); res(false); window.scCompat.abrirFora(); };
+    s.el.querySelector('[data-aqui]').onclick = () => { s.el.remove(); res(true); };
+  });
+
   // ---------- avisos ----------
   function toast(title, body, onClick) {
     document.querySelector('.sc-toast')?.remove();
