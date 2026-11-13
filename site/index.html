@@ -690,15 +690,34 @@ footer a { color: #888; }
     if (q) { af = q; localStorage.setItem('sc-af', JSON.stringify({ c: q, t: Date.now() })); fetch('/api/conta.php?a=clique&af=' + encodeURIComponent(q), { credentials: 'same-origin' }).catch(() => {}); }
     else { const g = JSON.parse(localStorage.getItem('sc-af') || 'null'); if (g && Date.now() - g.t < 60 * 864e5) af = g.c; }
   } catch (e) {}
-  // origem da venda: qual página (vsl ou home) e a campanha (utm_*) vão para o checkout da Eduzz e voltam no aviso da venda (edz_trk_1)
+  // origem: de qual página (home com teste grátis ou vsl de compra direta) e de qual canal/campanha a pessoa veio.
+  // Vai para o painel (quadro Origens), para o cadastro do teste (cookie sc_or) e para o checkout da Eduzz (trk=o.pagina.fonte.campanha, volta na venda).
+  const ORIGEM = (() => {
+    const lim = (v, n) => String(v || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, n);
+    const q = new URLSearchParams(location.search), pagina = window.SC_SEM_TESTE ? 'vsl' : 'home';
+    const utm = {}; ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((k) => { if (q.get(k)) utm[k] = q.get(k); });
+    let fonte = lim(utm.utm_source, 40), campanha = lim(utm.utm_campaign, 60);
+    if (!fonte && af) { fonte = 'afiliado'; campanha = lim(af, 60); }
+    if (!fonte) {
+      const ua = navigator.userAgent, ref = document.referrer.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+      fonte = /Instagram/.test(ua) || /instagram\./.test(ref) ? 'instagram' : /FBAN|FBAV|FB_IAB/.test(ua) || /facebook\.|fb\./.test(ref) ? 'facebook' : /whatsapp|wa\.me/.test(ref) ? 'whatsapp'
+        : /tiktok/i.test(ua + ref) ? 'tiktok' : /youtube|youtu\.be/.test(ref) ? 'youtube' : /google\./.test(ref) ? 'google' : ref && !/studiocover/.test(ref) ? lim(ref, 40) : 'direto';
+    }
+    let o = { pagina, fonte, campanha, utm, t: Date.now() };
+    try { // entrou de novo sem campanha (direto): continua valendo o canal de antes (30 dias)
+      const g = JSON.parse(localStorage.getItem('sc-or') || 'null');
+      if (fonte === 'direto' && g && Date.now() - g.t < 30 * 864e5) o = { ...g, pagina, t: Date.now() };
+      localStorage.setItem('sc-or', JSON.stringify(o));
+    } catch (e) {}
+    document.cookie = 'sc_or=' + encodeURIComponent([o.pagina, o.fonte, o.campanha].join('|')) + ';path=/;max-age=' + 30 * 86400 + ';samesite=lax' + (location.protocol === 'https:' ? ';secure' : '');
+    fetch('/api/conta.php?a=visita&p=' + pagina + '&f=' + encodeURIComponent(o.fonte) + '&c=' + encodeURIComponent(o.campanha), { credentials: 'same-origin' }).catch(() => {});
+    return o;
+  })();
   const comOrigem = (url) => {
     try {
-      const q = new URLSearchParams(location.search), u = new URL(url, location.href);
-      let utm = {}; try { utm = JSON.parse(sessionStorage.getItem('sc-utm') || '{}'); } catch (e) {}
-      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((k) => { if (q.get(k)) utm[k] = q.get(k); });
-      try { sessionStorage.setItem('sc-utm', JSON.stringify(utm)); } catch (e) {}
-      Object.entries(utm).forEach(([k, v]) => { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
-      if (!u.searchParams.has('trk')) u.searchParams.set('trk', ((window.SC_SEM_TESTE ? 'vsl' : 'home') + (utm.utm_campaign ? '-' + utm.utm_campaign : '')).slice(0, 60));
+      const u = new URL(url, location.href);
+      Object.entries(ORIGEM.utm || {}).forEach(([k, v]) => { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+      if (!u.searchParams.has('trk')) u.searchParams.set('trk', ['o', ORIGEM.pagina, ORIGEM.fonte, ORIGEM.campanha].join('.').slice(0, 90));
       return u.toString();
     } catch (e) { return url; }
   };
