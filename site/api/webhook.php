@@ -3,6 +3,7 @@
 // Aceita o webhook novo (JSON) e o postback antigo (formulário). Tudo que chega fica registrado no painel
 // (Configurações → Webhooks) para conferir o formato no primeiro teste.
 declare(strict_types=1);
+define('ESCUDO_LIVRE', true); // a Eduzz nunca é barrada pelo bloqueio de IP (o token protege)
 require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
 require_once __DIR__ . '/origem.php';
@@ -16,7 +17,7 @@ $log = function (string $result) use ($raw, $data) {
 };
 
 // segurança: token na URL, e a assinatura HMAC quando o segredo da Eduzz estiver configurado
-if (!hash_equals(setting('webhook_token'), (string)($_GET['token'] ?? ''))) { $log('recusado: token errado'); fail('token inválido', 403); }
+if (!hash_equals(setting('webhook_token'), (string)($_GET['token'] ?? ''))) { $log('recusado: token errado'); escudo_evento('chave', 'webhook'); fail('token inválido', 403); }
 $secret = setting('eduzz_secret');
 if ($secret !== '') {
   $sig = $_SERVER['HTTP_X_SIGNATURE'] ?? $_SERVER['HTTP_X_EDUZZ_SIGNATURE'] ?? '';

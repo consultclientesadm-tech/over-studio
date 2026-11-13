@@ -63,6 +63,7 @@ switch ($a) {
     $q = db()->prepare('SELECT * FROM users WHERE email = ?'); $q->execute([$email]);
     $u = $q->fetch();
     if (!$u || !$u['pass_hash'] || !password_verify($pass, $u['pass_hash'])) {
+      escudo_evento('login', 'aluno');
       if ($u && !$u['pass_hash']) fail('Você ainda não criou a sua senha. Use o link que chegou no seu e-mail ou toque em "Esqueci a senha".');
       fail('E-mail ou senha não conferem.');
     }
@@ -89,6 +90,7 @@ switch ($a) {
     $hash = password_hash($pass, PASSWORD_DEFAULT);
     db()->prepare('UPDATE users SET pass_hash = ?, token = NULL, token_exp = NULL, last_login = ? WHERE id = ?')->execute([$hash, now(), $u['id']]);
     if (arg('aceite')) registra_aceite((int)$u['id']);
+    if ((string)arg('trans') === '') escudo_evento('senha_obrigado', $u['email']);
     $u['pass_hash'] = $hash;
     login_user($u);
     json_out(['ok' => true, 'user' => public_user($u)]);
@@ -105,6 +107,7 @@ switch ($a) {
     require_post();
     throttle('obrs:' . client_ip(), 10, 900);
     [$u, $st] = compra_recente(clean_email((string)arg('email')), (string)arg('trans'));
+    throttle('obrse:' . clean_email((string)arg('email')), 4, 3600);
     if ($st !== 'criar') fail($st === 'tem_senha' ? 'Você já tem senha. Toque em "Entrar".' : 'Não achamos a compra deste e-mail. Use o link que chegou no seu e-mail.');
     $pass = (string)arg('senha');
     if ($e = strong_password($pass)) fail($e);
@@ -261,6 +264,7 @@ function compra_recente(string $email, string $trans): array {
   if (!$u || !access($u)['paid']) return [null, 'esperando'];
   if ($u['pass_hash']) return [$u, 'tem_senha'];
   if (!$u['paid_at'] || strtotime($u['paid_at']) < time() - 3 * 3600) return [$u, 'antiga'];
+  if ($trans === '' && strtotime($u['paid_at']) < time() - 45 * 60) return [$u, 'antiga']; // sem o código da fatura, só logo depois da compra (protege a conta de quem souber só o e-mail)
   if ($trans !== '') { // se a Eduzz mandou o código da fatura, ele tem que bater
     $q = db()->prepare("SELECT 1 FROM sales WHERE user_id = ? AND trans = ? AND status = 'pago'"); $q->execute([$u['id'], $trans]);
     if (!$q->fetch()) return [$u, 'antiga'];

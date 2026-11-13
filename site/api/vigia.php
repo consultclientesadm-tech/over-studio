@@ -8,7 +8,7 @@ require_once __DIR__ . '/saude.php';
 require_once __DIR__ . '/vigia_erros.php';
 if (PHP_SAPI !== 'cli') {
   $k = (string)cfg('cron_key');
-  if ($k === '' || !hash_equals($k, (string)($_GET['chave'] ?? ''))) { http_response_code(403); exit('sem permissão'); }
+  if ($k === '' || !hash_equals($k, (string)($_GET['chave'] ?? ''))) { escudo_evento('chave', basename(__FILE__)); http_response_code(403); exit('sem permissão'); }
 }
 // depois de publicar: php vigia.php --corrigido <sig> [<sig>...] --commit "<hash mensagem>"
 $ai = array_search('--corrigido', $argv ?? [], true);
@@ -19,7 +19,6 @@ if (PHP_SAPI === 'cli' && $ai !== false) {
 }
 $forcar = in_array('--agora', $argv ?? [], true) || isset($_GET['agora']);
 $r = erros_vigia($forcar);
-if (($r['vigia_erros'] ?? '') === 'ok') {
-  try { $r['sistema'] = health_run(); } catch (Throwable $e) { $r['sistema'] = 'erro: ' . $e->getMessage(); }
-  echo date('d/m H:i'), ' ', json_encode($r, JSON_UNESCAPED_UNICODE), "\n";
-}
+try { $r['escudo'] = escudo_checagem($forcar); } catch (Throwable $e) { $r['escudo'] = 'erro: ' . $e->getMessage(); } // segurança: a cada ~5 min
+if (($r['vigia_erros'] ?? '') === 'ok') { try { $r['sistema'] = health_run(); } catch (Throwable $e) { $r['sistema'] = 'erro: ' . $e->getMessage(); } }
+if (($r['vigia_erros'] ?? '') === 'ok' || ($r['escudo']['escudo'] ?? 'recente') !== 'recente') echo date('d/m H:i'), ' ', json_encode($r, JSON_UNESCAPED_UNICODE), "\n";
