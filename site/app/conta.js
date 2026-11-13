@@ -270,10 +270,11 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     document.body.appendChild(t); setTimeout(() => t.remove(), 6500);
   }
   async function avisos() {
-    const j = await api('avisos');
+    let j;
+    try { j = await api('avisos'); } catch (e) { if (e.message !== 'login') toast('Sem conexão', 'Não deu para abrir os avisos agora. Confira a internet e tente de novo.'); return; }
     const items = (j.items || []).map((n) => `<div class="sc-n ${n.read_at ? '' : 'nova'}"><b>${esc(n.title)}</b>${esc(n.body)}${n.url ? `<br><a href="${esc(n.url)}" style="color:#ffd400">Abrir →</a>` : ''}<br><small>${esc(n.created_at.slice(0, 16).split(' ').reverse().join(' · ').replace(/(\d{4})-(\d\d)-(\d\d)/, '$3/$2'))}</small></div>`).join('');
     sheet(`<h3>Avisos</h3>${items || '<p>Nenhum aviso por enquanto.</p>'}`);
-    if (unread) { api('lido', {}); unread = 0; render(); }
+    if (unread) { api('lido', {}).catch(() => {}); unread = 0; render(); }
   }
 
   // ---------- notificação no celular ----------
@@ -296,7 +297,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   // renova a inscrição em silêncio (o celular às vezes troca o endereço)
   async function pushRenova() {
     if (!pushLigado()) return;
-    try { const reg = await navigator.serviceWorker.getRegistration('/app/avisos/'); const sub = reg && (await reg.pushManager.getSubscription()); if (sub) api('push-salvar', { sub: sub.toJSON() }); else ativarPush(); } catch {}
+    try { const reg = await navigator.serviceWorker.getRegistration('/app/avisos/'); const sub = reg && (await reg.pushManager.getSubscription()); if (sub) api('push-salvar', { sub: sub.toJSON() }).catch(() => {}); else ativarPush(); } catch {}
   }
   function convitePush() {
     if (!podePush || Notification.permission !== 'default') return;
@@ -325,7 +326,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       if (a.dataset.m === 'avisos') avisos();
       if (a.dataset.m === 'instalar') install();
       if (a.dataset.m === 'push') ativarPush();
-      if (a.dataset.m === 'sair') { await api('sair', {}); location.href = '/entrar/'; }
+      if (a.dataset.m === 'sair') { await api('sair', {}).catch(() => {}); location.href = '/entrar/'; }
       if (a.dataset.m === 'aparelho') aparelho();
       if (a.dataset.m === 'dados') meusDados();
     }));
@@ -403,6 +404,6 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       try { const r = await api('me'); if (r.user) { const antes = me.paid; me = r.user; render(); if (!antes && me.paid) pagou(); else if (me.trial && !me.paid && !me.can_use && !document.querySelector('.sc-ov') && !document.querySelector('[data-screen="studio"]')) paywall(); } } catch {}
     });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') window.scSaiu = Date.now(); });
-    if (unread) setTimeout(async () => { const a = await api('avisos'); const n = (a.items || []).find((x) => !x.read_at); if (n) toast(n.title, n.body, avisos); }, 2500);
+    if (unread) setTimeout(async () => { try { const a = await api('avisos'); const n = (a.items || []).find((x) => !x.read_at); if (n) toast(n.title, n.body, avisos); } catch {} }, 2500);
   })();
 })();

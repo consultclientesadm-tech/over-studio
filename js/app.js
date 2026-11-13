@@ -970,7 +970,11 @@ addEventListener('error', (e) => {
   note({ erro: String(e.message).slice(0, 120) }); toast('Erro: ' + e.message, 9000);
 });
 addEventListener('unhandledrejection', (e) => {
-  const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); ev('erro', { etapa: 'app', msg: m, tela: app.dataset.screen || '' });
+  const m = String(e.reason?.message || e.reason).slice(0, 120);
+  // internet caiu num pedido de fundo (Failed to fetch / Load failed / NetworkError): não é falha do app nem para o vídeo.
+  // Só registra como "rede", sem mostrar erro técnico na tela.
+  if (/^(Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.?|Network request failed)$/i.test(m)) { ev('erro', { etapa: 'rede', msg: m, tela: app.dataset.screen || '' }); e.preventDefault(); return; }
+  note({ erro: m }); ev('erro', { etapa: 'app', msg: m, tela: app.dataset.screen || '' });
   // leitura do arquivo falhou fora do fluxo principal: explica o que fazer em vez de mostrar a mensagem técnica
   if (LEITURA.test(m + ' ' + (e.reason?.name || ''))) { e.preventDefault(); if (app.dataset.screen !== 'studio') perdeuArquivo(); return; }
   toast('Erro: ' + m, 9000);
