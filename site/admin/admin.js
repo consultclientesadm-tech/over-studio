@@ -39,13 +39,14 @@ $('fPrimeiro').onsubmit = (e) => { e.preventDefault(); sub($('fPrimeiro'), 'prim
 $('sair').onclick = async () => { await api('sair', {}); boot(); };
 
 // ---------- abas ----------
-const TABS = { geral: 'tGeral', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', admins: 'tAdmins', config: 'tConfig' };
+const TABS = { geral: 'tGeral', financas: 'tFin', vistoria: 'tVist', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', admins: 'tAdmins', config: 'tConfig' };
 function tab(t) {
   if (!TABS[t]) t = 'geral';
   document.querySelectorAll('.nav > button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   Object.entries(TABS).forEach(([k, id]) => ($(id).hidden = k !== t));
   history.replaceState(null, '', '#' + t);
-  ({ geral: loadGeral, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, admins: loadAdmins, config: loadConfig })[t]();
+  $('vistBtn').hidden = t === 'vistoria';
+  ({ geral: loadGeral, financas: loadFin, vistoria: loadVist, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, admins: loadAdmins, config: loadConfig })[t]();
 }
 document.querySelectorAll('.nav > button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
 
@@ -227,7 +228,7 @@ function medidor(t, probs) {
     ['⚡', 'Ritmo de vendas', 20, cl(ritmo / meta), `${ritmo.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} venda${ritmo === 1 ? '' : 's'} por dia nos últimos 7 dias (meta ${meta})`, 'Mais tráfego: anúncios, posts com antes e depois e afiliados.'],
     ['📈', 'Crescimento', 20, cl((cresc - 0.5) / 0.7), t.vendas_7d_ant ? `${t.vendas_7d} vendas nos últimos 7 dias contra ${t.vendas_7d_ant} nos 7 anteriores` : `${t.vendas_7d} vendas nos últimos 7 dias`, 'As vendas caíram em relação à semana anterior: veja o que mudou nos anúncios.'],
     ['↩', 'Reembolsos', 20, cl(1 - t.taxa_reembolso / 0.15), `${pc(t.taxa_reembolso)} do vendido voltou (bom: abaixo de 5%)`, 'Muitos reembolsos: veja no "O app está funcionando?" se alguém está travando.'],
-    ['🛰️', 'Sistema funcionando', 15, cl(1 - probs * 0.35), probs ? `${probs} problema${probs === 1 ? '' : 's'} apontado${probs === 1 ? '' : 's'} pelo vigia` : 'Site, app, checkout, e-mails e Eduzz ok', 'Resolva o que o vigia apontou no topo da página.'],
+    ['🛰️', 'Sistema funcionando', 15, cl(1 - probs * 0.35), probs ? `${probs} problema${probs === 1 ? '' : 's'} apontado${probs === 1 ? '' : 's'} pelo vigia` : 'Site, app, checkout, e-mails e Eduzz ok', 'Veja o que o vigia apontou na aba Vistoria.'],
   ];
   const nota = Math.round(F.reduce((a, f) => a + f[2] * f[3], 0));
   const [rot, cor] = nota >= 80 ? ['EXCELENTE', '#2ee59d'] : nota >= 60 ? ['BOA', '#b8f04a'] : nota >= 40 ? ['ATENÇÃO', '#ffb02e'] : ['CRÍTICA', '#ff4d5e'];
@@ -247,7 +248,7 @@ function medidor(t, probs) {
 
 // ---------- visão geral ----------
 let dias = 30;
-$('periodo').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; dias = +b.dataset.d; $('periodo').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadGeral(); };
+document.querySelectorAll('.segP').forEach((sg) => (sg.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; dias = +b.dataset.d; document.querySelectorAll('.segP button').forEach((x) => x.classList.toggle('on', +x.dataset.d === dias)); $('tFin').hidden ? loadGeral() : loadFin(); }));
 // ---------- vistoria de erros (de 10 em 10 minutos) ----------
 const ROT = { novo: ['🆕 NOVO', 'r'], aumentou: ['📈 AUMENTOU', 'r'], voltou: ['🔁 VOLTOU', 'r'] };
 const desde = (s) => { if (!s) return '—'; const m = Math.round((Date.now() - new Date(s.replace(' ', 'T') + '-03:00')) / 60000); return m < 1 ? 'agora' : m < 60 ? `há ${m} min` : m < 1440 ? `há ${Math.floor(m / 60)} h` : dt(s); };
@@ -307,9 +308,76 @@ function desenhaFat() {
   G.area($('cFat'), fatSerie, { color: '#ffd400', fmt: (v) => (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace('.', ',') + 'k' : Math.round(v)) });
 }
 addEventListener('resize', () => { clearTimeout(desenhaFat.t); desenhaFat.t = setTimeout(desenhaFat, 200); });
+
+// ---------- visão geral: comissões, termômetro e anúncios ----------
+function renderGeral(j) {
+  const t = j.tot, per = { 7: '7 dias', 30: '30 dias', 90: '90 dias', 365: '12 meses' }[dias];
+  const probs = t.saude && t.saude.problemas ? Object.keys(t.saude.problemas).length : 0;
+  const N = (v, f = 'brl') => `<b class="cnt" data-to="${+v || 0}" data-f="${f}">0</b>`;
+  const liq = t.faturamento_periodo, ads = t.anuncios_periodo || 0, lucro = liq - ads, sp = t.socio_pct, lp = 100 - sp;
+  const pessoa = (ini, nome, pct, cls) => `<div class="cpes ${cls}"><div class="cav"><span>${ini}</span></div><div><small>${nome} · ${pct}%</small>${N(liq * pct / 100)}
+    <span>${ads ? `depois dos anúncios: <b>${brl(lucro * pct / 100)}</b>` : `no mês: ${brl(t.faturamento_mes * pct / 100)}`}</span></div></div>`;
+  $('comBox').innerHTML = `<div class="comBox glass">
+    <div class="cmain"><span class="tag y">💰 COMISSÃO DOS SÓCIOS · ${per.toUpperCase()}</span>
+      <div class="ctot">${N(liq)}<small>líquido que caiu (já sem a taxa da Eduzz)</small></div>
+      <div class="cchips"><span>🛒 <b>${t.vendas_periodo}</b> venda${t.vendas_periodo === 1 ? '' : 's'}</span><span>🎫 ticket <b>${brl0(t.ticket_medio)}</b></span><span>📅 hoje <b>${brl0(t.faturamento_hoje)}</b></span><span>🎁 <b>${t.testes_periodo}</b> cadastro${t.testes_periodo === 1 ? '' : 's'}</span><span>🎯 conversão <b>${Math.round(t.conversao_teste * 100)}%</b></span></div></div>
+    <div class="cpess">${pessoa('L', 'Leo', lp, 'y')}${pessoa('R', 'Reinaldo', sp, 'c')}</div></div>`;
+  contar($('comBox'));
+  $('termo').innerHTML = `<div class="glass termoBox">${medidor(t, probs)}</div>`;
+  contar($('termo'));
+  renderAds(t, per);
+  fatSerie = j.faturamento; fatPeriodo = liq; desenhaFat();
+}
+function renderAds(t, per) {
+  const ads = t.anuncios_periodo || 0, liq = t.faturamento_periodo, v = t.vendas_periodo, cad = t.testes_periodo;
+  const roas = ads ? liq / ads : null, roi = ads ? (liq - ads) / ads : null;
+  const cor = roi === null ? '' : roi >= 1 ? 'g' : roi >= 0 ? 'y' : 'r';
+  const hoje = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  const L = t.anuncios_lista || [];
+  $('adsBox').innerHTML = `<div class="glass adsBox">
+    <div class="nh"><i>📣</i><small>ANÚNCIOS · ${per.toUpperCase()}</small></div>
+    <div class="adsG">
+      <div class="ak big ${cor}"><small>Retorno por real gasto</small><b>${roas === null ? '—' : brl(roas)}</b><span>${roas === null ? 'lance o gasto abaixo' : `para cada R$ 1 em anúncio`}</span></div>
+      <div class="ak ${cor}"><small>ROI</small><b>${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</b><span>${roi === null ? '' : roi >= 0 ? 'lucro sobre o gasto' : 'gastou mais do que voltou'}</span></div>
+      <div class="ak"><small>Investido</small><b>${brl0(ads)}</b><span>no período</span></div>
+      <div class="ak"><small>Custo por venda</small><b>${ads && v ? brl0(ads / v) : '—'}</b><span>${v} venda${v === 1 ? '' : 's'}</span></div>
+      <div class="ak"><small>Custo por cadastro</small><b>${ads && cad ? brl(ads / cad) : '—'}</b><span>${cad} no teste</span></div>
+      <div class="ak ${cor}"><small>Lucro após anúncios</small><b>${brl0(liq - ads)}</b><span>líquido − anúncios</span></div>
+    </div>
+    <form class="adsF" id="adsF"><label>Quanto gastou de anúncio?<input name="valor" inputmode="decimal" placeholder="Ex.: 2.000" required></label><label>Dia<input name="dia" type="date" value="${hoje}" max="${hoje}"></label><label>Onde (opcional)<input name="nota" maxlength="80" placeholder="Instagram, TikTok…"></label><button class="btn sm">+ Lançar gasto</button></form>
+    ${L.length ? `<details class="adsL"><summary>Gastos lançados (${L.length}) · total geral ${brl0(t.anuncios_total)}</summary>${L.map((a) => `<div><span>${a.dia.slice(8, 10)}/${a.dia.slice(5, 7)}/${a.dia.slice(2, 4)}</span><b>${brl(a.valor)}</b><em>${esc(a.nota || '')}</em><button class="lnk" data-del-ad="${a.id}" title="Apagar">✕</button></div>`).join('')}</details>` : '<p class="sub adsDica">Lance quanto gastou (pode ser por dia, por semana ou um valor só) e o painel calcula sozinho o custo por venda e quanto voltou.</p>'}
+  </div>`;
+  $('adsF').onsubmit = async (e) => { e.preventDefault(); const f = new FormData(e.target); const r = await api('anuncio-add', Object.fromEntries(f)); if (!r.ok) return toast(r.error || 'Não deu.'); toast('Gasto lançado.'); const j = await getResumo(); if (j.ok) renderGeral(j); };
+  $('adsBox').querySelectorAll('[data-del-ad]').forEach((b) => (b.onclick = async () => { if (!confirm('Apagar esse gasto?')) return; await api('anuncio-del', { id: b.dataset.delAd }); const j = await getResumo(); if (j.ok) renderGeral(j); }));
+}
+// selo de erros na última hora (menu e botão do canto)
+async function vistBadge() {
+  try { const j = await api('vigia-erros'); if (!j.ok) return; const n = (j.grupos || []).filter((g) => g.status === 'aberto').reduce((a, g) => a + (+g.h1 || 0), 0);
+    [$('vistBadge'), $('vistBtnN')].forEach((el) => { el.hidden = !n; el.textContent = n > 99 ? '99+' : n; }); $('vistBtn').classList.toggle('alerta', !!n); } catch {}
+}
+$('vistBtn').onclick = () => tab('vistoria');
+setInterval(() => { if (!document.hidden && $('vPainel') && !$('vPainel').hidden) vistBadge(); }, 60000);
+
+let resumoJ = null;
+async function getResumo() { const j = await api('resumo', null, '&dias=' + dias); if (j.ok) resumoJ = j; return j; }
 async function loadGeral() {
-  loadHoje();
-  const j = await api('resumo', null, '&dias=' + dias); if (!j.ok) return;
+  loadHoje(); vistBadge();
+  const j = await getResumo(); if (!j.ok) return;
+  renderGeral(j);
+}
+async function loadFin() { const j = await getResumo(); if (j.ok) renderFin(j); }
+async function loadVist() {
+  loadVigiaErros(); loadAppSaude();
+  const j = resumoJ && resumoJ.dias === dias ? resumoJ : await getResumo();
+  if (j && j.ok) $('vigiaSite').innerHTML = vigiaSiteHtml(j.tot);
+}
+function vigiaSiteHtml(t) {
+  const sd = t.saude, probs = sd && sd.problemas ? Object.values(sd.problemas) : [];
+  return !sd ? '<div class="vigia"><b>🛰️ Vigia do site</b> ainda não rodou. Ele roda junto com a tarefa de hora em hora.</div>'
+    : probs.length ? `<div class="vigia mal"><b>⚠️ O vigia do site encontrou ${probs.length === 1 ? 'um problema' : probs.length + ' problemas'}</b><ul>${probs.map((m) => '<li>' + esc(m) + '</li>').join('')}</ul><small>Checado em ${esc(sd.quando)}. Os administradores recebem aviso por e-mail.</small></div>`
+    : `<div class="vigia ok"><b>🛰️ Site funcionando</b><small>Site, app, checkout, e-mails e Eduzz checados em ${esc(sd.quando)}.</small></div>`;
+}
+function renderFin(j) {
   const t = j.tot;
   const pc = (v) => Math.round(v * 100) + '%';
   const per = { 7: '7 dias', 30: '30 dias', 90: '90 dias', 365: '12 meses' }[dias];
@@ -319,14 +387,9 @@ async function loadGeral() {
   const card = (cor, ico, rot, v, f, sub, extra = '') => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div>${N(v, f)}<span>${sub}</span>${extra}</div>`;
   const pessoas = t.alunos_pagos + t.cortesias + t.em_teste + t.reembolsos + t.bloqueados;
   const fat = (v) => (pessoas ? Math.max(v ? 3 : 0, (v / pessoas) * 100) : 0);
-  const sd = t.saude, probs = sd && sd.problemas ? Object.values(sd.problemas) : [];
-  const vigia = !sd ? '<div class="vigia"><b>🛰️ Vigia</b> ainda não rodou. Ele roda junto com a tarefa de hora em hora.</div>'
-    : probs.length ? `<div class="vigia mal"><b>⚠️ O vigia encontrou ${probs.length === 1 ? 'um problema' : probs.length + ' problemas'}</b><ul>${probs.map((m) => '<li>' + esc(m) + '</li>').join('')}</ul><small>Checado em ${esc(sd.quando)}. Os administradores recebem aviso por e-mail.</small></div>`
-    : `<div class="vigia ok"><b>🛰️ Tudo funcionando</b><small>Site, app, checkout, e-mails e Eduzz checados em ${esc(sd.quando)}.</small></div>`;
-  $('nums').innerHTML = vigia + `
+  $('nums').innerHTML = `
   <section class="bloco">
     <div class="bh"><span class="tag y">💰 SAÚDE FINANCEIRA</span><small>valores líquidos: o que a Eduzz paga, já sem a taxa. Cortesia não entra aqui.</small></div>
-    ${medidor(t, probs.length)}
     <div class="hero">
       <div class="hmain"><small>LÍQUIDO QUE CAIU PARA OS SÓCIOS</small>${N(t.faturamento_total, 'brl')}
         <span>${brl(t.bruto_total)} vendidos − ${brl(t.taxas_total)} taxa da Eduzz${t.comissoes_total ? ` − ${brl(t.comissoes_total)} comissão de afiliados` : ''}${t.reembolsado_total ? ` − ${brl(t.reembolsado_total)} reembolsados` : ''} · ${t.alunos_pagos} aluno${t.alunos_pagos === 1 ? '' : 's'} pagando</span>
@@ -366,8 +429,7 @@ async function loadGeral() {
       ${card(t.emails_falha_7d ? 'r' : 'g', '✉️', 'E-mails (7 dias)', t.emails_ok_7d, 'n', t.emails_falha_7d ? `${t.emails_falha_7d} falharam · veja em Funil` : 'todos entregues ao servidor')}
     </div>
   </section>`;
-  contar($('nums')); loadAppSaude(); loadVigiaErros();
-  fatSerie = j.faturamento; fatPeriodo = t.faturamento_periodo; desenhaFat();
+  contar($('nums'));
   G.ring($('cConv'), t.conversao_teste, { color: '#a77bff' });
   $('convLeg').textContent = `${t.testes_convertidos} compraram de ${t.testes_total} que testaram`;
   G.bars($('cVendas'), j.vendas, { color: '#2ee59d' });
@@ -383,7 +445,7 @@ $('ultVendas').onclick = async (e) => {
   const j = await api('venda-apagar', { id: +b.dataset.apagarVenda });
   if (j.ok) { toast('Venda apagada do faturamento.'); loadGeral(); } else toast(j.error || 'Não deu certo.');
 };
-let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => !$('tGeral').hidden && loadGeral(), 300); });
+let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => !$('tFin').hidden && resumoJ && renderFin(resumoJ), 300); });
 
 // ---------- alunos ----------
 let fStatus = '', pag = 1, buscaT;

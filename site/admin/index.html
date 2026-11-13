@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=14">
+<link rel="stylesheet" href="admin.css?v=15">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -42,24 +42,34 @@
   <aside class="nav">
     <div class="brand"><div class="marca mini"></div><b>STUDIO <em>COVER</em></b></div>
     <button data-tab="geral" class="on"><i>◈</i><span>Visão geral</span></button>
+    <button data-tab="financas"><i>💰</i><span>Saúde financeira</span></button>
     <button data-tab="alunos"><i>◉</i><span>Alunos</span></button>
     <button data-tab="funil"><i>⟴</i><span>Funil</span></button>
     <button data-tab="afiliados"><i>🤝</i><span>Afiliados</span></button>
+    <button data-tab="vistoria"><i>🛰️</i><span>Vistoria</span><em class="nbadge" id="vistBadge" hidden></em></button>
     <button data-tab="admins"><i>⛨</i><span>Administradores</span></button>
     <button data-tab="config"><i>⚙</i><span>Configurações</span></button>
     <div class="eu"><small id="euNome"></small><button id="sair" class="lnk">Sair</button></div>
   </aside>
 
   <main class="main">
+    <button class="vistBtn" id="vistBtn" title="Vistoria de erros"><i>🛰️</i><span>Vistoria de erros</span><em id="vistBtnN" hidden></em></button>
     <!-- Visão geral -->
     <div class="tab" id="tGeral">
-      <header class="th"><div><h2>Visão geral</h2><p class="sub">Saúde financeira e uso do Studio Cover</p></div>
-        <div class="seg" id="periodo"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
-      <div id="vigiaErros"></div>
+      <header class="th"><div><h2>Visão geral</h2><p class="sub">Comissões, vendas e cadastros ao vivo</p></div>
+        <div class="seg segP"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
+      <section id="comBox"></section>
       <section class="glass chart big fatTopo" id="fatBox"><div class="ch"><div class="fth"><span class="vivo"><i></i>AO VIVO</span><b>Faturamento</b><small id="fatPer"></small></div><span id="fatTot"></span><div class="seg vista" id="vistaSeg"><button data-v="periodo" class="on">Dia a dia</button><button data-v="hora">Hoje por hora</button></div></div><canvas id="cFat"></canvas><p class="legend" id="fatLeg"></p></section>
-      <div id="hoje"></div><div id="cadHoje"></div>
+      <div id="hoje"></div>
+      <div class="geralRow"><div id="termo"></div><div id="adsBox"></div></div>
+      <div id="cadHoje"></div>
+    </div>
+
+    <!-- Saúde financeira -->
+    <div class="tab" id="tFin" hidden>
+      <header class="th"><div><h2>Saúde financeira</h2><p class="sub">Líquido, sócios, alunos e uso do app</p></div>
+        <div class="seg segP"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
       <div id="nums"></div>
-      <div id="appSaude"></div>
       <div class="grid4">
         <div class="glass chart"><div class="ch"><b>Conversão do teste grátis</b></div><canvas id="cConv"></canvas><p class="legend" id="convLeg"></p></div>
         <div class="glass chart"><div class="ch"><b>Vendas por dia</b></div><canvas id="cVendas"></canvas></div>
@@ -67,6 +77,14 @@
         <div class="glass chart"><div class="ch"><b>Base de alunos</b></div><canvas id="cBase"></canvas><p class="legend" id="baseLeg"></p></div>
       </div>
       <div class="glass"><div class="ch"><b>Últimas vendas</b></div><div class="tbl" id="ultVendas"></div></div>
+    </div>
+
+    <!-- Vistoria de erros -->
+    <div class="tab" id="tVist" hidden>
+      <header class="th"><div><h2>Vistoria de erros</h2><p class="sub">O sistema confere o app a cada 10 minutos e avisa por e-mail quando aparece erro novo</p></div></header>
+      <div id="vigiaErros"></div>
+      <div id="vigiaSite"></div>
+      <div id="appSaude"></div>
     </div>
 
     <!-- Alunos -->
@@ -162,6 +180,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=16"></script>
+<script src="admin.js?v=17"></script>
 </body>
 </html>

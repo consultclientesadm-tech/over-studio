@@ -294,3 +294,48 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .fatTopo canvas { height: 300px !important; }
 .fatTopo.nova { animation: novaVenda 1.6s ease-out; }
 @media (max-width: 640px) { .fatTopo canvas { height: 220px !important; } .fatTopo #fatTot { font-size: 18px; } .fatTopo .vista { transform-origin: left center; } }
+
+/* ---- visão geral nova: comissões, termômetro, anúncios ---- */
+.comBox { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; padding: 22px 24px; margin-bottom: 18px; position: relative; overflow: hidden;
+  background: radial-gradient(120% 140% at 0% 0%, rgba(255,212,0,.12), transparent 55%), radial-gradient(120% 140% at 100% 100%, rgba(63,208,255,.10), transparent 55%), var(--glass); }
+.comBox .tag { color: var(--y); display: inline-block; }
+.ctot { margin: 14px 0 12px; } .ctot .cnt { display: block; font: 800 44px Orbitron; color: var(--y); text-shadow: 0 0 28px rgba(255,212,0,.4); line-height: 1.1; }
+.ctot small { color: var(--mut); font-size: 12.5px; }
+.cchips { display: flex; flex-wrap: wrap; gap: 8px; } .cchips span { font-size: 12.5px; color: var(--mut); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(3,3,10,.4); } .cchips b { color: var(--ink); }
+.cpess { display: grid; gap: 12px; align-content: center; }
+.cpes { display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 18px; border: 1px solid var(--line); background: rgba(3,3,10,.45); --k: var(--y); }
+.cpes.c { --k: var(--c); }
+.cav { width: 58px; height: 58px; flex: none; border-radius: 50%; display: grid; place-items: center; position: relative; background: conic-gradient(var(--k), transparent 70%, var(--k)); animation: girar 6s linear infinite; }
+.cav span { width: 50px; height: 50px; border-radius: 50%; background: #0b0c16; display: grid; place-items: center; font: 800 20px Orbitron; color: var(--k); animation: girar 6s linear infinite reverse; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.cpes small { display: block; color: var(--mut); font-size: 12px; letter-spacing: .04em; } .cpes .cnt { display: block; font: 800 26px Orbitron; color: var(--k); }
+.cpes span { font-size: 12px; color: var(--mut); } .cpes span b { color: var(--ink); }
+.geralRow { display: grid; gap: 18px; margin-bottom: 18px; }
+.termoBox { padding: 16px; } .termoBox .saudeRow { margin: 0; } .termoBox .ncard { background: rgba(3,3,10,.35); }
+.adsBox { padding: 18px 20px; } .adsBox .nh { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; } .adsBox .nh i { font-style: normal; } .adsBox .nh small { font: 800 12px Orbitron; letter-spacing: .14em; color: var(--mut); }
+.adsG { display: grid; grid-template-columns: 1.4fr repeat(5, 1fr); gap: 10px; }
+.ak { padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: rgba(3,3,10,.4); --k: var(--ink); }
+.ak.g { --k: var(--g); } .ak.y { --k: var(--y); } .ak.r { --k: var(--r); }
+.ak small { display: block; color: var(--mut); font-size: 11.5px; } .ak b { display: block; font: 800 20px Orbitron; color: var(--k); margin: 6px 0 2px; white-space: nowrap; } .ak span { font-size: 11.5px; color: var(--mut); }
+.ak.big b { font-size: 28px; text-shadow: 0 0 20px color-mix(in srgb, var(--k) 40%, transparent); }
+.adsF { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 14px; }
+.adsF label { display: grid; gap: 4px; font-size: 11.5px; color: var(--mut); flex: 1 1 150px; }
+.adsF input { height: 40px; border-radius: 10px; border: 1px solid var(--line); background: rgba(3,3,10,.6); color: var(--ink); font: 600 14px Sora; padding: 0 12px; color-scheme: dark; }
+.adsF .btn { height: 40px; }
+.adsL { margin-top: 12px; font-size: 13px; } .adsL summary { cursor: pointer; color: var(--mut); }
+.adsL div { display: grid; grid-template-columns: 80px 110px 1fr 28px; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); align-items: center; } .adsL em { color: var(--mut); font-style: normal; }
+.adsDica { margin-top: 10px; font-size: 12.5px; }
+@media (max-width: 1200px) { .adsG { grid-template-columns: repeat(3, 1fr); } .ak.big { grid-column: span 3; } }
+@media (max-width: 900px) { .comBox { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .comBox { padding: 18px 14px; } .ctot .cnt { font-size: 32px; } .cpes { padding: 12px; gap: 12px; } .cpes .cnt { font-size: 21px; } .cav { width: 48px; height: 48px; } .cav span { width: 41px; height: 41px; font-size: 17px; }
+  .adsG { grid-template-columns: 1fr 1fr; } .ak.big { grid-column: span 2; } .ak b { font-size: 17px; } }
+
+/* botão de vistoria no canto + selo */
+.vistBtn { position: fixed; top: 16px; right: 18px; z-index: 40; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(46,229,157,.45);
+  background: rgba(8,12,20,.85); backdrop-filter: blur(10px); color: var(--g); font: 700 12.5px Sora; cursor: pointer; box-shadow: 0 0 18px rgba(46,229,157,.18); }
+.vistBtn i { font-style: normal; } .vistBtn.alerta { border-color: rgba(255,77,94,.6); color: #ff8a95; box-shadow: 0 0 22px rgba(255,77,94,.35); animation: vivo 1.6s infinite; }
+.vistBtn em, .nbadge { font-style: normal; min-width: 20px; height: 20px; border-radius: 10px; background: var(--r); color: #fff; font: 800 11px Sora; display: inline-grid; place-items: center; padding: 0 5px; }
+.nav > button .nbadge { margin-left: auto; }
+.main .th { padding-right: 190px; }
+@media (max-width: 760px) { .vistBtn { top: 10px; right: 10px; height: 36px; padding: 0 10px; } .vistBtn span { display: none; } .main .th { padding-right: 56px; }
+  .nav { overflow-x: auto; justify-content: flex-start; } .nav > button { min-width: 62px; position: relative; } .nav > button .nbadge { position: absolute; margin: 0 0 22px 26px; min-width: 16px; height: 16px; font-size: 9.5px; } }
