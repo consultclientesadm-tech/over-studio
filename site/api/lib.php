@@ -248,7 +248,10 @@ function checkout_url(?array $u = null): string {
   $af = $u ? af_by_id(isset($u['afiliado_id']) ? (int)$u['afiliado_id'] : null) : af_visitante();
   if ($af && $af['ativo']) $url = af_checkout($af, $url);
   if (!$url) return '';
-  return strtr($url, ['{email}' => rawurlencode($u['email'] ?? ''), '{nome}' => rawurlencode($u['name'] ?? '')]);
+  $url = strtr($url, ['{email}' => rawurlencode($u['email'] ?? ''), '{nome}' => rawurlencode($u['name'] ?? '')]);
+  // quem compra de dentro do app ou do funil (já fez o teste grátis): marca a origem "teste" na venda (edz_trk_1)
+  if ($u && !preg_match('/[?&]trk=/', $url)) $url .= (strpos($url, '?') === false ? '?' : '&') . 'trk=teste';
+  return $url;
 }
 function public_user(array $u): array {
   return ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'], 'status' => $u['status'], 'expires_at' => $u['expires_at'],

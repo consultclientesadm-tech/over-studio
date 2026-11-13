@@ -690,9 +690,21 @@ footer a { color: #888; }
     if (q) { af = q; localStorage.setItem('sc-af', JSON.stringify({ c: q, t: Date.now() })); fetch('/api/conta.php?a=clique&af=' + encodeURIComponent(q), { credentials: 'same-origin' }).catch(() => {}); }
     else { const g = JSON.parse(localStorage.getItem('sc-af') || 'null'); if (g && Date.now() - g.t < 60 * 864e5) af = g.c; }
   } catch (e) {}
+  // origem da venda: qual página (vsl ou home) e a campanha (utm_*) vão para o checkout da Eduzz e voltam no aviso da venda (edz_trk_1)
+  const comOrigem = (url) => {
+    try {
+      const q = new URLSearchParams(location.search), u = new URL(url, location.href);
+      let utm = {}; try { utm = JSON.parse(sessionStorage.getItem('sc-utm') || '{}'); } catch (e) {}
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((k) => { if (q.get(k)) utm[k] = q.get(k); });
+      try { sessionStorage.setItem('sc-utm', JSON.stringify(utm)); } catch (e) {}
+      Object.entries(utm).forEach(([k, v]) => { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
+      if (!u.searchParams.has('trk')) u.searchParams.set('trk', ((window.SC_SEM_TESTE ? 'vsl' : 'home') + (utm.utm_campaign ? '-' + utm.utm_campaign : '')).slice(0, 60));
+      return u.toString();
+    } catch (e) { return url; }
+  };
   fetch('/api/conta.php?a=oferta' + (af ? '&af=' + encodeURIComponent(af) : '')).then((r) => r.json()).then((o) => {
     pixelLiga(window.SC_PIXEL || o.pixel);
-    if (o.checkout_url) $('comprar').href = o.checkout_url;
+    if (o.checkout_url) $('comprar').href = comOrigem(o.checkout_url);
     else $('comprar').href = window.SC_SEM_TESTE ? '#oferta' : '/entrar/?teste';
     if (o.price) {
       $('preco').hidden = false;
