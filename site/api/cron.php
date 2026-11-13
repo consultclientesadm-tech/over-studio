@@ -20,6 +20,7 @@ try {
   db()->prepare('DELETE FROM attempts WHERE at < ?')->execute([time() - 2 * 86400]);
 } catch (Throwable $e) {}
 $r['vigia'] = health_run();
+try { require_once __DIR__ . '/meta_ads.php'; $r['meta_ads'] = meta_sync(false); } catch (Throwable $e) { $r['meta_ads'] = 'erro: ' . $e->getMessage(); }
 try { $r['escudo'] = escudo_checagem(); } catch (Throwable $e) { $r['escudo'] = 'erro: ' . $e->getMessage(); }
 try { $r['vigia_erros'] = erros_vigia(); } catch (Throwable $e) { $r['vigia_erros'] = 'erro: ' . $e->getMessage(); }
 echo json_encode($r, JSON_UNESCAPED_UNICODE), "\n";
