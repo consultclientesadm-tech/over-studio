@@ -11,31 +11,85 @@ const MODEL_CACHE = 'afina-ia-v1';
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 // ---------- Modelo da IA: baixa em 4 pedaços (com progresso) e guarda no aparelho ----------
+// Baixa a IA com vigia: se passar STALL_MS sem chegar nenhum pedaço (rede caiu, CDN travou), cancela e tenta de novo
+// (CDN → próprio site). Antes o download podia ficar parado para sempre em "Baixando a IA" e a pessoa fechava o app.
+const STALL_MS = 30000;
+async function pull(url, sink) {
+  const urls = localOf(url) !== url ? [url, localOf(url), localOf(url)] : [url, url, url];
+  let last;
+  for (const u of urls) {
+    const ac = new AbortController();
+    let t = setTimeout(() => ac.abort(), STALL_MS);
+    const kick = (parar) => { clearTimeout(t); if (!parar) t = setTimeout(() => ac.abort(), STALL_MS); };
+    try {
+      const res = await fetch(u, { signal: ac.signal });
+      if (!res.ok) throw new Error(`modelo ${res.status}`);
+      kick();
+      const out = await sink(res, kick);
+      clearTimeout(t);
+      return out;
+    } catch (e) { clearTimeout(t); last = ac.signal.aborted ? new Error('o download da IA parou (internet fraca)') : e; }
+  }
+  throw last;
+}
+
+// Um download por arquivo: o que começou em segundo plano ao abrir o app é o mesmo que o processamento espera
+// (antes os dois baixavam o mesmo arquivo ao mesmo tempo e o download levava o dobro no celular).
+const inflight = new Map();
+function grab(url, cache) {
+  let j = inflight.get(url);
+  if (j) return j;
+  j = { got: 0, subs: new Set() };
+  const feed = (n) => { j.got += n; j.subs.forEach((f) => { try { f(n); } catch {} }); };
+  let max = 0; // numa nova tentativa, só conta o que passar do que já tinha chegado (a barra não volta nem passa de 100%)
+  j.p = pull(url, async (res, kick) => {
+    let n = 0;
+    const chunks = cache ? null : [];
+    // Com armazenamento: grava direto enquanto baixa (no iPhone, juntar pedaços na memória estourava a memória)
+    const put = cache ? cache.put(url, res.clone()) : null;
+    if (put) put.catch(() => {});
+    const reader = res.body.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      kick(); n += value.length; if (chunks) chunks.push(value);
+      if (n > max) { feed(n - max); max = n; }
+    }
+    kick(true); // tudo chegou: gravar no aparelho pode demorar, não cancela por isso
+    if (put) { try { await put; return null; } catch { return 'sem-espaco'; } }
+    const out = new Uint8Array(n);
+    let o = 0;
+    for (const c of chunks) { out.set(c, o); o += c.length; }
+    return out.buffer;
+  }).finally(() => inflight.delete(url));
+  inflight.set(url, j);
+  return j;
+}
+// Se já existe um download em andamento deste arquivo, espera por ele mostrando o progresso
+async function join(url, cache, onBytes) {
+  const j = grab(url, cache);
+  if (j.got) onBytes(j.got);
+  j.subs.add(onBytes);
+  try { return await j.p; } finally { j.subs.delete(onBytes); }
+}
+
 async function fetchPart(url, onBytes) {
   let cache = null;
   try { cache = await caches.open(MODEL_CACHE); } catch { /* sem Cache Storage */ }
   const hit = cache && (await cache.match(url));
   if (hit) { const b = await hit.arrayBuffer(); onBytes(b.byteLength); return b; }
-  let res = await fetch(url).catch(() => null);
-  if ((!res || !res.ok) && localOf(url) !== url) res = await fetch(localOf(url));
-  if (!res.ok) throw new Error(`modelo ${res.status}`);
-  if (cache) {
-    // Grava direto no armazenamento do aparelho enquanto baixa (sem juntar pedaços na memória: no iPhone,
-    // juntar e copiar o modelo no primeiro uso estourava a memória e o app voltava para o início).
-    const put = cache.put(url, res.clone());
-    const reader = res.body.getReader();
-    for (;;) { const { done, value } = await reader.read(); if (done) break; onBytes(value.length); }
-    try { await put; const again = await cache.match(url); if (again) return again.arrayBuffer(); } catch { /* sem espaço */ }
-    const r2 = await fetch(url).catch(() => fetch(localOf(url))); return r2.arrayBuffer();
+  let r = await join(url, cache, onBytes);
+  if (r instanceof ArrayBuffer) return r;
+  if (r === null) {
+    const again = cache && (await cache.match(url).catch(() => null));
+    if (again) return again.arrayBuffer();
   }
-  const reader = res.body.getReader();
-  const chunks = [];
-  let n = 0;
-  for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); n += value.length; onBytes(value.length); }
-  const out = new Uint8Array(n);
-  let o = 0;
-  for (const c of chunks) { out.set(c, o); o += c.length; }
-  return out.buffer;
+  // sem espaço no armazenamento: baixa de novo direto na memória
+  r = await join(url, null, () => {});
+  if (r instanceof ArrayBuffer) return r;
+  const again = await caches.open(MODEL_CACHE).then((c) => c.match(url)).catch(() => null);
+  if (again) return again.arrayBuffer();
+  throw new Error('não deu para baixar a IA');
 }
 
 // Baixa o modelo em segundo plano assim que o app abre (vai direto para o armazenamento, sem ocupar memória):
@@ -43,13 +97,14 @@ async function fetchPart(url, onBytes) {
 export async function prefetchModel() {
   try {
     const cache = await caches.open(MODEL_CACHE);
-    for (const u of useLite() ? SP_PARTS : MODEL_PARTS) if (!(await cache.match(u))) {
-      let r = await fetch(u).catch(() => null);
-      if ((!r || !r.ok) && localOf(u) !== u) r = await fetch(localOf(u));
-      if (r.ok) await cache.put(u, r);
-    }
+    for (const u of useLite() ? SP_PARTS : MODEL_PARTS) if (!(await cache.match(u))) await grab(u, cache).p;
     return true;
   } catch { return false; }
+}
+// O ajudante (celular) baixa por conta própria: se o download de segundo plano ainda está rodando aqui,
+// espera ele terminar (com a barra andando) em vez de baixar o mesmo arquivo duas vezes ao mesmo tempo.
+async function waitPrefetch(onBytes) {
+  for (const u of SP_PARTS) { const j = inflight.get(u); if (j) { try { await join(u, null, onBytes); } catch {} } }
 }
 
 // Celular usa a IA leve (Spleeter, ~40 MB, pouca memória). Computador usa a HTDemucs (mais fina, ~170 MB, ~2,5 GB de memória).
@@ -214,7 +269,7 @@ const bedOf = (src, voice) => voice.map((v, c) => { const s = src[c] || src[0], 
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=39', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=40', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now(), sent = false;
     const send = () => {
       if (sent) return; sent = true;
@@ -245,6 +300,7 @@ export async function separate(channels, { onDownload = () => {}, onProgress = (
     // No celular a IA roda num "ajudante" separado que é desligado no fim: assim toda a memória dela volta
     // para o aparelho antes de abrir a imagem do vídeo (sem isso o iPhone fechava o app nessa hora).
     if (typeof window !== 'undefined' && window.Worker && !separate.noWorker) {
+      let got = 0; await waitPrefetch((b) => { got += b; onDownload(Math.min(0.99, got / SP_TOTAL)); });
       try { return await separateInWorker(channels, { onDownload, onProgress }); } catch (e) {
         // o ajudante caiu (pouca memória no celular) e levou o áudio junto: quem chamou relê o áudio e tenta direto
         separate.noWorker = true;
