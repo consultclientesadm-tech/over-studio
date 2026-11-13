@@ -70,11 +70,30 @@ let hojeIds = null, hojeDesenhado = false;
 // som de caixa registradora a cada venda nova (o navegador só deixa tocar depois do primeiro toque na página)
 const caixa = new Audio('/admin/caixa.mp3?v=1'); caixa.preload = 'auto'; caixa.volume = 1;
 let somLiberado = false;
-addEventListener('pointerdown', () => { if (somLiberado) return; somLiberado = true; caixa.muted = true; caixa.play().then(() => { caixa.pause(); caixa.currentTime = 0; caixa.muted = false; }).catch(() => { caixa.muted = false; }); }, { capture: true });
-function chime() { try { caixa.currentTime = 0; caixa.muted = false; caixa.play().catch(() => {}); setTimeout(() => { const b = caixa.cloneNode(); b.volume = 1; b.play().catch(() => {}); }, 1700); } catch {} }
+addEventListener('pointerdown', () => { if (somLiberado) return; somLiberado = true; setTimeout(() => { const sb = $('somLib'); if (sb) sb.remove(); }, 400); caixa.muted = true; caixa.play().then(() => { caixa.pause(); caixa.currentTime = 0; caixa.muted = false; }).catch(() => { caixa.muted = false; }); }, { capture: true });
+function chime() { if (Date.now() - (chime.t || 0) < 5000) return; chime.t = Date.now(); try { caixa.currentTime = 0; caixa.muted = false; caixa.play().catch(() => {}); setTimeout(() => { const b = caixa.cloneNode(); b.volume = 1; b.play().catch(() => {}); }, 1700); } catch {} }
 // aviso no celular: o celular do administrador recebe uma notificação a cada venda
 const iosAdm = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 const instaladoAdm = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+// vigia de vendas: confere a cada 20 s em qualquer aba, mesmo com o painel em segundo plano ou minimizado (antes só conferia com a Visão geral aberta e visível)
+const vendasVistas = { ids: null };
+async function vigiaVendas() {
+  if (!$('vPainel') || $('vPainel').hidden) return;
+  const j = await api('hoje').catch(() => null); if (!j || !j.ok) return;
+  const ids = new Set(j.hoje.map((v) => v.id));
+  if (vendasVistas.ids) {
+    const novas = j.hoje.filter((v) => !vendasVistas.ids.has(v.id) && v.liquido > 0);
+    if (novas.length) {
+      chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}`);
+      if (document.hidden && 'Notification' in window && Notification.permission === 'granted' && !(() => { try { return localStorage.getItem('sc-adm-push'); } catch { return null; } })()) try { new Notification('💰 Mais uma venda do Studio Cover!', { body: '+' + brl(novas.reduce((a, v) => a + v.liquido, 0)) + ' líquido', icon: '/admin/icon-192.png' }); } catch {}
+      if (!$('tGeral').hidden) loadHoje();
+    }
+  }
+  vendasVistas.ids = ids;
+}
+setInterval(vigiaVendas, 20000); setTimeout(vigiaVendas, 3000);
+// o navegador do computador só deixa tocar som depois de um clique na página: aviso discreto até o primeiro clique
+setTimeout(() => { if (somLiberado || !$('vPainel') || $('vPainel').hidden) return; const d = document.createElement('button'); d.id = 'somLib'; d.className = 'somLib'; d.textContent = '🔊 Clique aqui para ligar o som da caixa registradora'; d.onclick = () => { d.remove(); chime.t = 0; chime(); }; document.body.appendChild(d); }, 2500);
 if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'venda') { chime(); if (!$('tGeral').hidden) loadHoje(); } });
 async function ligarAvisoVenda() {
   if (iosAdm && !instaladoAdm) return modal(`<h3>💰 Aviso de venda no iPhone</h3><p>No iPhone o aviso só funciona com o painel instalado na tela de início:</p><p>1. Abra <b>studiocover.com.br/admin</b> no <b>Safari</b>.<br>2. Toque em <b>Compartilhar</b> (o quadrado com a seta) e em <b>Adicionar à Tela de Início</b>.<br>3. Abra o painel pelo ícone novo, toque em <b>💰 Aviso de venda</b> e em <b>Ligar aviso neste aparelho</b>.</p><button class="btn" data-fechar>Entendi</button>`);
