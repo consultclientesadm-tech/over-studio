@@ -63,7 +63,35 @@ function contar(root) {
 
 // ---------- gráfico do dia, ao vivo ----------
 let hojeIds = null, hojeDesenhado = false;
-function chime() { try { const C = window.AudioContext || window.webkitAudioContext; const c = chime.c || (chime.c = new C()); [880, 1320].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.value = f; o.type = 'sine'; g.gain.setValueAtTime(0.0001, c.currentTime + i * 0.12); g.gain.exponentialRampToValueAtTime(0.18, c.currentTime + i * 0.12 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + i * 0.12 + 0.5); o.connect(g).connect(c.destination); o.start(c.currentTime + i * 0.12); o.stop(c.currentTime + i * 0.12 + 0.55); }); } catch {} }
+// som de caixa registradora a cada venda nova (o navegador só deixa tocar depois do primeiro toque na página)
+const caixa = new Audio('/admin/caixa.mp3?v=1'); caixa.preload = 'auto'; caixa.volume = 1;
+let somLiberado = false;
+addEventListener('pointerdown', () => { if (somLiberado) return; somLiberado = true; caixa.muted = true; caixa.play().then(() => { caixa.pause(); caixa.currentTime = 0; caixa.muted = false; }).catch(() => { caixa.muted = false; }); }, { capture: true });
+function chime() { try { caixa.currentTime = 0; caixa.muted = false; caixa.play().catch(() => {}); setTimeout(() => { const b = caixa.cloneNode(); b.volume = 1; b.play().catch(() => {}); }, 1700); } catch {} }
+// aviso no celular: o celular do administrador recebe uma notificação a cada venda
+const iosAdm = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+const instaladoAdm = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'venda') { chime(); if (!$('tGeral').hidden) loadHoje(); } });
+async function ligarAvisoVenda() {
+  if (iosAdm && !instaladoAdm) return modal(`<h3>💰 Aviso de venda no iPhone</h3><p>No iPhone o aviso só funciona com o painel instalado na tela de início:</p><p>1. Abra <b>studiocover.com.br/admin</b> no <b>Safari</b>.<br>2. Toque em <b>Compartilhar</b> (o quadrado com a seta) e em <b>Adicionar à Tela de Início</b>.<br>3. Abra o painel pelo ícone novo, toque em <b>💰 Aviso de venda</b> e em <b>Ligar aviso neste aparelho</b>.</p><button class="btn" data-fechar>Entendi</button>`);
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return toast('Este navegador não recebe avisos. Use o Chrome ou o Safari.');
+  try {
+    if (Notification.permission === 'denied') return toast('As notificações estão bloqueadas para este site. Libere nos ajustes do navegador.');
+    if ((await Notification.requestPermission()) !== 'granted') return toast('Sem permissão de notificação, o aviso não chega.');
+    const reg = await navigator.serviceWorker.register('/admin/push-sw.js', { scope: '/admin/' });
+    await navigator.serviceWorker.ready;
+    const { chave } = await api('push-chave');
+    const key = Uint8Array.from(atob(chave.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (chave.length % 4)) % 4)), (c) => c.charCodeAt(0));
+    const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+    const j = await api('push-salvar', { sub: sub.toJSON() }); if (!j.ok) return toast(j.error || 'Não deu para ligar.');
+    try { localStorage.setItem('sc-adm-push', '1'); } catch {}
+    const t = await api('push-teste', {});
+    chime(); toast(t.enviados ? '💰 Aviso ligado! Chegou uma venda de teste aí no aparelho.' : 'Aviso ligado. Se o teste não chegar em 1 minuto, me avise.');
+  } catch (e) { toast('Não deu para ligar o aviso: ' + e.message); }
+}
+$('somBtn').onclick = () => modal(`<h3>💰 Som e aviso de venda</h3><p>Com o painel aberto, cada venda nova toca uma <b>caixa registradora</b> bem alta. Toque em qualquer lugar do painel uma vez para o navegador liberar o som.</p><p>No celular, ligue o aviso: cada venda chega como notificação, com o valor, o nome e de onde veio.</p><button class="btn" id="mTestaSom">🔊 Ouvir o som</button> <button class="btn" id="mLigaPush" style="margin-top:10px">📲 Ligar aviso neste aparelho</button>`, (m) => { m.querySelector('#mTestaSom').onclick = chime; m.querySelector('#mLigaPush').onclick = () => { closeModal(); ligarAvisoVenda(); }; });
+// renova em silêncio (o celular às vezes troca o endereço do aviso)
+(async () => { try { if (localStorage.getItem('sc-adm-push') !== '1' || Notification.permission !== 'granted') return; const reg = await navigator.serviceWorker.getRegistration('/admin/'); const sub = reg && (await reg.pushManager.getSubscription()); if (sub) api('push-salvar', { sub: sub.toJSON() }).catch(() => {}); } catch {} })();
 let vista = 'periodo'; // 'periodo' (dia a dia do período escolhido) ou 'hora' (só hoje, por hora)
 async function loadHoje() {
   const [j, sr] = await Promise.all([api('hoje'), api('serie', null, '&dias=' + dias)]); if (!j.ok) return;
