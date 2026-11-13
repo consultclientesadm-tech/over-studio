@@ -694,6 +694,14 @@ async function loadDepo() {
 let orDias = 7;
 $('segOr').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; orDias = +b.dataset.d; $('segOr').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadOrigens(); };
 const PAG = { home: '🎁 Página com teste grátis', vsl: '🎬 /vsl (compra direta)', 'link-afiliado': '🤝 Link de afiliado', 'sem-rastreio': '❔ Sem rastreio (antes de 13/11)' };
+// nome amigável do canal (Origens)
+function fonteNome(f, c) {
+  const N = { 'anuncio-meta': '📣 Anúncio Meta', 'meta-sem-utm': '📣 Anúncio Meta (provável, link sem UTM)', 'comentarios-ig': '💬 Comentários do Instagram (direct)', whatsapp: '🟢 WhatsApp', afiliado: '🤝 Afiliado', direto: 'Direto (digitou o site)' };
+  if (N[f]) return N[f];
+  if (f === 'instagram' && /reinaldo|criativo|teste-gratis|vsl/.test(c || '')) return N['comentarios-ig']; // links do direct anteriores à separação
+  if (f === 'instagram') return '📷 Instagram (orgânico, sem UTM)';
+  return esc(f || 'direto');
+}
 async function loadOrigens() {
   const j = await api('origens', null, '&dias=' + orDias); if (!j.ok) return;
   const L = j.linhas, pc = (a, b) => (b ? (Math.round((a / b) * 1000) / 10).toLocaleString('pt-BR') + '%' : '—');
@@ -712,8 +720,8 @@ async function loadOrigens() {
     <td>${r.k}</td><td>${r.visitas}</td><td>${r.cadastros}<small>${pc(r.cadastros, r.visitas)} das visitas</small></td>
     <td><b style="color:#2ee59d">${r.vendas}</b><small>${cam(r)}</small></td><td><b>${pc(r.vendas, r.visitas)}</b><small>visita → venda</small></td><td>${brl(r.liquido)}${r.vendas ? `<small>${brl(r.liquido / r.vendas)} por venda</small>` : ''}</td></tr>`).join('')}</table>` : '<p class="sub">Ainda sem dados neste período.</p>';
   $('orPag').innerHTML = tabela(agrupa((r) => PAG[r.pagina] || esc(r.pagina)), 'Página');
-  $('orCan').innerHTML = tabela(agrupa((r) => r.pagina === 'sem-rastreio' && !r.fonte ? PAG['sem-rastreio'] : `<b>${esc(r.fonte || 'direto')}</b>${r.campanha ? `<small>${esc(r.campanha)}</small>` : '<small>sem campanha</small>'}`), 'Canal · campanha');
-  $('orUlt').innerHTML = j.ultimas.length ? `<table><tr><th>Quando</th><th>Aluno</th><th>Página</th><th>Canal · campanha</th><th>Caminho</th><th>Líquido</th></tr>${j.ultimas.map((v) => `<tr><td>${dt(v.created_at)}</td><td>${esc(v.name || '—')}</td><td>${PAG[v.or_pagina || 'sem-rastreio'] || esc(v.or_pagina)}</td><td>${v.or_fonte ? `<b>${esc(v.or_fonte)}</b>` : '—'}${v.or_campanha ? `<small>${esc(v.or_campanha)}</small>` : ''}</td><td>${esc(v.or_caminho || '—')}</td><td>${brl(v.liquido)}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda ainda.</p>';
+  $('orCan').innerHTML = tabela(agrupa((r) => r.pagina === 'sem-rastreio' && !r.fonte ? PAG['sem-rastreio'] : `<b>${fonteNome(r.fonte, r.campanha)}</b>${r.campanha ? `<small>${esc(r.campanha)}</small>` : '<small>sem campanha</small>'}`), 'Canal · campanha');
+  $('orUlt').innerHTML = j.ultimas.length ? `<table><tr><th>Quando</th><th>Aluno</th><th>Página</th><th>Canal · campanha</th><th>Caminho</th><th>Líquido</th></tr>${j.ultimas.map((v) => `<tr><td>${dt(v.created_at)}</td><td>${esc(v.name || '—')}</td><td>${PAG[v.or_pagina || 'sem-rastreio'] || esc(v.or_pagina)}</td><td>${v.or_fonte ? `<b>${fonteNome(v.or_fonte, v.or_campanha)}</b>` : '—'}${v.or_campanha ? `<small>${esc(v.or_campanha)}</small>` : ''}</td><td>${esc(v.or_caminho || '—')}</td><td>${brl(v.liquido)}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda ainda.</p>';
   $('orNota').textContent = `Como ler: "compra direta" é quem clicou em comprar na página; "depois do teste" é quem fez o teste grátis e comprou pelo app ou pelo e-mail do funil (a venda fica com a página e o canal do cadastro). Use links com ?utm_source=canal&utm_campaign=nome (ex.: whatsapp, reinaldo-vsl) para separar cada anúncio.${j.desde_rastreio ? ' Visitas contadas desde ' + dt(j.desde_rastreio) + '.' : ''}`;
 }
 

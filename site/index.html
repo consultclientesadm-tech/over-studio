@@ -697,6 +697,11 @@ footer a { color: #888; }
     const q = new URLSearchParams(location.search), pagina = window.SC_SEM_TESTE ? 'vsl' : 'home';
     const utm = {}; ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((k) => { if (q.get(k)) utm[k] = q.get(k); });
     let fonte = lim(utm.utm_source, 40), campanha = lim(utm.utm_campaign, 60);
+    // separa anúncio do Meta de comentário→direct: o direct leva utm_medium=direct; o anúncio leva utm_medium=paid (ou utm_source={{site_source_name}}: fb, ig, an, msg)
+    const med = lim(utm.utm_medium, 30);
+    if (med === 'direct' && /instagram|^ig$/.test(fonte)) fonte = 'comentarios-ig';
+    else if (/^(paid|pago|cpc|ads|anuncio|paid_social|paid-social|trafego)$/.test(med) || /^(fb|ig|an|msg|meta|meta-ads|facebook-ads|instagram-ads)$/.test(fonte)) fonte = 'anuncio-meta';
+    else if (!fonte && q.get('fbclid') && (/Instagram|FBAN|FBAV|FB_IAB/.test(navigator.userAgent) || /instagram\.|facebook\.|fb\./.test(document.referrer))) fonte = 'meta-sem-utm';
     if (!fonte && af) { fonte = 'afiliado'; campanha = lim(af, 60); }
     if (!fonte) {
       const ua = navigator.userAgent, ref = document.referrer.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
