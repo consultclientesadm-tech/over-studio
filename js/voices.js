@@ -13,6 +13,7 @@ import { fft, ifft, getHannWindow } from './vendor/demucs/fft.js';
 
 const N = 4096, H = 1024; // ~93 ms de janela, um quadro a cada ~23 ms (44,1 kHz)
 const MAXV = 4; // até 4 vozes (quarteto)
+const SUB = 0.8;
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const toMidi = (f) => 69 + 12 * Math.log2(f / 440);
 const toHz = (m) => 440 * 2 ** ((m - 69) / 12);
@@ -84,6 +85,15 @@ export async function findVoices(channels, sr, onProgress = () => {}) {
       let bi = -1, bs = 0;
       for (let j = 0; j < cands.length; j++) { sal[j] = salience(R, cands[j].f); if (sal[j] > bs) { bs = sal[j]; bi = j; } }
       if (bi < 0) break;
+      // erro de oitava: se a nota uma oitava (ou uma 12ª) abaixo explica quase tão bem o som, a voz é ela
+      // (o pico achado era o 2º ou o 3º harmônico)
+      for (let again = true; again;) {
+        again = false;
+        for (const st of [60, 95]) { // 12 e 19 semitons, na grade de 1/5
+          const j = bi - st;
+          if (j >= 0 && sal[j] >= bs * SUB) { bi = j; bs = sal[j]; again = true; break; }
+        }
+      }
       if (it === 0) s1 = bs; else if (bs < 0.3 * s1) break;
       // altura exata: média dos harmônicos (com interpolação do pico), pesada pela força de cada um
       const f0 = cands[bi].f;
@@ -119,7 +129,7 @@ export async function findVoices(channels, sr, onProgress = () => {}) {
 
   // ---------- Linhas de canto: liga as notas de um quadro com as do próximo ----------
   const lines = [], open = [];
-  const GAP = 3, MINLEN = Math.round(0.12 / dt);
+  const GAP = 4, MINLEN = Math.round(0.12 / dt);
   for (let fi = 0; fi < nf; fi++) {
     const ps = frames[fi].map((p) => ({ ...p, used: false }));
     const pairs = [];
@@ -139,16 +149,38 @@ export async function findVoices(channels, sr, onProgress = () => {}) {
   const run = Math.round(0.3 / dt);
   const together = (k) => {
     let tot = 0, r = 0;
-    for (let fi = 0; fi <= nf; fi++) { if (fi < nf && cnt[fi] >= k) r++; else { if (r >= run) tot += r; r = 0; } }
+    // troca de nota de uma das vozes (até ~0,1 s sem ela) não quebra o trecho junto
+    let miss = 0; const TOL = 4;
+    for (let fi = 0; fi <= nf; fi++) {
+      if (fi < nf && cnt[fi] >= k) { r += 1 + miss; miss = 0; }
+      else if (fi < nf && r > 0 && miss < TOL) miss++;
+      else { if (r >= run) tot += r; r = 0; miss = 0; }
+    }
     return tot;
   };
+  // Duas linhas ao mesmo tempo por pelo menos 0,4 s. Não conta a cauda do eco: a nota de antes que
+  // continua soando, cada vez mais fraca, e some logo depois que a nota nova começou.
+  const pairT = () => {
+    const mark = new Uint8Array(nf), MIN = Math.round(0.4 / dt);
+    for (let i = 0; i < good.length; i++) for (let j = i + 1; j < good.length; j++) {
+      const A = good[i], B = good[j], a = Math.max(A.start, B.start), b = Math.min(A.end, B.end);
+      if (b - a + 1 < MIN) continue;
+      const old = A.start <= B.start ? A : B;
+      if (old.end <= b + 3) {
+        const ins = old.pts.filter((p) => p.fi >= a && p.fi <= b), n3 = Math.max(1, Math.floor(ins.length / 3));
+        const e0 = ins.slice(0, n3).reduce((s, p) => s + p.e, 0) / n3, e1 = ins.slice(-n3).reduce((s, p) => s + p.e, 0) / n3;
+        if (e1 < e0 * 0.6) continue; // morrendo: é eco
+      }
+      for (let fi = a; fi <= b; fi++) mark[fi] = 1;
+    }
+    let t = 0; for (let fi = 0; fi < nf; fi++) t += mark[fi];
+    return t;
+  };
   let voiced = 0; for (let fi = 0; fi < nf; fi++) if (cnt[fi]) voiced++;
-  let count = 1;
-  for (let k = 2; k <= MAXV; k++) {
-    const t = together(k), need = k === 2 ? Math.max(2.5 / dt, voiced * 0.08) : Math.max(1.5 / dt, voiced * 0.05);
-    if (t >= need) count = k; else break;
-  }
-  const res = { count, nf, dt, sr, lines: good, frames, together: Math.round(together(2) * dt * 10) / 10, voicedSec: Math.round(voiced * dt * 10) / 10 };
+  const t2 = pairT();
+  let count = t2 >= Math.max(2 / dt, voiced * 0.06) ? 2 : 1;
+  for (let k = 3; count === k - 1 && k <= MAXV; k++) if (together(k) >= Math.max(2.5 / dt, voiced * 0.12)) count = k;
+  const res = { count, nf, dt, sr, lines: good, frames, together: Math.round(t2 * dt * 10) / 10, together3: Math.round(together(3) * dt * 10) / 10, voicedSec: Math.round(voiced * dt * 10) / 10 };
   if (count >= 2) assign(res, x, sr, win, buf, re, im);
   onProgress(1);
   return res;
@@ -209,7 +241,12 @@ function assign(res, x, sr, win, buf, re, im) {
     if (l.timbre) { for (let q = 0; q < 12; q++) p.t[q] += l.timbre[q] * w; p.tw += w; }
   }
   for (const p of prof) { p.m = p.w ? p.m / p.w : 60; if (p.tw) for (let q = 0; q < 12; q++) p.t[q] /= p.tw; }
-  for (let v = 0; v < K; v++) if (!prof[v].w) prof[v].m = (prof[v - 1]?.m ?? 70) - 4;
+  // voz sem trecho junto para servir de retrato (escolhida na mão, ou dupla que canta em uníssono):
+  // a região dela vem da altura das linhas de canto (Voz 1 = a parte de cima, Voz 2 = a de baixo…)
+  if (prof.some((p) => !p.w)) {
+    const all = lines.flatMap((l) => l.pts.map((p) => p.m)).sort((a, b) => a - b);
+    for (let v = 0; v < K; v++) if (!prof[v].w) prof[v].m = all.length ? all[Math.min(all.length - 1, Math.floor(all.length * (1 - (v + 0.5) / K)))] : 70 - 4 * v;
+  }
   let spread = 0, sc = 0;
   for (let a = 0; a < K; a++) for (let b = a + 1; b < K; b++) if (prof[a].tw && prof[b].tw) { spread += dist(prof[a].t, prof[b].t); sc++; }
   spread = sc ? Math.max(1, spread / sc) : 0;
@@ -234,6 +271,14 @@ function assign(res, x, sr, win, buf, re, im) {
   for (const l of lines) for (const p of l.pts) if (p.e > en[l.voice][p.fi]) { en[l.voice][p.fi] = p.e; f0[l.voice][p.fi] = p.m; }
   res.f0 = f0;
   res.range = prof.map((p) => Math.round(p.m));
+}
+
+// Quantidade de vozes escolhida pela pessoa (quando a detecção não achou, ou achou errado)
+export function forceVoices(res, channels, sr, K) {
+  res.count = K;
+  const win = getHannWindow(N), buf = new Float32Array(N), re = new Float32Array(N), im = new Float32Array(N);
+  assign(res, mono(channels), sr, win, buf, re, im);
+  return res;
 }
 
 // ---------- 3) Separa: cada voz com os próprios harmônicos ----------

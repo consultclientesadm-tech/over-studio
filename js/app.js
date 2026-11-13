@@ -2,7 +2,7 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=42';
+import * as cover from './pipeline.js?v=43';
 import { prefetchModel } from './studio.js?v=41';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
@@ -286,7 +286,7 @@ async function start(f, tries = 1) {
     if (!audioOnly && (!video.videoWidth || video.error)) await convertVideo();
     note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
-    ev('abriu', { seg: Math.round((performance.now() - t0) / 1000), dur: Math.round(state.duration || 0), mb: Math.round(f.size / 1048576) });
+    ev('abriu', { seg: Math.round((performance.now() - t0) / 1000), dur: Math.round(state.duration || 0), mb: Math.round(f.size / 1048576), vozes: state.voices?.count || 1, junto: state.voices?.together || 0 });
     if (window.scOk) window.scOk(); // teste grátis: conta aqui, quando a pessoa já vê e ouve o antes e depois
     if (state.cortado) toast(`Seu vídeo tem ${fmt(state.cortado)}. Usei os primeiros ${MAX_SEC / 60} minutos (o limite por vídeo). Se quiser outro trecho, corte no celular e suba de novo.`, 9000);
     const fp = endRun();
@@ -743,6 +743,7 @@ const ORD = ['primeira', 'segunda', 'terceira', 'quarta'];
 const volTxt = (v) => (v <= -15 ? 'mudo' : (v > 0 ? '+' : '') + (+v).toFixed(v % 1 ? 1 : 0) + ' dB');
 function voiceBar() {
   const box = $('voiceBar'), K = state.parts ? state.parts.length : 0;
+  $('voicePick').querySelectorAll('button').forEach((b) => b.classList.toggle('on', +b.dataset.k === Math.max(1, K)));
   $('studio').classList.toggle('multi', K > 1);
   if (K < 2) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
@@ -766,20 +767,28 @@ $('voiceBar').addEventListener('click', async (e) => {
     toast(on.length ? `Tocando só: ${on.join(' e ')}` : 'Todas as vozes mudas na prévia.');
     return;
   }
-  if (e.target.closest('#vJoin')) {
-    pause(); busy(true, 'Juntando as vozes…');
-    try {
-      clearTimeout(autoT); await runAuto();
-      await cover.joinVoices(state, tuneOpts()); cur = 0; muted.clear(); undo.length = 0;
-      const was = tuned; tuned = false;
-      tracks.orig = origTrack(); tracks.raw = rawTrack(); fresh('orig'); fresh('raw');
-      editor.sel = -1; editor.load(S()); voiceBar(); voiceVols(); refreshChips();
-      busy(false);
-      if (was) await doTune(); else if (mastered) { busy(true, 'Refazendo a mix…'); await doMaster(false); busy(false); }
-      refreshAB(); toast('Pronto: agora é uma voz só.');
-    } catch (err) { console.error(err); busy(false); toast('Deu erro: ' + err.message, 6000); }
-  }
+  if (e.target.closest('#vJoin')) setVoices(1);
 });
+// Quantas pessoas cantam, escolhido na mão (Ajustes): 1 junta as vozes; 2, 3 ou 4 separa nessa quantidade
+async function setVoices(K) {
+  const now = state.parts ? state.parts.length : 1;
+  if (K === now) return toast(K === 1 ? 'Já está como uma voz só.' : `Já está separado em ${K} vozes.`);
+  pause(); busy(true, K === 1 ? 'Juntando as vozes…' : `Separando as ${K} vozes…`);
+  try {
+    clearTimeout(autoT); await runAuto();
+    if (state.parts) await cover.joinVoices(state, tuneOpts());
+    if (K > 1) await cover.splitInto(state, K, tuneOpts(), (s, p) => busyPct(p));
+    cur = 0; muted.clear(); undo.length = 0;
+    const was = tuned; tuned = false;
+    tracks.orig = origTrack(); tracks.raw = rawTrack(); fresh('orig'); fresh('raw');
+    editor.sel = -1; editor.load(S()); voiceBar(); voiceVols(); refreshChips();
+    busy(false);
+    if (was) await doTune(); else if (mastered) { busy(true, 'Refazendo a mix…'); await doMaster(false); busy(false); }
+    refreshAB(); toast(K === 1 ? 'Pronto: agora é uma voz só.' : `Pronto: ${K} vozes separadas. A Voz 1 é a mais aguda.`, 5000);
+    ev('vozes', { k: K, auto: state.voices?.count || 1 });
+  } catch (err) { console.error(err); busy(false); toast('Deu erro: ' + err.message, 6000); }
+}
+$('voicePick').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setVoices(+b.dataset.k); });
 // Volume de cada voz (Mix e Exportar andam juntos). No mínimo (−15 dB) a voz fica muda no vídeo final.
 function voiceVols() {
   for (const pre of ['m', 'e']) $(pre + 'Voice').previousElementSibling.textContent = state.parts ? 'Volume de todas as vozes' : 'Volume da voz';

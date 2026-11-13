@@ -3,7 +3,7 @@
 import { createRequire } from 'module';
 import { spawn } from 'child_process';
 const { chromium } = createRequire(import.meta.url)('playwright');
-const [vid, dir] = process.argv.slice(2);
+const [vid, dir, sep] = process.argv.slice(2);
 const srv = spawn('node', ['server.js'], { env: { ...process.env, PORT: '8096' }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
@@ -17,7 +17,7 @@ try {
     page.on('pageerror', (e) => console.log('[erro]', e.message));
     page.on('console', (m) => m.type() === 'error' && console.log('[console]', m.text()));
     await page.goto('http://localhost:8096/');
-    await page.evaluate(() => { document.getElementById('optSeparate').checked = false; });
+    if (sep !== 'sep') await page.evaluate(() => { document.getElementById('optSeparate').checked = false; });
     await page.setInputFiles('#file', vid);
     await page.waitForFunction(() => document.getElementById('app').dataset.screen === 'studio', null, { timeout: 600000 });
     await page.waitForTimeout(800);
@@ -66,6 +66,11 @@ try {
     await page.waitForFunction(() => document.getElementById('busy').hidden && !window.studio.state.parts, null, { timeout: 600000 });
     const j = await page.evaluate(() => ({ bar: document.getElementById('voiceBar').hidden, vols: document.querySelectorAll('#mVoices input').length }));
     check(j.bar && j.vols === 0, `${name}: "É uma voz só" junta as vozes e some com as abas`);
+    // escolher dupla na mão (Ajustes)
+    await page.evaluate(() => { document.getElementById('more').hidden = false; });
+    await page.click('#voicePick button[data-k="2"]');
+    await page.waitForFunction(() => document.getElementById('busy').hidden && window.studio.state.parts?.length === 2, null, { timeout: 600000 });
+    check(!(await page.isHidden('#voiceBar')), `${name}: "Dupla" em Ajustes separa as vozes de novo`);
     await ctx.close();
   }
 } finally { await browser.close(); srv.kill(); }

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=40">
+<link rel="stylesheet" href="css/app.css?v=41">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -154,6 +154,7 @@
           <label class="knob" data-help="Quanto tirar das oscilações dentro da nota (quando a voz treme ou escorrega). O vibrato é mantido."><span id="sLabel">Endireitar tudo</span><input type="range" id="s" min="0" max="1" step="0.05" value="1"><output id="sOut">100%</output></label>
           <label class="switch mini" data-help="Ligado: cada nota vai para a nota mais próxima da escala do tom da música. Desligado: vai para a nota mais próxima de qualquer escala."><input type="checkbox" id="mSnap" checked><span></span> Prender no tom</label>
           <label class="switch mini" data-help="Ligado: afina pela melodia da música original que você subiu. Só funciona depois de subir a original."><input type="checkbox" id="mUseRef" checked disabled><span></span> Pela música original</label>
+          <div class="voicepick" data-help="Quantas pessoas cantam no vídeo. O app descobre sozinho, mas se errar escolha aqui: em dupla ou trio, cada voz é separada e afinada por conta própria, com mudo e volume de cada uma. A Voz 1 é a mais aguda."><span>Quem canta</span><div class="seg" id="voicePick" role="group" aria-label="Quantas pessoas cantam"><button type="button" data-k="1" class="on">1 voz</button><button type="button" data-k="2">Dupla</button><button type="button" data-k="3">Trio</button></div></div>
         </div>
       </div>
 
@@ -232,7 +233,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=56"></script>
+<script type="module" src="js/app.js?v=57"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
