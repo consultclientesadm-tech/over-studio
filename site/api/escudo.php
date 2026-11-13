@@ -28,6 +28,7 @@ function escudo_db(): PDO {
       CREATE INDEX IF NOT EXISTS seg_eventos_ip ON seg_eventos(ip, tipo, created_at);
       CREATE INDEX IF NOT EXISTS seg_eventos_dia ON seg_eventos(created_at);
       CREATE TABLE IF NOT EXISTS seg_bloqueios (ip TEXT PRIMARY KEY, motivo TEXT NOT NULL, ate TEXT NOT NULL, created_at TEXT NOT NULL, vezes INTEGER NOT NULL DEFAULT 1);');
+    if (!in_array('local', array_column($db->query('PRAGMA table_info(seg_bloqueios)')->fetchAll(), 'name'), true)) $db->exec("ALTER TABLE seg_bloqueios ADD COLUMN local TEXT NOT NULL DEFAULT ''");
     $ok = true;
   }
   return $db;
@@ -56,14 +57,39 @@ function escudo_evento(string $tipo, string $detalhe = ''): void {
     if ((int)$q->fetchColumn() >= $max && !escudo_bloqueado()) escudo_bloquear($ip, $desc, $dur, $detalhe);
   } catch (Throwable $e) {}
 }
+// de onde vem o IP (aproximado: país, cidade, provedor; quem ataca costuma usar VPN ou servidor alugado)
+function escudo_geo_ler(string $txt, string $fonte): ?array {
+  $j = json_decode($txt, true); if (!is_array($j)) return null;
+  if ($fonte === 'ipapi') { if (($j['status'] ?? '') !== 'success') return null;
+    return ['pais' => (string)($j['country'] ?? ''), 'estado' => (string)($j['regionName'] ?? ''), 'cidade' => (string)($j['city'] ?? ''), 'provedor' => (string)($j['isp'] ?? $j['org'] ?? ''), 'datacenter' => !empty($j['hosting'])]; }
+  if (empty($j['success'])) return null;
+  return ['pais' => (string)($j['country'] ?? ''), 'estado' => (string)($j['region'] ?? ''), 'cidade' => (string)($j['city'] ?? ''), 'provedor' => (string)($j['connection']['isp'] ?? $j['connection']['org'] ?? ''), 'datacenter' => null];
+}
+function escudo_geo(string $ip): ?array {
+  $ip = preg_replace('#::/64$#', '::1', $ip);
+  if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) || !function_exists('curl_init')) return null;
+  foreach ([['ipapi', 'http://ip-api.com/json/' . rawurlencode($ip) . '?fields=status,country,regionName,city,isp,org,hosting&lang=pt-BR'], ['ipwho', 'https://ipwho.is/' . rawurlencode($ip) . '?lang=pt-BR']] as [$f, $u]) {
+    $ch = curl_init($u); curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 4, CURLOPT_CONNECTTIMEOUT => 3, CURLOPT_USERAGENT => 'studio-cover-escudo']);
+    $r = (string)curl_exec($ch); curl_close($ch);
+    if ($g = escudo_geo_ler($r, $f)) return $g;
+  }
+  return null;
+}
+function escudo_geo_txt(?array $g): string {
+  if (!$g) return '';
+  $lugar = implode(', ', array_filter([$g['cidade'], $g['estado'], $g['pais']], fn($x) => $x !== '' && $x !== null));
+  return trim($lugar . ($g['provedor'] ? ' · ' . $g['provedor'] : '') . (!empty($g['datacenter']) ? ' · servidor/VPN (data center)' : ''), ' ·');
+}
 function escudo_bloquear(string $ip, string $motivo, int $dur, string $detalhe = ''): void {
   $db = escudo_db();
-  $db->prepare('INSERT INTO seg_bloqueios (ip, motivo, ate, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(ip) DO UPDATE SET motivo = excluded.motivo, ate = excluded.ate, vezes = vezes + 1')
-    ->execute([$ip, $motivo, date('Y-m-d H:i:s', time() + $dur), now()]);
+  $geo = null; try { $geo = escudo_geo($ip); } catch (Throwable $e) {}
+  $local = escudo_geo_txt($geo);
+  $db->prepare('INSERT INTO seg_bloqueios (ip, motivo, ate, created_at, local) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ip) DO UPDATE SET motivo = excluded.motivo, ate = excluded.ate, vezes = vezes + 1, local = COALESCE(NULLIF(excluded.local, \'\'), local)')
+    ->execute([$ip, $motivo, date('Y-m-d H:i:s', time() + $dur), now(), $local]);
   $db->prepare('INSERT INTO seg_eventos (ip, tipo, detalhe, created_at) VALUES (?, ?, ?, ?)')->execute([$ip, 'bloqueio', $motivo . ' · ' . round($dur / 3600) . ' h', now()]);
   escudo_avisar('bloqueio', '🛡️ Studio Cover: ataque barrado e IP bloqueado',
-    '<p>O escudo bloqueou o IP <b>' . h($ip) . '</b> por ' . round($dur / 3600) . ' h.</p><p>Motivo: <b>' . h($motivo) . '</b>' . ($detalhe ? '<br><small>Último sinal: ' . h(mb_substr($detalhe, 0, 160)) . '</small>' : '') . '</p><p>Nada foi invadido: a tentativa foi barrada. Se foi engano (por exemplo, você mesmo errando a senha), desbloqueie na aba Vistoria do painel.</p>',
-    "IP $ip bloqueado: $motivo", 1800);
+    '<p>O escudo bloqueou o IP <b>' . h($ip) . '</b> por ' . round($dur / 3600) . ' h.</p>' . ($local ? '<p>De onde vem (aproximado): <b>' . h($local) . '</b></p>' : '') . '<p>Motivo: <b>' . h($motivo) . '</b>' . ($detalhe ? '<br><small>Último sinal: ' . h(mb_substr($detalhe, 0, 160)) . '</small>' : '') . '</p><p>Nada foi invadido: a tentativa foi barrada. Se foi engano (por exemplo, você mesmo errando a senha), desbloqueie na aba Vistoria do painel.</p>',
+    "IP $ip bloqueado: $motivo" . ($local ? " · $local" : ''), 1800);
 }
 
 // e-mail + celular dos administradores (no máximo 1 aviso do mesmo tipo a cada $intervalo segundos)
