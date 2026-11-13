@@ -261,10 +261,11 @@ async function loadVigiaErros() {
   const aps = (o) => Object.entries(o || {}).map(([a, n]) => `${esc(a)} (${n})`).join(' · ');
   const linha = (g) => {
     const al = alertas.find((a) => a.sig === g.sig);
-    const sit = g.status === 'resolvido' ? `<span class="st active">✅ Resolvido</span>` : g.status === 'ignorado' ? '<span class="st">🔕 Ignorado</span>'
-      : g.h1 ? '<span class="st blocked">🔴 Acontecendo agora</span>' : '<span class="st trial">🟡 Pendente</span>';
-    const bt = g.status === 'aberto' ? `<button class="btn sm" data-erro="${g.sig}" data-st="resolvido" title="Avisa de novo se voltar a acontecer">✓ Já foi corrigido</button> <button class="btn sm ghost" data-erro="${g.sig}" data-st="ignorado" title="Não avisa mais deste erro">Ignorar</button>` : `<button class="btn sm ghost" data-erro="${g.sig}" data-st="aberto">Reabrir</button>`;
-    return `<tr><td>${sit}${al ? ` <span class="st blocked">${ROT[al.motivo]?.[0] || ''}</span>` : ''}<b>${g.tipo === 'fechou' ? '📵' : '❌'} ${esc(g.etapa || 'app')}</b><small>${esc(g.msg)}</small><small>última vez <b>${desde(g.ultimo)}</b> · primeira ${dt(g.primeiro)} · ${g.total} no total</small></td>
+    const sit = g.status === 'resolvido' ? (g.resolvido_por === 'claude' ? `<span class="st active">✅ Corrigido pelo Claude ${desde(g.resolvido_em)}</span>` : g.resolvido_por === 'auto' ? '<span class="st active">✅ Resolvido: 24h sem acontecer</span>' : '<span class="st active">✅ Marcado como corrigido por você</span>')
+      : g.status === 'ignorado' ? '<span class="st">🔕 Ignorado</span>'
+      : (g.h1 ? '<span class="st blocked">🔴 Acontecendo agora</span>' : '<span class="st trial">🟡 Pendente</span>') + ' <span class="st cortesia">🔧 O Claude está cuidando</span>';
+    const bt = g.status === 'aberto' ? `<button class="btn sm ghost" data-erro="${g.sig}" data-st="resolvido" title="Avisa de novo se voltar a acontecer">✓ Já foi corrigido</button> <button class="btn sm ghost" data-erro="${g.sig}" data-st="ignorado" title="Não avisa mais deste erro">Ignorar</button>` : `<button class="btn sm ghost" data-erro="${g.sig}" data-st="aberto">Reabrir</button>`;
+    return `<tr><td>${sit}${al ? ` <span class="st blocked">${ROT[al.motivo]?.[0] || ''}</span>` : ''}<b>${g.tipo === 'fechou' ? '📵' : '❌'} ${esc(g.etapa || 'app')}</b><small>${esc(g.msg)}</small><small>última vez <b>${desde(g.ultimo)}</b> · primeira ${dt(g.primeiro)} · ${g.total} no total</small>${g.resolvido_por === 'claude' && g.nota ? `<small>correção: ${esc(g.nota)}</small>` : ''}</td>
       <td>${g.h1 ? `<b style="color:#ff6b6b">${g.h1}</b>` : '0'}</td><td>${g.h24}<small>${g.pessoas_24h} pessoa${g.pessoas_24h === 1 ? '' : 's'}</small></td><td><small>${aps(g.aparelhos)}</small></td><td>${bt}</td></tr>`;
   };
   const tabela = (lista) => `<div class="glass tbl"><table><tr><th>Erro</th><th>Última hora</th><th>24h</th><th>Aparelhos</th><th></th></tr>${lista.map(linha).join('')}</table></div>`;
@@ -274,7 +275,7 @@ async function loadVigiaErros() {
   $('vigiaErros').innerHTML = `<section class="bloco">
     <div class="bh"><span class="tag ${agora.length ? 'r' : 'g'}">🛰️ VISTORIA DE ERROS · A CADA 10 MIN</span><small>${v ? `última vistoria ${desde(v.quando)} · ${v.erros_1h} erro${v.erros_1h === 1 ? '' : 's'} na última hora · ${v.erros_24h} em 24h` : 'ainda não rodou'} <button class="btn sm ghost" id="vigiaAgora">Vistoriar agora</button></small></div>
     <div class="vigia ${agora.length ? 'mal' : pend.length ? '' : 'ok'}">${resumo}
-      <small><b>Como funciona:</b> a vistoria só encontra os erros e avisa você por e-mail. Ela não conserta sozinha: quem corrige é o Claude, no código. Depois da correção publicada, aperte <b>✓ Já foi corrigido</b>. Se o mesmo erro voltar, você recebe o aviso "VOLTOU". Erro que fica 24h sem acontecer passa sozinho para Resolvido.</small></div>
+      <small><b>Como funciona:</b> a vistoria encontra os erros a cada 10 minutos. O Claude confere esta lista de hora em hora, corrige no código e, quando a correção entra no ar, o erro fica verde sozinho (✅ Corrigido pelo Claude). Você não precisa avisar nem marcar nada, só acompanhar. Se um erro corrigido voltar, ele reaparece aqui como 🔁 VOLTOU e o Claude olha de novo.</small></div>
     ${agora.length ? `<h4 class="vh">🔴 Acontecendo agora</h4>${tabela(agora)}` : ''}
     ${pend.length ? `<h4 class="vh">🟡 Pendentes (aconteceram nas últimas 24h, não na última hora)</h4>${tabela(pend)}` : ''}
     ${ok.length ? `<details class="vh"><summary>✅ Resolvidos e ignorados (${ok.length})</summary>${tabela(ok)}</details>` : ''}

@@ -23,5 +23,10 @@ if [ ! -f "$W/api/config.php" ]; then
 fi
 mkdir -p "$HOME/studio-cover-dados" && chmod 700 "$HOME/studio-cover-dados"
 echo "$NEW" > "$MARK"
+# erros corrigidos pelo Claude: commits com "corrige-erro: <código>" marcam o erro como resolvido no painel
+if [ -n "$PHPB" ] && [ "$OLD" != "nada" ] && git cat-file -e "$OLD" 2>/dev/null; then
+  SIGS=$(git log --format=%B "$OLD..$NEW" | grep -oiE 'corrige-erro:? *[0-9a-f]{16}' | grep -oE '[0-9a-f]{16}$' | sort -u | tr '\n' ' ')
+  [ -n "$SIGS" ] && "$PHPB" "$W/api/vigia.php" --corrigido $SIGS --commit "$(git log -1 --format='%h %s' | cut -c1-150)" >> "$HOME/logs/sc-vigia.log" 2>&1 || true
+fi
 mkdir -p "$HOME/logs"; echo "$(date '+%d/%m/%Y %H:%M') publicado $(git log -1 --format='%h %s')" >> "$HOME/logs/sc-publicacoes.log"
 echo "publicado $NEW"

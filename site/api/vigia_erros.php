@@ -14,6 +14,8 @@ function erros_db(): PDO {
   if (!$ok) {
     $db->exec('CREATE TABLE IF NOT EXISTS erro_grupos (sig TEXT PRIMARY KEY, tipo TEXT, etapa TEXT, msg TEXT, exemplo TEXT,
       primeiro TEXT, ultimo TEXT, total INTEGER DEFAULT 0, status TEXT DEFAULT \'aberto\', resolvido_em TEXT, avisado_em TEXT, avisado_n INTEGER DEFAULT 0)');
+    $cols = array_column($db->query('PRAGMA table_info(erro_grupos)')->fetchAll(), 'name');
+    foreach (['resolvido_por', 'nota'] as $c) if (!in_array($c, $cols, true)) $db->exec("ALTER TABLE erro_grupos ADD COLUMN $c TEXT");
     $ok = true;
   }
   return $db;
@@ -65,14 +67,14 @@ function erros_vigia(bool $forcar = false): array {
     } else {
       $db->prepare('UPDATE erro_grupos SET ultimo = MAX(ultimo, ?), primeiro = MIN(primeiro, ?), total = total + 1, exemplo = ? WHERE sig = ?')->execute([$e['created_at'], $e['created_at'], erro_aparelho($e, $d), $s['sig']]);
       if ($g['status'] === 'resolvido' && $e['created_at'] > (string)$g['resolvido_em']) {
-        $db->prepare("UPDATE erro_grupos SET status = 'aberto' WHERE sig = ?")->execute([$s['sig']]);
+        $db->prepare("UPDATE erro_grupos SET status = 'aberto', resolvido_por = NULL, nota = NULL WHERE sig = ?")->execute([$s['sig']]);
         $voltaram[$s['sig']] = 1;
       }
     }
   }
   set_setting('vigia_erros_id', (string)$maxId);
   // erro que ficou 24h sem acontecer passa sozinho para resolvido (se voltar, avisa VOLTOU)
-  $db->prepare("UPDATE erro_grupos SET status = 'resolvido', resolvido_em = ? WHERE status = 'aberto' AND ultimo < ?")->execute([now(), date('Y-m-d H:i:s', time() - 86400)]);
+  $db->prepare("UPDATE erro_grupos SET status = 'resolvido', resolvido_em = ?, resolvido_por = 'auto' WHERE status = 'aberto' AND ultimo < ?")->execute([now(), date('Y-m-d H:i:s', time() - 86400)]);
 
   // 2) números por grupo: última hora x normal das 23h anteriores
   $h1 = date('Y-m-d H:i:s', time() - 3600); $h24 = date('Y-m-d H:i:s', time() - 86400);
@@ -170,7 +172,7 @@ function erros_lista(): array {
     $aps = $s['aparelhos'] ?? []; arsort($aps);
     $out[] = ['sig' => $g['sig'], 'tipo' => $g['tipo'], 'etapa' => $g['etapa'], 'msg' => $g['msg'], 'status' => $g['status'], 'primeiro' => $g['primeiro'], 'ultimo' => $g['ultimo'],
       'total' => (int)$g['total'], 'h1' => $s['h1'] ?? 0, 'h24' => $s['h24'] ?? 0, 'pessoas_24h' => $s ? count($s['pessoas']) : 0, 'aparelhos' => array_slice($aps, 0, 4, true),
-      'novo' => $g['primeiro'] >= $h24];
+      'novo' => $g['primeiro'] >= $h24, 'resolvido_em' => $g['resolvido_em'], 'resolvido_por' => $g['resolvido_por'], 'nota' => $g['nota']];
   }
   usort($out, fn($a, $b) => [$b['h1'], $b['h24']] <=> [$a['h1'], $a['h24']]);
   return array_slice($out, 0, 30);
@@ -178,5 +180,12 @@ function erros_lista(): array {
 
 function erro_marcar(string $sig, string $status): void {
   if (!in_array($status, ['resolvido', 'ignorado', 'aberto'], true)) fail('Situação inválida.');
-  erros_db()->prepare('UPDATE erro_grupos SET status = ?, resolvido_em = ? WHERE sig = ?')->execute([$status, $status === 'aberto' ? null : now(), $sig]);
+  erros_db()->prepare('UPDATE erro_grupos SET status = ?, resolvido_em = ?, resolvido_por = ?, nota = NULL WHERE sig = ?')->execute([$status, $status === 'aberto' ? null : now(), $status === 'aberto' ? null : 'voce', $sig]);
+}
+
+// o Claude corrigiu: o commit publicado traz "corrige-erro: <sig>" (a tarefa de publicação chama isto depois de publicar)
+function erros_corrigidos(array $sigs, string $commit): int {
+  $q = erros_db()->prepare("UPDATE erro_grupos SET status = 'resolvido', resolvido_em = ?, resolvido_por = 'claude', nota = ? WHERE sig = ? AND status <> 'ignorado'"); $n = 0;
+  foreach (array_unique($sigs) as $sig) if (preg_match('/^[0-9a-f]{16}$/', $sig)) { $q->execute([now(), mb_substr($commit, 0, 200), $sig]); $n += $q->rowCount(); }
+  return $n;
 }

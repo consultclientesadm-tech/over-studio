@@ -10,6 +10,13 @@ if (PHP_SAPI !== 'cli') {
   $k = (string)cfg('cron_key');
   if ($k === '' || !hash_equals($k, (string)($_GET['chave'] ?? ''))) { http_response_code(403); exit('sem permissão'); }
 }
+// depois de publicar: php vigia.php --corrigido <sig> [<sig>...] --commit "<hash mensagem>"
+$ai = array_search('--corrigido', $argv ?? [], true);
+if (PHP_SAPI === 'cli' && $ai !== false) {
+  $ci = array_search('--commit', $argv, true); $commit = $ci !== false ? (string)($argv[$ci + 1] ?? '') : '';
+  $sigs = array_slice($argv, $ai + 1, $ci !== false && $ci > $ai ? $ci - $ai - 1 : null);
+  echo date('d/m H:i'), ' corrigidos pelo Claude: ', erros_corrigidos($sigs, $commit), ' (', implode(' ', $sigs), ")\n"; exit;
+}
 $forcar = in_array('--agora', $argv ?? [], true) || isset($_GET['agora']);
 $r = erros_vigia($forcar);
 if (($r['vigia_erros'] ?? '') === 'ok') {
