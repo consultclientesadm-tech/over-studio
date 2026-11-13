@@ -5,8 +5,8 @@
 import * as cover from './pipeline.js?v=38';
 import { prefetchModel } from './studio.js?v=37';
 import { TuneEditor } from './editor.js?v=37';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=39';
-import { exportVideo, exportType } from './export.js?v=37';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
+import { exportVideo, exportType } from './export.js?v=38';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -742,6 +742,7 @@ $('exportBtn').onclick = async () => {
   if (window.scAntesExportar && !(await window.scAntesExportar())) return;
   if (pending) toast('Você tem edições de afinação que ainda não foram aplicadas.');
   $('exportBtn').disabled = true; $('exportBar').hidden = false; $('ready').hidden = true;
+  if (thumbGr) { thumbGr.release(); thumbGr = null; } // libera memória de vídeo para a gravação (as miniaturas refazem depois)
   try {
     const ch = mastered ? mastered.channels : cover.rawMix(state);
     const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;

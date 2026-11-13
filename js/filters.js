@@ -102,8 +102,17 @@ export class Grader {
     this.c = canvas;
     const gl = (this.gl = canvas.getContext('webgl', { preserveDrawingBuffer: true, premultipliedAlpha: false }));
     if (!gl) throw new Error('Este aparelho não tem WebGL');
-    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
-    const pr = (this.pr = gl.createProgram());
+    // Sem memória de vídeo (iPhone com muita coisa aberta) o Safari entrega o quadro já "perdido": createShader
+    // volta vazio e o erro saía em inglês ou como "null". Agora vira um aviso claro que pode tentar de novo.
+    const perdeu = () => { const e = new Error('A placa de vídeo do aparelho ficou sem memória. Feche outros apps e abas e toque em exportar de novo.'); e.gpu = true; return e; };
+    if (gl.isContextLost()) throw perdeu();
+    const sh = (type, src) => {
+      const s = gl.createShader(type); if (!s) throw perdeu();
+      gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { if (gl.isContextLost()) throw perdeu(); throw new Error(gl.getShaderInfoLog(s) || 'falha ao preparar o filtro de cor'); }
+      return s;
+    };
+    const pr = (this.pr = gl.createProgram()); if (!pr) throw perdeu();
     gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr);
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -113,6 +122,8 @@ export class Grader {
     this.u = (n) => gl.getUniformLocation(pr, n);
     this.f = ORIGINAL; this.amount = 1;
   }
+  // devolve a memória de vídeo na hora (o iPhone tem poucos quadros WebGL e não solta sozinho)
+  release() { try { this.gl.getExtension('WEBGL_lose_context')?.loseContext(); } catch {} }
   set(filter, amount = 1) { this.f = filter || ORIGINAL; this.amount = amount; }
   draw(src) {
     const gl = this.gl, f = this.f;

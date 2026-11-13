@@ -6,12 +6,31 @@
 // Toca o vídeo cortado, desenha cada quadro com o filtro num quadro 1080p e grava junto com o áudio
 // masterizado. Usa o gravador do próprio navegador (MediaRecorder): MP4 onde o navegador grava MP4
 // (Chrome novo, Safari), WebM nos outros. Leva o tempo do próprio vídeo (1 minuto de vídeo = 1 minuto).
-import { Grader } from './filters.js?v=39';
+import { Grader } from './filters.js?v=40';
 
 const TYPES = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
 export const exportType = () => TYPES.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
 
-export async function exportVideo({ file, video, filter, amount = 1, channels, sr, start, end, onProgress = () => {} }) {
+// Um quadro WebGL por vez na exportação: solta o anterior e, se o aparelho entregar um quadro sem memória,
+// espera um pouco e tenta num canvas novo (o mesmo canvas devolveria o mesmo quadro perdido).
+let live = null;
+const freeLive = () => { if (live) { live.release(); live = null; } };
+async function newGrader(canvas) {
+  freeLive();
+  for (let i = 0; ; i++) {
+    try { return (live = new Grader(canvas)); } catch (e) {
+      if (!e.gpu || i >= 2) { if (e.gpu) e.final = true; throw e; }
+      await new Promise((r) => setTimeout(r, 500));
+      const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height; canvas = c;
+    }
+  }
+}
+
+export async function exportVideo(o) {
+  try { return await exportAny(o); } finally { freeLive(); }
+}
+
+async function exportAny({ file, video, filter, amount = 1, channels, sr, start, end, onProgress = () => {} }) {
   if (file && window.VideoEncoder && window.VideoDecoder) {
     try { return await exportFull({ file, filter, amount, channels, sr, start, end, onProgress }); }
     catch (e) { if (e.final) throw e; console.warn('gravação quadro a quadro falhou, usando a reserva:', e); }
@@ -21,7 +40,7 @@ export async function exportVideo({ file, video, filter, amount = 1, channels, s
   const portrait = video.videoHeight >= video.videoWidth;
   const canvas = document.createElement('canvas');
   canvas.width = portrait ? 1080 : 1920; canvas.height = portrait ? 1920 : 1080;
-  const gr = new Grader(canvas);
+  const gr = await newGrader(canvas);
   gr.set(filter, amount);
   // Áudio pronto, tocado por um "toca-discos" interno ligado direto no gravador (não sai na caixa de som)
   const C = window.AudioContext || window.webkitAudioContext;
@@ -30,7 +49,7 @@ export async function exportVideo({ file, video, filter, amount = 1, channels, s
   const buf = ctx.createBuffer(2, channels[0].length, sr);
   buf.copyToChannel(channels[0], 0); buf.copyToChannel(channels[1] || channels[0], 1);
   const dest = ctx.createMediaStreamDestination();
-  const vStream = canvas.captureStream(30);
+  const vStream = gr.c.captureStream(30);
   const stream = new MediaStream([...vStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
   const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 14e6, audioBitsPerSecond: 256e3 });
   const parts = [];
@@ -125,11 +144,11 @@ async function exportFull({ file, filter, amount, channels, sr, start, end, onPr
 
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
-  const gr = new Grader(canvas);
+  const gr = await newGrader(canvas);
   gr.set(filter, amount);
   const { target, blob } = blobTarget(MB);
   const output = new MB.Output({ format: mov ? new MB.MovOutputFormat({ fastStart: false }) : new MB.Mp4OutputFormat({ fastStart: false }), target });
-  const vs = new MB.CanvasSource(canvas, { codec, bitrate, keyFrameInterval: 2, latencyMode: 'quality' });
+  const vs = new MB.CanvasSource(gr.c, { codec, bitrate, keyFrameInterval: 2, latencyMode: 'quality' });
   output.addVideoTrack(vs, { frameRate: st?.averagePacketRate ? Math.round(st.averagePacketRate) : undefined });
   const as = new MB.AudioBufferSource(mov ? { codec: 'pcm-s16' } : { codec: 'aac', bitrate: 256e3 });
   output.addAudioTrack(as);
