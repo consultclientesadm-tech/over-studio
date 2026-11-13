@@ -45,6 +45,7 @@
     <button data-tab="financas"><i>💰</i><span>Saúde financeira</span></button>
     <button data-tab="alunos"><i>◉</i><span>Alunos</span></button>
     <button data-tab="funil"><i>⟴</i><span>Funil</span></button>
+    <button data-tab="depoimentos"><i>💬</i><span>Depoimentos</span><em class="nbadge" id="depoBadge" hidden></em></button>
     <button data-tab="afiliados"><i>🤝</i><span>Afiliados</span></button>
     <button data-tab="vistoria"><i>🛰️</i><span>Vistoria</span><em class="nbadge" id="vistBadge" hidden></em></button>
     <button data-tab="admins"><i>⛨</i><span>Administradores</span></button>
@@ -105,6 +106,13 @@
       <div class="glass"><div id="funilFlow" class="flow"></div><p class="sub" id="cronInfo"></p></div>
       <div id="emStats"></div>
       <div class="glass"><div class="ch"><b>Últimos e-mails enviados</b><span class="acts"><span id="saudeEmail" class="saude"></span><button class="btn sm ghost" id="reenviarEmails">Reenviar os que falharam</button></span></div><div class="tbl" id="tblEmails"></div></div>
+    </div>
+
+    <!-- Depoimentos -->
+    <div class="tab" id="tDepo" hidden>
+      <header class="th"><div><h2>Depoimentos</h2><p class="sub">Prova social: quem comprou ou baixou o vídeo no teste manda o antes e depois, uma frase e a autorização de uso pela página <a href="/depoimento/" target="_blank" style="color:var(--y)">/depoimento</a> (cada pessoa tem um link próprio).</p></div></header>
+      <div id="depoPedir"></div>
+      <div id="depoLista"></div>
     </div>
 
     <!-- Afiliados -->

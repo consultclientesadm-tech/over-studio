@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050506">
+<meta name="robots" content="noindex">
+<title>Seu antes e depois · Studio Cover</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="/assets/compat.js?v=1" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root { --y: #ffd400; --g: #2ee59d; --r: #ff4d5e; --ink: #f4f4f7; --mut: #9a9aa6; --line: #26262e; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: #050506; color: var(--ink); font-family: 'Space Grotesk', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+.grade { position: fixed; inset: 0; background: linear-gradient(rgba(255,212,0,.05) 1px, transparent 1px) 0 0/44px 44px, linear-gradient(90deg, rgba(255,212,0,.05) 1px, transparent 1px) 0 0/44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 20%, #000 0, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 50% 20%, #000 0, transparent 70%); }
+main { position: relative; min-height: 100svh; padding: max(28px, env(safe-area-inset-top)) 16px 40px; }
+.box { width: 100%; max-width: 440px; margin: 0 auto; }
+.topo { text-align: center; margin-bottom: 18px; }
+.ok { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; color: #000; background: var(--g); box-shadow: 0 0 40px rgba(46,229,157,.45); }
+h1 { font: 900 21px/1.25 Orbitron, sans-serif; letter-spacing: .05em; margin: 0 0 6px; }
+h1 em { font-style: normal; color: var(--y); }
+.topo p { color: var(--mut); margin: 0; font-size: 14.5px; }
+.passos { display: flex; gap: 6px; justify-content: center; margin: 16px 0 14px; }
+.passos span { flex: 1; max-width: 130px; font-size: 11.5px; text-align: center; color: var(--mut); padding-top: 8px; border-top: 3px solid var(--line); }
+.passos span.on { color: var(--ink); border-color: var(--y); }
+.passos span.ok2 { color: var(--g); border-color: var(--g); }
+.card { background: rgba(14,14,18,.86); border: 1px solid var(--line); border-radius: 22px; padding: 22px 20px; box-shadow: 0 0 0 1px rgba(255,212,0,.06), 0 30px 80px rgba(0,0,0,.6); }
+.card h2 { margin: 0 0 6px; font-size: 19px; }
+.card p { color: var(--mut); line-height: 1.55; margin: 0 0 10px; font-size: 14.5px; }
+.card p b { color: var(--ink); }
+label { display: block; font-size: 12px; color: var(--mut); margin: 12px 0 6px; letter-spacing: .04em; }
+input { width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--line); background: #0b0b0f; color: var(--ink); font: 500 16px 'Space Grotesk', sans-serif; padding: 0 14px; outline: none; }
+input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12); }
+.btn { display: block; width: 100%; height: 54px; margin-top: 16px; border: 0; border-radius: 40px; background: linear-gradient(180deg, #ffe34d, #ffc400); color: #000; font: 900 14px/54px Orbitron, sans-serif; letter-spacing: .07em; text-align: center; text-decoration: none; cursor: pointer; box-shadow: 0 0 30px rgba(255,212,0,.35); }
+.btn[disabled] { opacity: .6; }
+.btn2 { display: block; width: 100%; margin-top: 10px; padding: 13px; border-radius: 40px; border: 1px solid #3a3a44; background: none; color: var(--ink); font: 600 14px 'Space Grotesk', sans-serif; text-align: center; text-decoration: none; cursor: pointer; }
+.msg { margin-top: 10px; font-size: 13.5px; min-height: 18px; line-height: 1.45; color: var(--r); }
+.msg.ok { color: var(--g); }
+.giro { width: 34px; height: 34px; margin: 6px auto 12px; border-radius: 50%; border: 3px solid #2a2a33; border-top-color: var(--y); animation: g 1s linear infinite; }
+@keyframes g { to { transform: rotate(360deg); } }
+.so { display: flex; gap: 8px; margin: 4px 0 14px; }
+.so button { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: #0b0b0f; color: var(--mut); font: 600 14px 'Space Grotesk', sans-serif; cursor: pointer; }
+.so button.on { border-color: var(--y); color: var(--ink); }
+ol.st { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+ol.st li { counter-increment: s; display: flex; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid #1c1c23; font-size: 14.5px; line-height: 1.4; }
+ol.st li:last-child { border: 0; }
+ol.st li::before { content: counter(s); flex: 0 0 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--y); color: #000; font: 900 13px Orbitron, sans-serif; }
+ol.st li svg, ol.st li img { flex: 0 0 26px; }
+.aviso { background: rgba(255,212,0,.08); border: 1px solid rgba(255,212,0,.35); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin: 0 0 14px; color: var(--ink); }
+.dica { font-size: 12.5px !important; text-align: center; margin-top: 14px !important; }
+textarea { width: 100%; min-height: 96px; border-radius: 14px; border: 1px solid var(--line); background: #0b0b0f; color: var(--ink); font: 500 16px/1.45 'Space Grotesk', sans-serif; padding: 12px 14px; outline: none; resize: vertical; }
+textarea:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12); }
+.arq { position: relative; display: flex; gap: 12px; align-items: center; padding: 14px; border: 1.5px dashed #3a3a44; border-radius: 16px; margin-top: 10px; cursor: pointer; background: #0b0b0f; }
+.arq.ok { border-style: solid; border-color: var(--g); }
+.arq input { position: absolute; inset: 0; opacity: 0; cursor: pointer; height: auto; }
+.arq .ic { flex: 0 0 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,212,0,.12); font-size: 20px; }
+.arq b { display: block; font-size: 14.5px; }
+.arq small { color: var(--mut); font-size: 12.5px; line-height: 1.4; display: block; }
+.arq em { font-style: normal; color: var(--y); font-size: 11px; letter-spacing: .08em; }
+.estrelas { display: flex; gap: 6px; }
+.estrelas button { flex: 1; height: 46px; border-radius: 12px; border: 1px solid var(--line); background: #0b0b0f; color: #444; font-size: 24px; cursor: pointer; }
+.estrelas button.on { color: var(--y); border-color: rgba(255,212,0,.5); }
+.chk { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 0; font-size: 13px; color: var(--mut); line-height: 1.45; letter-spacing: 0; cursor: pointer; }
+.chk input { flex: 0 0 22px; width: 22px; height: 22px; margin: 0; accent-color: #ffd400; }
+.barra { height: 10px; border-radius: 10px; background: #1c1c23; overflow: hidden; margin: 14px 0 6px; }
+.barra i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffc400, #ffe34d); transition: width .3s; }
+.presente { background: rgba(46,229,157,.08); border: 1px solid rgba(46,229,157,.4); border-radius: 14px; padding: 12px 14px; font-size: 13.5px; line-height: 1.5; margin: 0 0 6px; }
+.lin { display: flex; gap: 10px; } .lin > div { flex: 1; min-width: 0; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="grade"></div>
+<main><div class="box">
+  <div class="topo">
+    <div class="ok" style="background:var(--y);box-shadow:0 0 40px rgba(255,212,0,.45)">🎤</div>
+    <h1>SEU <em>ANTES E DEPOIS</em></h1>
+    <p id="ola">Leva 2 minutos e ajuda outros cantores a confiar no Studio Cover.</p>
+  </div>
+
+  <div class="card" id="cErro" hidden><h2>Link inválido</h2><p id="erroTxt"></p><a class="btn2" href="/">Ir para o site</a></div>
+
+  <form class="card" id="cForm" hidden novalidate>
+    <div class="presente" id="presente" hidden>🎁 Mandando o seu vídeo, você ganha <b>mais 1 vídeo grátis</b> no app.</div>
+    <h2>1. Os seus vídeos</h2>
+    <p>Mande o vídeo que o Studio Cover entregou. Se ainda tiver o original na galeria, mande também: é o antes e depois que convence.</p>
+    <label class="arq" id="aDepois"><input type="file" accept="video/*,audio/*" data-tipo="depois"><span class="ic">✨</span><span><em>DEPOIS</em><b>Vídeo que o app entregou</b><small>Toque para escolher na galeria</small></span></label>
+    <label class="arq" id="aAntes"><input type="file" accept="video/*,audio/*" data-tipo="antes"><span class="ic">🎬</span><span><em>ANTES · OPCIONAL</em><b>Vídeo original, sem o app</b><small>O mesmo vídeo como você gravou</small></span></label>
+    <label class="arq" id="aFalando"><input type="file" accept="video/*" data-tipo="falando"><span class="ic">🤳</span><span><em>BÔNUS · OPCIONAL</em><b>Você falando do resultado</b><small>10 a 20 segundos, olhando para a câmera</small></span></label>
+
+    <h2 style="margin-top:22px">2. O que você achou?</h2>
+    <label for="texto">Em uma ou duas frases, com sinceridade</label>
+    <textarea id="texto" maxlength="1500" placeholder="Ex.: Gravei no quintal com o celular e saiu com voz de estúdio. Postei sem vergonha nenhuma."></textarea>
+    <label>Sua nota</label>
+    <div class="estrelas" id="estrelas">
+      <button type="button" data-n="1">★</button><button type="button" data-n="2">★</button><button type="button" data-n="3">★</button><button type="button" data-n="4">★</button><button type="button" data-n="5">★</button>
+    </div>
+
+    <h2 style="margin-top:22px">3. Como você aparece</h2>
+    <label for="nome">Nome artístico</label>
+    <input id="nome" maxlength="80" autocomplete="name">
+    <div class="lin">
+      <div><label for="ig">@ do Instagram</label><input id="ig" maxlength="41" placeholder="@seuperfil" autocapitalize="off" autocorrect="off"></div>
+      <div><label for="cidade">Cidade (opcional)</label><input id="cidade" maxlength="80"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="autImg" checked><span id="aceiteTxt"></span></label>
+    <label class="chk"><input type="checkbox" id="autNome" checked><span>Pode mostrar o meu nome e marcar o meu @.</span></label>
+
+    <div id="prog" hidden><div class="barra"><i id="barra"></i></div><p class="dica" id="progTxt" style="margin:0 !important"></p></div>
+    <button class="btn" id="enviar">ENVIAR</button>
+    <p class="msg" id="msg"></p>
+    <p class="dica">Não feche esta página enquanto o vídeo sobe. Arquivos grandes podem levar alguns minutos no 4G; no Wi-Fi é mais rápido.</p>
+  </form>
+
+  <div class="card" id="cOk" hidden style="text-align:center">
+    <div class="ok">✓</div>
+    <h2>Recebemos, obrigado! 🙏</h2>
+    <p id="okTxt">O seu depoimento chegou para a nossa equipe.</p>
+    <p class="presente" id="okBonus" hidden>🎁 Você ganhou <b>mais 1 vídeo grátis</b>. Já está liberado no app.</p>
+    <a class="btn" href="/app/">ABRIR O STUDIO COVER</a>
+  </div>
+</div></main>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const P = new URLSearchParams(location.search), t = P.get('t') || '';
+  const api = (a, q = '', body, raw) => fetch('/api/depoimento.php?a=' + a + '&t=' + encodeURIComponent(t) + q, body === undefined ? { credentials: 'same-origin', cache: 'no-store' }
+    : { method: 'POST', credentials: 'same-origin', headers: { 'X-SC': '1', 'Content-Type': raw ? 'application/octet-stream' : 'application/json' }, body: raw ? body : JSON.stringify(body) })
+    .then((r) => r.json().catch(() => ({ ok: false, error: r.status === 413 ? 'O servidor recusou um pedaço do arquivo.' : 'Erro no servidor (' + r.status + ').' })));
+  const arqs = {}; let nota = 0, max = 450, atual = null;
+  api('quem').then((j) => {
+    if (!j.ok) { $('erroTxt').textContent = j.error; $('cErro').hidden = false; return; }
+    const pn = (j.nome || '').trim().split(' ')[0];
+    if (pn) $('ola').textContent = pn + ', leva 2 minutos e ajuda outros cantores a confiar no Studio Cover.';
+    $('nome').value = j.nome || ''; $('aceiteTxt').textContent = j.aceite; $('presente').hidden = !j.bonus; max = j.max_mb || max;
+    $('cForm').hidden = false;
+  }).catch(() => { $('erroTxt').textContent = 'Sem conexão. Tente de novo.'; $('cErro').hidden = false; });
+  document.querySelectorAll('.arq input').forEach((inp) => (inp.onchange = () => {
+    const f = inp.files[0], box = inp.parentElement, sm = box.querySelector('small');
+    if (!f) return;
+    if (f.size > max * 1048576) { sm.textContent = `Passou de ${max} MB. Escolha um vídeo menor ou mais curto.`; inp.value = ''; return; }
+    arqs[inp.dataset.tipo] = f; box.classList.add('ok'); sm.textContent = '✓ ' + f.name + ' · ' + (f.size / 1048576).toFixed(1) + ' MB';
+  }));
+  $('estrelas').querySelectorAll('button').forEach((b) => (b.onclick = () => { nota = +b.dataset.n; $('estrelas').querySelectorAll('button').forEach((x) => x.classList.toggle('on', +x.dataset.n <= nota)); }));
+  $('autImg').onchange = () => { $('autNome').disabled = !$('autImg').checked; if (!$('autImg').checked) $('autNome').checked = false; };
+  const ext = (f) => { const m = /\.([a-z0-9]+)$/i.exec(f.name || ''); if (m) return f.name; const e = (f.type.split('/')[1] || 'mp4').replace('quicktime', 'mov'); return 'video.' + e; };
+  $('cForm').onsubmit = async (e) => {
+    e.preventDefault(); const msg = $('msg'); msg.textContent = ''; msg.className = 'msg';
+    const texto = $('texto').value.trim();
+    if (texto.length < 3) { msg.textContent = 'Escreva em uma frase o que você achou.'; $('texto').focus(); return; }
+    if (!arqs.depois && !arqs.antes && !arqs.falando && !confirm('Você não escolheu nenhum vídeo. Mandar só o texto?')) return;
+    const b = $('enviar'); b.disabled = true; b.textContent = 'ENVIANDO…';
+    const tipos = Object.keys(arqs);
+    const j = atual || await api('enviar', '', { texto, nota, nome: $('nome').value, instagram: $('ig').value, cidade: $('cidade').value, aut_imagem: $('autImg').checked, aut_nome: $('autNome').checked,
+      arquivos: tipos.map((k) => ({ tipo: k, nome: ext(arqs[k]), tam: arqs[k].size })) }).catch(() => ({ ok: false, error: 'Sem conexão.' }));
+    if (!j.ok) { msg.textContent = j.error; b.disabled = false; b.textContent = 'ENVIAR'; return; }
+    atual = j; // se a conexão cair, o próximo toque continua de onde parou
+    const q = '&id=' + j.id + '&k=' + encodeURIComponent(j.k);
+    if (j.arquivos.length) {
+      $('prog').hidden = false; const total = j.arquivos.reduce((s, f) => s + f.tam, 0); let feito = 0; const CH = 2 * 1048576;
+      try {
+        for (let i = 0; i < j.arquivos.length; i++) {
+          const f = arqs[j.arquivos[i].tipo]; let o = 0, falhas = 0;
+          while (o < f.size) {
+            const r = await api('parte', q + '&i=' + i + '&o=' + o, f.slice(o, o + CH), true).catch(() => null);
+            if (!r || !r.ok) { if (++falhas > 6) throw new Error(r && r.error || 'A conexão caiu.'); await new Promise((ok) => setTimeout(ok, 1500 * falhas)); continue; }
+            falhas = 0; feito += r.recebido - o; o = r.recebido;
+            $('barra').style.width = Math.round((feito / total) * 100) + '%';
+            $('progTxt').textContent = `Enviando ${i + 1} de ${j.arquivos.length} · ${Math.round((feito / total) * 100)}%`;
+          }
+        }
+      } catch (err) { msg.textContent = err.message + ' Toque em ENVIAR para tentar de novo.'; b.disabled = false; b.textContent = 'ENVIAR'; return; }
+    }
+    const fim = j.arquivos.length ? await api('fim', q, {}) : { ok: true, bonus: false };
+    if (!fim.ok) { msg.textContent = fim.error; b.disabled = false; b.textContent = 'ENVIAR'; return; }
+    $('cForm').hidden = true; $('cOk').hidden = false; $('okBonus').hidden = !fim.bonus;
+    if (!$('autImg').checked) $('okTxt').textContent = 'O seu depoimento chegou só para a nossa equipe. Não vamos publicar nada sem a sua autorização.';
+    scrollTo(0, 0);
+  };
+})();
+</script>
+</body>
+</html>

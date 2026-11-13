@@ -39,14 +39,14 @@ $('fPrimeiro').onsubmit = (e) => { e.preventDefault(); sub($('fPrimeiro'), 'prim
 $('sair').onclick = async () => { await api('sair', {}); boot(); };
 
 // ---------- abas ----------
-const TABS = { geral: 'tGeral', financas: 'tFin', vistoria: 'tVist', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', admins: 'tAdmins', config: 'tConfig' };
+const TABS = { geral: 'tGeral', financas: 'tFin', vistoria: 'tVist', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', depoimentos: 'tDepo', admins: 'tAdmins', config: 'tConfig' };
 function tab(t) {
   if (!TABS[t]) t = 'geral';
   document.querySelectorAll('.nav > button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   Object.entries(TABS).forEach(([k, id]) => ($(id).hidden = k !== t));
   history.replaceState(null, '', '#' + t);
   $('vistBtn').hidden = t === 'vistoria';
-  ({ geral: loadGeral, financas: loadFin, vistoria: loadVist, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, admins: loadAdmins, config: loadConfig })[t]();
+  ({ geral: loadGeral, financas: loadFin, vistoria: loadVist, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, depoimentos: loadDepo, admins: loadAdmins, config: loadConfig })[t]();
 }
 document.querySelectorAll('.nav > button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
 
@@ -553,6 +553,50 @@ $('reenviarEmails').onclick = async (ev) => {
   toast(j.ok ? `Reenviados: ${j.reenviados}. Pulados: ${j.pulados}.${j.falharam_agora ? ' Falharam agora: ' + j.falharam_agora : ''}` : j.error); loadFunil();
 };
 $('rodarFunil').onclick = async () => { const j = await api('funil-rodar', {}); toast(`Funil rodou: ${j.enviados} envio(s).`); loadFunil(); };
+
+// ---------- depoimentos (prova social) ----------
+const DEPO_ST = { novo: ['trial', 'Novo'], aprovado: ['active', 'Aprovado'], usado: ['cortesia', 'Já usado'], recusado: ['blocked', 'Não usar'], enviando: ['nao', 'Enviando…'] };
+let depoJ = null;
+async function loadDepo() {
+  const j = await api('depo'); if (!j.ok) return; depoJ = j;
+  const c = j.contagem, P = j.pessoas;
+  const card = (cor, ico, rot, v, sub) => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div><b class="cnt" data-to="${+v || 0}" data-f="n">0</b><span>${sub}</span></div>`;
+  const wa = (p) => { const n = String(p.phone || '').replace(/\D/g, ''); const tel = n ? (n.length <= 11 ? '55' + n : n) : ''; return 'https://wa.me/' + tel + '?text=' + encodeURIComponent(p.whats); };
+  const quando = (p) => p.enviou ? '<span class="st active">✅ mandou</span>' : p.pedido_at ? `<span class="st trial">pedido</span><small>${dt(p.pedido_at)}</small>` : +p.unsub ? '<span class="st nao">saiu da lista</span>' : '<span class="st nao">ainda não pedido</span>';
+  $('depoPedir').innerHTML = `<section class="bloco"><div class="bh"><span class="tag y">📣 PEDIR DEPOIMENTO</span><small>Cada pessoa recebe um link próprio. O e-mail vai uma vez só por pessoa.</small></div>
+    <div class="cards4">${card('y', '💳', 'Compradores', c.compradores, 'assinaram e pagaram')}${card('c', '🎬', 'Testaram e baixaram', c.testaram, 'baixaram o vídeo pronto no teste')}${card('p', '📨', 'Já pedidos', c.pedidos, `${c.a_pedir} ainda sem pedido`)}${card('g', '💬', 'Mandaram', c.enviaram, 'depoimentos recebidos')}</div>
+    <div class="glass" style="margin-top:14px"><div class="ch"><b>Quem pode receber o pedido</b><span class="acts"><label class="sub" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="depoBonus" ${j.bonus ? 'checked' : ''}> +1 vídeo grátis para quem está no teste e manda</label><button class="btn sm ghost" id="depoPrevia">Ver o e-mail e o WhatsApp</button><button class="btn sm" id="depoEnviar" ${c.a_pedir ? '' : 'disabled'}>Enviar e-mail para ${c.a_pedir} pessoa${c.a_pedir === 1 ? '' : 's'}</button></span></div>
+    <div class="tbl">${P.length ? `<table><tr><th>Pessoa</th><th>Grupo</th><th>Pedido</th><th></th></tr>${P.map((p) => `<tr><td>${esc(p.name || '')}<small>${esc(p.email)}${p.phone ? ' · ' + esc(p.phone) : ''}</small></td><td>${p.comprou ? '<span class="st pago">comprou</span>' : '<span class="st trial">testou e baixou</span>'}${p.exportou_at ? `<small>baixou ${dt(p.exportou_at)}</small>` : ''}</td><td>${quando(p)}</td>
+      <td style="white-space:nowrap"><a class="btn sm ghost" href="${wa(p)}" target="_blank" rel="noopener" data-wa="${p.id}">WhatsApp</a> <button class="btn sm ghost" data-copia="${p.id}">Copiar link</button></td></tr>`).join('')}</table>` : '<p class="sub">Ainda ninguém comprou ou baixou um vídeo.</p>'}</div></div></section>`;
+  contar($('depoPedir'));
+  const P2 = Object.fromEntries(P.map((p) => [p.id, p]));
+  $('depoPedir').querySelectorAll('[data-wa]').forEach((a) => (a.onclick = () => { api('depo-marcar', { id: +a.dataset.wa }).then(() => setTimeout(loadDepo, 800)); }));
+  $('depoPedir').querySelectorAll('[data-copia]').forEach((b) => (b.onclick = async () => { const p = P2[b.dataset.copia]; try { await navigator.clipboard.writeText(p.whats); toast('Mensagem com o link copiada.'); } catch { prompt('Copie a mensagem:', p.whats); } }));
+  $('depoBonus').onchange = async (e) => { const r = await api('config-salvar', { depo_bonus: e.target.checked ? '1' : '0' }); toast(r.ok ? 'Salvo.' : r.error); };
+  $('depoPrevia').onclick = async () => {
+    const v = await api('depo-previa'); if (!v.ok) return toast(v.error);
+    const bloco = (t, x) => `<h3 style="margin:14px 0 6px">${t}</h3><p class="sub">Assunto: <b>${esc(x.assunto)}</b></p><iframe style="width:100%;height:430px;border:1px solid var(--line);border-radius:14px;background:#050506" srcdoc="${esc(x.html)}"></iframe><p class="sub" style="margin-top:8px">WhatsApp:</p><pre style="white-space:pre-wrap;background:rgba(255,255,255,.04);padding:12px;border-radius:12px;font:13px/1.5 inherit">${esc(x.whats)}</pre>`;
+    modal(`<h2>Como chega o pedido</h2>${bloco('Para quem comprou', v.comprador)}${bloco('Para quem testou e baixou', v.testou)}<button class="btn sm ghost" data-fechar>Fechar</button>`);
+  };
+  $('depoEnviar').onclick = async (ev) => {
+    if (!confirm(`Mandar o pedido de depoimento por e-mail para ${c.a_pedir} pessoa(s)? Cada uma recebe uma vez só.`)) return;
+    ev.target.disabled = true; toast('Enviando…');
+    const r = await api('depo-pedir', {}); toast(r.ok ? `Enviados: ${r.enviados}. Pulados: ${r.pulados}.` : r.error); loadDepo();
+  };
+  // recebidos
+  const arq = (d, f) => { const u = `/api/admin.php?a=depo-arquivo&id=${d.id}&tipo=${f.tipo}`; const vid = /^(mp4|mov|m4v|webm|3gp|hevc)$/.test(f.ext), aud = /^(m4a|mp3|wav|aac)$/.test(f.ext);
+    return `<div class="dpa"><small>${esc(j.tipos[f.tipo] || f.tipo)} · ${(f.tam / 1048576).toFixed(1)} MB${+f.recebido < +f.tam ? ' · incompleto' : ''}</small>${vid ? `<video src="${u}" controls playsinline preload="metadata"></video>` : aud ? `<audio src="${u}" controls preload="none"></audio>` : `<img src="${u}" alt="">`}<a href="${u}&baixar=1" class="btn sm ghost">Baixar</a></div>`; };
+  const L = j.items;
+  $('depoLista').innerHTML = `<section class="bloco"><div class="bh"><span class="tag g">💬 RECEBIDOS</span><small>${L.length} depoimento${L.length === 1 ? '' : 's'}. Só use nas redes o que tem ✅ autorização.</small></div>${L.length ? L.map((d) => { const s = DEPO_ST[d.status] || ['', d.status];
+    return `<div class="glass dpo"><div class="ch"><b>${esc(d.nome || d.email)}${d.instagram ? ` <a href="https://instagram.com/${esc(d.instagram)}" target="_blank" rel="noopener" style="color:var(--y)">@${esc(d.instagram)}</a>` : ''} ${d.nota ? '<span style="color:var(--y)">' + '★'.repeat(+d.nota) + '</span>' : ''}</b><span class="acts"><span class="st ${s[0]}">${s[1]}</span>
+      <select data-st="${d.id}">${['novo', 'aprovado', 'usado', 'recusado'].map((k) => `<option value="${k}" ${d.status === k ? 'selected' : ''}>${DEPO_ST[k][1]}</option>`).join('')}</select><button class="btn sm ghost" data-del="${d.id}">Apagar</button></span></div>
+      <p style="font-size:16px;line-height:1.5;margin:6px 0">“${esc(d.texto)}”</p>
+      <p class="sub">${dt(d.created_at)} · ${esc(d.email)}${d.cidade ? ' · ' + esc(d.cidade) : ''} · ${+d.aut_imagem ? '✅ autorizou usar nas redes' + (+d.aut_nome ? ' com nome e @' : ' (sem mostrar o nome)') : '🔒 NÃO autorizou uso público'}${+d.bonus ? ' · 🎁 ganhou +1 vídeo' : ''}</p>
+      ${d.arquivos.length ? `<div class="dpas">${d.arquivos.map((f) => arq(d, f)).join('')}</div>` : ''}</div>`; }).join('') : '<div class="vigia"><b>Nenhum depoimento ainda.</b><small>Quando alguém mandar, aparece aqui e chega um e-mail para os administradores.</small></div>'}</section>`;
+  $('depoLista').querySelectorAll('[data-st]').forEach((x) => (x.onchange = async () => { await api('depo-status', { id: +x.dataset.st, status: x.value }); loadDepo(); }));
+  $('depoLista').querySelectorAll('[data-del]').forEach((b) => (b.onclick = async () => { if (!confirm('Apagar este depoimento e os vídeos dele?')) return; await api('depo-apagar', { id: +b.dataset.del }); loadDepo(); }));
+  const novos = L.filter((d) => d.status === 'novo').length; $('depoBadge').hidden = !novos; $('depoBadge').textContent = novos;
+}
 
 // ---------- afiliados ----------
 async function loadAfiliados() {
