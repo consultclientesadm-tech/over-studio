@@ -12,8 +12,6 @@ if (PHP_SAPI !== 'cli') {
 }
 $r = run_funnel(in_array('--agora', $argv ?? [], true));
 try { $r['convite_afiliado'] = run_af_convite(in_array('--agora', $argv ?? [], true))['enviados']; } catch (Throwable $e) { $r['convite_afiliado'] = 'erro: ' . $e->getMessage(); }
-// uma vez só (2026-11-13): devolve o vídeo do teste para quem perdeu por erro do app
-try { if (!setting('testes_devolvidos_v1')) { $n = count(testes_perdidos(true)); set_setting('testes_devolvidos_v1', now() . ' · ' . $n); $r['testes_devolvidos'] = $n; } } catch (Throwable $e) { $r['testes_devolvidos'] = 'erro: ' . $e->getMessage(); }
 set_setting('cron_last', now());
 // LGPD: não guarda dado além do necessário (prazos na Política de privacidade)
 try {

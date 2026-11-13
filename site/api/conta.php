@@ -132,13 +132,13 @@ switch ($a) {
     $kind = arg('tipo') === 'audio' ? 'audio' : 'video';
     $db = db();
     $db->prepare('INSERT INTO usage (user_id, kind, mb, created_at) VALUES (?, ?, ?, ?)')->execute([$u['id'], $kind, (float)arg('mb', 0), now()]);
-    // o vídeo do teste só é descontado quando abre no estúdio (ação "consumir"); se der erro no meio, a pessoa não perde o teste
+    // o vídeo do teste só é descontado quando a pessoa baixa o vídeo ou o áudio pronto (ação "consumir"); se der erro no meio, a pessoa não perde o teste
     $db->prepare('UPDATE users SET videos_used = videos_used + 1' . ($acc['paid'] ? '' : ', trial_hold = 1') . ', last_seen = ? WHERE id = ?')->execute([now(), $u['id']]);
     $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
     json_out(['ok' => true, 'user' => public_user($u), 'restam_depois' => $acc['paid'] ? null : max(0, (int)$u['trial_left'] - 1)]);
   }
 
-  case 'consumir': { // o app chama quando o vídeo abriu no estúdio: aí sim desconta o vídeo do teste grátis
+  case 'consumir': { // o app chama quando a pessoa baixa o vídeo ou o áudio pronto: aí sim desconta o vídeo do teste grátis
     require_post();
     $u = current_user();
     if (!$u) fail('Entre na sua conta.', 401);

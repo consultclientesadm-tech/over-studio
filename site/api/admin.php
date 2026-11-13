@@ -156,7 +156,7 @@ switch ($a) {
 
   case 'testes-perdidos': { // quem perdeu o teste por erro do app; POST com devolver=1 devolve 1 vídeo para cada um
     $dev = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (int)arg('devolver') === 1;
-    $r = testes_perdidos($dev);
+    $r = testes_perdidos($dev, $dev && (int)arg('avisar') === 1);
     json_out(['ok' => true, 'devolvidos' => $dev ? count($r) : 0, 'total' => count($r), 'items' => array_map(fn($x) => ['nome' => $x['name'], 'email' => $x['email'], 'desde' => $x['created_at']], $r)]);
   }
 

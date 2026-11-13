@@ -207,7 +207,6 @@ async function start(f, tries = 1) {
     note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
     ev('abriu', { seg: Math.round((performance.now() - t0) / 1000), dur: Math.round(state.duration || 0), mb: Math.round(f.size / 1048576) });
-    if (window.scOk) window.scOk();
     if (state.cortado) toast(`Seu vídeo tem ${fmt(state.cortado)}. Usei os primeiros ${MAX_SEC / 60} minutos (o limite por vídeo). Se quiser outro trecho, corte no celular e suba de novo.`, 9000);
     endRun();
   } catch (e) {
@@ -750,12 +749,12 @@ $('exportBtn').onclick = async () => {
     a.download = `${(file.name || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.${out.ext}`;
     $('readyInfo').textContent = `${out.width} × ${out.height} · ${out.ext.toUpperCase()} · ${Math.max(1, Math.round(out.blob.size / 1048576))} MB, com o som e a cor que você escolheu.`;
     $('ready').hidden = false; $('ready').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    toast('Vídeo pronto!'); ev('exportou', { mb: Math.round(out.blob.size / 1048576), w: out.width, h: out.height, ext: out.ext });
+    toast('Vídeo pronto!'); if (window.scOk) window.scOk(); ev('exportou', { mb: Math.round(out.blob.size / 1048576), w: out.width, h: out.height, ext: out.ext });
   } catch (e) { console.error(e); ev('erro', { etapa: 'exportar', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 7000); }
   $('exportBtn').disabled = false;
   seek(0);
 };
-$('dlWav').onclick = () => { const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = `${((file && file.name) || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.wav`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
+$('dlWav').onclick = () => { if (window.scOk) window.scOk(); ev('exportou', { audio: 1 }); const a = document.createElement('a'); const u = URL.createObjectURL(cover.toWav(tracks[mastered ? 'master' : 'raw'], cover.SR)); a.href = u; a.download = `${((file && file.name) || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.wav`; a.click(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
 
 window.studio = { audio: () => ({ currentTime: aTime() }), get state() { return state; }, get mastered() { return mastered; }, get tuned() { return tuned || null; }, cover, select: (i) => editor.select(i), go, get editor() { return editor; } };
 
@@ -787,6 +786,7 @@ addEventListener('unhandledrejection', (e) => { const m = String(e.reason?.messa
 
 // Só a voz / só a música (WAV), no mesmo trecho do vídeo final
 function dlStem(ch, nome) {
+  if (window.scOk) window.scOk(); ev('exportou', { audio: 1, stem: nome });
   const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
   const a = Math.round(s * cover.SR), b = Math.min(ch[0].length, Math.round(e * cover.SR));
   const cut = [0, 1].map((c) => (ch[c] || ch[0]).slice(a, b));

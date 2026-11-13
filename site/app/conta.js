@@ -137,13 +137,13 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       if (j.paywall) { me = j.user; render(); paywall(); return false; }
       if (j.user) { me = j.user; render(); }
       const rd = j.restam_depois;
-      if (me.trial && !me.paid) toast('Teste grátis', rd ? `Você ainda tem ${rd} vídeo${rd > 1 ? 's' : ''} grátis depois deste.` : 'Este é o seu vídeo grátis. Se der algum erro no meio, ele não é descontado.');
+      if (me.trial && !me.paid) toast('Teste grátis', rd ? `Você ainda tem ${rd} vídeo${rd > 1 ? 's' : ''} grátis depois deste.` : 'Este é o seu vídeo grátis. Ele só é descontado quando você baixar o vídeo pronto.');
       return true;
     } catch (e) { return e.message !== 'login'; } // sem internet: deixa usar (o processamento é no aparelho)
   };
 
-  // o vídeo abriu no estúdio: agora sim desconta o vídeo do teste grátis
-  window.scOk = async () => { try { const j = await api('consumir', {}); if (j.user) { me = j.user; render(); } } catch (e) {} };
+  // baixou o vídeo (ou o áudio) pronto: agora sim desconta o vídeo do teste grátis
+  window.scOk = async () => { try { const j = await api('consumir', {}); if (j.user) { me = j.user; render(); if (me.trial && !me.paid && !me.can_use) setTimeout(() => { if (!document.querySelector('.sc-ov')) paywall(); }, 6000); } } catch (e) {} };
 
   // ---------- avisos ----------
   function toast(title, body, onClick) {

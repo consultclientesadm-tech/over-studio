@@ -259,14 +259,24 @@ function app_events_db(): PDO {
   if (!$ok) { $db->exec('CREATE TABLE IF NOT EXISTS app_events (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, kind TEXT NOT NULL, data TEXT, ua TEXT, created_at TEXT NOT NULL); CREATE INDEX IF NOT EXISTS app_events_day ON app_events(created_at)'); $ok = true; }
   return $db;
 }
-// Quem perdeu o vídeo do teste por erro do app (o teste era descontado antes de processar, até 2026-11-13):
-// está em teste, sem vídeo restante, tentou (tem "inicio" ou "erro" no diário) e o vídeo nunca abriu no estúdio.
-function testes_perdidos(bool $devolver = false): array {
+// Quem perdeu o vídeo do teste (até 2026-11-13 o teste era descontado antes de processar): está em teste,
+// tentou usar (tem "inicio" ou "erro" no diário) e nunca baixou o vídeo/áudio pronto. Ainda não foi avisado.
+function testes_perdidos(bool $devolver = false, bool $avisar = false): array {
   $db = db(); app_events_db();
-  $rows = $db->query("SELECT u.id, u.name, u.email, u.created_at FROM users u WHERE u.status = 'trial' AND u.trial_left = 0 AND u.trial_hold = 0
+  $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
+  if (!in_array('teste_avisado_at', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN teste_avisado_at TEXT');
+  $rows = $db->query("SELECT u.* FROM users u WHERE u.status = 'trial' AND u.teste_avisado_at IS NULL AND u.created_at < '2026-11-13 02:00:00'
     AND EXISTS (SELECT 1 FROM app_events e WHERE e.user_id = u.id AND e.kind IN ('inicio', 'erro'))
-    AND NOT EXISTS (SELECT 1 FROM app_events e WHERE e.user_id = u.id AND e.kind IN ('abriu', 'pronto', 'exportou'))")->fetchAll();
-  if ($devolver && $rows) { $q = $db->prepare('UPDATE users SET trial_left = 1 WHERE id = ?'); foreach ($rows as $r) $q->execute([$r['id']]); }
+    AND NOT EXISTS (SELECT 1 FROM app_events e WHERE e.user_id = u.id AND e.kind = 'exportou')")->fetchAll();
+  if ($devolver) {
+    $q = $db->prepare('UPDATE users SET trial_left = MAX(trial_left, 1), trial_hold = 0' . ($avisar ? ', teste_avisado_at = ?' : '') . ' WHERE id = ?');
+    foreach ($rows as $u) {
+      $q->execute($avisar ? [now(), $u['id']] : [$u['id']]);
+      if ($avisar) try { funnel_send($u, 'teste-devolvido', ['assunto' => '{nome}, desculpa! Seu teste grátis voltou', 'titulo' => 'Desculpa pelo erro. Seu teste voltou!',
+        'texto' => '<p>Quando você testou o Studio Cover, o app deu um erro e o seu vídeo grátis foi descontado sem você ver o resultado. Isso foi falha nossa, e a gente pede desculpas.</p><p>Já corrigimos e <b>devolvemos o seu vídeo grátis</b>. Agora ele só é descontado quando você baixar o vídeo pronto.</p><p>Dica: abra pelo <b>Safari</b> (iPhone) ou <b>Chrome</b> (Android), não pelo navegador do Instagram, e use um vídeo de até 3 minutos.</p>',
+        'botao' => 'Testar de novo', 'link' => '{app}', 'aviso' => 'Desculpa pelo erro! Seu vídeo grátis voltou. Toque para testar de novo.']); } catch (Throwable $e) {}
+    }
+  }
   return $rows;
 }
 // aparelho legível a partir do user agent
