@@ -434,3 +434,32 @@ body, .app, .app * { -webkit-user-select: none; user-select: none; -webkit-touch
 .reqcard .reqmeu { margin: 10px 0 0; font-weight: 700; }
 .reqcard .reqmeu:empty { display: none; }
 .reqcard .reqmeu.ok { color: #2ee59d; } .reqcard .reqmeu.fraco { color: #ffd400; } .reqcard .reqmeu.incompativel { color: #ff8a95; }
+
+/* Dupla, trio: uma aba por voz (afina só ela) e o mudo de cada voz (para ouvir quem é quem) */
+.voicebar { display: flex; flex-direction: column; gap: 6px; }
+.voicebar .vbinfo { font-size: 12px; color: var(--mut); }
+.voicebar .vbinfo b { color: var(--y); }
+.voicebar .vbtabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: stretch; }
+.vtab { display: flex; border: 1px solid var(--line2); border-radius: 12px; overflow: hidden; background: #111116; }
+.vtab.on { border-color: var(--y); box-shadow: var(--glow); }
+.vtab .vsel { border: 0; background: transparent; padding: 6px 12px; text-align: left; cursor: pointer; font-weight: 700; font-size: 13px; line-height: 1.2; }
+.vtab .vsel small { display: block; font-weight: 500; font-size: 11px; color: var(--mut); }
+.vtab.on .vsel { color: var(--y); }
+.vtab .vmute { border: 0; border-left: 1px solid var(--line2); background: transparent; width: 42px; min-height: 40px; cursor: pointer; font-size: 16px; }
+.vtab .vmute.on { background: rgba(255, 77, 94, .16); }
+.vtab.muted .vsel { opacity: .55; }
+.voicebar .vjoin { margin-left: auto; align-self: center; min-height: 34px; }
+.voicevols:empty { display: none; }
+.voicevols .row span small { color: var(--mut); font-weight: 500; }
+@media (max-width: 480px) { .vtab .vsel { padding: 5px 9px; font-size: 12px; } .voicebar .vjoin { margin-left: 0; } }
+#studio.pop .voicebar { order: -1; }
+#studio.pop.multi .step[data-step="2"].on { grid-template-rows: auto auto auto minmax(0, 1fr) auto auto auto; }
+@media (max-width: 700px) {
+  .voicebar { gap: 4px; }
+  .voicebar .vbtabs { flex-wrap: nowrap; gap: 5px; }
+  .vtab .vsel { padding: 4px 10px; }
+  .vtab .vmute { width: 36px; min-height: 32px; font-size: 14px; }
+  .voicebar .vjoin { margin-left: auto; min-height: 30px; padding: 0 9px; font-size: 11px; white-space: nowrap; }
+}
+/* com as abas das vozes, o painel de notas continua com o espaço que sobra */
+#studio.multi:not(.pop) .step[data-step="2"].on { grid-template-rows: auto auto auto minmax(140px, 1fr) auto auto auto; }
