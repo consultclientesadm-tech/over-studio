@@ -33,6 +33,10 @@ function erro_sig(string $kind, array $d): array {
   return ['sig' => substr(sha1($kind . '|' . mb_strtolower($etapa) . '|' . $n), 0, 16), 'etapa' => $etapa, 'msg' => mb_substr($msg, 0, 160)];
 }
 
+// "Script error." sem arquivo e outros erros marcados como externo vêm do navegador do Instagram, tradutores ou extensões.
+// O app ignora e continua funcionando, então a vistoria não abre, não reabre e não mostra.
+function erro_de_fora(array $d): bool { return mb_strtolower(trim((string)($d['etapa'] ?? ''))) === 'externo'; }
+
 function erro_aparelho(array $e, array $d): string {
   $ap = ua_short((string)$e['ua']);
   if (!empty($d['modelo'])) $ap = preg_replace('/^[^·]+/', mb_substr((string)$d['modelo'], 0, 40) . ' ', $ap, 1);
@@ -58,6 +62,7 @@ function erros_vigia(bool $forcar = false): array {
   $get = $db->prepare('SELECT * FROM erro_grupos WHERE sig = ?');
   foreach ($q->fetchAll() as $e) {
     $lidos++; $maxId = max($maxId, (int)$e['id']); $d = json_decode((string)$e['data'], true) ?: [];
+    if (erro_de_fora($d)) continue; // erro de fora do app (navegador do Instagram, tradutor): não abre nem reabre
     $s = erro_sig($e['kind'], $d);
     $get->execute([$s['sig']]); $g = $get->fetch();
     if (!$g) {
@@ -73,6 +78,7 @@ function erros_vigia(bool $forcar = false): array {
     }
   }
   set_setting('vigia_erros_id', (string)$maxId);
+  $db->exec("UPDATE erro_grupos SET status = 'ignorado', resolvido_em = COALESCE(resolvido_em, datetime('now', 'localtime')), resolvido_por = 'auto' WHERE LOWER(etapa) = 'externo' AND status <> 'ignorado'");
   // erro que ficou 24h sem acontecer passa sozinho para resolvido (se voltar, avisa VOLTOU)
   $db->prepare("UPDATE erro_grupos SET status = 'resolvido', resolvido_em = ?, resolvido_por = 'auto' WHERE status = 'aberto' AND ultimo < ?")->execute([now(), date('Y-m-d H:i:s', time() - 86400)]);
 
@@ -81,7 +87,8 @@ function erros_vigia(bool $forcar = false): array {
   $q = $db->prepare("SELECT e.user_id, e.kind, e.data, e.ua, e.created_at, u.email FROM app_events e LEFT JOIN users u ON u.id = e.user_id WHERE e.created_at >= ? AND e.kind IN ('erro', 'fechou')"); $q->execute([$h24]);
   $st = [];
   foreach ($q->fetchAll() as $e) {
-    $d = json_decode((string)$e['data'], true) ?: []; $s = erro_sig($e['kind'], $d); $k = $s['sig'];
+    $d = json_decode((string)$e['data'], true) ?: []; if (erro_de_fora($d)) continue;
+    $s = erro_sig($e['kind'], $d); $k = $s['sig'];
     $st[$k] ??= ['h1' => 0, 'h24' => 0, 'pessoas' => [], 'pessoas_h1' => [], 'aparelhos' => [], 'emails' => []];
     $st[$k]['h24']++; $st[$k]['pessoas'][(int)$e['user_id']] = 1;
     $ap = erro_aparelho($e, $d); $st[$k]['aparelhos'][$ap] = ($st[$k]['aparelhos'][$ap] ?? 0) + 1;
@@ -159,14 +166,15 @@ function erros_lista(): array {
   $q = $db->prepare("SELECT e.user_id, e.kind, e.data, e.ua, e.created_at FROM app_events e WHERE e.created_at >= ? AND e.kind IN ('erro', 'fechou')"); $q->execute([$h24]);
   $st = [];
   foreach ($q->fetchAll() as $e) {
-    $d = json_decode((string)$e['data'], true) ?: []; $k = erro_sig($e['kind'], $d)['sig'];
+    $d = json_decode((string)$e['data'], true) ?: []; if (erro_de_fora($d)) continue;
+    $k = erro_sig($e['kind'], $d)['sig'];
     $st[$k] ??= ['h1' => 0, 'h24' => 0, 'pessoas' => [], 'pagos' => [], 'aparelhos' => []];
     $st[$k]['h24']++; if ($e['created_at'] >= $h1) $st[$k]['h1']++; $st[$k]['pessoas'][(int)$e['user_id']] = 1;
     if (isset(pagos_ids()[(int)$e['user_id']])) $st[$k]['pagos'][(int)$e['user_id']] = 1;
     $ap = erro_aparelho($e, $d); $st[$k]['aparelhos'][$ap] = ($st[$k]['aparelhos'][$ap] ?? 0) + 1;
   }
   $out = [];
-  foreach ($db->query('SELECT * FROM erro_grupos ORDER BY ultimo DESC LIMIT 200')->fetchAll() as $g) {
+  foreach ($db->query("SELECT * FROM erro_grupos WHERE LOWER(etapa) <> 'externo' ORDER BY ultimo DESC LIMIT 200")->fetchAll() as $g) {
     $s = $st[$g['sig']] ?? null;
     if (!$s && $g['status'] !== 'aberto') continue;
     if (!$s && $g['ultimo'] < date('Y-m-d H:i:s', time() - 7 * 86400)) continue;
