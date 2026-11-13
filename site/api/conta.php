@@ -139,13 +139,13 @@ switch ($a) {
     $kind = arg('tipo') === 'audio' ? 'audio' : 'video';
     $db = db();
     $db->prepare('INSERT INTO usage (user_id, kind, mb, created_at) VALUES (?, ?, ?, ?)')->execute([$u['id'], $kind, (float)arg('mb', 0), now()]);
-    // o vídeo do teste só é descontado quando a pessoa baixa o vídeo ou o áudio pronto (ação "consumir"); se der erro no meio, a pessoa não perde o teste
+    // o vídeo do teste só é descontado quando abre no estúdio (ação "consumir"); se der erro no meio, a pessoa não perde o teste
     $db->prepare('UPDATE users SET videos_used = videos_used + 1' . ($acc['paid'] ? '' : ', trial_hold = 1') . ', last_seen = ? WHERE id = ?')->execute([now(), $u['id']]);
     $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
     json_out(['ok' => true, 'user' => public_user($u), 'restam_depois' => $acc['paid'] ? null : max(0, (int)$u['trial_left'] - 1)]);
   }
 
-  case 'consumir': { // o app chama quando a pessoa baixa o vídeo ou o áudio pronto: aí sim desconta o vídeo do teste grátis
+  case 'consumir': { // o app chama quando o vídeo abre no estúdio (a pessoa já vê e ouve o antes e depois): aí desconta o vídeo do teste grátis
     require_post();
     $u = current_user();
     if (!$u) fail('Entre na sua conta.', 401);
@@ -159,12 +159,26 @@ switch ($a) {
     json_out(['ok' => true, 'user' => public_user($u)]);
   }
 
+  case 'baixar': { // a pessoa tocou em baixar o vídeo/áudio pronto: no teste só baixa quem comprou (ou quem ganhou um download de presente)
+    require_post();
+    $u = current_user();
+    if (!$u) fail('Entre na sua conta.', 401);
+    $acc = access($u);
+    if ($acc['paid']) json_out(['ok' => true, 'user' => public_user($u)]);
+    if ((int)($u['baixar_livre'] ?? 0) > 0 && !$acc['blocked']) {
+      db()->prepare('UPDATE users SET baixar_livre = MAX(0, baixar_livre - 1) WHERE id = ?')->execute([$u['id']]);
+      $q = db()->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
+      json_out(['ok' => true, 'presente' => true, 'user' => public_user($u)]);
+    }
+    json_out(['ok' => false, 'bloqueado' => true, 'user' => public_user($u)]);
+  }
+
   case 'evento': { // diário do app: o que aconteceu com cada vídeo (sem o vídeo, só números e mensagens de erro)
     require_post();
     $u = current_user(); if (!$u) json_out(['ok' => true]);
     throttle('ev:' . $u['id'], 120, 3600);
     $k = preg_replace('/[^a-z]/', '', (string)arg('k'));
-    if (!in_array($k, ['inicio', 'abriu', 'pronto', 'exportou', 'erro', 'fechou'], true)) json_out(['ok' => true]);
+    if (!in_array($k, ['inicio', 'abriu', 'pronto', 'exportou', 'erro', 'fechou', 'quisbaixar', 'liberou'], true)) json_out(['ok' => true]);
     $d = arg('d', []); $d = is_array($d) ? array_slice($d, 0, 12, true) : [];
     foreach ($d as $i => $v) $d[$i] = is_scalar($v) ? mb_substr((string)$v, 0, 200) : '';
     app_events_db()->prepare('INSERT INTO app_events (user_id, kind, data, ua, created_at) VALUES (?, ?, ?, ?, ?)')

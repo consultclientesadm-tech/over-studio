@@ -53,14 +53,14 @@ function funnel_welcome(array $u): void {
   $n = (int)setting('trial_videos');
   $vid = $n === 1 ? '1 vídeo' : "$n vídeos";
   funnel_send($u, 'boas-vindas', ['assunto' => 'Bem-vindo ao Studio Cover, {nome}!', 'titulo' => 'Seu teste grátis está liberado',
-    'texto' => "<p>Você tem <b>$vid</b> para testar o Studio Cover completo: separar a voz, afinar, mixar, cor de cinema e exportar.</p><p>Dica: escolha um cover que você gravou e achou que \"não ficou bom\". É nele que a diferença aparece.</p>",
+    'texto' => "<p>Você tem <b>$vid</b> para testar o Studio Cover completo: separar a voz, afinar, mixar e colocar cor de cinema. Você vê e ouve o antes e depois ali mesmo, no app.</p><p>Gostou do resultado? É só liberar o acesso completo e baixar o mesmo vídeo na hora, sem refazer.</p><p>Dica: escolha um cover que você gravou e achou que \"não ficou bom\". É nele que a diferença aparece.</p>",
     'botao' => 'Abrir o Studio Cover', 'link' => '{app}', 'aviso' => "Você tem $vid grátis. " . ($n === 1 ? 'Suba o seu!' : 'Suba o primeiro!')]);
 }
 
 function funnel_trial_over(array $u): void {
   funnel_send($u, 'teste-acabou', ['assunto' => '{nome}, seu teste grátis terminou', 'titulo' => 'Gostou do resultado?',
-    'texto' => '<p>Você ouviu como a sua voz fica afinada e mixada. Sem o Studio Cover, o próximo vídeo volta a ser o áudio cru do celular: a nota que escapa, a voz embolada na base.</p><p><b>Amanhã você vai postar mais um cover desafinado, ou vai postar com som de estúdio?</b></p><p>Libere o acesso completo e faça quantos covers quiser.</p>',
-    'botao' => 'Liberar meu acesso completo', 'link' => '{checkout}', 'aviso' => 'Seu próximo cover está travado. Libere o acesso completo.']);
+    'texto' => '<p>Você ouviu como a sua voz fica afinada e mixada. Sem o Studio Cover, o próximo vídeo volta a ser o áudio cru do celular: a nota que escapa, a voz embolada na base.</p><p><b>Amanhã você vai postar mais um cover desafinado, ou vai postar com som de estúdio?</b></p><p>O seu vídeo do teste continua guardado no app, no mesmo aparelho. Libere o acesso completo, baixe ele pronto e faça quantos covers quiser.</p>',
+    'botao' => 'Liberar e baixar meu cover', 'link' => '{checkout}', 'aviso' => 'Seu próximo cover está travado. Libere o acesso completo.']);
 }
 
 // pagou: manda o link para criar a senha (ou avisa que liberou, se já tem senha)

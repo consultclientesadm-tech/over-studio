@@ -65,7 +65,7 @@ function depo_email(array $u): array {
     'titulo' => 'Me conta como ficou o seu vídeo',
     'html' => '<p>Você testou o Studio Cover e baixou o seu vídeo pronto. Queria muito saber: o que achou do resultado?</p>'
       . '<p>Leva 2 minutos: mande o vídeo que o app entregou, o original (se ainda estiver na galeria) e uma frase sincera, gostando ou não.</p>'
-      . ($bonus ? '<p>Como agradecimento, você ganha <b>mais 1 vídeo grátis</b> no app assim que enviar. ' : '<p>')
+      . ($bonus ? '<p>Como agradecimento, você ganha <b>mais 1 vídeo grátis, já liberado para baixar</b>, assim que enviar. ' : '<p>')
       . 'E, se você autorizar, o seu cover aparece no <b>@studiocoveroficial</b> com você marcado.</p>'
       . '<p>Alguma coisa não ficou boa? Responda este e-mail e me conte. É assim que a gente melhora.</p>',
     'botao' => 'Mandar meu antes e depois'];
@@ -73,7 +73,7 @@ function depo_email(array $u): array {
 function depo_whats(array $u): string {
   $nome = depo_primeiro_nome($u); $link = depo_link($u, 'whatsapp');
   if ((int)($u['comprou'] ?? 0)) return "Oi, $nome! Aqui é o Leonardo, do Studio Cover. Obrigado por confiar na gente logo no começo 🙏\n\nPosso te pedir um favor rápido? Manda pra gente o seu antes e depois (o vídeo original e o que o app entregou) e uma frase sincera do que achou. Se você autorizar, a gente posta no @studiocoveroficial com você marcado.\n\nÉ por aqui, leva 2 minutos: $link";
-  return "Oi, $nome! Aqui é o Leonardo, do Studio Cover. Vi que você testou o app e baixou o seu cover. O que achou do resultado?\n\nSe puder, manda o seu antes e depois e uma frase sincera por este link (leva 2 minutos)" . (setting('depo_bonus') !== '0' ? ', e você ganha mais 1 vídeo grátis no app' : '') . ": $link";
+  return "Oi, $nome! Aqui é o Leonardo, do Studio Cover. Vi que você testou o app e baixou o seu cover. O que achou do resultado?\n\nSe puder, manda o seu antes e depois e uma frase sincera por este link (leva 2 minutos)" . (setting('depo_bonus') !== '0' ? ', e você ganha mais 1 vídeo grátis no app, liberado para baixar' : '') . ": $link";
 }
 
 function depo_pedir(array $ids = []): array {

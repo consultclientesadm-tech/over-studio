@@ -82,7 +82,7 @@ switch ($a) {
 }
 fail('Ação desconhecida.', 404);
 
-// terminou: marca como novo, dá o vídeo de presente (quem está no teste e mandou vídeo, 1 vez só) e avisa os administradores
+// terminou: marca como novo, dá o vídeo de presente (com download liberado) (quem está no teste e mandou vídeo, 1 vez só) e avisa os administradores
 function depo_concluir(int $id, array $u): bool {
   $db = depo_db();
   $db->prepare("UPDATE depoimentos SET status = 'novo', done_at = ? WHERE id = ?")->execute([now(), $id]);
@@ -91,9 +91,10 @@ function depo_concluir(int $id, array $u): bool {
   $q = $db->prepare('SELECT COUNT(*) FROM depoimentos WHERE user_id = ? AND bonus = 1'); $q->execute([$u['id']]);
   $bonus = setting('depo_bonus') !== '0' && $u['status'] === 'trial' && $temVideo && !(int)$q->fetchColumn();
   if ($bonus) {
-    $db->prepare('UPDATE users SET trial_left = trial_left + 1 WHERE id = ?')->execute([$u['id']]);
+    // presente: mais 1 vídeo no teste E liberado para baixar (no teste comum o download é só para quem compra)
+    db()->prepare('UPDATE users SET trial_left = trial_left + 1, baixar_livre = baixar_livre + 1 WHERE id = ?')->execute([$u['id']]);
     $db->prepare('UPDATE depoimentos SET bonus = 1 WHERE id = ?')->execute([$id]);
-    notify((int)$u['id'], 'Obrigado pelo seu antes e depois! 🎁', 'Você ganhou mais 1 vídeo grátis no Studio Cover.', site_url() . '/app/');
+    notify((int)$u['id'], 'Obrigado pelo seu antes e depois! 🎁', 'Você ganhou mais 1 vídeo grátis no Studio Cover, já liberado para baixar.', site_url() . '/app/');
   }
   try {
     $est = $d['nota'] ? str_repeat('★', (int)$d['nota']) : '';

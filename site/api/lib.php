@@ -102,6 +102,12 @@ SQL);
   if (!in_array('aceite_ver', $cols, true)) $db->exec("ALTER TABLE users ADD COLUMN aceite_ver TEXT NOT NULL DEFAULT ''");
   // teste grátis só é gasto quando o vídeo abre no estúdio (2026-11-13): marca o vídeo "em andamento" aqui
   if (!in_array('trial_hold', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN trial_hold INTEGER NOT NULL DEFAULT 0');
+  // no teste a pessoa vê e ouve o antes e depois, mas só baixa quem comprou (2026-11-13). Exceção: download liberado de presente (depoimento)
+  if (!in_array('baixar_livre', $cols, true)) {
+    $db->exec('ALTER TABLE users ADD COLUMN baixar_livre INTEGER NOT NULL DEFAULT 0');
+    // quem já ganhou o vídeo de presente pelo depoimento (antes desta regra) também ganha o download liberado
+    try { $db->exec("UPDATE users SET baixar_livre = 1 WHERE status = 'trial' AND id IN (SELECT user_id FROM depoimentos WHERE bonus = 1)"); } catch (Throwable $e) {}
+  }
 }
 
 // ---------- configurações editáveis no painel ----------
@@ -255,7 +261,7 @@ function checkout_url(?array $u = null): string {
 }
 function public_user(array $u): array {
   return ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'], 'status' => $u['status'], 'expires_at' => $u['expires_at'],
-    'videos_used' => (int)$u['videos_used'], 'afiliado' => af_e_afiliado((string)$u['email'])] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value')];
+    'videos_used' => (int)$u['videos_used'], 'baixar_livre' => (int)($u['baixar_livre'] ?? 0), 'afiliado' => af_e_afiliado((string)$u['email'])] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value')];
 }
 
 function app_events_db(): PDO {

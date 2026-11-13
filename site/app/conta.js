@@ -43,6 +43,7 @@
 .sc-bar p{flex:1;margin:0;line-height:1.3;transition:opacity .35s}.sc-bar p.f{opacity:0}
 .sc-bar button{flex:none;height:40px;padding:0 16px;border:0;border-radius:30px;background:linear-gradient(180deg,#ffe34d,#ffc400);color:#000;font:900 12px Orbitron,sans-serif;letter-spacing:.05em;cursor:pointer;animation:scp 1.6s ease-in-out infinite}
 @keyframes scp{0%,100%{box-shadow:0 0 0 0 rgba(255,212,0,.6)}50%{box-shadow:0 0 0 9px rgba(255,212,0,0)}}
+.sc-marca{align-self:start;justify-self:end;margin:10px;z-index:4;pointer-events:none;font:700 10.5px 'Space Grotesk',sans-serif;letter-spacing:.08em;color:#ffd400;background:rgba(0,0,0,.55);border:1px solid rgba(255,212,0,.5);border-radius:20px;padding:5px 10px}
 body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 .sc-dor{background:#1a1406;border:1px solid rgba(255,212,0,.35);border-radius:14px;padding:12px 14px;margin:12px 0;color:#ffe9a0;font-weight:600;font-size:14.5px;line-height:1.45}
 .sc-preco{text-align:center;margin:14px 0 0}.sc-preco b{display:block;font:900 30px Orbitron,sans-serif;color:#ffd400;text-shadow:0 0 22px rgba(255,212,0,.35)}.sc-preco small{color:#9a9aa6;font-size:12.5px}
@@ -103,8 +104,8 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       <div class="sc-dor">Amanhã você vai postar mais um cover desafinado... ou vai postar com som de estúdio?</div>
       <ul class="sc-ul"><li>Covers ilimitados, direto do celular</li><li>Afinação natural, sem voz de robô</li><li>Mix e master na hora, sem pagar estúdio</li><li>Cor de cinema e exportação na qualidade original</li></ul>
       ${precoHtml()}<a class="sc-b" href="${esc(url)}" target="_blank" rel="noopener">LIBERAR MEU ACESSO AGORA</a>
-      <p style="font-size:12.5px;text-align:center">O acesso libera sozinho nesta mesma conta (${esc(me.email)}) assim que o pagamento cair.</p>
-      <button class="sc-b2" data-fechar>Agora não</button>`);
+      <p style="font-size:12.5px;text-align:center">O acesso libera sozinho nesta mesma conta (${esc(me.email)}) assim que o pagamento cair. O vídeo que você testou fica guardado neste aparelho e sai pronto para baixar.</p>
+      <button class="sc-b2" data-fechar>Agora não</button>`).el.querySelector('.sc-b').addEventListener('click', vigiaCompra);
   }
   // barra fixa que acompanha quem já usou o teste grátis
   const DORES = ['🔒 Seu próximo cover está travado.', 'Amanhã você vai postar mais um cover desafinado?', 'Aquela nota que escapou não precisa ir para o ar.', 'Estúdio cobra R$ 150 por música. Aqui é ilimitado.', 'Quantos covers vão ficar parados na galeria?'];
@@ -139,13 +140,23 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       if (j.paywall) { me = j.user; render(); paywall(); return false; }
       if (j.user) { me = j.user; render(); }
       const rd = j.restam_depois;
-      if (me.trial && !me.paid) toast('Teste grátis', rd ? `Você ainda tem ${rd} vídeo${rd > 1 ? 's' : ''} grátis depois deste.` : 'Este é o seu vídeo grátis. Ele só é descontado quando você baixar o vídeo pronto.');
+      if (me.trial && !me.paid) toast('Teste grátis', rd ? `Você ainda tem ${rd} vídeo${rd > 1 ? 's' : ''} grátis depois deste.` : 'Este é o seu vídeo grátis: você vê e ouve o antes e depois aqui no app. Para baixar, é só liberar o acesso completo.');
       return true;
     } catch (e) { return e.message !== 'login'; } // sem internet: deixa usar (o processamento é no aparelho)
   };
 
-  // baixou o vídeo (ou o áudio) pronto: agora sim desconta o vídeo do teste grátis
-  window.scOk = async () => { try { const j = await api('consumir', {}); if (j.user) { me = j.user; render(); if (me.trial && !me.paid && !me.can_use) setTimeout(() => { if (!document.querySelector('.sc-ov')) paywall(); }, 6000); } } catch (e) {} };
+  // o vídeo abriu no estúdio (a pessoa já vê e ouve o antes e depois): aqui desconta o vídeo do teste grátis.
+  // Se der erro antes de abrir, a pessoa não perde o teste. No teste ela usa tudo, mas só baixa depois de comprar.
+  window.scOk = async () => { marca(); try { const j = await api('consumir', {}); if (j.user) { me = j.user; render(); } } catch (e) {} };
+  // pessoa no teste (sem compra e sem download de presente): o app guarda o vídeo para ele sair pronto depois da compra
+  window.scTeste = () => !!(me && !me.paid && !(me.baixar_livre > 0) && !liberado);
+  // selo discreto de prévia sobre o vídeo do teste (some quando libera o acesso)
+  function marca() {
+    const v = document.getElementById('viewer'); if (!v) return;
+    let m = document.querySelector('.sc-marca');
+    if (!window.scTeste()) { m?.remove(); return; }
+    if (!m) { m = document.createElement('div'); m.className = 'sc-marca'; m.textContent = 'PRÉVIA · TESTE GRÁTIS'; v.appendChild(m); }
+  }
 
   // vídeo ficou pronto (prévia na tela): quem está no teste já vê a oferta, sem esperar baixar
   window.scPronto = () => {
@@ -153,24 +164,86 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     setTimeout(() => {
       if (document.querySelector('.sc-ov')) return;
       const url = me.checkout_url || '/#comprar';
-      sheet(`<h3>Ficou com som de estúdio 🎧</h3>
-        <p>Essa é a sua voz afinada e mixada, do jeito que vai para o ar. Com o acesso completo, todo cover que você gravar sai assim: sem limite de vídeos, sem pagar estúdio.</p>
-        <ul class="sc-ul"><li>Covers ilimitados, direto do celular</li><li>Afinação natural, sem voz de robô</li><li>Mix, master e cor de cinema na hora</li></ul>
-        ${precoHtml()}<a class="sc-b" href="${esc(url)}" target="_blank" rel="noopener">QUERO TODOS OS MEUS COVERS ASSIM</a>
-        <button class="sc-b2" data-fechar>Primeiro quero baixar este vídeo</button>`);
+      const s = sheet(`<h3>Ficou com som de estúdio 🎧</h3>
+        <p>Essa é a sua voz afinada e mixada, do jeito que vai para o ar. Toque no play e compare o antes e o depois.</p>
+        <p>Para <b>baixar este vídeo</b> e fazer todos os próximos assim, libere o acesso completo: sem limite de vídeos, sem pagar estúdio.</p>
+        <ul class="sc-ul"><li>Baixe este cover na hora, sem refazer</li><li>Covers ilimitados, direto do celular</li><li>Afinação natural, mix, master e cor de cinema</li></ul>
+        ${precoHtml()}<a class="sc-b" href="${esc(url)}" target="_blank" rel="noopener" data-compra>LIBERAR E BAIXAR MEU COVER</a>
+        <button class="sc-b2" data-fechar>Primeiro quero ver o antes e depois</button>`);
+      s.el.querySelector('[data-compra]').addEventListener('click', vigiaCompra);
     }, 9000);
   };
-  // antes de exportar no navegador do Instagram/Facebook: ele costuma não deixar baixar
-  window.scAntesExportar = () => new Promise((res) => {
+  // ---------- baixar: no teste só baixa quem comprou ----------
+  let liberado = false, vigia = null;
+  const ofertaAberta = () => document.querySelector('.sc-ov [data-baixar-oferta]');
+  // a pessoa foi para o checkout: confere o pagamento a cada 5 s (até 30 min) para liberar o download aqui mesmo, sem refazer o vídeo
+  function vigiaCompra() {
+    clearInterval(vigia); const ate = Date.now() + 30 * 60000;
+    vigia = setInterval(async () => {
+      if (Date.now() > ate || !me || me.paid) { clearInterval(vigia); return; }
+      try { const r = await api('me'); if (r.user && r.user.paid) { clearInterval(vigia); me = r.user; pagou(); } } catch (e) {}
+    }, 5000);
+  }
+  // pagamento caiu com o vídeo ainda aberto: libera o download na hora
+  function pagou() {
+    render(); marca();
+    window.scLog && window.scLog('liberou', {});
+    if (ofertaAberta()) return; // a própria oferta troca para o botão de baixar
+    if (document.getElementById('viewer') && document.querySelector('[data-screen="studio"]')) toast('Acesso liberado! 🎉', 'Agora é só tocar em Baixar: o seu vídeo sai na hora.');
+    else if (window.scVideoGuardado) guardadoDepoisDaCompra();
+  }
+  function ofertaBaixar(oQue) {
+    return new Promise((res) => {
+      const url = me.checkout_url || '/#comprar';
+      const s = sheet(`<div data-baixar-oferta><h3>Seu cover está pronto para baixar 🔒</h3>
+        <p>No teste grátis você vê e ouve o antes e depois aqui no app. Para baixar ${oQue} e postar, libere o acesso completo.</p>
+        <ul class="sc-ul"><li>Baixa <b>este mesmo vídeo</b> na hora, sem refazer</li><li>Covers ilimitados por 1 ano, direto do celular</li><li>Afinação natural, mix, master e cor de cinema</li></ul>
+        ${precoHtml()}<a class="sc-b" href="${esc(url)}" target="_blank" rel="noopener" data-compra>LIBERAR E BAIXAR AGORA</a>
+        <p style="font-size:12.5px;text-align:center" data-espera>Depois de pagar, volte para esta tela: o download libera aqui mesmo, sozinho.</p>
+        <button class="sc-b2" data-fechar>Agora não</button></div>`, () => { clearInterval(tick); res(false); });
+      s.el.querySelector('[data-compra]').addEventListener('click', () => { vigiaCompra(); s.el.querySelector('[data-espera]').innerHTML = '⏳ Esperando o pagamento… Pix e cartão liberam em segundos. <b>Não feche esta tela.</b>'; });
+      // pagou com a oferta aberta: troca o conteúdo por um botão de baixar (o toque da pessoa garante o download no iPhone)
+      const tick = setInterval(() => {
+        if (!me || !me.paid) return; clearInterval(tick);
+        const box = s.el.querySelector('[data-baixar-oferta]');
+        box.innerHTML = `<h3>Pagamento confirmado! 🎉</h3><p>Seu acesso completo está liberado nesta conta. Toque para baixar o seu cover.</p><button class="sc-b" data-ja>BAIXAR AGORA</button>`;
+        box.querySelector('[data-ja]').onclick = () => { s.el.remove(); res(true); };
+      }, 700);
+    });
+  }
+  // navegador do Instagram/Facebook: costuma não deixar salvar o arquivo no celular
+  const avisoInApp = () => new Promise((res) => {
     const app = window.scCompat && window.scCompat.inApp;
     if (!app) return res(true);
     const nav = ios ? 'Safari' : 'Chrome';
     const s = sheet(`<h3>Baixe pelo ${nav}</h3><p>O navegador do ${esc(app)} costuma não deixar salvar o vídeo pronto no celular.</p>
-      <p>Abra o Studio Cover no ${nav} e faça de novo: <b>o seu teste grátis só conta quando o vídeo é baixado</b>, então você não perde nada.</p>
+      <p>Se não salvar, abra o Studio Cover no ${nav}, entre com a mesma conta e faça de novo: com o acesso completo os vídeos são ilimitados.</p>
       <button class="sc-b" data-fora>ABRIR NO ${nav.toUpperCase()}</button><button class="sc-b2" data-aqui>Tentar baixar aqui mesmo</button>`, () => res(false));
     s.el.querySelector('[data-fora]').onclick = () => { s.el.remove(); res(false); window.scCompat.abrirFora(); };
     s.el.querySelector('[data-aqui]').onclick = () => { s.el.remove(); res(true); };
   });
+  // o app chama antes de baixar o vídeo, o áudio ou só a voz/base
+  window.scAntesExportar = async (oQue = 'o vídeo pronto') => {
+    if (!me) return true; // versão sem conta
+    if (me.paid || liberado) return avisoInApp();
+    try {
+      const j = await api('baixar', {});
+      if (j.user) { me = j.user; render(); }
+      if (j.ok) { liberado = true; marca(); if (j.presente) toast('Download de presente 🎁', 'Obrigado pelo seu depoimento! Este vídeo está liberado para baixar.'); return avisoInApp(); }
+    } catch (e) { if (e.message === 'login') return false; }
+    window.scLog && window.scLog('quisbaixar', { oque: oQue.slice(0, 30) });
+    const ok = await ofertaBaixar(oQue);
+    if (ok) return avisoInApp();
+    return false;
+  };
+  // comprou depois de fechar a tela (o celular recarregou a página): o vídeo do teste ficou guardado no aparelho
+  async function guardadoDepoisDaCompra() {
+    if (!me.paid || !window.scVideoGuardado || document.querySelector('.sc-ov')) return;
+    const nome = await window.scVideoGuardado(); if (!nome) return;
+    const s = sheet(`<h3>Acesso liberado! 🎉</h3><p>O vídeo que você testou (<b>${esc(nome)}</b>) ficou guardado neste aparelho. Toque abaixo e ele sai pronto de novo, afinado, mixado e com cor de cinema, para você baixar.</p>
+      <button class="sc-b" data-refaz>FAZER E BAIXAR MEU VÍDEO</button><button class="sc-b2" data-fechar>Agora não</button>`);
+    s.el.querySelector('[data-refaz]').onclick = () => { s.el.remove(); window.scRefazerGuardado(); };
+  }
 
   // ---------- avisos ----------
   function toast(title, body, onClick) {
@@ -221,7 +294,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     const trial = me.trial && !me.paid;
     const n = Math.max(0, me.trial_left);
     sheet(`<h3>${esc(me.name || 'Minha conta')}</h3><p style="margin-top:0">${esc(me.email)}</p>
-      ${trial ? `<div class="sc-n nova"><b>Teste grátis: ${n} vídeo${n === 1 ? '' : 's'} restante${n === 1 ? '' : 's'}</b>Libere o acesso completo para fazer quantos covers quiser.<a class="sc-b" href="${esc(me.checkout_url || '/#comprar')}" target="_blank" rel="noopener">LIBERAR ACESSO COMPLETO</a></div>` : me.paid ? `<div class="sc-n"><b style="color:#2ee59d">✓ Acesso completo</b>${me.expires_at ? 'Válido até ' + esc(me.expires_at.slice(0, 10).split('-').reverse().join('/')) : 'Vitalício'}</div>` : ''}
+      ${trial ? `<div class="sc-n nova"><b>Teste grátis: ${n} vídeo${n === 1 ? '' : 's'} restante${n === 1 ? '' : 's'}</b>No teste você vê e ouve o antes e depois. Libere o acesso completo para baixar os seus vídeos e fazer quantos covers quiser.<a class="sc-b" href="${esc(me.checkout_url || '/#comprar')}" target="_blank" rel="noopener">LIBERAR ACESSO COMPLETO</a></div>` : me.paid ? `<div class="sc-n"><b style="color:#2ee59d">✓ Acesso completo</b>${me.expires_at ? 'Válido até ' + esc(me.expires_at.slice(0, 10).split('-').reverse().join('/')) : 'Vitalício'}</div>` : ''}
       ${me.paid ? (me.afiliado ? '<a class="sc-li" href="/afiliado/" target="_blank" rel="noopener"><i>💰</i>Meu painel de afiliado</a>' : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">💰 Ganhe como afiliado</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`) : ''}
       <a class="sc-li" data-m="avisos"><i>🔔</i>Avisos ${unread ? `<b style="color:#ffd400">(${unread})</b>` : ''}</a>
       ${standalone ? '' : '<a class="sc-li" data-m="instalar"><i>📲</i>Instalar na tela de início</a>'}
@@ -304,12 +377,13 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     } catch {}
     const preso = me.trial && !me.paid && !me.can_use;
     if (preso && !me.blocked) setTimeout(paywall, 1200); // terminou o teste: toda vez que abre o app
+    else if (me.paid) setTimeout(guardadoDepoisDaCompra, 1500); // comprou e o vídeo do teste ficou guardado: oferece fazer e baixar
     else if (standalone || android) setTimeout(convitePush, 4000);
     pushRenova();
     document.addEventListener('visibilitychange', async () => { // voltou para o app depois de um tempo: confere se pagou e lembra
       if (document.visibilityState !== 'visible' || !me || me.paid) return;
       const fora = Date.now() - (window.scSaiu || Date.now()); if (fora < 120000) return;
-      try { const r = await api('me'); if (r.user) { me = r.user; render(); if (me.trial && !me.paid && !me.can_use && !document.querySelector('.sc-ov')) paywall(); } } catch {}
+      try { const r = await api('me'); if (r.user) { const antes = me.paid; me = r.user; render(); if (!antes && me.paid) pagou(); else if (me.trial && !me.paid && !me.can_use && !document.querySelector('.sc-ov') && !document.querySelector('[data-screen="studio"]')) paywall(); } } catch {}
     });
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') window.scSaiu = Date.now(); });
     if (unread) setTimeout(async () => { const a = await api('avisos'); const n = (a.items || []).find((x) => !x.read_at); if (n) toast(n.title, n.body, avisos); }, 2500);

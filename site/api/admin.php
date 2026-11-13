@@ -344,7 +344,7 @@ switch ($a) {
     $edb = app_events_db();
     $q = $edb->prepare('SELECT e.*, u.email, u.name FROM app_events e LEFT JOIN users u ON u.id = e.user_id WHERE e.created_at >= ? ORDER BY e.id DESC'); $q->execute([$since]);
     $ev = $q->fetchAll();
-    $cnt = ['inicio' => 0, 'abriu' => 0, 'pronto' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0]; $seg = []; $disp = []; $prob = []; $pessoas = [];
+    $cnt = ['inicio' => 0, 'abriu' => 0, 'pronto' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0, 'quisbaixar' => 0, 'liberou' => 0]; $seg = []; $disp = []; $prob = []; $pessoas = [];
     foreach ($ev as $e) {
       $k = $e['kind']; $cnt[$k] = ($cnt[$k] ?? 0) + 1; $d = json_decode((string)$e['data'], true) ?: [];
       $ap = ua_short((string)$e['ua']);
