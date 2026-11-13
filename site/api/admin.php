@@ -371,7 +371,7 @@ switch ($a) {
     push_save(-(int)$me['id'], (array)arg('sub', []), (string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
     json_out(['ok' => true]);
   }
-  case 'push-teste': { $n = push_user(-(int)$me['id'], '💰 Cha-ching! Teste de venda', 'É assim que vai chegar cada venda do Studio Cover. 🙏', '/admin/'); json_out(['ok' => true, 'enviados' => $n]); }
+  case 'push-teste': { $nm = trim(explode(' ', trim((string)($me['name'] ?? '')))[0] ?? ''); $n = push_user(-(int)$me['id'], '💰 Parabéns' . ($nm !== '' ? " $nm" : '') . ', mais uma venda concluída!', "Venda de R$ 297,00 · líquido R$ 279,96\nTeste do aviso: é assim que cada venda vai chegar. 🙏", '/admin/'); json_out(['ok' => true, 'enviados' => $n]); }
   case 'origens': json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))))); // de qual página e canal vêm visitas, testes e vendas
   case 'vigia-erros': { // vistoria de 10 em 10 min: tipos de erro do app, alertas e quando rodou
     json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista()]);

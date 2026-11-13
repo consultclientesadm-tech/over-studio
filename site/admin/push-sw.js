@@ -5,8 +5,8 @@ self.addEventListener('push', (e) => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data && e.data.text() }; }
   e.waitUntil(Promise.all([
     self.registration.showNotification(d.title || '💰 Venda no Studio Cover!', {
-      body: d.body || '', icon: '/assets/icon-192.png', badge: '/assets/icon-192.png', data: { url: d.url || '/admin/' },
-      tag: 'sc-venda-' + Date.now(), renotify: true, requireInteraction: true, silent: false, vibrate: [120, 60, 120, 60, 400],
+      body: d.body || '', icon: '/admin/icon-192.png', badge: '/admin/badge-96.png', data: { url: d.url || '/admin/' },
+      tag: 'sc-venda-' + Date.now(), renotify: true, silent: false, vibrate: [120, 60, 120, 60, 400],
     }),
     // painel aberto: toca a caixa registradora lá também
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => cs.forEach((c) => c.postMessage({ tipo: 'venda' }))),
