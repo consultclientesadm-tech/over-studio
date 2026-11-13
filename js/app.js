@@ -5,7 +5,7 @@
 import * as cover from './pipeline.js?v=37';
 import { prefetchModel } from './studio.js?v=37';
 import { TuneEditor } from './editor.js?v=37';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=37';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=38';
 import { exportVideo, exportType } from './export.js?v=37';
 
 const $ = (id) => document.getElementById(id);
@@ -245,8 +245,8 @@ let lastVT = -1, lastEd = 0;
 function cssLook(f, k = 1) {
   if (!f || f.id === 'original' || !k) return '';
   const m = (v, base) => base + (v - base) * k;
-  const warm = f.temp > 0 ? f.temp * 2.2 : 0, cool = f.temp < 0 ? f.temp * 60 : 0;
-  return `brightness(${m(1 + f.exposure * 1.4 - f.fade * 0.3, 1).toFixed(3)}) contrast(${m(f.contrast - f.fade * 0.6, 1).toFixed(3)}) saturate(${m(f.saturation, 1).toFixed(3)})`
+  const warm = f.temp > 0 ? f.temp * 1.8 : 0, cool = f.temp < 0 ? f.temp * 70 : 0;
+  return `brightness(${m(1 + f.exposure * 1.4 - f.fade * 0.3, 1).toFixed(3)}) contrast(${m(1 + (f.contrast - 1) * 1.5 - f.fade * 0.6, 1).toFixed(3)}) saturate(${m(f.saturation, 1).toFixed(3)})`
     + (warm ? ` sepia(${(warm * k).toFixed(3)})` : '') + (cool ? ` hue-rotate(${(cool * k).toFixed(1)}deg)` : '');
 }
 function grab() { if (!audioOnly && video.readyState >= 2 && frame.width) { fctx.drawImage(video, 0, 0, frame.width, frame.height); lastVT = video.currentTime; } }

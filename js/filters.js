@@ -9,28 +9,30 @@
 // Looks de câmera de cinema: curva de filme (luzes que "rolam" suave, sem estourar), cor separada nas sombras e
 // nas luzes, halation (o brilho avermelhado em volta das luzes que a película e as lentes de cinema fazem),
 // difusão leve de lente, grão fino e nitidez de câmera. Sem nomes de marca: são inspirados no visual delas.
+// 2026-11-13: looks bem mais fortes (o Leo achou que quase não mudavam). Contraste de cinema, cor separada
+// nas sombras e nas luzes, glow de verdade nas luzes (bloom), halation, vinheta marcada e grão.
 export const FILTERS = [
-  { id: 'cine', name: 'Câmera de Cinema', exposure: 0, contrast: 1.1, saturation: 0.96, temp: 0.015, tint: 0, shadows: [-0.012, 0.006, 0.02], highlights: [0.022, 0.01, -0.012], fade: 0.015, vignette: 0.18, grain: 0.014, sharpen: 0.45, halation: 0.35, diffusion: 0.15 },
-  { id: 'pro', name: 'Câmera Pro Natural', exposure: 0.01, contrast: 1.06, saturation: 1.02, temp: 0.008, tint: 0, shadows: [0, 0.004, 0.01], highlights: [0.01, 0.005, 0], fade: 0, vignette: 0.1, grain: 0.008, sharpen: 0.5, halation: 0.15, diffusion: 0.08 },
-  { id: 'golden', name: 'Cinema Dourado', exposure: 0.02, contrast: 1.08, saturation: 1.0, temp: 0.07, tint: 0.008, shadows: [0.01, 0.002, -0.01], highlights: [0.03, 0.014, -0.016], fade: 0.02, vignette: 0.2, grain: 0.012, sharpen: 0.4, halation: 0.45, diffusion: 0.2 },
-  { id: 'night', name: 'Cinema Noturno', exposure: -0.04, contrast: 1.12, saturation: 0.88, temp: -0.09, tint: 0.006, shadows: [-0.02, 0.012, 0.045], highlights: [0.02, 0.01, 0.0], fade: 0.015, vignette: 0.26, grain: 0.016, sharpen: 0.4, halation: 0.4, diffusion: 0.15 },
-  { id: 'film', name: 'Película 35mm', exposure: 0, contrast: 1.07, saturation: 0.9, temp: 0.025, tint: -0.004, shadows: [0.006, 0.012, 0.016], highlights: [0.02, 0.012, 0], fade: 0.06, vignette: 0.22, grain: 0.032, sharpen: 0.2, halation: 0.6, diffusion: 0.22 },
-  { id: 'bleach', name: 'Thriller', exposure: -0.02, contrast: 1.18, saturation: 0.66, temp: -0.01, tint: 0, shadows: [-0.006, 0.006, 0.014], highlights: [0.012, 0.01, 0.006], fade: 0, vignette: 0.24, grain: 0.02, sharpen: 0.45, halation: 0.2, diffusion: 0.05 },
-  { id: 'noir', name: 'Preto e Branco de Cinema', exposure: 0, contrast: 1.2, saturation: 0, temp: 0, tint: 0, shadows: [0, 0, 0], highlights: [0, 0, 0], fade: 0.03, vignette: 0.3, grain: 0.03, sharpen: 0.35, halation: 0.25, diffusion: 0.12 },
+  { id: 'cine', name: 'Câmera de Cinema', exposure: -0.04, contrast: 1.32, saturation: 1.08, temp: 0.03, tint: 0, shadows: [-0.05, 0.015, 0.075], highlights: [0.07, 0.03, -0.045], fade: 0.03, vignette: 0.42, grain: 0.022, sharpen: 0.5, halation: 0.7, diffusion: 0.25, glow: 0.45 },
+  { id: 'pro', name: 'Câmera Pro Natural', exposure: 0.02, contrast: 1.2, saturation: 1.16, temp: 0.015, tint: 0, shadows: [-0.012, 0.004, 0.025], highlights: [0.03, 0.015, 0], fade: 0, vignette: 0.24, grain: 0.01, sharpen: 0.65, halation: 0.3, diffusion: 0.12, glow: 0.25 },
+  { id: 'golden', name: 'Cinema Dourado', exposure: 0.03, contrast: 1.24, saturation: 1.12, temp: 0.22, tint: 0.02, shadows: [0.03, 0.0, -0.05], highlights: [0.09, 0.045, -0.06], fade: 0.03, vignette: 0.38, grain: 0.016, sharpen: 0.45, halation: 0.9, diffusion: 0.35, glow: 0.65 },
+  { id: 'night', name: 'Cinema Noturno', exposure: -0.18, contrast: 1.34, saturation: 0.8, temp: -0.26, tint: 0.01, shadows: [-0.05, 0.02, 0.1], highlights: [0.03, 0.04, 0.05], fade: 0.02, vignette: 0.5, grain: 0.022, sharpen: 0.45, halation: 0.6, diffusion: 0.25, glow: 0.5 },
+  { id: 'film', name: 'Película 35mm', exposure: 0, contrast: 1.18, saturation: 0.86, temp: 0.08, tint: -0.015, shadows: [0.01, 0.04, 0.05], highlights: [0.07, 0.04, -0.02], fade: 0.16, vignette: 0.4, grain: 0.055, sharpen: 0.2, halation: 1.0, diffusion: 0.35, glow: 0.4 },
+  { id: 'bleach', name: 'Thriller', exposure: -0.08, contrast: 1.45, saturation: 0.5, temp: -0.06, tint: 0.01, shadows: [-0.02, 0.02, 0.05], highlights: [0.03, 0.03, 0.02], fade: 0, vignette: 0.48, grain: 0.03, sharpen: 0.6, halation: 0.3, diffusion: 0.1, glow: 0.2 },
+  { id: 'noir', name: 'Preto e Branco de Cinema', exposure: -0.02, contrast: 1.5, saturation: 0, temp: 0, tint: 0, shadows: [0, 0, 0], highlights: [0, 0, 0], fade: 0.04, vignette: 0.5, grain: 0.045, sharpen: 0.45, halation: 0.4, diffusion: 0.2, glow: 0.5 },
 ];
-export const ORIGINAL = { id: 'original', name: 'Original', exposure: 0, contrast: 1, saturation: 1, temp: 0, tint: 0, shadows: [0, 0, 0], highlights: [0, 0, 0], fade: 0, vignette: 0, grain: 0, sharpen: 0, halation: 0, diffusion: 0 };
+export const ORIGINAL = { id: 'original', name: 'Original', exposure: 0, contrast: 1, saturation: 1, temp: 0, tint: 0, shadows: [0, 0, 0], highlights: [0, 0, 0], fade: 0, vignette: 0, grain: 0, sharpen: 0, halation: 0, diffusion: 0, glow: 0 };
 
 const VS = `attribute vec2 p; varying vec2 uv; void main(){ uv = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0,1); }`;
 const FS = `precision mediump float;
 varying vec2 uv; uniform sampler2D img; uniform vec2 px; uniform vec4 crop; uniform float t;
-uniform float exposure, contrast, saturation, temp, tint, fade, vignette, grain, sharpen, halation, diffusion, amount;
+uniform float exposure, contrast, saturation, temp, tint, fade, vignette, grain, sharpen, halation, diffusion, glow, amount; uniform vec2 gr;
 uniform vec3 shadows, highlights;
 float rnd(vec2 c){ return fract(sin(dot(c, vec2(12.9898,78.233)) + t) * 43758.5453); }
 // curva em S que nunca estoura: preto continua preto e branco continua branco
 float scurve(float x, float k){ const float p = .42; x = clamp(x, 0., 1.);
   return x < p ? p * pow(x / p, k) : 1. - (1. - p) * pow((1. - x) / (1. - p), k); }
 // ombro suave nas luzes: o que passaria do branco é comprimido em vez de cortado
-vec3 shoulder(vec3 c){ const float k = .78; vec3 t = max(c - k, 0.) / (1. - k); return min(c, k) + (1. - k) * t / (1. + t); }
+vec3 shoulder(vec3 c){ const float k = .86; vec3 t = max(c - k, 0.) / (1. - k); return min(c, k) + (1. - k) * t / (1. + t); }
 void main(){
   vec2 st = crop.xy + uv * crop.zw;
   vec3 c0 = texture2D(img, st).rgb;
@@ -42,23 +44,31 @@ void main(){
   vec3 amp = sqrt(clamp(min(mnC, 2. - mxC) / max(mxC, vec3(1e-4)), 0., 1.));
   vec3 w = amp * (-1. / mix(8., 5., clamp(sharpen, 0., 1.)));
   vec3 c = clamp((nb * w + nd * w + nf * w + nh * w + c0) / (1. + 4. * w), 0., 1.);
-  // brilho de lente/película: anel de 8 amostras largas em volta do ponto
-  vec2 r = px * 7.;
-  vec3 wide = (texture2D(img, st + vec2(r.x,0.)).rgb + texture2D(img, st - vec2(r.x,0.)).rgb + texture2D(img, st + vec2(0.,r.y)).rgb + texture2D(img, st - vec2(0.,r.y)).rgb
-    + texture2D(img, st + r*.7).rgb + texture2D(img, st - r*.7).rgb + texture2D(img, st + vec2(r.x,-r.y)*.7).rgb + texture2D(img, st + vec2(-r.x,r.y)*.7).rgb) * .125;
-  float wl = dot(wide, vec3(.2126,.7152,.0722));
-  // difusão (como um filtro de lente "mist"): as luzes ganham um véu suave, a pele fica mais bonita
-  c = mix(c, max(c, wide), diffusion * smoothstep(.45, .95, wl));
-  // halation: borda quente avermelhada em volta das luzes fortes
-  c += halation * .22 * smoothstep(.62, 1., wl) * vec3(1., .42, .22) * (1. - smoothstep(.75, 1., dot(c, vec3(.33))));
+  // brilho de lente/película (bloom): dois anéis largos, com raio proporcional ao quadro (gr), não ao pixel
+  vec3 wide = vec3(0.), wide2 = vec3(0.);
+  for (int i = 0; i < 8; i++) { float a = float(i) * .7853982 + .3927;
+    vec2 o = vec2(cos(a), sin(a));
+    wide += texture2D(img, st + o * gr * .45).rgb;
+    wide2 += texture2D(img, st + o * gr).rgb; }
+  wide = wide * .125; wide2 = wide2 * .125;
+  vec3 bl = (wide * .55 + wide2 * .45);
+  float wl = dot(bl, vec3(.2126,.7152,.0722));
+  // difusão (filtro "mist" de lente): véu suave nas luzes, pele mais bonita
+  c = mix(c, max(c, bl), diffusion * smoothstep(.35, .9, wl));
+  // glow: só o que é luz forte vaza para os lados, somado em "screen" (não estoura)
+  vec3 bp = max(bl - .55, 0.) / .45; bp *= bp;
+  c = 1. - (1. - c) * (1. - clamp(glow * 1.1 * bp * vec3(1., .93, .85), 0., 1.));
+  // halation: borda quente avermelhada em volta das luzes fortes, como na película
+  c += halation * .3 * smoothstep(.5, 1., wl) * vec3(1., .38, .18) * (1. - smoothstep(.7, 1., dot(c, vec3(.33))));
   // luz linear: balanço de branco e exposição como na câmera
   vec3 lin = c * c;
-  vec3 wb = vec3(1. + temp * .35, 1. - tint * .3, 1. - temp * .35);
+  vec3 wb = vec3(1. + temp * .9, 1. - tint * .8, 1. - temp * 1.1);
   wb /= dot(wb, vec3(.2126, .7152, .0722));
   lin *= wb * exp2(exposure);
   c = sqrt(shoulder(lin));
   // contraste por curva em S
-  c = vec3(scurve(c.r, contrast), scurve(c.g, contrast), scurve(c.b, contrast));
+  float kc = 1. + (contrast - 1.) * 2.4;
+  c = vec3(scurve(c.r, kc), scurve(c.g, kc), scurve(c.b, kc));
   // vibrance com proteção de pele
   float l = dot(c, vec3(.2126,.7152,.0722));
   float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sat = mx - mn;
@@ -66,10 +76,10 @@ void main(){
   float s = saturation >= 1. ? 1. + (saturation - 1.) * (1. - sat) * (1. - skin * .6) : saturation;
   c = mix(vec3(l), c, s);
   // cor nas sombras e nas luzes (teal & orange e afins)
-  float sh = 1. - smoothstep(0., .5, l), hi = smoothstep(.5, 1., l);
-  c += shadows * sh + highlights * hi;
+  float sh = 1. - smoothstep(0., .55, l), hi = smoothstep(.4, 1., l);
+  c += (shadows * sh + highlights * hi) * 2.2;
   c = c * (1. - fade * .5) + fade * .5 * vec3(.92, .9, .95);
-  vec2 d = uv - .5; c *= 1. - vignette * smoothstep(.3, .9, length(d * vec2(1., 1.2)) * 1.25);
+  vec2 d = uv - .5; c *= 1. - vignette * smoothstep(.25, .95, length(d * vec2(1., 1.15)) * 1.3);
   c += (rnd(uv * 1000.) - .5) * grain * (1. - l * .6);
   gl_FragColor = vec4(mix(c0, clamp(c, 0., 1.), amount), 1.);
 }`;
@@ -105,7 +115,8 @@ export class Grader {
     gl.uniform4fv(this.u('crop'), crop);
     gl.uniform2f(this.u('px'), 1 / sw, 1 / sh);
     gl.uniform1f(this.u('t'), (performance.now() % 10000) / 1000);
-    for (const k of ['exposure', 'contrast', 'saturation', 'temp', 'tint', 'fade', 'vignette', 'grain', 'sharpen', 'halation', 'diffusion']) gl.uniform1f(this.u(k), f[k] ?? 0);
+    const m = Math.min(sw, sh); gl.uniform2f(this.u('gr'), (m * 0.022) / sw, (m * 0.022) / sh);
+    for (const k of ['exposure', 'contrast', 'saturation', 'temp', 'tint', 'fade', 'vignette', 'grain', 'sharpen', 'halation', 'diffusion', 'glow']) gl.uniform1f(this.u(k), f[k] ?? 0);
     gl.uniform3fv(this.u('shadows'), f.shadows); gl.uniform3fv(this.u('highlights'), f.highlights);
     gl.uniform1f(this.u('amount'), this.amount);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -165,9 +176,9 @@ export function compose(base, look) {
   if (!look || look.id === 'original') return base;
   const add3 = (a, b) => a.map((x, i) => x + b[i]);
   return {
-    id: look.id, name: look.name, exposure: base.exposure + look.exposure, contrast: Math.min(1.3, base.contrast * look.contrast),
-    saturation: look.saturation < 1 ? look.saturation : Math.min(1.25, base.saturation * look.saturation), temp: base.temp + look.temp, tint: base.tint + look.tint,
+    id: look.id, name: look.name, exposure: base.exposure + look.exposure, contrast: Math.min(1.6, base.contrast * look.contrast),
+    saturation: look.saturation < 1 ? look.saturation : Math.min(1.35, base.saturation * look.saturation), temp: base.temp + look.temp, tint: base.tint + look.tint,
     shadows: add3(base.shadows, look.shadows), highlights: add3(base.highlights, look.highlights),
-    fade: Math.max(base.fade, look.fade), vignette: Math.max(base.vignette, look.vignette), grain: Math.max(base.grain, look.grain), sharpen: Math.max(base.sharpen, look.sharpen), halation: Math.max(base.halation || 0, look.halation || 0), diffusion: Math.max(base.diffusion || 0, look.diffusion || 0),
+    fade: Math.max(base.fade, look.fade), vignette: Math.max(base.vignette, look.vignette), grain: Math.max(base.grain, look.grain), sharpen: Math.max(base.sharpen, look.sharpen), halation: Math.max(base.halation || 0, look.halation || 0), diffusion: Math.max(base.diffusion || 0, look.diffusion || 0), glow: Math.max(base.glow || 0, look.glow || 0),
   };
 }
