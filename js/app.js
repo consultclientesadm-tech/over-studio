@@ -309,8 +309,10 @@ async function start(f, tries = 1) {
     else ajudaErro('Não deu certo desta vez', escH(e.message), mbE);
   }
 }
-// "could not be read" (Chrome) / "The I/O read operation failed." (Safari/iPhone): o aparelho tirou o acesso ao arquivo
-const LEITURA = /could not be read|NotReadable|I\/O read operation|permission problems/i;
+// "could not be read" (Chrome) / "The I/O read operation failed." (Safari/iPhone): o aparelho tirou o acesso ao arquivo.
+// "A requested file or directory could not be found" (Chrome/Android, NotFoundError): o arquivo sumiu depois de escolhido
+// (vídeo do Google Fotos/Drive que era só uma cópia temporária, ou a galeria apagou/moveu a cópia).
+const LEITURA = /could not be read|NotReadable|I\/O read operation|permission problems|file or directory could not be found|NotFoundError/i;
 function perdeuArquivo() {
   app.dataset.screen = 'home';
   return aviso('O celular perdeu o acesso a esse vídeo', 'O aparelho não deixou mais o app ler o arquivo. Isso acontece quando o vídeo está na nuvem (iCloud, Google Fotos, Drive) ou quando o app fica em segundo plano enquanto abre.',
