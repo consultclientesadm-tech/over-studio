@@ -42,13 +42,17 @@ $('sair').onclick = async () => { await api('sair', {}); boot(); };
 const TABS = { geral: 'tGeral', origens: 'tOrig', financas: 'tFin', vistoria: 'tVist', alunos: 'tAlunos', funil: 'tFunil', afiliados: 'tAfiliados', depoimentos: 'tDepo', admins: 'tAdmins', config: 'tConfig' };
 function tab(t) {
   if (!TABS[t]) t = 'geral';
-  document.querySelectorAll('.nav > button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.nav > button[data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === t)); $('maisBtn').classList.toggle('on', !!document.querySelector('.nav > button.mx.on'));
   Object.entries(TABS).forEach(([k, id]) => ($(id).hidden = k !== t));
   history.replaceState(null, '', '#' + t);
   $('vistBtn').hidden = t === 'vistoria';
   ({ geral: loadGeral, origens: loadOrigens, financas: loadFin, vistoria: loadVist, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, depoimentos: loadDepo, admins: loadAdmins, config: loadConfig })[t]();
 }
-document.querySelectorAll('.nav > button').forEach((b) => (b.onclick = () => tab(b.dataset.tab)));
+document.querySelectorAll('.nav > button[data-tab]').forEach((b) => (b.onclick = () => { document.querySelector('.nav').classList.remove('aberto'); tab(b.dataset.tab); }));
+// celular: barra de baixo com 4 abas e o botão Mais, que abre as outras numa gaveta
+$('maisBtn').onclick = (e) => { e.stopPropagation(); document.querySelector('.nav').classList.toggle('aberto'); };
+document.addEventListener('click', (e) => { const n = document.querySelector('.nav'); if (n.classList.contains('aberto') && !n.contains(e.target)) n.classList.remove('aberto'); });
+setInterval(() => { const n = ['depoBadge', 'vistBadge'].reduce((s, id) => s + (($(id) && !$(id).hidden && +$(id).textContent) || 0), 0); $('maisBadge').hidden = !n; $('maisBadge').textContent = n; }, 1500);
 
 // ---------- números que contam ----------
 function contar(root) {

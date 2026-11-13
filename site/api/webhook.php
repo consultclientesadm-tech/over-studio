@@ -91,7 +91,15 @@ try {
   $corpo = 'Venda de R$ ' . number_format($bruto, 2, ',', '.') . ' · líquido R$ ' . number_format((float)($sl['liquido'] ?? $value), 2, ',', '.') . "\n" . ($name ?: $email) . ($de ? " · $de" : '') . "\nHoje: $nh venda" . ($nh == 1 ? '' : 's') . ' · R$ ' . number_format((float)$lh, 2, ',', '.') . ' 🙏';
   foreach ($db->query('SELECT id, name FROM admins')->fetchAll() as $ad) {
     $nome = trim(explode(' ', trim((string)$ad['name']))[0] ?? '');
-    push_user(-(int)$ad['id'], '💰 Parabéns' . ($nome !== '' ? " $nome" : '') . ', mais uma venda concluída!', $corpo, '/admin/');
+    push_user(-(int)$ad['id'], '💰 Parabéns' . ($nome !== '' ? " $nome" : '') . ', mais uma venda do Studio Cover!', $corpo, '/admin/');
+  }
+  // afiliado da venda: recebe com o nome dele e a comissão dele
+  if ($afId && ($af = af_by_id((int)$afId))) {
+    $nm = trim(explode(' ', trim((string)$af['nome']))[0] ?? '');
+    $qa = $db->prepare("SELECT COUNT(*), COALESCE(SUM(comissao), 0) FROM sales WHERE status = 'pago' AND afiliado_id = ? AND created_at >= ?"); $qa->execute([$afId, date('Y-m-d')]); [$na, $ca] = $qa->fetch(PDO::FETCH_NUM);
+    $cm = (float)$n['comissao'];
+    push_user(-1000000 - (int)$afId, '💰 Parabéns' . ($nm !== '' ? " $nm" : '') . ', mais uma venda do Studio Cover!',
+      'Sua comissão: R$ ' . number_format($cm, 2, ',', '.') . "\nHoje: $na venda" . ($na == 1 ? '' : 's') . ' sua' . ($na == 1 ? '' : 's') . ' · R$ ' . number_format((float)$ca, 2, ',', '.') . ' de comissão 🙏', '/afiliado/');
   }
 } catch (Throwable $e) {}
 $log("pago: $email R$ $value");

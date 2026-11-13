@@ -1,6 +1,6 @@
 {
-  "name": "Comando · Studio Cover",
-  "short_name": "SC Comando",
+  "name": "Studio Cover",
+  "short_name": "Studio Cover",
   "start_url": "/admin/",
   "scope": "/admin/",
   "display": "standalone",
