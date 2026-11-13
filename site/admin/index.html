@@ -9,7 +9,7 @@
 <link rel="icon" href="/assets/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=13">
+<link rel="stylesheet" href="admin.css?v=14">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -56,14 +56,12 @@
       <header class="th"><div><h2>Visão geral</h2><p class="sub">Saúde financeira e uso do Studio Cover</p></div>
         <div class="seg" id="periodo"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
       <div id="vigiaErros"></div>
+      <section class="glass chart big fatTopo" id="fatBox"><div class="ch"><div class="fth"><span class="vivo"><i></i>AO VIVO</span><b>Faturamento</b><small id="fatPer"></small></div><span id="fatTot"></span><div class="seg vista" id="vistaSeg"><button data-v="periodo" class="on">Dia a dia</button><button data-v="hora">Hoje por hora</button></div></div><canvas id="cFat"></canvas><p class="legend" id="fatLeg"></p></section>
       <div id="hoje"></div><div id="cadHoje"></div>
       <div id="nums"></div>
       <div id="appSaude"></div>
-      <div class="grid2">
-        <div class="glass chart big"><div class="ch"><b>Faturamento</b><span id="fatTot"></span></div><canvas id="cFat"></canvas></div>
+      <div class="grid4">
         <div class="glass chart"><div class="ch"><b>Conversão do teste grátis</b></div><canvas id="cConv"></canvas><p class="legend" id="convLeg"></p></div>
-      </div>
-      <div class="grid3">
         <div class="glass chart"><div class="ch"><b>Vendas por dia</b></div><canvas id="cVendas"></canvas></div>
         <div class="glass chart"><div class="ch"><b>Cadastros</b> <i class="dot y"></i> e <b>vídeos processados</b> <i class="dot g"></i></div><canvas id="cUso"></canvas></div>
         <div class="glass chart"><div class="ch"><b>Base de alunos</b></div><canvas id="cBase"></canvas><p class="legend" id="baseLeg"></p></div>
@@ -164,6 +162,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=15"></script>
+<script src="admin.js?v=16"></script>
 </body>
 </html>

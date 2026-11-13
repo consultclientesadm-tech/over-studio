@@ -281,3 +281,16 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .vx span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .hl .lh { width: 10px; height: 10px; border-radius: 2px; background: var(--y); box-shadow: 0 0 6px var(--y); }
 @media (max-width: 860px) { .vx { margin-left: 56px; } .hc .vbn { font-size: 9px; } }
+
+/* faturamento no topo (ao vivo, segue os botões de período) */
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 1200px) { .grid4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .grid4 { grid-template-columns: 1fr; } }
+.fatTopo { margin-bottom: 18px; padding: 18px 20px 14px; }
+.fatTopo .fth { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fatTopo .fth b { font-size: 16px; } .fatTopo .fth small { color: var(--mut); font-size: 12px; }
+.fatTopo #fatTot { font-size: 22px; text-shadow: 0 0 18px rgba(255,212,0,.35); }
+.fatTopo .vista { transform: scale(.9); transform-origin: right center; }
+.fatTopo canvas { height: 300px !important; }
+.fatTopo.nova { animation: novaVenda 1.6s ease-out; }
+@media (max-width: 640px) { .fatTopo canvas { height: 220px !important; } .fatTopo #fatTot { font-size: 18px; } .fatTopo .vista { transform-origin: left center; } }

@@ -93,7 +93,15 @@ async function loadHoje() {
   const novas = hojeIds ? vendas.filter((v) => !hojeIds.has(v.id) && v.liquido > 0) : [];
   hojeIds = new Set(vendas.map((v) => v.id));
   const abas = `<div class="seg vista"><button data-v="periodo" class="${vista === 'periodo' ? 'on' : ''}">Dia a dia</button><button data-v="hora" class="${vista === 'hora' ? 'on' : ''}">Hoje por hora</button></div>`;
-  if (vista === 'periodo' && sr && sr.ok) $('hoje').innerHTML = periodoHtml(sr, total, novas.length, abas);
+  $('fatBox').hidden = vista !== 'periodo';
+  $('vistaSeg').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === vista));
+  if (vista === 'periodo') {
+    $('hoje').innerHTML = '';
+    // gráfico de faturamento do topo: o ponto de hoje acompanha as vendas ao vivo
+    const fs = fatSerie; if (fs && fs.length) { const ult = fs[fs.length - 1], hojeD = sr && sr.ok ? sr.hoje : ult.d;
+      if (ult.d === hojeD && Math.abs(ult.v - total) > 0.009) { fatPeriodo += total - ult.v; ult.v = total; desenhaFat(); }
+      if (novas.length) { const fb = $('fatBox'); fb.classList.remove('nova'); void fb.offsetWidth; fb.classList.add('nova'); } }
+  }
   else $('hoje').innerHTML = `<section class="hojeBox glass${novas.length ? ' nova' : ''}">
     <div class="hh"><div><span class="vivo"><i></i>AO VIVO · VENDAS DE HOJE</span>${abas}
       <div class="hv">${N2(total)}<small>líquido · ${nV} venda${nV === 1 ? '' : 's'}${nV ? ` · última às ${vendas.filter((v) => v.liquido > 0).slice(-1)[0].h}` : ''}</small></div></div>
@@ -114,7 +122,7 @@ async function loadHoje() {
     <div class="hl"><span><i class="ly"></i>Hoje (líquido acumulado)</span><span><i class="lo"></i>Ontem</span><span><i class="lp"></i>Venda de afiliado</span>${j.media_7d ? '<span><i class="lm"></i>Média por dia (7 dias)</span>' : ''}</div>
   </section>`;
   hojeDesenhado = true;
-  $('hoje').querySelectorAll('.vista button').forEach((b) => (b.onclick = () => { vista = b.dataset.v; hojeDesenhado = false; loadHoje.ja = false; loadHoje(); }));
+  [...$('hoje').querySelectorAll('.vista button'), ...$('vistaSeg').querySelectorAll('button')].forEach((b) => (b.onclick = () => { vista = b.dataset.v; hojeDesenhado = false; loadHoje.ja = false; loadHoje(); if (vista === 'periodo') desenhaFat(); }));
   const hv = $('hoje').querySelector('.hv .cnt'); if (hv) { if (novas.length || !loadHoje.ja) contar($('hoje')); else { hv.textContent = brl(+hv.dataset.to); } }
   loadHoje.ja = true;
   if (novas.length) { chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}${novas.some((v) => v.af) ? ' (afiliado)' : ''}`); }
@@ -288,6 +296,17 @@ async function loadAppSaude() {
   </section>`;
   contar($('appSaude'));
 }
+let fatSerie = null, fatPeriodo = 0;
+function desenhaFat() {
+  if (!fatSerie || $('fatBox').hidden) return;
+  const per = { 7: '7 dias', 30: '30 dias', 90: '90 dias', 365: '12 meses' }[dias] || dias + ' dias';
+  const hojeV = fatSerie[fatSerie.length - 1].v, comVenda = fatSerie.filter((p) => p.v > 0).length;
+  $('fatPer').textContent = 'líquido · últimos ' + per;
+  $('fatTot').textContent = brl(fatPeriodo);
+  $('fatLeg').textContent = `Hoje: ${brl(hojeV)} · média ${brl0(fatPeriodo / fatSerie.length)}/dia · ${comVenda} dia${comVenda === 1 ? '' : 's'} com venda`;
+  G.area($('cFat'), fatSerie, { color: '#ffd400', fmt: (v) => (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace('.', ',') + 'k' : Math.round(v)) });
+}
+addEventListener('resize', () => { clearTimeout(desenhaFat.t); desenhaFat.t = setTimeout(desenhaFat, 200); });
 async function loadGeral() {
   loadHoje();
   const j = await api('resumo', null, '&dias=' + dias); if (!j.ok) return;
@@ -348,8 +367,7 @@ async function loadGeral() {
     </div>
   </section>`;
   contar($('nums')); loadAppSaude(); loadVigiaErros();
-  $('fatTot').textContent = brl(t.faturamento_periodo);
-  G.area($('cFat'), j.faturamento, { color: '#ffd400', fmt: (v) => (v >= 1000 ? Math.round(v / 1000) + 'k' : Math.round(v)) });
+  fatSerie = j.faturamento; fatPeriodo = t.faturamento_periodo; desenhaFat();
   G.ring($('cConv'), t.conversao_teste, { color: '#a77bff' });
   $('convLeg').textContent = `${t.testes_convertidos} compraram de ${t.testes_total} que testaram`;
   G.bars($('cVendas'), j.vendas, { color: '#2ee59d' });
