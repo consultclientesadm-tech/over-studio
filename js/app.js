@@ -293,13 +293,28 @@ async function start(f, tries = 1) {
     // teste grátis: guarda o vídeo no aparelho; se a pessoa comprar e a página recarregar, ele sai pronto de novo sem subir outra vez
     if (window.scTeste && window.scTeste()) fp.then(() => idb('readwrite', (st) => st.put(f, 'pendente'))).catch(() => {});
   } catch (e) {
+    // O celular perdeu o acesso ao arquivo escolhido (vídeo na nuvem/Google Fotos, app foi para o fundo):
+    // tenta de novo com a cópia que guardamos no aparelho ao escolher o vídeo
+    if (tries === 1 && LEITURA.test(String(e.message) + ' ' + (e.name || ''))) {
+      let copia = null;
+      try { copia = await idb('readonly', (st) => st.get('video')); if (copia) await copia.slice(0, 65536).arrayBuffer(); } catch { copia = null; }
+      if (copia) { console.warn('arquivo original ilegível; usando a cópia guardada'); endRun(); return start(copia, 2); }
+    }
     console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '', causa: e.causa || '' });
     app.dataset.screen = 'home';
     const mbE = Math.round(f.size / 1048576);
     if (e.message === 'LIMITE') aviso(`⏱️ Vídeo maior que ${MIN} minutos`, `Esse vídeo tem ${fmt(e.duration || video.duration)}. O limite é de ${MAX_SEC / 60} minutos.`, ['Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar e suba de novo']);
     else if (/decod|Unable|EncodingError|não é AAC|não tem áudio/i.test(e.message)) aviso('Não consegui ler o áudio desse vídeo', escH(e.message), ['Grave com a câmera do próprio celular (MP4 ou MOV)', 'Se o vídeo veio de outro app ou do WhatsApp, salve o original e suba de novo', 'Ou use <b>"Ou suba só o áudio"</b>']);
+    else if (LEITURA.test(String(e.message) + ' ' + (e.name || ''))) perdeuArquivo();
     else ajudaErro('Não deu certo desta vez', escH(e.message), mbE);
   }
+}
+// "could not be read" (Chrome) / "The I/O read operation failed." (Safari/iPhone): o aparelho tirou o acesso ao arquivo
+const LEITURA = /could not be read|NotReadable|I\/O read operation|permission problems/i;
+function perdeuArquivo() {
+  app.dataset.screen = 'home';
+  return aviso('O celular perdeu o acesso a esse vídeo', 'O aparelho não deixou mais o app ler o arquivo. Isso acontece quando o vídeo está na nuvem (iCloud, Google Fotos, Drive) ou quando o app fica em segundo plano enquanto abre.',
+    ['Abra o vídeo na galeria e espere ele baixar inteiro no aparelho', 'Toque em <b>Novo vídeo</b> e escolha o vídeo de novo', 'Deixe o app aberto na tela até terminar de abrir', 'Se o vídeo veio do WhatsApp ou do Drive, salve no aparelho primeiro']);
 }
 
 // O navegador leu o som mas não abre a imagem (Edge sem HEVC com vídeo do iPhone): converte aqui no aparelho
@@ -943,7 +958,12 @@ addEventListener('error', (e) => {
   if (fora) return;
   note({ erro: String(e.message).slice(0, 120) }); toast('Erro: ' + e.message, 9000);
 });
-addEventListener('unhandledrejection', (e) => { const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); ev('erro', { etapa: 'app', msg: m }); toast('Erro: ' + m, 9000); });
+addEventListener('unhandledrejection', (e) => {
+  const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); ev('erro', { etapa: 'app', msg: m, tela: app.dataset.screen || '' });
+  // leitura do arquivo falhou fora do fluxo principal: explica o que fazer em vez de mostrar a mensagem técnica
+  if (LEITURA.test(m + ' ' + (e.reason?.name || ''))) { e.preventDefault(); if (app.dataset.screen !== 'studio') perdeuArquivo(); return; }
+  toast('Erro: ' + m, 9000);
+});
 
 // Só a voz / só a música (WAV), no mesmo trecho do vídeo final
 async function dlStem(mk, nome) {
