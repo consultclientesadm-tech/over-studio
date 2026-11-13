@@ -747,15 +747,23 @@ function voiceBar() {
   const pick = [[1, '👤', '1 voz'], [2, '👥', 'Dupla'], [3, '👥', 'Trio']].map(([k, ic, t]) => `<button type="button" data-k="${k}" class="${K === k ? 'on' : ''}" data-help="${k === 1 ? 'Uma pessoa cantando: a voz é afinada inteira.' : `${t}: o app separa ${k} vozes (a Voz 1 é a mais aguda) e afina cada uma por conta própria, com mudo e volume de cada voz.`}"><i>${ic}${k === 3 ? '👤' : ''}</i>${t}</button>`).join('');
   let html = `<div class="vqrow"><span class="vqlbl">Quem canta?</span><div class="vpick" role="group" aria-label="Quantas pessoas cantam">${pick}</div></div>`;
   if (K > 1) {
-    html += `<div class="vbinfo">Toque numa voz para afinar só ela. Use <b>🔊/🔇</b> para ouvir só uma e saber quem é quem.</div>
-    <div class="vbtabs">${state.parts.map((p, i) => `<div class="vtab${i === cur ? ' on' : ''}${muted.has(i) ? ' muted' : ''}"><button type="button" class="vsel" data-i="${i}" data-help="Escolhe a ${p.name}: o painel de afinação mostra e mexe só nas notas dela.">${p.name}<small>${ORD[i] || ''} voz${i === 0 ? ' · mais aguda' : ''}</small></button><button type="button" class="vmute${muted.has(i) ? ' on' : ''}" data-m="${i}" aria-label="${muted.has(i) ? 'Ligar' : 'Deixar muda'} a ${p.name}" data-help="Liga ou deixa muda a ${p.name} na prévia, para ouvir só uma voz e saber quem é quem. Não muda o vídeo final: lá vale o volume de cada voz (na Mix).">${muted.has(i) ? '🔇<small>muda</small>' : '🔊<small>ouvindo</small>'}</button></div>`).join('')}</div>`;
+    html += `<div class="vbinfo">Toque numa voz para ouvir e afinar só ela. <b>🔊/🔇</b> liga ou deixa muda cada voz.</div>
+    <div class="vbtabs"${muted.size && K === 2 ? ' style="grid-template-columns:repeat(2,minmax(0,1fr)) auto"' : ''}>${state.parts.map((p, i) => `<div class="vtab${i === cur ? ' on' : ''}${muted.has(i) ? ' muted' : ''}"><button type="button" class="vsel" data-i="${i}" data-help="Escolhe a ${p.name}: a prévia toca só ela e o painel de afinação mostra e mexe só nas notas dela. Para ouvir todas juntas, toque em Ouvir todas.">${p.name}<small>${ORD[i] || ''} voz${i === 0 ? ' · mais aguda' : ''}</small></button><button type="button" class="vmute${muted.has(i) ? ' on' : ''}" data-m="${i}" aria-label="${muted.has(i) ? 'Ligar' : 'Deixar muda'} a ${p.name}" data-help="Liga ou deixa muda a ${p.name} na prévia, para ouvir só uma voz e saber quem é quem. Não muda o vídeo final: lá vale o volume de cada voz (na Mix).">${muted.has(i) ? '🔇<small>muda</small>' : '🔊<small>ouvindo</small>'}</button></div>`).join('')}${muted.size ? '<button type="button" class="vall" data-help="Volta a tocar todas as vozes juntas na prévia.">🔊<small>ouvir todas</small></button>' : ''}</div>`;
   }
   box.innerHTML = html;
 }
+// toca só as vozes ligadas (o resto fica mudo na prévia) e refaz o som da prévia
+function hear(on) {
+  muted.clear(); state.parts.forEach((_, k) => { if (!on.includes(k)) muted.add(k); });
+  tracks.orig = origTrack(); tracks.raw = rawTrack(); fresh('orig'); fresh('raw'); voiceBar();
+}
+// escolher uma voz = afinar só ela E ouvir só ela (as outras ficam mudas na prévia, até tocar em Ouvir todas)
 async function pickVoice(i) {
-  if (!state.parts || i === cur) return;
-  clearTimeout(autoT); await runAuto(); // o que estava mexendo na voz anterior vale antes de trocar
-  cur = i; editor.sel = -1; editor.load(S()); onSelect(-1); refreshChips(); voiceBar();
+  if (!state.parts) return;
+  if (i !== cur) { clearTimeout(autoT); await runAuto(); } // o que estava mexendo na voz anterior vale antes de trocar
+  const was = cur; cur = i;
+  if (i !== was) { editor.sel = -1; editor.load(S()); onSelect(-1); refreshChips(); }
+  hear([i]); toast(`Tocando só a ${state.parts[i].name}`);
 }
 $('voiceBar').addEventListener('click', async (e) => {
   const sel = e.target.closest('.vsel'), mu = e.target.closest('.vmute');
@@ -767,6 +775,7 @@ $('voiceBar').addEventListener('click', async (e) => {
     toast(on.length ? `Tocando só: ${on.join(' e ')}` : 'Todas as vozes mudas na prévia.');
     return;
   }
+  if (e.target.closest('.vall')) { hear(state.parts.map((_, k) => k)); toast('Tocando todas as vozes juntas'); return; }
   const pk = e.target.closest('.vpick button'); if (pk) setVoices(+pk.dataset.k);
 });
 // Quantas pessoas cantam, escolhido na mão (Ajustes): 1 junta as vozes; 2, 3 ou 4 separa nessa quantidade
@@ -956,6 +965,10 @@ document.addEventListener('click', (e) => {
   $('tipTxt').textContent = el.dataset.help; $('tip').hidden = false;
 }, true);
 $('tipOk').onclick = () => ($('tip').hidden = true);
+// Manual do usuário (vídeos curtos): o código e os vídeos só carregam quando a pessoa abre
+const abrirManual = (id) => { ev('manual', { tela: app.dataset.screen || '' }); import('./manual.js?v=1').then((m) => m.openManual(id, (v) => ev('manual_video', { video: v }))).catch(() => toast('Não deu para abrir o manual. Confira a internet e tente de novo.')); };
+$('manBtn').onclick = () => abrirManual();
+$('manHome').onclick = () => abrirManual();
 $('helpBtn').onclick = () => {
   helpOn = !helpOn; app.classList.toggle('helpon', helpOn);
   toast(helpOn ? 'Modo ajuda ligado: toque em qualquer botão com borda tracejada para saber o que ele faz. Toque no ? de novo para usar o app.' : 'Modo ajuda desligado.', 5000);
