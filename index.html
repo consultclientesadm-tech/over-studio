@@ -193,7 +193,7 @@
 
       <!-- 5) Exportar -->
       <div class="step" data-step="5">
-        <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai na mesma resolução, quadros por segundo e qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
+        <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai em 1080p (o padrão do Instagram, TikTok e Reels), com os mesmos quadros por segundo e a qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
         <div class="summary" id="summary"></div>
         <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="eVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <div class="voicevols" id="eVoices"></div>
@@ -232,7 +232,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=53"></script>
+<script type="module" src="js/app.js?v=54"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
