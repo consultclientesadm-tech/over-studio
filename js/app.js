@@ -5,7 +5,7 @@
 import * as cover from './pipeline.js?v=37';
 import { prefetchModel } from './studio.js?v=37';
 import { TuneEditor } from './editor.js?v=37';
-import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=38';
+import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=39';
 import { exportVideo, exportType } from './export.js?v=37';
 
 const $ = (id) => document.getElementById(id);

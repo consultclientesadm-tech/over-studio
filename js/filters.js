@@ -9,23 +9,33 @@
 // Looks de câmera de cinema: curva de filme (luzes que "rolam" suave, sem estourar), cor separada nas sombras e
 // nas luzes, halation (o brilho avermelhado em volta das luzes que a película e as lentes de cinema fazem),
 // difusão leve de lente, grão fino e nitidez de câmera. Sem nomes de marca: são inspirados no visual delas.
-// 2026-11-13: looks bem mais fortes (o Leo achou que quase não mudavam). Contraste de cinema, cor separada
-// nas sombras e nas luzes, glow de verdade nas luzes (bloom), halation, vinheta marcada e grão.
+// 2026-11-13: linha de looks equilibrada, um para cada ambiente (pedido do Leo: nada de puxar tudo para o amarelo).
+// "Câmera de Cinema" foi aprovado e fica como está. Os outros variam em brilho, saturação, nitidez e contraste,
+// com balanço de branco neutro (o Colorista já corrige a luz amarela do quarto antes do filtro).
+//  - Cinema: teal & orange de cinema (luz de dia ou quarto)
+//  - Natural Limpo: luz de dia, parede clara, pele real, só mais limpo e definido
+//  - Cor Viva: externo, plantas, céu; cor um pouco mais saturada sem estourar pele
+//  - Filme Lavado: luz chapada ou nublada; cor suave, preto levantado, cara de película
+//  - Brilho Suave: pouca luz, ring light, clima romântico; glow e difusão de lente
+//  - Nítido HD: vídeo meio "mole" do celular; realce de detalhe (clarity) e nitidez forte
+//  - Palco Noturno: show, bar, luz colorida; sombras frias e brilho nas luzes
+//  - Preto e Branco de Cinema
 export const FILTERS = [
   { id: 'cine', name: 'Câmera de Cinema', exposure: -0.04, contrast: 1.32, saturation: 1.08, temp: 0.03, tint: 0, shadows: [-0.05, 0.015, 0.075], highlights: [0.07, 0.03, -0.045], fade: 0.03, vignette: 0.42, grain: 0.022, sharpen: 0.5, halation: 0.7, diffusion: 0.25, glow: 0.45 },
-  { id: 'pro', name: 'Câmera Pro Natural', exposure: 0.02, contrast: 1.2, saturation: 1.16, temp: 0.015, tint: 0, shadows: [-0.012, 0.004, 0.025], highlights: [0.03, 0.015, 0], fade: 0, vignette: 0.24, grain: 0.01, sharpen: 0.65, halation: 0.3, diffusion: 0.12, glow: 0.25 },
-  { id: 'golden', name: 'Cinema Dourado', exposure: 0.03, contrast: 1.24, saturation: 1.12, temp: 0.22, tint: 0.02, shadows: [0.03, 0.0, -0.05], highlights: [0.09, 0.045, -0.06], fade: 0.03, vignette: 0.38, grain: 0.016, sharpen: 0.45, halation: 0.9, diffusion: 0.35, glow: 0.65 },
-  { id: 'night', name: 'Cinema Noturno', exposure: -0.18, contrast: 1.34, saturation: 0.8, temp: -0.26, tint: 0.01, shadows: [-0.05, 0.02, 0.1], highlights: [0.03, 0.04, 0.05], fade: 0.02, vignette: 0.5, grain: 0.022, sharpen: 0.45, halation: 0.6, diffusion: 0.25, glow: 0.5 },
-  { id: 'film', name: 'Película 35mm', exposure: 0, contrast: 1.18, saturation: 0.86, temp: 0.08, tint: -0.015, shadows: [0.01, 0.04, 0.05], highlights: [0.07, 0.04, -0.02], fade: 0.16, vignette: 0.4, grain: 0.055, sharpen: 0.2, halation: 1.0, diffusion: 0.35, glow: 0.4 },
-  { id: 'bleach', name: 'Thriller', exposure: -0.08, contrast: 1.45, saturation: 0.5, temp: -0.06, tint: 0.01, shadows: [-0.02, 0.02, 0.05], highlights: [0.03, 0.03, 0.02], fade: 0, vignette: 0.48, grain: 0.03, sharpen: 0.6, halation: 0.3, diffusion: 0.1, glow: 0.2 },
+  { id: 'pro', name: 'Natural Limpo', exposure: 0.06, contrast: 1.12, saturation: 1.06, temp: -0.01, tint: 0, shadows: [-0.006, 0, 0.012], highlights: [0.004, 0.004, 0.004], fade: 0, vignette: 0.18, grain: 0.008, sharpen: 0.7, halation: 0.1, diffusion: 0.06, glow: 0.15, clarity: 0.25 },
+  { id: 'vivo', name: 'Cor Viva', exposure: 0.02, contrast: 1.16, saturation: 1.24, temp: 0, tint: 0, shadows: [-0.015, 0.004, 0.025], highlights: [0.012, 0.008, -0.004], fade: 0, vignette: 0.26, grain: 0.01, sharpen: 0.6, halation: 0.2, diffusion: 0.08, glow: 0.2, clarity: 0.3 },
+  { id: 'film', name: 'Filme Lavado', exposure: 0.03, contrast: 1.04, saturation: 0.76, temp: -0.02, tint: -0.006, shadows: [0, 0.014, 0.03], highlights: [0.01, 0.01, 0.012], fade: 0.24, vignette: 0.26, grain: 0.035, sharpen: 0.25, halation: 0.35, diffusion: 0.25, glow: 0.22 },
+  { id: 'glow', name: 'Brilho Suave', exposure: 0.05, contrast: 1.04, saturation: 1.0, temp: 0, tint: 0, shadows: [0, 0.006, 0.02], highlights: [0.016, 0.012, 0.01], fade: 0.06, vignette: 0.26, grain: 0.012, sharpen: 0.2, halation: 0.5, diffusion: 0.7, glow: 0.95 },
+  { id: 'hd', name: 'Nítido HD', exposure: 0.02, contrast: 1.14, saturation: 1.08, temp: -0.01, tint: 0, shadows: [-0.008, 0, 0.012], highlights: [0.006, 0.004, 0], fade: 0, vignette: 0.16, grain: 0, sharpen: 1, halation: 0, diffusion: 0, glow: 0.05, clarity: 0.75 },
+  { id: 'night', name: 'Palco Noturno', exposure: -0.1, contrast: 1.24, saturation: 0.9, temp: -0.18, tint: 0.008, shadows: [-0.035, 0.012, 0.09], highlights: [0.03, 0.02, 0.02], fade: 0.02, vignette: 0.42, grain: 0.02, sharpen: 0.45, halation: 0.5, diffusion: 0.2, glow: 0.5 },
   { id: 'noir', name: 'Preto e Branco de Cinema', exposure: -0.02, contrast: 1.5, saturation: 0, temp: 0, tint: 0, shadows: [0, 0, 0], highlights: [0, 0, 0], fade: 0.04, vignette: 0.5, grain: 0.045, sharpen: 0.45, halation: 0.4, diffusion: 0.2, glow: 0.5 },
 ];
-export const ORIGINAL = { id: 'original', name: 'Original', exposure: 0, contrast: 1, saturation: 1, temp: 0, tint: 0, shadows: [0, 0, 0], highlights: [0, 0, 0], fade: 0, vignette: 0, grain: 0, sharpen: 0, halation: 0, diffusion: 0, glow: 0 };
+export const ORIGINAL = { id: 'original', name: 'Original', exposure: 0, contrast: 1, saturation: 1, temp: 0, tint: 0, shadows: [0, 0, 0], highlights: [0, 0, 0], fade: 0, vignette: 0, grain: 0, sharpen: 0, halation: 0, diffusion: 0, glow: 0, clarity: 0 };
 
 const VS = `attribute vec2 p; varying vec2 uv; void main(){ uv = vec2(p.x*.5+.5, .5-p.y*.5); gl_Position = vec4(p,0,1); }`;
 const FS = `precision mediump float;
 varying vec2 uv; uniform sampler2D img; uniform vec2 px; uniform vec4 crop; uniform float t;
-uniform float exposure, contrast, saturation, temp, tint, fade, vignette, grain, sharpen, halation, diffusion, glow, amount; uniform vec2 gr;
+uniform float exposure, contrast, saturation, temp, tint, fade, vignette, grain, sharpen, halation, diffusion, glow, clarity, amount; uniform vec2 gr;
 uniform vec3 shadows, highlights;
 float rnd(vec2 c){ return fract(sin(dot(c, vec2(12.9898,78.233)) + t) * 43758.5453); }
 // curva em S que nunca estoura: preto continua preto e branco continua branco
@@ -53,6 +63,8 @@ void main(){
   wide = wide * .125; wide2 = wide2 * .125;
   vec3 bl = (wide * .55 + wide2 * .45);
   float wl = dot(bl, vec3(.2126,.7152,.0722));
+  // clarity: realça o detalhe médio (textura, cabelo, cordas) comparando com a versão borrada
+  c = clamp(c + clarity * (c - bl) * 1.4 * (1. - abs(wl - .5)), 0., 1.);
   // difusão (filtro "mist" de lente): véu suave nas luzes, pele mais bonita
   c = mix(c, max(c, bl), diffusion * smoothstep(.35, .9, wl));
   // glow: só o que é luz forte vaza para os lados, somado em "screen" (não estoura)
@@ -116,7 +128,7 @@ export class Grader {
     gl.uniform2f(this.u('px'), 1 / sw, 1 / sh);
     gl.uniform1f(this.u('t'), (performance.now() % 10000) / 1000);
     const m = Math.min(sw, sh); gl.uniform2f(this.u('gr'), (m * 0.022) / sw, (m * 0.022) / sh);
-    for (const k of ['exposure', 'contrast', 'saturation', 'temp', 'tint', 'fade', 'vignette', 'grain', 'sharpen', 'halation', 'diffusion', 'glow']) gl.uniform1f(this.u(k), f[k] ?? 0);
+    for (const k of ['exposure', 'contrast', 'saturation', 'temp', 'tint', 'fade', 'vignette', 'grain', 'sharpen', 'halation', 'diffusion', 'glow', 'clarity']) gl.uniform1f(this.u(k), f[k] ?? 0);
     gl.uniform3fv(this.u('shadows'), f.shadows); gl.uniform3fv(this.u('highlights'), f.highlights);
     gl.uniform1f(this.u('amount'), this.amount);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -179,6 +191,6 @@ export function compose(base, look) {
     id: look.id, name: look.name, exposure: base.exposure + look.exposure, contrast: Math.min(1.6, base.contrast * look.contrast),
     saturation: look.saturation < 1 ? look.saturation : Math.min(1.35, base.saturation * look.saturation), temp: base.temp + look.temp, tint: base.tint + look.tint,
     shadows: add3(base.shadows, look.shadows), highlights: add3(base.highlights, look.highlights),
-    fade: Math.max(base.fade, look.fade), vignette: Math.max(base.vignette, look.vignette), grain: Math.max(base.grain, look.grain), sharpen: Math.max(base.sharpen, look.sharpen), halation: Math.max(base.halation || 0, look.halation || 0), diffusion: Math.max(base.diffusion || 0, look.diffusion || 0), glow: Math.max(base.glow || 0, look.glow || 0),
+    fade: Math.max(base.fade, look.fade), vignette: Math.max(base.vignette, look.vignette), grain: Math.max(base.grain, look.grain), sharpen: Math.max(base.sharpen, look.sharpen), halation: Math.max(base.halation || 0, look.halation || 0), diffusion: Math.max(base.diffusion || 0, look.diffusion || 0), glow: Math.max(base.glow || 0, look.glow || 0), clarity: Math.max(base.clarity || 0, look.clarity || 0),
   };
 }
