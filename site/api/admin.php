@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
 require_once __DIR__ . '/vigia_erros.php';
+require_once __DIR__ . '/depo_lib.php';
 header('X-Robots-Tag: noindex');
 $a = (string)($_GET['a'] ?? '');
 $db = db();
@@ -40,7 +41,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -421,6 +422,61 @@ switch ($a) {
     $in = input(); $af = af_by_id((int)($in['id'] ?? 0)); if (!$af) fail('Afiliado não encontrado.');
     if (!empty($in['enviar'])) json_out(['ok' => true, 'email_enviado' => af_boas_vindas($af)]);
     json_out(['ok' => true, 'link' => af_senha_link($af)]);
+  }
+  case 'depo': { // depoimentos recebidos + quem pode receber o pedido
+    $db2 = depo_db(); $P = depo_pessoas();
+    $L = array_map('depo_publico', $db2->query("SELECT d.*, u.status u_status FROM depoimentos d LEFT JOIN users u ON u.id = d.user_id ORDER BY (d.status = 'novo') DESC, d.id DESC LIMIT 200")->fetchAll());
+    $c = ['compradores' => 0, 'testaram' => 0, 'pedidos' => 0, 'enviaram' => 0, 'a_pedir' => 0];
+    foreach ($P as $p) { $p['comprou'] ? $c['compradores']++ : $c['testaram']++; if ($p['pedido_at']) $c['pedidos']++; if ($p['enviou']) $c['enviaram']++; if (!$p['pedido_at'] && !$p['enviou'] && !(int)$p['unsub']) $c['a_pedir']++; }
+    json_out(['ok' => true, 'contagem' => $c, 'pessoas' => $P, 'items' => $L, 'tipos' => DEPO_TIPOS, 'bonus' => setting('depo_bonus') !== '0']);
+  }
+  case 'depo-previa': { // como o e-mail chega (comprador e quem testou)
+    $ex = ['id' => 0, 'name' => 'Fulano da Silva', 'email' => 'fulano@exemplo.com', 'status' => 'trial', 'paid_value' => 0];
+    $out = [];
+    foreach (['comprador' => 1, 'testou' => 0] as $k => $cp) {
+      $m = depo_email($ex + ['comprou' => $cp]);
+      $out[$k] = ['assunto' => $m['assunto'], 'html' => mail_template(h($m['titulo']), $m['html'], $m['botao'], site_url() . '/depoimento/', ''), 'whats' => depo_whats($ex + ['comprou' => $cp])];
+    }
+    json_out(['ok' => true] + $out);
+  }
+  case 'depo-pedir': { // manda o pedido por e-mail (ids vazio = todo mundo que ainda não recebeu)
+    $ids = array_values(array_map('intval', (array)arg('ids', [])));
+    json_out(['ok' => true] + depo_pedir($ids));
+  }
+  case 'depo-marcar': { // pediu pelo WhatsApp (o botão abre o WhatsApp e marca)
+    depo_db()->prepare('INSERT OR REPLACE INTO depo_pedidos (user_id, canal, created_at) VALUES (?, ?, ?)')->execute([(int)arg('id'), 'whatsapp', now()]);
+    json_out(['ok' => true]);
+  }
+  case 'depo-status': {
+    $st = (string)arg('status'); if (!in_array($st, ['novo', 'aprovado', 'usado', 'recusado'], true)) fail('Status inválido.');
+    depo_db()->prepare('UPDATE depoimentos SET status = ? WHERE id = ?')->execute([$st, (int)arg('id')]);
+    json_out(['ok' => true]);
+  }
+  case 'depo-apagar': {
+    $id = (int)arg('id'); $dir = depo_dir($id);
+    foreach (glob($dir . '/*') ?: [] as $f) @unlink($f); @rmdir($dir);
+    depo_db()->prepare('DELETE FROM depoimentos WHERE id = ?')->execute([$id]);
+    json_out(['ok' => true]);
+  }
+  case 'depo-arquivo': { // vê ou baixa um arquivo do depoimento (aceita Range: o vídeo toca e avança no navegador)
+    $q = depo_db()->prepare('SELECT * FROM depoimentos WHERE id = ?'); $q->execute([(int)($_GET['id'] ?? 0)]); $d = $q->fetch();
+    if (!$d) fail('Não encontrado.', 404);
+    $f = null; foreach (json_decode($d['arquivos'], true) ?: [] as $x) if ($x['tipo'] === ($_GET['tipo'] ?? '')) $f = $x;
+    $path = $f ? depo_dir((int)$d['id']) . '/' . $f['tipo'] . '.' . $f['ext'] : '';
+    if (!$f || !is_file($path)) fail('Arquivo não encontrado.', 404);
+    $mime = ['mov' => 'video/quicktime', 'mp4' => 'video/mp4', 'm4v' => 'video/mp4', 'webm' => 'video/webm', '3gp' => 'video/3gpp', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'heic' => 'image/heic', 'm4a' => 'audio/mp4', 'mp3' => 'audio/mpeg', 'wav' => 'audio/wav', 'aac' => 'audio/aac'][$f['ext']] ?? 'application/octet-stream';
+    $size = filesize($path); $ini = 0; $fim = $size - 1;
+    if (preg_match('/bytes=(\d*)-(\d*)/', $_SERVER['HTTP_RANGE'] ?? '', $m)) {
+      if ($m[1] !== '') { $ini = (int)$m[1]; if ($m[2] !== '') $fim = min($fim, (int)$m[2]); } elseif ($m[2] !== '') $ini = max(0, $size - (int)$m[2]);
+      if ($ini > $fim) { http_response_code(416); header("Content-Range: bytes */$size"); exit; }
+      http_response_code(206); header("Content-Range: bytes $ini-$fim/$size");
+    }
+    $nome = preg_replace('/[^a-z0-9]+/', '-', strtolower($d['nome'] ?: 'depoimento')) . '-' . $f['tipo'] . '.' . $f['ext'];
+    header('Content-Type: ' . $mime); header('Accept-Ranges: bytes'); header('Content-Length: ' . ($fim - $ini + 1)); header('Cache-Control: private, max-age=3600');
+    header('Content-Disposition: ' . (isset($_GET['baixar']) ? 'attachment' : 'inline') . '; filename="' . $nome . '"');
+    $h = fopen($path, 'rb'); fseek($h, $ini); $rest = $fim - $ini + 1;
+    while ($rest > 0 && !feof($h)) { $b = fread($h, (int)min(1048576, $rest)); echo $b; $rest -= strlen($b); flush(); }
+    fclose($h); exit;
   }
   case 'funil-rodar': json_out(['ok' => true] + run_funnel(true));
 }

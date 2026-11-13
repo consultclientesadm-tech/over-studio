@@ -131,6 +131,7 @@ const SETTINGS_DEFAULT = [
   'af_tutorial_url' => '',           // vídeo do passo a passo no painel do afiliado (https)
   'empresa_nome' => '',              // LGPD: razão social ou nome de quem vende (aparece na Política de privacidade e nos Termos)
   'empresa_doc' => '',               // CNPJ ou CPF de quem vende
+  'depo_bonus' => '1',               // quem está no teste ganha +1 vídeo ao mandar o antes e depois (1 vez)
   'dpo_email' => 'contato@studiocover.com.br', // e-mail do encarregado de dados (LGPD): pedidos de acesso, correção e exclusão
 ];
 function setting(string $k): string {

@@ -16,7 +16,7 @@ Options -Indexes
   RewriteRule ^(VSL|Vsl)/$ /vsl/ [L,R=301]
 </IfModule>
 # arquivos que nunca podem ser baixados
-<FilesMatch "^(config\.php|config\.exemplo\.php|lib\.php|mail\.php|funil\.php|.*\.sqlite.*|.*\.md)$">
+<FilesMatch "^(config\.php|config\.exemplo\.php|lib\.php|mail\.php|funil\.php|depo_lib\.php|.*\.sqlite.*|.*\.md)$">
   Require all denied
 </FilesMatch>
 <IfModule mod_expires.c>

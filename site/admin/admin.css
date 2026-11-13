@@ -339,3 +339,13 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .main .th { padding-right: 190px; }
 @media (max-width: 760px) { .vistBtn { top: 10px; right: 10px; height: 36px; padding: 0 10px; } .vistBtn span { display: none; } .main .th { padding-right: 56px; }
   .nav { overflow-x: auto; justify-content: flex-start; } .nav > button { min-width: 62px; position: relative; } .nav > button .nbadge { position: absolute; margin: 0 0 22px 26px; min-width: 16px; height: 16px; font-size: 9.5px; } }
+/* depoimentos */
+.dpas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.dpa { display: flex; flex-direction: column; gap: 6px; width: 220px; max-width: 100%; }
+.dpa video, .dpa img { width: 100%; max-height: 390px; border-radius: 14px; background: #000; object-fit: contain; }
+.dpa audio { width: 100%; }
+.dpo { margin-bottom: 14px; }
+.dpo select { background: #0b0b0f; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; height: 34px; padding: 0 8px; }
+#tDepo input[type=checkbox] { width: 18px; height: 18px; flex: 0 0 18px; accent-color: #ffd400; }
+#tDepo a.btn { display: inline-flex; align-items: center; text-decoration: none; }
+.dpa a.btn { justify-content: center; }
