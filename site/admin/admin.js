@@ -304,7 +304,7 @@ async function loadEscudo() {
       ${card(gh.ok ? 'g' : 'y', '🔑', 'Chave do GitHub', gh.ok ? 'ok' : gh.tem ? 'com problema' : 'falta', gh.ok ? `termina em …${esc(gh.final)} · testada ${desde(gh.testado)}` : 'para o código ficar privado')}
     </div>
     ${j.bloqueados.length ? `<h4 class="vh">⛔ Bloqueados agora</h4><div class="glass tbl"><table><tr><th>IP</th><th>Motivo</th><th>Até</th><th></th></tr>${j.bloqueados.map((b) => `<tr><td>${esc(b.ip)}${b.ip === j.meu_ip ? ' <span class="st trial">é você</span>' : ''}</td><td>${esc(b.motivo)}<small>${b.vezes > 1 ? b.vezes + 'ª vez' : ''}</small></td><td>${dt(b.ate)}</td><td><button class="btn sm ghost" data-desb="${esc(b.ip)}">Desbloquear</button></td></tr>`).join('')}</table></div>` : ''}
-    <details class="vh"><summary>🔑 Chave do GitHub (código privado)</summary><div class="glass formgrid">
+    <details class="vh"${gh.ok ? '' : ' open'}><summary>🔑 Chave do GitHub (código privado): ${gh.ok ? '✅ funcionando' : 'cole aqui a chave github_pat_'}</summary><div class="glass formgrid">
       <p class="sub full">Com o código privado no GitHub, o site precisa desta chave para buscar a versão nova. Ela fica guardada fora do site, nunca aparece no painel (só o final), e só serve para LER o código.</p>
       <label class="full">Cole a chave (começa com github_pat_)<div class="copy"><input id="ghTok" type="password" autocomplete="off" placeholder="github_pat_..."><button type="button" class="btn sm" id="ghSalvar">Testar e salvar</button></div></label>
       <span class="msg full" id="ghMsg">${gh.ok ? `✅ Chave salva e testada${gh.privado ? ' · repositório já está privado' : ' · repositório ainda público'}` : ''}</span>
