@@ -160,8 +160,9 @@ function erros_lista(): array {
   $st = [];
   foreach ($q->fetchAll() as $e) {
     $d = json_decode((string)$e['data'], true) ?: []; $k = erro_sig($e['kind'], $d)['sig'];
-    $st[$k] ??= ['h1' => 0, 'h24' => 0, 'pessoas' => [], 'aparelhos' => []];
+    $st[$k] ??= ['h1' => 0, 'h24' => 0, 'pessoas' => [], 'pagos' => [], 'aparelhos' => []];
     $st[$k]['h24']++; if ($e['created_at'] >= $h1) $st[$k]['h1']++; $st[$k]['pessoas'][(int)$e['user_id']] = 1;
+    if (isset(pagos_ids()[(int)$e['user_id']])) $st[$k]['pagos'][(int)$e['user_id']] = 1;
     $ap = erro_aparelho($e, $d); $st[$k]['aparelhos'][$ap] = ($st[$k]['aparelhos'][$ap] ?? 0) + 1;
   }
   $out = [];
@@ -171,10 +172,10 @@ function erros_lista(): array {
     if (!$s && $g['ultimo'] < date('Y-m-d H:i:s', time() - 7 * 86400)) continue;
     $aps = $s['aparelhos'] ?? []; arsort($aps);
     $out[] = ['sig' => $g['sig'], 'tipo' => $g['tipo'], 'etapa' => $g['etapa'], 'msg' => $g['msg'], 'status' => $g['status'], 'primeiro' => $g['primeiro'], 'ultimo' => $g['ultimo'],
-      'total' => (int)$g['total'], 'h1' => $s['h1'] ?? 0, 'h24' => $s['h24'] ?? 0, 'pessoas_24h' => $s ? count($s['pessoas']) : 0, 'aparelhos' => array_slice($aps, 0, 4, true),
+      'total' => (int)$g['total'], 'h1' => $s['h1'] ?? 0, 'h24' => $s['h24'] ?? 0, 'pessoas_24h' => $s ? count($s['pessoas']) : 0, 'pagos_24h' => $s ? count($s['pagos']) : 0, 'aparelhos' => array_slice($aps, 0, 4, true),
       'novo' => $g['primeiro'] >= $h24, 'resolvido_em' => $g['resolvido_em'], 'resolvido_por' => $g['resolvido_por'], 'nota' => $g['nota']];
   }
-  usort($out, fn($a, $b) => [$b['h1'], $b['h24']] <=> [$a['h1'], $a['h24']]);
+  usort($out, fn($a, $b) => [$b['status'] === 'aberto' && $b['pagos_24h'] > 0, $b['h1'], $b['h24']] <=> [$a['status'] === 'aberto' && $a['pagos_24h'] > 0, $a['h1'], $a['h24']]);
   return array_slice($out, 0, 30);
 }
 
@@ -188,4 +189,25 @@ function erros_corrigidos(array $sigs, string $commit): int {
   $q = erros_db()->prepare("UPDATE erro_grupos SET status = 'resolvido', resolvido_em = ?, resolvido_por = 'claude', nota = ? WHERE sig = ? AND status <> 'ignorado'"); $n = 0;
   foreach (array_unique($sigs) as $sig) if (preg_match('/^[0-9a-f]{16}$/', $sig)) { $q->execute([now(), mb_substr($commit, 0, 200), $sig]); $n += $q->rowCount(); }
   return $n;
+}
+
+// cliente que pagou (não conta cortesia nem teste)
+function cliente_pago(array $u): bool { return ($u['status'] ?? '') === 'active' && (float)($u['paid_value'] ?? 0) > 0; }
+function pagos_ids(): array {
+  static $ids = null;
+  if ($ids === null) $ids = array_flip(array_map('intval', db()->query("SELECT id FROM users WHERE status = 'active' AND paid_value > 0")->fetchAll(PDO::FETCH_COLUMN)));
+  return $ids;
+}
+function desculpa_cliente_pago(array $u): void {
+  $k = 'desculpa_' . (int)$u['id']; $q = db()->prepare('SELECT v FROM settings WHERE k = ?'); $q->execute([$k]); $last = (string)$q->fetchColumn();
+  if ($last && strtotime($last) > time() - 86400) return;
+  set_setting($k, now());
+  $nome = trim(explode(' ', (string)($u['name'] ?? ''))[0]);
+  notify((int)$u['id'], 'Desculpe pelo problema 🙏', 'Vimos que deu um erro no seu Studio Cover e já estamos corrigindo. Tente de novo daqui a pouco.', site_url() . '/app/');
+  send_mail($u, (string)$u['email'], 'desculpa-erro', 'Desculpe pelo problema no Studio Cover', 'Já estamos resolvendo',
+    '<p>Oi' . ($nome ? ' ' . h($nome) : '') . ',</p><p>O nosso sistema percebeu que deu um erro no seu Studio Cover agora há pouco. Pedimos desculpas! A nossa equipe já foi avisada e está corrigindo.</p>'
+    . '<p>Tente de novo daqui a pouco. Se continuar, é só responder este e-mail que a gente te ajuda pessoalmente.</p>', 'Abrir o Studio Cover', site_url() . '/app/');
+  // avisa os administradores também
+  foreach (db()->query('SELECT email FROM admins')->fetchAll(PDO::FETCH_COLUMN) as $to)
+    try { send_mail(null, $to, 'alerta', '💛 Cliente PAGO teve erro: ' . (string)$u['email'], 'Cliente pago com erro', '<p>' . h((string)$u['name']) . ' (' . h((string)$u['email']) . ') teve erro no app. Ele já recebeu um pedido de desculpas por e-mail e no app. O Claude corrige esse erro primeiro na próxima rodada.</p>', 'Abrir o painel', site_url() . '/admin/'); } catch (Throwable $e) {}
 }

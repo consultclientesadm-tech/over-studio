@@ -185,6 +185,11 @@ switch ($a) {
       ->execute([$u['id'], $k, json_encode($d, JSON_UNESCAPED_UNICODE), mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 250), now()]);
     if ($k === 'erro' || $k === 'fechou') { // erro chegou: se a vistoria não rodou nos últimos minutos, roda agora (depois de responder ao app)
       require_once __DIR__ . '/vigia_erros.php';
+      // cliente pago com erro: pedido de desculpas na hora (aviso no app/celular + e-mail), no máximo 1 a cada 24h
+      if (cliente_pago($u) && ($d['etapa'] ?? '') !== 'externo') { $uu = $u; register_shutdown_function(function () use ($uu) {
+        if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+        try { desculpa_cliente_pago($uu); } catch (Throwable $e) {}
+      }); }
       $vl = setting('vigia_erros_last');
       if (!$vl || strtotime($vl) < time() - VIGIA_ERROS_INTERVALO) register_shutdown_function(function () {
         if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
