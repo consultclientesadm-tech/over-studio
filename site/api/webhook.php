@@ -82,5 +82,13 @@ $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, 
 try { or_marca_venda((int)$db->lastInsertId(), or_da_venda($data, $u, $afId)); } catch (Throwable $e) {} // de qual página/canal veio a venda
 $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
 funnel_paid($u, $isNew);
+// aviso de venda no celular dos administradores (som de notificação do aparelho)
+try {
+  $sl = $db->query("SELECT liquido, or_pagina, or_fonte, or_campanha, or_caminho FROM sales WHERE status = 'pago' ORDER BY id DESC LIMIT 1")->fetch() ?: [];
+  $hoje = $db->prepare("SELECT COUNT(*), COALESCE(SUM(liquido), 0) FROM sales WHERE status = 'pago' AND created_at >= ?"); $hoje->execute([date('Y-m-d')]); [$nh, $lh] = $hoje->fetch(PDO::FETCH_NUM);
+  $de = trim(implode(' · ', array_filter([($sl['or_pagina'] ?? '') === 'vsl' ? '/vsl' : (($sl['or_pagina'] ?? '') === 'home' ? 'página do teste' : ''), $sl['or_fonte'] ?? '', $sl['or_campanha'] ?? '', $sl['or_caminho'] ?? ''])));
+  $corpo = 'R$ ' . number_format((float)($sl['liquido'] ?? $value), 2, ',', '.') . ' líquido · ' . ($name ?: $email) . ($de ? "\n$de" : '') . "\nHoje: $nh venda" . ($nh == 1 ? '' : 's') . ' · R$ ' . number_format((float)$lh, 2, ',', '.') . ' 🙏';
+  foreach ($db->query('SELECT id FROM admins')->fetchAll() as $ad) push_user(-(int)$ad['id'], '💰 Cha-ching! Mais uma venda no Studio Cover', $corpo, '/admin/');
+} catch (Throwable $e) {}
 $log("pago: $email R$ $value");
 json_out(['ok' => true, 'acao' => 'liberado']);

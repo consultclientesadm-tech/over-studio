@@ -7,9 +7,13 @@
 <meta name="theme-color" content="#030308">
 <title>Comando · Studio Cover</title>
 <link rel="icon" href="/assets/logo.svg">
+<link rel="manifest" href="/admin/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SC Comando">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=16">
+<link rel="stylesheet" href="admin.css?v=17">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -55,6 +59,7 @@
   </aside>
 
   <main class="main">
+    <button class="vistBtn somBtn" id="somBtn" title="Som e aviso de venda no celular"><i>💰</i><span>Aviso de venda</span></button>
     <button class="vistBtn" id="vistBtn" title="Vistoria de erros"><i>🛰️</i><span>Vistoria de erros</span><em id="vistBtnN" hidden></em></button>
     <!-- Visão geral -->
     <div class="tab" id="tGeral">
@@ -201,6 +206,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=24"></script>
+<script src="admin.js?v=25"></script>
 </body>
 </html>
