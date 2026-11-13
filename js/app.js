@@ -6,7 +6,7 @@ import * as cover from './pipeline.js?v=42';
 import { prefetchModel } from './studio.js?v=41';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
-import { exportVideo, exportType } from './export.js?v=38';
+import { exportVideo, exportType } from './export.js?v=39';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -132,7 +132,7 @@ function aviso(titulo, texto, passos = [], botoes = [{ t: 'Entendi', v: true, b:
 }
 const DICAS = [
   `<b>Vídeo de até ${MIN} minutos</b> (se for maior, o app usa só os ${MIN} primeiros)`,
-  `<b>Até ${MB_OK} MB</b>, gravado em <b>1080p</b> (4K pesa 3 vezes mais e pode travar o celular)`,
+  `<b>Até ${MB_OK} MB</b>, de preferência gravado em <b>1080p</b>. Vídeo em 4K é aceito, mas o seu cover sempre sai em <b>1080p</b> (o padrão do Instagram, com a mesma qualidade), e o 4K pesa até 3 vezes mais para o celular`,
   'Feche os outros apps e deixe o Studio Cover aberto na tela até terminar',
   'Use pelo <b>ícone da tela de início</b> ou no Safari/Chrome (não no navegador do Instagram)',
 ];
@@ -163,7 +163,7 @@ async function conferirVideo(f) {
   const txt = [longo ? `Seu vídeo tem <b>${fmt(dur)}</b>. O limite é de <b>${MAX_SEC / 60} minutos</b>: o app vai usar só os ${MAX_SEC / 60} primeiros.` : '',
     pesado ? `Ele tem <b>${mb} MB</b>. Acima de ${MB_OK} MB o celular pode ficar sem memória e fechar o app no meio (não é defeito do app, é o limite do aparelho).` : ''].filter(Boolean).join(' ');
   const passos = [longo ? 'Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar' : '',
-    pesado ? 'Grave em <b>1080p</b> em vez de 4K (Ajustes › Câmera › Gravar vídeo, no iPhone)' : '',
+    pesado ? 'Grave em <b>1080p</b> em vez de 4K (Ajustes › Câmera › Gravar vídeo, no iPhone): o cover sai em 1080p de qualquer jeito' : '',
     pesado ? 'Ou use <b>"Ou suba só o áudio"</b> ou o computador' : ''].filter(Boolean);
   return !!(await aviso(longo ? `⏱️ Vídeo maior que ${MIN} minutos` : '⚠️ Vídeo pesado para o celular', txt, passos,
     [{ t: 'Escolher outro vídeo', v: false, b: 1 }, { t: longo ? `Continuar com os ${MAX_SEC / 60} primeiros minutos` : 'Tentar mesmo assim', v: true }]));
@@ -885,7 +885,7 @@ function refreshSummary() {
   const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
   $('dlBed').hidden = !state.bed;
   $('dlWav').textContent = audioOnly ? 'Baixar o áudio pronto (WAV)' : 'Baixar só o áudio (WAV)';
-  $('exportSub').textContent = audioOnly ? 'Baixe o áudio pronto e junte de volta no seu vídeo no editor (CapCut, InShot etc.), alinhando pelo começo.' : 'O vídeo sai na mesma resolução, quadros por segundo e qualidade do original. Deixe a tela aberta até terminar.';
+  $('exportSub').textContent = audioOnly ? 'Baixe o áudio pronto e junte de volta no seu vídeo no editor (CapCut, InShot etc.), alinhando pelo começo.' : 'O vídeo sai em 1080p (o padrão do Instagram, TikTok e Reels), com os mesmos quadros por segundo e a qualidade do original. Deixe a tela aberta até terminar.';
   if (audioOnly) {
     $('summary').innerHTML = `<div>Afinação<b>${tuned ? `sim · ${state.after.band}% na faixa` : 'não'}</b></div><div>Mix e master<b>${mastered ? 'sim' : 'não'}</b></div><div>Duração<b>${fmt(e - s)}</b></div><div>Formato<b>WAV</b></div>`;
     return;

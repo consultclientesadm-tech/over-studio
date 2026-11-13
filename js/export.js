@@ -1,6 +1,6 @@
 // ===== Vídeo final =====
 // Caminho principal (exportFull): lê o arquivo original quadro a quadro, aplica a cor e grava de novo com a
-// mesma resolução, os mesmos quadros por segundo e a mesma qualidade (taxa de bits) do original. Não depende
+// resolução de 1080p (4K desce para 1080p), os mesmos quadros por segundo e a mesma qualidade (taxa de bits) do original. Não depende
 // de tocar o vídeo em tempo real, então não perde quadro nem baixa a qualidade.
 // Reserva (exportVideo): para navegador sem WebCodecs (iPhone com iOS antes do 16.4).
 // Toca o vídeo cortado, desenha cada quadro com o filtro num quadro 1080p e grava junto com o áudio
@@ -123,15 +123,19 @@ async function exportFull({ file, filter, amount, channels, sr, start, end, onPr
   if (!vt || !(await vt.canDecode())) throw new Error('não decodifica este vídeo');
   const st = await vt.computePacketStats(120).catch(() => null);
   const srcRate = st?.averageBitrate || 16e6;
-  // Mesma resolução do original (vídeo pequeno sobe para 1080p; acima de 4K desce para 4K)
+  // Sempre 1080p (o padrão do Instagram/TikTok/Reels): vídeo pequeno sobe para 1080p e 4K desce para 1080p.
+  // Reduzir 4K para 1080p com taxa de bits alta não perde nitidez (cada ponto final junta 4 do original)
+  // e deixa a exportação bem mais leve para o celular.
   let W = vt.displayWidth, H = vt.displayHeight;
-  const up = Math.max(1, 1080 / Math.min(W, H)), down = Math.min(1, 3840 / Math.max(W, H));
+  const up = Math.max(1, 1080 / Math.min(W, H)), down = Math.min(1, 1080 / Math.min(W, H));
   const sc = up > 1 ? up : down;
   W = even(W * sc); H = even(H * sc);
   // Mesma qualidade: a taxa de bits do original (H.264 precisa de ~40% a mais que o HEVC do iPhone)
   const hevcSrc = (await vt.getCodecParameterString?.())?.startsWith('h') || vt.codec === 'hevc';
   const px = (W * H) / (1080 * 1920);
-  let bitrate = Math.min(80e6, Math.max(12e6 * px, srcRate * (hevcSrc ? 1.4 : 1.1) * Math.max(1, sc * sc)));
+  // 1080p: no mínimo 12 Mb/s (bem acima dos ~8 Mb/s que o Instagram usa) e até 30 Mb/s; 4K reduzido leva a
+  // taxa do original proporcional ao tamanho, então não perde qualidade
+  let bitrate = Math.min(30e6, Math.max(12e6 * px, srcRate * (hevcSrc ? 1.4 : 1.1) * sc * sc));
   bitrate = Math.round(bitrate);
   let codec = await MB.getFirstEncodableVideoCodec(['avc', 'hevc'], { width: W, height: H, bitrate });
   if (!codec && Math.min(W, H) > 1080) { // aparelho que não grava 4K: grava em 1080p
