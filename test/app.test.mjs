@@ -80,6 +80,7 @@ try {
       await page.click('#tuneAuto'); await page.waitForTimeout(300); await busyDone();
       const i = await page.evaluate(() => { const p = window.studio.state.plan; let b = 0; p.forEach((n, k) => { if (n.end - n.start > p[b].end - p[b].start) b = k; }); return b; });
       const before = await page.evaluate((i) => window.studio.state.plan[i].target, i);
+      await page.click('#panelBtn'); await page.waitForTimeout(400); // subir/descer ficam dentro do Painel de afinação
       await page.evaluate((i) => window.studio.select(i), i);
       const want = await page.evaluate((i) => window.studio.editor.stepFrom(window.studio.state.plan[i].target, 1), i);
       const t0 = Date.now();
@@ -95,6 +96,7 @@ try {
       const band2 = await page.evaluate(() => window.studio.state.after.band);
       check(band2 >= 97, `faixa verde depois da edição = ${band2}%`);
       await page.screenshot({ path: `${dir}/${name}-4-editada.png` });
+      await page.click('#popClose'); await page.waitForTimeout(300);
     }
     // etapa 3: mix e master com 3 opções
     await page.click('#next'); await page.waitForTimeout(300);

@@ -40,6 +40,14 @@ try {
     await page.click('#voiceBar .vsel[data-i="1"]'); await page.waitForTimeout(400);
     const sel = await page.evaluate(() => ({ on: document.querySelector('#voiceBar .vtab.on .vsel').dataset.i, plan: window.studio.editor.state === window.studio.state.parts[1] }));
     check(sel.on === '1' && sel.plan, `${name}: tocar na Voz 2 abre as notas dela no painel`);
+    const solo = await page.evaluate(() => ({ m0: document.querySelector('#voiceBar .vmute[data-m="0"]').classList.contains('on'), m1: document.querySelector('#voiceBar .vmute[data-m="1"]').classList.contains('on'), all: !!document.querySelector('#voiceBar .vall') }));
+    check(solo.m0 && !solo.m1 && solo.all, `${name}: tocar na Voz 2 toca só a Voz 2 (Voz 1 muda) e aparece Ouvir todas`);
+    await page.click('#voiceBar .vsel[data-i="0"]'); await page.waitForTimeout(300);
+    const solo1 = await page.evaluate(() => [0, 1].map((i) => document.querySelector(`#voiceBar .vmute[data-m="${i}"]`).classList.contains('on')));
+    check(!solo1[0] && solo1[1], `${name}: tocar na Voz 1 toca só a Voz 1`);
+    await page.click('#voiceBar .vall'); await page.waitForTimeout(300);
+    check(await page.evaluate(() => !document.querySelector('#voiceBar .vmute.on')), `${name}: Ouvir todas liga as duas vozes de novo`);
+    await page.click('#voiceBar .vsel[data-i="1"]'); await page.waitForTimeout(300);
     await page.screenshot({ path: `${dir}/${name}-dupla-voz2-mudo.png` });
     if (name === 'celular') {
       await page.click('#panelBtn'); await page.waitForTimeout(500);

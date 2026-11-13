@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=42">
+<link rel="stylesheet" href="css/app.css?v=43">
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
 // e a página recarregava no meio do processamento, voltando para o início.
@@ -32,8 +32,9 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v37</small></div>
+    <div class="brand"><span class="logo"></span><b>STUDIO</b><i>COVER</i><small class="ver">v38</small></div>
     <div class="topinfo" id="topinfo"></div>
+    <button class="ghost sm manbtn" id="manBtn" title="Manual do usuário: vídeos curtos de cada função">📖 <span>Manual</span></button>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda">?</button>
     <button class="ghost sm" id="newBtn" hidden>Novo vídeo</button>
   </header>
@@ -53,6 +54,7 @@
         <input type="file" id="audioFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden>
         <b>Ou suba só o áudio</b><small>MP3, M4A ou WAV · você baixa o áudio pronto e junta no seu vídeo</small>
       </label>
+      <button type="button" class="mancard" id="manHome"><i>▶</i><span><b>Manual em vídeo</b><small>Vídeos curtos mostrando cada função do app</small></span></button>
       <details class="reqcard" id="reqCard">
         <summary>📱 Veja se o seu aparelho é compatível</summary>
         <ul>
@@ -233,7 +235,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=59"></script>
+<script type="module" src="js/app.js?v=60"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
