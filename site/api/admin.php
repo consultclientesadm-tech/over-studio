@@ -372,10 +372,24 @@ switch ($a) {
     json_out(['ok' => true]);
   }
   case 'push-teste': { $nm = trim(explode(' ', trim((string)($me['name'] ?? '')))[0] ?? ''); $n = push_user(-(int)$me['id'], '💰 Parabéns' . ($nm !== '' ? " $nm" : '') . ', mais uma venda do Studio Cover!', "Venda de R$ 297,00 · líquido R$ 279,96\nTeste do aviso: é assim que cada venda vai chegar. 🙏", '/admin/'); json_out(['ok' => true, 'enviados' => $n]); }
-  case 'origens': json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))))); // de qual página e canal vêm visitas, testes e vendas
+  case 'origens': try { meta_sync(false); } catch (Throwable $e) {} json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))))); // de qual página e canal vêm visitas, testes e vendas
   case 'vigia-erros': { // vistoria de 10 em 10 min: tipos de erro do app, alertas e quando rodou
     json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista()]);
   }
+  // conta de anúncios do Meta: puxa o gasto real sozinho (só leitura). O token nunca volta para a tela.
+  case 'meta-conectar': {
+    $dono = preg_replace('/[^a-z0-9]/', '', strtolower((string)arg('dono', ''))) ?? '';
+    $act = preg_replace('/\D/', '', (string)arg('act', '')) ?? ''; $tok = trim((string)arg('token', ''));
+    if ($dono === '' || $act === '' || strlen($tok) < 50) json_out(['ok' => false, 'error' => 'Preencha de quem é, o ID da conta de anúncios e o token.']);
+    $act = 'act_' . $act;
+    try { $nome = meta_testa($act, $tok); } catch (Throwable $e) { json_out(['ok' => false, 'error' => 'O Meta não aceitou: ' . $e->getMessage()]); }
+    meta_db()->prepare('INSERT INTO meta_contas (dono, act, token, nome, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(act) DO UPDATE SET dono = excluded.dono, token = excluded.token, nome = excluded.nome, erro = \'\', ultimo = NULL')
+      ->execute([substr($dono, 0, 20), $act, $tok, mb_substr($nome, 0, 80), now()]);
+    $s = meta_sync(true);
+    json_out(['ok' => true, 'nome' => $nome, 'sync' => $s[$act] ?? '']);
+  }
+  case 'meta-remover': { meta_db()->prepare('DELETE FROM meta_contas WHERE id = ?')->execute([(int)arg('id', 0)]); json_out(['ok' => true]); }
+  case 'meta-sync': json_out(['ok' => true, 'sync' => meta_sync(true)]);
   case 'anuncio-add': { // gasto com anúncio: dia (AAAA-MM-DD), valor, nota
     $db->exec('CREATE TABLE IF NOT EXISTS ad_gastos (id INTEGER PRIMARY KEY AUTOINCREMENT, dia TEXT NOT NULL, valor REAL NOT NULL, nota TEXT, created_at TEXT NOT NULL)');
     $dia = (string)(arg('dia', '')); if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dia)) $dia = date('Y-m-d');

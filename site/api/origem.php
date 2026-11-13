@@ -3,6 +3,7 @@
 // A página grava o cookie sc_or = "pagina|fonte|campanha" (30 dias) e manda a visita; o botão de compra leva trk=o.pagina.fonte.campanha para a Eduzz,
 // que devolve no aviso da venda (edz_trk_1). Quem compra de dentro do app/funil leva trk=teste e a venda herda a origem do cadastro do teste.
 declare(strict_types=1);
+require_once __DIR__ . '/meta_ads.php';
 
 function or_limpa(string $s, int $max = 40): string {
   $s = mb_strtolower(trim($s));
@@ -73,8 +74,10 @@ function or_anuncios(PDO $db, string $since): array {
   $g = $db->prepare('SELECT conta, SUM(valor) v FROM ad_gastos WHERE dia >= ? GROUP BY conta'); $g->execute([substr($since, 0, 10)]);
   $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido FROM sales WHERE status = 'pago' AND created_at >= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm')"); $s->execute([$since]);
   $r = [];
-  $add = function (string $c) use (&$r) { $r[$c] ??= ['conta' => $c, 'gasto' => 0.0, 'vendas' => 0, 'liquido' => 0.0, 'vsl' => 0, 'home' => 0]; };
-  foreach ($g->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; }
+  $add = function (string $c) use (&$r) { $r[$c] ??= ['conta' => $c, 'gasto' => 0.0, 'gasto_auto' => 0.0, 'gasto_manual' => 0.0, 'vendas' => 0, 'liquido' => 0.0, 'vsl' => 0, 'home' => 0]; };
+  foreach ($g->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_manual'] += (float)$x['v']; } // impulsionamento lançado à mão
+  try { $m = meta_db()->prepare('SELECT conta, SUM(valor) v FROM meta_gasto WHERE dia >= ? GROUP BY conta'); $m->execute([substr($since, 0, 10)]);
+    foreach ($m->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_auto'] += (float)$x['v']; } } catch (Throwable $e) {} // Gerenciador, automático pela UTM
   foreach ($s->fetchAll() as $x) {
     $c = $x['or_fonte'] === 'meta-sem-utm' ? '?' : (string)(explode('-', (string)$x['or_campanha'])[0] ?? '');
     $add($c); $r[$c]['vendas']++; $r[$c]['liquido'] += (float)$x['liquido'];
@@ -107,5 +110,5 @@ function or_relatorio(int $dias): array {
   }
   $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' ORDER BY s.id DESC LIMIT 15");
   $ult->execute();
-  return ['ok' => true, 'anuncios' => or_anuncios($db, $since), 'dias' => $dias, 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
+  return ['ok' => true, 'anuncios' => or_anuncios($db, $since), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
 }
