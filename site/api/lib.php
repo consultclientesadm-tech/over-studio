@@ -100,6 +100,8 @@ SQL);
   $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
   if (!in_array('aceite_at', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN aceite_at TEXT');
   if (!in_array('aceite_ver', $cols, true)) $db->exec("ALTER TABLE users ADD COLUMN aceite_ver TEXT NOT NULL DEFAULT ''");
+  // teste grátis só é gasto quando o vídeo abre no estúdio (2026-11-13): marca o vídeo "em andamento" aqui
+  if (!in_array('trial_hold', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN trial_hold INTEGER NOT NULL DEFAULT 0');
 }
 
 // ---------- configurações editáveis no painel ----------
@@ -256,6 +258,16 @@ function app_events_db(): PDO {
   static $ok = false; $db = db();
   if (!$ok) { $db->exec('CREATE TABLE IF NOT EXISTS app_events (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, kind TEXT NOT NULL, data TEXT, ua TEXT, created_at TEXT NOT NULL); CREATE INDEX IF NOT EXISTS app_events_day ON app_events(created_at)'); $ok = true; }
   return $db;
+}
+// Quem perdeu o vídeo do teste por erro do app (o teste era descontado antes de processar, até 2026-11-13):
+// está em teste, sem vídeo restante, tentou (tem "inicio" ou "erro" no diário) e o vídeo nunca abriu no estúdio.
+function testes_perdidos(bool $devolver = false): array {
+  $db = db(); app_events_db();
+  $rows = $db->query("SELECT u.id, u.name, u.email, u.created_at FROM users u WHERE u.status = 'trial' AND u.trial_left = 0 AND u.trial_hold = 0
+    AND EXISTS (SELECT 1 FROM app_events e WHERE e.user_id = u.id AND e.kind IN ('inicio', 'erro'))
+    AND NOT EXISTS (SELECT 1 FROM app_events e WHERE e.user_id = u.id AND e.kind IN ('abriu', 'pronto', 'exportou'))")->fetchAll();
+  if ($devolver && $rows) { $q = $db->prepare('UPDATE users SET trial_left = 1 WHERE id = ?'); foreach ($rows as $r) $q->execute([$r['id']]); }
+  return $rows;
 }
 // aparelho legível a partir do user agent
 function ua_short(string $ua): string {

@@ -135,9 +135,13 @@ export async function extractAac(file) {
         const mt = ver === 1 ? Number(v.getBigInt64(o + 8)) : v.getInt32(o + 4);
         o += ver === 1 ? 20 : 12;
         if (mt === -1) { delay += dur / movieScale; continue; }
+
         skip = mt / scale; break;
       }
     }
+    // lista de edição estranha (vídeo reeditado por outro app) não pode empurrar o áudio por minutos
+    if (!(delay >= 0 && delay < 2)) delay = 0;
+    if (!(skip >= 0 && skip < 2)) skip = 0;
     return { adts: out.subarray(0, p), delay, skip };
   }
   throw new Error('este vídeo não tem áudio');

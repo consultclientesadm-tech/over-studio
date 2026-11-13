@@ -11,7 +11,7 @@
 import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=37';
 import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=37';
 import { referenceNotes, applyReference } from './reference.js?v=37';
-import { decodeVideoAudio } from './demux.js?v=37';
+import { decodeVideoAudio } from './demux.js?v=38';
 import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=37';
 
 export const SR = STUDIO_SR;
@@ -230,7 +230,9 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   onStep('audio', 0);
   let orig = file instanceof Blob ? await audioFromVideo(file) : file; // aceita canais prontos (testes)
   onStep('audio', 1);
-  if (o.maxSec && orig[0].length / SR > o.maxSec) { const e = new Error('LIMITE'); e.duration = orig[0].length / SR; throw e; }
+  // vídeo maior que o limite: em vez de recusar, usa os primeiros minutos (a pessoa não perde o teste)
+  let cortado = 0;
+  if (o.maxSec && orig[0].length / SR > o.maxSec) { cortado = orig[0].length / SR; const n = Math.round(o.maxSec * SR); orig = orig.map((c) => c.slice(0, n)); }
   let voice = orig, bed = null;
   if (o.separate) {
     const r = await separate(orig, { onDownload: (p) => onStep('download', p), onProgress: (p) => onStep('separate', p) });
@@ -243,7 +245,7 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
   const chroma = cf ? cf.frames.reduce((a, f) => { for (let i = 0; i < 12; i++) a[i] += f[i]; return a; }, new Array(12).fill(0)) : null;
   const key = detectKey(raw, chroma);
   const chords = cf ? chordTrack(cf, key) : null; // acordes da base, dentro do campo harmônico
-  const state = { orig, voice, bed, key, chords, track, rawNotes: raw, duration: orig[0].length / SR };
+  const state = { orig, voice, bed, key, chords, track, rawNotes: raw, duration: orig[0].length / SR, cortado };
   if (o.reference) await setReference(state, o.reference, onStep);
   if (o.autoTune === false) untune(state, o); else await retune(state, o, onStep);
   return state;

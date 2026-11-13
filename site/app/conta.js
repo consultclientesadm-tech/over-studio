@@ -136,10 +136,14 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       const j = await api('usar', { tipo: audio ? 'audio' : 'video', mb: Math.round(file.size / 1048576) });
       if (j.paywall) { me = j.user; render(); paywall(); return false; }
       if (j.user) { me = j.user; render(); }
-      if (me.trial && !me.paid) toast('Teste grátis', me.trial_left ? `Você ainda tem ${me.trial_left} vídeo${me.trial_left > 1 ? 's' : ''} grátis depois deste.` : 'Este é o seu último vídeo grátis. Aproveite!');
+      const rd = j.restam_depois;
+      if (me.trial && !me.paid) toast('Teste grátis', rd ? `Você ainda tem ${rd} vídeo${rd > 1 ? 's' : ''} grátis depois deste.` : 'Este é o seu vídeo grátis. Se der algum erro no meio, ele não é descontado.');
       return true;
     } catch (e) { return e.message !== 'login'; } // sem internet: deixa usar (o processamento é no aparelho)
   };
+
+  // o vídeo abriu no estúdio: agora sim desconta o vídeo do teste grátis
+  window.scOk = async () => { try { const j = await api('consumir', {}); if (j.user) { me = j.user; render(); } } catch (e) {} };
 
   // ---------- avisos ----------
   function toast(title, body, onClick) {

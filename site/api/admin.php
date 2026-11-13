@@ -39,7 +39,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'hoje', 'serie', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -151,6 +151,12 @@ switch ($a) {
     }
     $qa = $db->prepare("SELECT COALESCE(SUM(liquido), 0) FROM sales WHERE created_at >= ? AND created_at < ? AND (status = 'pago' OR value < 0)"); $qa->execute([$antIni, $ini]);
     json_out(['ok' => true, 'dias' => $days, 'semana' => $semana, 'hoje' => date('Y-m-d'), 'agora' => date('H:i'), 'pontos' => array_values($out), 'anterior' => (float)$qa->fetchColumn()]);
+  }
+
+  case 'testes-perdidos': { // quem perdeu o teste por erro do app; POST com devolver=1 devolve 1 vídeo para cada um
+    $dev = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && (int)arg('devolver') === 1;
+    $r = testes_perdidos($dev);
+    json_out(['ok' => true, 'devolvidos' => $dev ? count($r) : 0, 'total' => count($r), 'items' => array_map(fn($x) => ['nome' => $x['name'], 'email' => $x['email'], 'desde' => $x['created_at']], $r)]);
   }
 
   case 'alunos': {

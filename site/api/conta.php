@@ -132,9 +132,23 @@ switch ($a) {
     $kind = arg('tipo') === 'audio' ? 'audio' : 'video';
     $db = db();
     $db->prepare('INSERT INTO usage (user_id, kind, mb, created_at) VALUES (?, ?, ?, ?)')->execute([$u['id'], $kind, (float)arg('mb', 0), now()]);
-    $db->prepare('UPDATE users SET videos_used = videos_used + 1' . ($acc['paid'] ? '' : ', trial_left = MAX(0, trial_left - 1)') . ', last_seen = ? WHERE id = ?')->execute([now(), $u['id']]);
+    // o vídeo do teste só é descontado quando abre no estúdio (ação "consumir"); se der erro no meio, a pessoa não perde o teste
+    $db->prepare('UPDATE users SET videos_used = videos_used + 1' . ($acc['paid'] ? '' : ', trial_hold = 1') . ', last_seen = ? WHERE id = ?')->execute([now(), $u['id']]);
     $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
-    if (!$acc['paid'] && (int)$u['trial_left'] === 0) funnel_trial_over($u);
+    json_out(['ok' => true, 'user' => public_user($u), 'restam_depois' => $acc['paid'] ? null : max(0, (int)$u['trial_left'] - 1)]);
+  }
+
+  case 'consumir': { // o app chama quando o vídeo abriu no estúdio: aí sim desconta o vídeo do teste grátis
+    require_post();
+    $u = current_user();
+    if (!$u) fail('Entre na sua conta.', 401);
+    $acc = access($u);
+    if (!$acc['paid'] && (int)$u['trial_hold'] === 1) {
+      $db = db();
+      $db->prepare('UPDATE users SET trial_left = MAX(0, trial_left - 1), trial_hold = 0 WHERE id = ?')->execute([$u['id']]);
+      $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
+      if ((int)$u['trial_left'] === 0) funnel_trial_over($u);
+    }
     json_out(['ok' => true, 'user' => public_user($u)]);
   }
 

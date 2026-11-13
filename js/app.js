@@ -2,7 +2,7 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=37';
+import * as cover from './pipeline.js?v=38';
 import { prefetchModel } from './studio.js?v=37';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=39';
@@ -197,7 +197,7 @@ async function start(f, tries = 1) {
   try {
     // primeiro só o áudio (o vídeo 4K aberto ao mesmo tempo que a IA estourava a memória do iPhone)
     t0 = performance.now(); lastEta = 0; progress.sepStart = null; $('eta').textContent = '';
-    state = await cover.analyze(f, { ...tuneOpts(), reference: refFile, autoTune: false, maxSec: MAX_SEC + 15 }, progress);
+    state = await cover.analyze(f, { ...tuneOpts(), reference: refFile, autoTune: false, maxSec: MAX_SEC }, progress);
     note({ dur: fmt(state.duration), stage: 'Abrindo a imagem do vídeo', pct: 99 });
     tracks.orig = state.orig; tracks.raw = cover.rawMix(state);
     video.src = URL.createObjectURL(f); video.load();
@@ -207,9 +207,11 @@ async function start(f, tries = 1) {
     note({ stage: 'Abrindo o estúdio', pct: 100 });
     openStudio();
     ev('abriu', { seg: Math.round((performance.now() - t0) / 1000), dur: Math.round(state.duration || 0), mb: Math.round(f.size / 1048576) });
+    if (window.scOk) window.scOk();
+    if (state.cortado) toast(`Seu vídeo tem ${fmt(state.cortado)}. Usei os primeiros ${MAX_SEC / 60} minutos (o limite por vídeo). Se quiser outro trecho, corte no celular e suba de novo.`, 9000);
     endRun();
   } catch (e) {
-    console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576) });
+    console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '' });
     app.dataset.screen = 'home';
     toast(e.message === 'LIMITE' ? `Esse vídeo tem ${fmt(e.duration || video.duration)}. Por enquanto o limite é ${MAX_SEC / 60} minutos: corte no celular e suba de novo.`
       : /decod|Unable|EncodingError/i.test(e.message) ? 'Não consegui ler o áudio desse vídeo. Tente outro arquivo.' : 'Deu erro: ' + e.message, 8000);
@@ -773,7 +775,14 @@ $('helpBtn').onclick = () => {
 };
 
 // Qualquer erro aparece na tela (e fica no diário), para a gente saber exatamente o que houve num aparelho real
-addEventListener('error', (e) => { note({ erro: String(e.message).slice(0, 120) }); ev('erro', { etapa: 'app', msg: String(e.message).slice(0, 160), em: String(e.filename || '').split('/').pop() + ':' + e.lineno }); toast('Erro: ' + e.message, 9000); });
+addEventListener('error', (e) => {
+  // "Script error." sem arquivo = erro de algo de fora do app (extensão, tradutor, navegador do Instagram). Não para o app:
+  // só registra, sem assustar a pessoa com um aviso de erro.
+  const fora = /^Script error\.?$/i.test(String(e.message)) && !e.filename;
+  ev('erro', { etapa: fora ? 'externo' : 'app', msg: String(e.message).slice(0, 160), em: String(e.filename || '').split('/').pop() + ':' + e.lineno, tela: app.dataset.screen || '' });
+  if (fora) return;
+  note({ erro: String(e.message).slice(0, 120) }); toast('Erro: ' + e.message, 9000);
+});
 addEventListener('unhandledrejection', (e) => { const m = String(e.reason?.message || e.reason).slice(0, 120); note({ erro: m }); ev('erro', { etapa: 'app', msg: m }); toast('Erro: ' + m, 9000); });
 
 // Só a voz / só a música (WAV), no mesmo trecho do vídeo final
