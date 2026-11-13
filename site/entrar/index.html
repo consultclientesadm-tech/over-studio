@@ -74,7 +74,7 @@ input:focus { border-color: var(--y); box-shadow: 0 0 0 4px rgba(255,212,0,.12);
   <!-- Teste grátis -->
   <form class="card" id="fCadastro" novalidate hidden>
     <h2>Teste grátis</h2>
-    <p class="sub" id="cadSub">Crie a sua conta e teste com os seus vídeos. Sem cartão.</p>
+    <p class="sub" id="cadSub">Crie a sua conta e veja o antes e depois com o seu vídeo. Sem cartão.</p>
     <p class="reqmini">Funciona em iPhone 13+, Android com 6 GB+ ou computador · vídeos de até 3 min · <a href="/#faqAparelho" target="_blank">detalhes</a></p>
     <label for="cNome">Seu nome</label><input id="cNome" autocomplete="name" required>
     <label for="cEmail">E-mail</label><input id="cEmail" type="email" autocomplete="email" inputmode="email" required>
@@ -161,7 +161,7 @@ $('fCriar').onsubmit = (e) => {
   if (me.trial_enabled) {
     $('irTeste').hidden = false; $('boxTeste').hidden = false;
     $('nTeste').textContent = `Teste grátis com ${me.trial_videos} vídeo${me.trial_videos == 1 ? '' : 's'}`;
-    $('cadSub').textContent = `Crie a sua conta e teste com ${me.trial_videos == 1 ? '1 vídeo seu' : me.trial_videos + ' vídeos seus'}. Sem cartão.`;
+    $('cadSub').textContent = `Crie a sua conta e veja o antes e depois com ${me.trial_videos == 1 ? '1 vídeo seu' : me.trial_videos + ' vídeos seus'}, aqui no app. Gostou? Libere o acesso e baixe. Sem cartão.`;
   }
   if (params.get('teste') !== null && me.trial_enabled) show('fCadastro');
 })();

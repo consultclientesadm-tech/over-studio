@@ -297,7 +297,7 @@ async function loadAppSaude() {
     <div class="cards4">
       ${card('y', '🎬', 'Vídeos começados', c.inicio, `${j.pessoas} pessoa${j.pessoas === 1 ? '' : 's'}`)}
       ${card(ruim ? 'r' : 'g', '✅', 'Abriram no estúdio', c.abriu, `${pc(c.abriu, c.inicio)} dos começados · tempo típico ${min(j.tempo_mediano)}`)}
-      ${card('c', '⬇️', 'Vídeos exportados', c.exportou, `${c.pronto} usaram o "tudo automático"`)}
+      ${card('c', '⬇️', 'Vídeos exportados', c.exportou, `${c.pronto} usaram o "tudo automático" · ${c.quisbaixar || 0} no teste tocaram em baixar (viram a oferta)${c.liberou ? ` · ${c.liberou} compraram e baixaram na hora` : ''}`)}
       ${card(c.erro + c.fechou ? 'r' : 'g', '⚠️', 'Erros e travamentos', c.erro + c.fechou, `${c.erro} erro${c.erro === 1 ? '' : 's'} · ${c.fechou} vez${c.fechou === 1 ? '' : 'es'} o celular fechou o app`)}
     </div>
     ${j.aparelhos.length ? `<div class="glass tbl"><table><tr><th>Aparelho</th><th>Começou</th><th>Abriu</th><th>Exportou</th><th>Erros</th></tr>${j.aparelhos.map((a) => `<tr><td>${esc(a.aparelho)}${a.forca ? `<small>força ${a.forca} · ${a.compat === 'incompativel' ? '⛔ avisado: incompatível' : a.compat === 'fraco' ? '⚠️ avisado: no limite' : '✓ compatível'}</small>` : ''}</td><td>${a.inicio}</td><td>${a.abriu}</td><td>${a.exportou}</td><td>${a.erro + a.fechou ? `<b style="color:#ff6b6b">${a.erro + a.fechou}</b>` : '0'}</td></tr>`).join('')}</table></div>` : ''}
