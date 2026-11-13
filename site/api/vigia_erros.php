@@ -71,6 +71,8 @@ function erros_vigia(bool $forcar = false): array {
     }
   }
   set_setting('vigia_erros_id', (string)$maxId);
+  // erro que ficou 24h sem acontecer passa sozinho para resolvido (se voltar, avisa VOLTOU)
+  $db->prepare("UPDATE erro_grupos SET status = 'resolvido', resolvido_em = ? WHERE status = 'aberto' AND ultimo < ?")->execute([now(), date('Y-m-d H:i:s', time() - 86400)]);
 
   // 2) números por grupo: última hora x normal das 23h anteriores
   $h1 = date('Y-m-d H:i:s', time() - 3600); $h24 = date('Y-m-d H:i:s', time() - 86400);

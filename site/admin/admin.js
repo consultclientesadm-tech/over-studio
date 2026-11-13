@@ -254,26 +254,33 @@ const ROT = { novo: ['🆕 NOVO', 'r'], aumentou: ['📈 AUMENTOU', 'r'], voltou
 const desde = (s) => { if (!s) return '—'; const m = Math.round((Date.now() - new Date(s.replace(' ', 'T') + '-03:00')) / 60000); return m < 1 ? 'agora' : m < 60 ? `há ${m} min` : m < 1440 ? `há ${Math.floor(m / 60)} h` : dt(s); };
 async function loadVigiaErros() {
   const j = await api('vigia-erros'); if (!j.ok) return;
-  const v = j.vigia, gs = j.grupos || [];
-  const abertos = gs.filter((g) => g.status === 'aberto' && g.h24 > 0);
-  const quente = abertos.filter((g) => g.h1 > 0);
-  const alertas = (v && v.alertas) || [];
-  const cor = quente.length ? 'mal' : abertos.length ? '' : 'ok';
+  const v = j.vigia, gs = j.grupos || [], alertas = (v && v.alertas) || [];
+  const agora = gs.filter((g) => g.status === 'aberto' && g.h1 > 0);
+  const pend = gs.filter((g) => g.status === 'aberto' && !g.h1);
+  const ok = gs.filter((g) => g.status !== 'aberto');
   const aps = (o) => Object.entries(o || {}).map(([a, n]) => `${esc(a)} (${n})`).join(' · ');
-  const st = { aberto: '', resolvido: '<span class="st active">resolvido</span>', ignorado: '<span class="st">ignorado</span>' };
+  const linha = (g) => {
+    const al = alertas.find((a) => a.sig === g.sig);
+    const sit = g.status === 'resolvido' ? `<span class="st active">✅ Resolvido</span>` : g.status === 'ignorado' ? '<span class="st">🔕 Ignorado</span>'
+      : g.h1 ? '<span class="st blocked">🔴 Acontecendo agora</span>' : '<span class="st trial">🟡 Pendente</span>';
+    const bt = g.status === 'aberto' ? `<button class="btn sm" data-erro="${g.sig}" data-st="resolvido" title="Avisa de novo se voltar a acontecer">✓ Já foi corrigido</button> <button class="btn sm ghost" data-erro="${g.sig}" data-st="ignorado" title="Não avisa mais deste erro">Ignorar</button>` : `<button class="btn sm ghost" data-erro="${g.sig}" data-st="aberto">Reabrir</button>`;
+    return `<tr><td>${sit}${al ? ` <span class="st blocked">${ROT[al.motivo]?.[0] || ''}</span>` : ''}<b>${g.tipo === 'fechou' ? '📵' : '❌'} ${esc(g.etapa || 'app')}</b><small>${esc(g.msg)}</small><small>última vez <b>${desde(g.ultimo)}</b> · primeira ${dt(g.primeiro)} · ${g.total} no total</small></td>
+      <td>${g.h1 ? `<b style="color:#ff6b6b">${g.h1}</b>` : '0'}</td><td>${g.h24}<small>${g.pessoas_24h} pessoa${g.pessoas_24h === 1 ? '' : 's'}</small></td><td><small>${aps(g.aparelhos)}</small></td><td>${bt}</td></tr>`;
+  };
+  const tabela = (lista) => `<div class="glass tbl"><table><tr><th>Erro</th><th>Última hora</th><th>24h</th><th>Aparelhos</th><th></th></tr>${lista.map(linha).join('')}</table></div>`;
+  const resumo = agora.length ? `<b>🔴 ${agora.length} erro${agora.length === 1 ? '' : 's'} acontecendo agora (na última hora)</b>`
+    : pend.length ? `<b>🟡 Nada acontecendo agora. ${pend.length} erro${pend.length === 1 ? '' : 's'} ainda pendente${pend.length === 1 ? '' : 's'}: aconteceu nas últimas 24h e ninguém marcou como corrigido.</b>`
+    : '<b>✅ Nenhum erro pendente</b>';
   $('vigiaErros').innerHTML = `<section class="bloco">
-    <div class="bh"><span class="tag ${quente.length ? 'r' : 'g'}">🛰️ VISTORIA DE ERROS · A CADA 10 MIN</span><small>${v ? `última vistoria ${desde(v.quando)} · ${v.erros_1h} erro${v.erros_1h === 1 ? '' : 's'} na última hora · ${v.erros_24h} em 24h` : 'ainda não rodou'} <button class="btn sm ghost" id="vigiaAgora">Vistoriar agora</button></small></div>
-    <div class="vigia ${cor}">${quente.length ? `<b>⚠️ ${quente.length} tipo${quente.length === 1 ? '' : 's'} de erro acontecendo agora</b>` : abertos.length ? `<b>${abertos.length} tipo${abertos.length === 1 ? '' : 's'} de erro nas últimas 24h, nenhum na última hora</b>` : '<b>✅ Nenhum erro aberto nas últimas 24h</b>'}
-      <small>Quando aparece um erro novo, um erro dispara ou um erro resolvido volta, os administradores recebem e-mail na hora.${alertas.length ? ` Alertas nas últimas 24h: ${alertas.map((a) => `${ROT[a.motivo]?.[0] || a.motivo} ${esc(a.etapa)} (${desde(a.quando)})`).join(' · ')}` : ''}</small></div>
-    ${gs.length ? `<div class="glass tbl"><table><tr><th>Erro</th><th>Última hora</th><th>24h</th><th>Aparelhos</th><th></th></tr>${gs.map((g) => {
-      const al = alertas.find((a) => a.sig === g.sig);
-      return `<tr><td>${al ? `<span class="st blocked">${ROT[al.motivo]?.[0] || ''}</span> ` : g.novo ? '<span class="st blocked">🆕 NOVO</span> ' : ''}${st[g.status] || ''}<b>${g.tipo === 'fechou' ? '📵' : '❌'} ${esc(g.etapa || 'app')}</b><small>${esc(g.msg)}</small><small>primeira vez ${dt(g.primeiro)} · última ${desde(g.ultimo)} · ${g.total} no total</small></td>
-        <td>${g.h1 ? `<b style="color:#ff6b6b">${g.h1}</b>` : '0'}</td><td>${g.h24}<small>${g.pessoas_24h} pessoa${g.pessoas_24h === 1 ? '' : 's'}</small></td><td><small>${aps(g.aparelhos)}</small></td>
-        <td>${g.status === 'aberto' ? `<button class="btn sm ghost" data-erro="${g.sig}" data-st="resolvido" title="Avisa de novo se voltar a acontecer">✓ Resolvido</button> <button class="btn sm ghost" data-erro="${g.sig}" data-st="ignorado" title="Não avisa mais deste erro">Ignorar</button>` : `<button class="btn sm ghost" data-erro="${g.sig}" data-st="aberto">Reabrir</button>`}</td></tr>`;
-    }).join('')}</table></div>` : ''}
+    <div class="bh"><span class="tag ${agora.length ? 'r' : 'g'}">🛰️ VISTORIA DE ERROS · A CADA 10 MIN</span><small>${v ? `última vistoria ${desde(v.quando)} · ${v.erros_1h} erro${v.erros_1h === 1 ? '' : 's'} na última hora · ${v.erros_24h} em 24h` : 'ainda não rodou'} <button class="btn sm ghost" id="vigiaAgora">Vistoriar agora</button></small></div>
+    <div class="vigia ${agora.length ? 'mal' : pend.length ? '' : 'ok'}">${resumo}
+      <small><b>Como funciona:</b> a vistoria só encontra os erros e avisa você por e-mail. Ela não conserta sozinha: quem corrige é o Claude, no código. Depois da correção publicada, aperte <b>✓ Já foi corrigido</b>. Se o mesmo erro voltar, você recebe o aviso "VOLTOU". Erro que fica 24h sem acontecer passa sozinho para Resolvido.</small></div>
+    ${agora.length ? `<h4 class="vh">🔴 Acontecendo agora</h4>${tabela(agora)}` : ''}
+    ${pend.length ? `<h4 class="vh">🟡 Pendentes (aconteceram nas últimas 24h, não na última hora)</h4>${tabela(pend)}` : ''}
+    ${ok.length ? `<details class="vh"><summary>✅ Resolvidos e ignorados (${ok.length})</summary>${tabela(ok)}</details>` : ''}
   </section>`;
   $('vigiaAgora').onclick = async (e) => { e.target.disabled = true; e.target.textContent = 'Vistoriando…'; await api('vigia-agora', {}); toast('Vistoria feita.'); loadVigiaErros(); };
-  $('vigiaErros').querySelectorAll('[data-erro]').forEach((b) => (b.onclick = async () => { const r = await api('erro-marcar', { sig: b.dataset.erro, status: b.dataset.st }); if (!r.ok) return toast(r.error || 'Não deu.'); toast(b.dataset.st === 'resolvido' ? 'Marcado como resolvido. Se voltar, o vigia avisa.' : b.dataset.st === 'ignorado' ? 'Esse erro não vai mais gerar aviso.' : 'Reaberto.'); loadVigiaErros(); }));
+  $('vigiaErros').querySelectorAll('[data-erro]').forEach((b) => (b.onclick = async () => { const r = await api('erro-marcar', { sig: b.dataset.erro, status: b.dataset.st }); if (!r.ok) return toast(r.error || 'Não deu.'); toast(b.dataset.st === 'resolvido' ? 'Marcado como corrigido. Se voltar, a vistoria avisa.' : b.dataset.st === 'ignorado' ? 'Esse erro não vai mais gerar aviso.' : 'Reaberto.'); loadVigiaErros(); }));
 }
 setInterval(() => { if (!document.hidden && $('vigiaErros') && $('vigiaErros').offsetParent) loadVigiaErros().catch(() => {}); }, 60000);
 
