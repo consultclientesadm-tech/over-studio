@@ -11,6 +11,9 @@ Options -Indexes
   RewriteCond %{HTTPS} off
   RewriteCond %{HTTP_HOST} !^localhost
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # /VSL ou /vsl sem barra -> /vsl/ (página de venda direta, sem teste grátis)
+  RewriteRule ^(VSL|Vsl|vsl)$ /vsl/ [L,R=301]
+  RewriteRule ^(VSL|Vsl)/$ /vsl/ [L,R=301]
 </IfModule>
 # arquivos que nunca podem ser baixados
 <FilesMatch "^(config\.php|config\.exemplo\.php|lib\.php|mail\.php|funil\.php|.*\.sqlite.*|.*\.md)$">

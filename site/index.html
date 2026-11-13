@@ -693,7 +693,7 @@ footer a { color: #888; }
   fetch('/api/conta.php?a=oferta' + (af ? '&af=' + encodeURIComponent(af) : '')).then((r) => r.json()).then((o) => {
     pixelLiga(window.SC_PIXEL || o.pixel);
     if (o.checkout_url) $('comprar').href = o.checkout_url;
-    else $('comprar').href = '/entrar/?teste';
+    else $('comprar').href = window.SC_SEM_TESTE ? '#oferta' : '/entrar/?teste';
     if (o.price) {
       $('preco').hidden = false;
       const n = parseInt(o.installments, 10) || 0;
@@ -703,7 +703,7 @@ footer a { color: #888; }
         $('precoVista').hidden = false;
       } else $('precoPor').textContent = 'R$ ' + o.price;
     }
-    if (o.trial) document.querySelectorAll('[data-teste]').forEach((e) => (e.hidden = false));
+    if (o.trial && !window.SC_SEM_TESTE) document.querySelectorAll('[data-teste]').forEach((e) => (e.hidden = false));
     document.querySelectorAll('[data-tv]').forEach((e) => (e.textContent = o.trial_videos || 1));
     if (+o.trial_videos === 1) { document.querySelectorAll('[data-tvp]').forEach((e) => (e.textContent = 'vídeo seu')); document.querySelectorAll('[data-tvp2]').forEach((e) => (e.textContent = 'vídeo')); }
     if (o.whatsapp) $('suporte').innerHTML = `Dúvidas? <a href="https://wa.me/${o.whatsapp.replace(/\D/g, '')}" target="_blank" rel="noopener">Fale no WhatsApp</a>`;
