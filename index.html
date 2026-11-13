@@ -43,16 +43,6 @@
     <div class="hero">
       <h1>Seu cover com <em>som de estúdio</em><br>e cara de cinema.</h1>
       <p>Grave no celular, suba aqui. Você vai em 5 passos: vídeo, afinação, mix e master, cor e exportar. Em cada passo dá para comparar com o original e desfazer.</p>
-      <div class="reqcard" id="reqCard">
-        <b>📱 Antes de subir, confira:</b>
-        <ul>
-          <li><b>Vídeo de até 3 minutos</b> (maior usa só os 3 primeiros)</li>
-          <li><b>iPhone 13 ou mais novo</b>, <b>Android com 6 GB de memória ou mais</b> ou <b>computador</b></li>
-          <li>Abra no <b>Safari</b> ou no <b>Chrome</b>, não no navegador do Instagram</li>
-          <li>Feche os outros apps e deixe esta tela aberta</li>
-        </ul>
-        <p class="reqmeu" id="reqMeuApp"></p>
-      </div>
       <label class="drop" id="drop">
         <input type="file" id="file" accept="video/*" hidden>
         <span class="dropicon"></span>
@@ -63,6 +53,16 @@
         <input type="file" id="audioFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden>
         <b>Ou suba só o áudio</b><small>MP3, M4A ou WAV · você baixa o áudio pronto e junta no seu vídeo</small>
       </label>
+      <details class="reqcard" id="reqCard">
+        <summary>📱 Veja se o seu aparelho é compatível</summary>
+        <ul>
+          <li><b>Vídeo de até 3 minutos</b> (maior usa só os 3 primeiros)</li>
+          <li><b>iPhone 13 ou mais novo</b>, <b>Android com 6 GB de memória ou mais</b> ou <b>computador</b></li>
+          <li>Abra no <b>Safari</b> ou no <b>Chrome</b>, não no navegador do Instagram</li>
+          <li>Feche os outros apps e deixe esta tela aberta</li>
+        </ul>
+        <p class="reqmeu" id="reqMeuApp"></p>
+      </details>
       <div class="opts">
         <label class="switch" data-help="Deixe ligado se no vídeo tem violão, banda ou playback junto com a voz. A IA separa a voz do instrumental para afinar só a voz. Desligue se você cantou à capela."><input type="checkbox" id="optSeparate" checked><span></span> Tem instrumental ou playback (separar a voz)</label>
       </div>

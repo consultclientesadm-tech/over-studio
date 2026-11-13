@@ -426,8 +426,10 @@ body, .app, .app * { -webkit-user-select: none; user-select: none; -webkit-touch
 #noImg > b { color: var(--y); font-size: 16px; }
 #noImg button { margin-top: 4px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--y); background: transparent; color: var(--y); font: 600 13px 'Space Grotesk', sans-serif; cursor: pointer; }
 /* requisitos bem visíveis na tela inicial (pedido do Leo, 2026-11-13) */
-.reqcard { margin: 14px 0; padding: 14px 16px; border-radius: 14px; border: 2px solid var(--y, #ffd400); background: rgba(255,212,0,.07); text-align: left; font-size: 14px; }
-.reqcard > b { color: var(--y, #ffd400); font-size: 15px; }
+.reqcard { margin: 10px 0 4px; padding: 0; border: 0; background: none; text-align: left; font-size: 13.5px; color: var(--mut, #9a9aa6); }
+.reqcard > summary { list-style: none; cursor: pointer; text-align: center; color: var(--mut, #9a9aa6); text-decoration: underline; text-underline-offset: 3px; padding: 6px 0; }
+.reqcard > summary::-webkit-details-marker { display: none; }
+.reqcard[open] { padding: 4px 14px 12px; border: 1px solid var(--line, #26262e); border-radius: 14px; background: rgba(255,255,255,.03); }
 .reqcard ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 5px; }
 .reqcard .reqmeu { margin: 10px 0 0; font-weight: 700; }
 .reqcard .reqmeu:empty { display: none; }

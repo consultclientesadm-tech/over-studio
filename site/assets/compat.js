@@ -166,7 +166,10 @@
     if (await modal(true)) { a.dataset.compatOk = '1'; a.click(); setTimeout(() => delete a.dataset.compatOk, 500); }
   }, true);
 
-  const mostrar = () => { barra(); ready.then(() => barra()); if (/\/(app|entrar|obrigado)\//.test(location.pathname)) barraInApp(); };
+  // No app e no cadastro não tem faixa no topo (espantava quem ia usar): lá fica o link discreto "Veja se o seu aparelho
+  // é compatível" embaixo do envio, e a confirmação só aparece na hora de começar. A faixa fica na página de vendas e no obrigado.
+  const discreto = !!document.getElementById('home') || /^\/(app|entrar)\//.test(location.pathname);
+  const mostrar = () => { if (discreto) return; barra(); ready.then(() => barra()); if (/^\/obrigado\//.test(location.pathname)) barraInApp(); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mostrar); else mostrar();
   window.scCompat = { get info() { return info; }, ready, confirmar, modal: () => modal(false), inApp, abrirFora };
 })();
