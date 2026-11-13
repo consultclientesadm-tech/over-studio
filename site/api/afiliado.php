@@ -18,6 +18,7 @@ switch ($a) {
     require_post();
     $email = clean_email((string)arg('email')); throttle('aflog:' . client_ip(), 40, 900); throttle('aflog:' . $email, 8, 900);
     $q = af_db()->prepare('SELECT * FROM afiliados WHERE email = ? AND ativo = 1'); $q->execute([$email]); $af = $q->fetch();
+    if (!$af || !$af['pass_hash'] || !password_verify((string)arg('senha'), $af['pass_hash'])) escudo_evento('login', 'afiliado');
     if (!$af || !$af['pass_hash'] || !password_verify((string)arg('senha'), $af['pass_hash'])) fail($af && !$af['pass_hash'] ? 'Crie a sua senha pelo link que chegou no seu e-mail (ou toque em "Esqueci a senha").' : 'E-mail ou senha não conferem.');
     af_db()->prepare('UPDATE afiliados SET last_login = ? WHERE id = ?')->execute([now(), $af['id']]);
     af_entra($af); json_out(['ok' => true]);

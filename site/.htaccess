@@ -5,6 +5,11 @@ Options -Indexes
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Permissions-Policy "camera=(), geolocation=(), microphone=()"
+  # escudo: só HTTPS por 1 ano, ninguém coloca o site dentro de outro, sem plugins, e não conta qual programa roda no servidor
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set Content-Security-Policy "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; upgrade-insecure-requests"
+  Header always unset X-Powered-By
+  Header unset X-Powered-By
 </IfModule>
 <IfModule mod_rewrite.c>
   RewriteEngine On
@@ -14,9 +19,11 @@ Options -Indexes
   # /VSL ou /vsl sem barra -> /vsl/ (página de venda direta, sem teste grátis)
   RewriteRule ^(VSL|Vsl|vsl)$ /vsl/ [L,R=301]
   RewriteRule ^(VSL|Vsl)/$ /vsl/ [L,R=301]
+  # escudo: armadilha para robôs de invasão (endereços que não existem neste site)
+  RewriteRule ^(wp-login\.php|wp-admin|wp-content|wp-includes|wp-config|xmlrpc\.php|phpmyadmin|pma|myadmin|adminer|\.env|\.git|\.svn|\.aws|\.ssh|\.DS_Store|vendor/phpunit|cgi-bin|shell\.php|cmd\.php|eval-stdin|boaform|HNAP1|actuator|server-status|config\.json|backup|\.htpasswd|sftp-config|.*\.(bak|sql|old|swp|tar|tgz|7z)$) /api/armadilha.php [L,NC]
 </IfModule>
 # arquivos que nunca podem ser baixados
-<FilesMatch "^(config\.php|config\.exemplo\.php|lib\.php|mail\.php|funil\.php|depo_lib\.php|.*\.sqlite.*|.*\.md)$">
+<FilesMatch "^(config\.php|config\.exemplo\.php|lib\.php|mail\.php|funil\.php|depo_lib\.php|.*\.sqlite.*|.*\.md|.*\.map|\.fonte|package(-lock)?\.json|\.user\.ini|php\.ini)$">
   Require all denied
 </FilesMatch>
 <IfModule mod_expires.c>

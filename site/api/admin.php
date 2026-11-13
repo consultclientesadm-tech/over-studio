@@ -21,7 +21,7 @@ if ($a === 'primeiro') { // cria o primeiro administrador (precisa da chave do c
   throttle('adm1:' . client_ip(), 10, 3600);
   if ((int)$db->query('SELECT COUNT(*) FROM admins')->fetchColumn() > 0) fail('Já existe administrador.');
   $key = (string)cfg('setup_key');
-  if ($key === '' || !hash_equals($key, (string)arg('chave'))) fail('Chave de instalação errada.', 403);
+  if ($key === '' || !hash_equals($key, (string)arg('chave'))) { escudo_evento('chave', 'instalação'); fail('Chave de instalação errada.', 403); }
   admin_create((string)arg('email'), (string)arg('nome'), (string)arg('senha'), null);
   $q = $db->prepare('SELECT * FROM admins WHERE email = ?'); $q->execute([clean_email((string)arg('email'))]);
   admin_login($q->fetch());
@@ -31,10 +31,11 @@ if ($a === 'login') {
   require_post();
   $email = clean_email((string)arg('email'));
   throttle('alog:' . client_ip(), 10, 900); throttle('alog:' . $email, 5, 900);
+  if (defined('ESCUDO_BLOQUEADO')) throttle('alogb:' . client_ip(), 3, 3600); // IP bloqueado pelo escudo: só 3 tentativas por hora
   $q = $db->prepare('SELECT * FROM admins WHERE email = ?'); $q->execute([$email]);
   $ad = $q->fetch();
-  if (!$ad || !password_verify((string)arg('senha'), $ad['pass_hash'])) { usleep(400000); fail('E-mail ou senha não conferem.'); }
-  admin_login($ad);
+  if (!$ad || !password_verify((string)arg('senha'), $ad['pass_hash'])) { escudo_evento('login_admin', $email); usleep(400000); fail('E-mail ou senha não conferem.'); }
+  admin_login($ad); escudo_evento('admin_login', $email);
   json_out(['ok' => true]);
 }
 if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSION['aver'], $_SESSION['aat']); json_out(['ok' => true]); }
@@ -42,7 +43,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'origens', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'origens', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa', 'escudo'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -250,7 +251,7 @@ switch ($a) {
   }
 
   case 'admins': json_out(['ok' => true, 'items' => $db->query('SELECT id, email, name, created_at, last_login FROM admins ORDER BY id')->fetchAll(), 'eu' => (int)$me['id']]);
-  case 'admin-criar': { admin_create((string)arg('email'), (string)arg('nome'), (string)arg('senha'), (int)$me['id']); json_out(['ok' => true]); }
+  case 'admin-criar': { admin_create((string)arg('email'), (string)arg('nome'), (string)arg('senha'), (int)$me['id']); escudo_evento('admin_novo', clean_email((string)arg('email')) . ' · por ' . $me['email']); json_out(['ok' => true]); }
   case 'admin-apagar': {
     $id = (int)arg('id');
     if ($id === (int)$me['id']) fail('Você não pode apagar o seu próprio acesso.');
@@ -265,6 +266,8 @@ switch ($a) {
     $h = password_hash((string)arg('nova'), PASSWORD_DEFAULT);
     $db->prepare('UPDATE admins SET pass_hash = ? WHERE id = ?')->execute([$h, $me['id']]);
     $_SESSION['aver'] = substr($h, -12);
+    escudo_evento('admin_senha', $me['email']);
+    escudo_avisar('admin_senha', '🛡️ Studio Cover: senha do painel trocada', '<p>A senha de administrador de <b>' . h($me['email']) . '</b> foi trocada agora.</p><p>Se não foi você, entre em contato com o Claude/Leonardo na hora.</p>', 'Senha do painel trocada: ' . $me['email'], 60);
     json_out(['ok' => true]);
   }
 
@@ -381,6 +384,14 @@ switch ($a) {
     $db->prepare('DELETE FROM ad_gastos WHERE id = ?')->execute([(int)(arg('id', 0))]);
     json_out(['ok' => true]);
   }
+  case 'escudo': json_out(escudo_resumo()); // escudo de segurança: ataques barrados, IPs bloqueados, checagem recorrente
+  case 'escudo-agora': { $r = escudo_checagem(true); json_out(['ok' => true] + $r); }
+  case 'escudo-desbloquear': {
+    $ip = (string)arg('ip'); escudo_db()->prepare('DELETE FROM seg_bloqueios WHERE ip = ?')->execute([$ip]);
+    escudo_db()->prepare('INSERT INTO seg_eventos (ip, tipo, detalhe, created_at) VALUES (?, ?, ?, ?)')->execute([$ip, 'desbloqueio', 'por ' . $me['email'], now()]);
+    json_out(['ok' => true]);
+  }
+  case 'escudo-github': json_out(['ok' => true, 'github' => escudo_gh_salvar((string)arg('token'))]);
   case 'erro-marcar': { // resolvido (volta a avisar se acontecer de novo), ignorado (não avisa mais) ou aberto
     erro_marcar((string)arg('sig'), (string)arg('status'));
     json_out(['ok' => true]);

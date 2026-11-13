@@ -1,0 +1,40 @@
+# Studio Cover: a cada mudança no main, monta o site com o JavaScript embaralhado (tools/proteger.mjs)
+# e grava o resultado no ramo "publicado". O servidor (deploy/publicar-site.sh) publica esse ramo.
+# Se esta etapa falhar, o servidor espera 15 min e publica sem embaralhar, para o site nunca travar.
+name: Publicar site protegido
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: publicar
+  cancel-in-progress: true
+jobs:
+  montar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Ferramentas de proteção
+        run: mkdir -p /tmp/ferramentas && cd /tmp/ferramentas && npm init -y >/dev/null && npm i --no-audit --no-fund terser@5.51.2 javascript-obfuscator@4.1.1
+      - name: Montar e embaralhar
+        run: |
+          sh tools/montar-site.sh
+          PROTEGER_MODULOS=/tmp/ferramentas node tools/proteger.mjs site
+          for f in $(find site -name '*.js' -not -path '*/vendor/*'); do node --check "$f" 2>/dev/null || node --input-type=module --check < "$f" || { echo "quebrou: $f"; exit 1; }; done
+          echo "$GITHUB_SHA" > site/.fonte
+      - name: Gravar no ramo publicado
+        run: |
+          git config user.name "studio-cover-publicador"
+          git config user.email "publicador@users.noreply.github.com"
+          export GIT_INDEX_FILE=/tmp/indice-publicado
+          cd site
+          git --git-dir=../.git --work-tree=. add -A -f .
+          TREE=$(git --git-dir=../.git --work-tree=. write-tree)
+          cd ..
+          C=$(git commit-tree "$TREE" -m "publicado ${GITHUB_SHA}")
+          git push -f origin "$C:refs/heads/publicado"

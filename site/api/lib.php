@@ -189,7 +189,7 @@ function throttle(string $key, int $max, int $seconds): void {
   $db = db(); $t = time();
   $db->prepare('DELETE FROM attempts WHERE at < ?')->execute([$t - 86400]);
   $q = $db->prepare('SELECT COUNT(*) FROM attempts WHERE key = ? AND at > ?'); $q->execute([$key, $t - $seconds]);
-  if ((int)$q->fetchColumn() >= $max) fail('Muitas tentativas. Espere alguns minutos e tente de novo.', 429);
+  if ((int)$q->fetchColumn() >= $max) { if (function_exists('escudo_evento')) escudo_evento('limite', strtok($key, ':')); fail('Muitas tentativas. Espere alguns minutos e tente de novo.', 429); }
   $db->prepare('INSERT INTO attempts (key, at) VALUES (?, ?)')->execute([$key, $t]);
 }
 
@@ -348,6 +348,8 @@ function set_password_link(array $u, int $days = 7): string {
 require_once __DIR__ . '/mail.php';
 require_once __DIR__ . '/push.php';
 require_once __DIR__ . '/afiliados.php';
+require_once __DIR__ . '/escudo.php';
+if (PHP_SAPI !== 'cli') { header_remove('X-Powered-By'); escudo_portao(); } // escudo: IP bloqueado e tentativa de injeção param aqui
 
 // ---------- LGPD ----------
 const LGPD_VERSAO = '2026-11-12'; // mude quando os Termos ou a Política mudarem de verdade

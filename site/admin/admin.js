@@ -285,6 +285,37 @@ async function loadVigiaErros() {
 }
 setInterval(() => { if (!document.hidden && $('vigiaErros') && $('vigiaErros').offsetParent) loadVigiaErros().catch(() => {}); }, 60000);
 
+// ---------- escudo de segurança (defesa: barra e bloqueia, nunca ataca ninguém) ----------
+async function loadEscudo() {
+  const j = await api('escudo'); if (!j.ok) return;
+  const c = j.checagem, pr = (c && c.problemas) || {}, np = Object.keys(pr).length, cont = j.contagem || {}, nome = j.nomes || {};
+  const barrados = ['armadilha', 'injecao', 'login_admin', 'login', 'chave', 'limite'].reduce((s, k) => s + ((cont[k] && cont[k].n) || 0), 0);
+  const gh = j.github || {};
+  const card = (cor, ico, rot, v, sub) => `<div class="ncard ${cor}"><div class="nh"><i>${ico}</i><small>${rot}</small></div><b class="cnt">${v}</b><span>${sub}</span></div>`;
+  const ev = (e) => `<tr><td>${dt(e.created_at)}</td><td><b>${esc(nome[e.tipo] || e.tipo)}</b><small>${esc(e.detalhe || '')}</small></td><td>${esc(e.ip || '')}<small>${esc((e.ua || '').slice(0, 60))}</small></td></tr>`;
+  $('escudo').innerHTML = `<section class="bloco">
+    <div class="bh"><span class="tag ${np ? 'r' : 'g'}">🛡️ ESCUDO DE SEGURANÇA</span><small>${c ? `última checagem ${desde(c.quando)}` : 'ainda não rodou'} <button class="btn sm ghost" id="escAgora">Checar agora</button></small></div>
+    <div class="vigia ${np ? 'mal' : 'ok'}">${np ? `<b>⚠️ A checagem achou ${np} ponto${np === 1 ? '' : 's'} de atenção</b><ul>${Object.values(pr).map((m) => `<li>${esc(m)}</li>`).join('')}</ul>` : c ? '<b>✅ Site íntegro: nenhum arquivo alterado, nada secreto aberto na internet</b>' : '<b>⏳ A primeira checagem roda em poucos minutos</b>'}
+      <small><b>Como funciona:</b> o escudo anota toda tentativa suspeita (senha errada em série, chave secreta errada, robô procurando falha, tentativa de injetar código) e bloqueia o IP por algumas horas quando passa do limite. A cada poucos minutos ele confere se algum arquivo do site foi mexido (se foi, volta ao original sozinho) e tira do ar qualquer arquivo estranho. Você recebe e-mail e aviso no celular. Ele só se defende: não ataca ninguém.</small></div>
+    <div class="cards4">
+      ${card(barrados ? 'r' : 'g', '🚫', 'Tentativas barradas (24h)', barrados, `${(cont.armadilha && cont.armadilha.n) || 0} robôs nas armadilhas · ${(cont.login_admin && cont.login_admin.n) || 0} senhas erradas no painel`)}
+      ${card(j.bloqueados.length ? 'y' : 'g', '⛔', 'IPs bloqueados agora', j.bloqueados.length, 'bloqueio some sozinho em algumas horas')}
+      ${card(c && c.restaurados && c.restaurados.length ? 'r' : 'g', '🧬', 'Arquivos do site', c && c.restaurados && c.restaurados.length ? c.restaurados.length + ' restaurado(s)' : 'íntegros', c && c.quarentena && c.quarentena.length ? c.quarentena.length + ' em quarentena' : 'nada estranho')}
+      ${card(gh.ok ? 'g' : 'y', '🔑', 'Chave do GitHub', gh.ok ? 'ok' : gh.tem ? 'com problema' : 'falta', gh.ok ? `termina em …${esc(gh.final)} · testada ${desde(gh.testado)}` : 'para o código ficar privado')}
+    </div>
+    ${j.bloqueados.length ? `<h4 class="vh">⛔ Bloqueados agora</h4><div class="glass tbl"><table><tr><th>IP</th><th>Motivo</th><th>Até</th><th></th></tr>${j.bloqueados.map((b) => `<tr><td>${esc(b.ip)}${b.ip === j.meu_ip ? ' <span class="st trial">é você</span>' : ''}</td><td>${esc(b.motivo)}<small>${b.vezes > 1 ? b.vezes + 'ª vez' : ''}</small></td><td>${dt(b.ate)}</td><td><button class="btn sm ghost" data-desb="${esc(b.ip)}">Desbloquear</button></td></tr>`).join('')}</table></div>` : ''}
+    <details class="vh"><summary>🔑 Chave do GitHub (código privado)</summary><div class="glass formgrid">
+      <p class="sub full">Com o código privado no GitHub, o site precisa desta chave para buscar a versão nova. Ela fica guardada fora do site, nunca aparece no painel (só o final), e só serve para LER o código.</p>
+      <label class="full">Cole a chave (começa com github_pat_)<div class="copy"><input id="ghTok" type="password" autocomplete="off" placeholder="github_pat_..."><button type="button" class="btn sm" id="ghSalvar">Testar e salvar</button></div></label>
+      <span class="msg full" id="ghMsg">${gh.ok ? `✅ Chave salva e testada${gh.privado ? ' · repositório já está privado' : ' · repositório ainda público'}` : ''}</span>
+    </div></details>
+    <details class="vh"><summary>📜 Últimos acontecimentos (${j.eventos.length})</summary><div class="glass tbl"><table><tr><th>Quando</th><th>O que</th><th>De onde</th></tr>${j.eventos.map(ev).join('')}</table></div></details>
+  </section>`;
+  $('escAgora').onclick = async (e) => { e.target.disabled = true; e.target.textContent = 'Checando…'; const r = await api('escudo-agora', {}); toast(r.ok ? (r.escudo === 'ok' ? 'Tudo certo.' : 'Checagem feita: veja os pontos de atenção.') : r.error || 'Não deu.'); loadEscudo(); };
+  $('ghSalvar').onclick = async (e) => { e.target.disabled = true; $('ghMsg').textContent = 'Testando com o GitHub…'; const r = await api('escudo-github', { token: $('ghTok').value }); e.target.disabled = false; $('ghMsg').textContent = r.ok ? '✅ Chave funcionando e salva.' : '❌ ' + r.error; if (r.ok) { $('ghTok').value = ''; setTimeout(loadEscudo, 1500); } };
+  $('escudo').querySelectorAll('[data-desb]').forEach((b) => (b.onclick = async () => { const r = await api('escudo-desbloquear', { ip: b.dataset.desb }); toast(r.ok ? 'Desbloqueado.' : r.error || 'Não deu.'); loadEscudo(); }));
+}
+
 async function loadAppSaude() {
   const j = await api('app-saude', null, '&dias=7'); if (!j.ok) return;
   const c = j.cont, pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
@@ -375,7 +406,7 @@ async function loadGeral() {
 }
 async function loadFin() { const j = await getResumo(); if (j.ok) renderFin(j); }
 async function loadVist() {
-  loadVigiaErros(); loadAppSaude();
+  loadVigiaErros(); loadEscudo(); loadAppSaude();
   const j = resumoJ && resumoJ.dias === dias ? resumoJ : await getResumo();
   if (j && j.ok) $('vigiaSite').innerHTML = vigiaSiteHtml(j.tot);
 }
