@@ -11,7 +11,7 @@
 import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=41';
 import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=37';
 import { referenceNotes, applyReference } from './reference.js?v=39';
-import { decodeVideoAudio } from './demux.js?v=39';
+import { decodeVideoAudio } from './demux.js?v=40';
 import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=37';
 import { findVoices, splitVoices, forceVoices } from './voices.js?v=3';
 
@@ -35,16 +35,28 @@ const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) =>
 // ---------- 1) Áudio do vídeo ----------
 // O navegador lê o áudio de MP4/MOV (AAC) direto, sem descompactar nada antes.
 export async function audioFromVideo(file, sr = SR, maxSec = 0) {
+  let direta = '';
   // Vídeo MP4/MOV: tira o AAC de dentro do arquivo (funciona no iPhone e não carrega o vídeo inteiro
   // na memória). Se não der (outro formato), deixa o navegador ler o arquivo todo.
   if (/\.(mov|mp4|m4v|m4a)$/i.test(file.name || '') || /video\/(mp4|quicktime)|audio\/mp4/.test(file.type || '')) {
-    try { return await decodeVideoAudio(file, sr, maxSec); } catch (e) { console.warn('leitura direta do AAC falhou:', e.message); }
+    try { return await decodeVideoAudio(file, sr, maxSec); } catch (e) {
+      console.warn('leitura direta do AAC falhou:', e.message);
+      // vídeo sem som: não adianta tentar de novo lendo o arquivo inteiro (só dava "Unable to decode audio data")
+      if (/não tem áudio/.test(e.message)) throw new Error('Este vídeo não tem áudio (parece que foi gravado sem som). Grave de novo com o som ligado ou use "Ou suba só o áudio".');
+      direta = String(e.message || e).slice(0, 80);
+    }
   }
   // ler o arquivo inteiro na memória derruba o celular com vídeo grande
   if (file.size > 250 * 1048576) throw new Error(`Não consegui tirar o áudio desse vídeo (${Math.round(file.size / 1048576)} MB). Tente exportar em MP4 1080p e subir de novo.`);
   const buf = await file.arrayBuffer();
   const ctx = new OfflineAudioContext(2, 1, sr);
-  const ab = await ctx.decodeAudioData(buf);
+  let ab;
+  try { ab = await ctx.decodeAudioData(buf); } catch (e) {
+    // guarda o motivo da primeira tentativa (vai para o diário do app) para sabermos o que o aparelho recusou
+    const err = e instanceof Error ? e : new Error(String(e?.message || e || 'Unable to decode audio data'));
+    if (direta) err.causa = direta;
+    throw err;
+  }
   const L = ab.getChannelData(0).slice();
   const R = ab.numberOfChannels > 1 ? ab.getChannelData(1).slice() : L.slice();
   return [L, R];
