@@ -7,6 +7,9 @@ R="$HOME/sc-repo"; W="$HOME/httpdocs"; MARK="$HOME/.sc_publicado"
 cd "$R"
 git fetch -q origin main
 NEW=$(git rev-parse origin/main); OLD=$(cat "$MARK" 2>/dev/null || echo nada)
+# vistoria de erros e do sistema (a tarefa roda a cada 5 min; o vigia só trabalha de ~10 em 10). Nunca trava a publicação.
+PHPB=$(ls /opt/plesk/php/8.*/bin/php 2>/dev/null | sort -V | tail -1); [ -n "$PHPB" ] || PHPB=$(command -v php 2>/dev/null || true)
+if [ -n "$PHPB" ] && [ -f "$W/api/vigia.php" ]; then mkdir -p "$HOME/logs"; "$PHPB" "$W/api/vigia.php" >> "$HOME/logs/sc-vigia.log" 2>&1 || true; [ "$(wc -c < "$HOME/logs/sc-vigia.log")" -gt 1000000 ] && tail -n 2000 "$HOME/logs/sc-vigia.log" > "$HOME/logs/sc-vigia.tmp" && mv "$HOME/logs/sc-vigia.tmp" "$HOME/logs/sc-vigia.log" || true; fi
 [ "$NEW" = "$OLD" ] && [ "$1" != "--forcar" ] && exit 0
 git reset -q --hard origin/main
 sh tools/montar-site.sh >/dev/null

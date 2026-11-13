@@ -240,6 +240,34 @@ function medidor(t, probs) {
 // ---------- visão geral ----------
 let dias = 30;
 $('periodo').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; dias = +b.dataset.d; $('periodo').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadGeral(); };
+// ---------- vistoria de erros (de 10 em 10 minutos) ----------
+const ROT = { novo: ['🆕 NOVO', 'r'], aumentou: ['📈 AUMENTOU', 'r'], voltou: ['🔁 VOLTOU', 'r'] };
+const desde = (s) => { if (!s) return '—'; const m = Math.round((Date.now() - new Date(s.replace(' ', 'T') + '-03:00')) / 60000); return m < 1 ? 'agora' : m < 60 ? `há ${m} min` : m < 1440 ? `há ${Math.floor(m / 60)} h` : dt(s); };
+async function loadVigiaErros() {
+  const j = await api('vigia-erros'); if (!j.ok) return;
+  const v = j.vigia, gs = j.grupos || [];
+  const abertos = gs.filter((g) => g.status === 'aberto' && g.h24 > 0);
+  const quente = abertos.filter((g) => g.h1 > 0);
+  const alertas = (v && v.alertas) || [];
+  const cor = quente.length ? 'mal' : abertos.length ? '' : 'ok';
+  const aps = (o) => Object.entries(o || {}).map(([a, n]) => `${esc(a)} (${n})`).join(' · ');
+  const st = { aberto: '', resolvido: '<span class="st active">resolvido</span>', ignorado: '<span class="st">ignorado</span>' };
+  $('vigiaErros').innerHTML = `<section class="bloco">
+    <div class="bh"><span class="tag ${quente.length ? 'r' : 'g'}">🛰️ VISTORIA DE ERROS · A CADA 10 MIN</span><small>${v ? `última vistoria ${desde(v.quando)} · ${v.erros_1h} erro${v.erros_1h === 1 ? '' : 's'} na última hora · ${v.erros_24h} em 24h` : 'ainda não rodou'} <button class="btn sm ghost" id="vigiaAgora">Vistoriar agora</button></small></div>
+    <div class="vigia ${cor}">${quente.length ? `<b>⚠️ ${quente.length} tipo${quente.length === 1 ? '' : 's'} de erro acontecendo agora</b>` : abertos.length ? `<b>${abertos.length} tipo${abertos.length === 1 ? '' : 's'} de erro nas últimas 24h, nenhum na última hora</b>` : '<b>✅ Nenhum erro aberto nas últimas 24h</b>'}
+      <small>Quando aparece um erro novo, um erro dispara ou um erro resolvido volta, os administradores recebem e-mail na hora.${alertas.length ? ` Alertas nas últimas 24h: ${alertas.map((a) => `${ROT[a.motivo]?.[0] || a.motivo} ${esc(a.etapa)} (${desde(a.quando)})`).join(' · ')}` : ''}</small></div>
+    ${gs.length ? `<div class="glass tbl"><table><tr><th>Erro</th><th>Última hora</th><th>24h</th><th>Aparelhos</th><th></th></tr>${gs.map((g) => {
+      const al = alertas.find((a) => a.sig === g.sig);
+      return `<tr><td>${al ? `<span class="st blocked">${ROT[al.motivo]?.[0] || ''}</span> ` : g.novo ? '<span class="st blocked">🆕 NOVO</span> ' : ''}${st[g.status] || ''}<b>${g.tipo === 'fechou' ? '📵' : '❌'} ${esc(g.etapa || 'app')}</b><small>${esc(g.msg)}</small><small>primeira vez ${dt(g.primeiro)} · última ${desde(g.ultimo)} · ${g.total} no total</small></td>
+        <td>${g.h1 ? `<b style="color:#ff6b6b">${g.h1}</b>` : '0'}</td><td>${g.h24}<small>${g.pessoas_24h} pessoa${g.pessoas_24h === 1 ? '' : 's'}</small></td><td><small>${aps(g.aparelhos)}</small></td>
+        <td>${g.status === 'aberto' ? `<button class="btn sm ghost" data-erro="${g.sig}" data-st="resolvido" title="Avisa de novo se voltar a acontecer">✓ Resolvido</button> <button class="btn sm ghost" data-erro="${g.sig}" data-st="ignorado" title="Não avisa mais deste erro">Ignorar</button>` : `<button class="btn sm ghost" data-erro="${g.sig}" data-st="aberto">Reabrir</button>`}</td></tr>`;
+    }).join('')}</table></div>` : ''}
+  </section>`;
+  $('vigiaAgora').onclick = async (e) => { e.target.disabled = true; e.target.textContent = 'Vistoriando…'; await api('vigia-agora', {}); toast('Vistoria feita.'); loadVigiaErros(); };
+  $('vigiaErros').querySelectorAll('[data-erro]').forEach((b) => (b.onclick = async () => { const r = await api('erro-marcar', { sig: b.dataset.erro, status: b.dataset.st }); if (!r.ok) return toast(r.error || 'Não deu.'); toast(b.dataset.st === 'resolvido' ? 'Marcado como resolvido. Se voltar, o vigia avisa.' : b.dataset.st === 'ignorado' ? 'Esse erro não vai mais gerar aviso.' : 'Reaberto.'); loadVigiaErros(); }));
+}
+setInterval(() => { if (!document.hidden && $('vigiaErros') && $('vigiaErros').offsetParent) loadVigiaErros().catch(() => {}); }, 60000);
+
 async function loadAppSaude() {
   const j = await api('app-saude', null, '&dias=7'); if (!j.ok) return;
   const c = j.cont, pc = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '—');
@@ -319,7 +347,7 @@ async function loadGeral() {
       ${card(t.emails_falha_7d ? 'r' : 'g', '✉️', 'E-mails (7 dias)', t.emails_ok_7d, 'n', t.emails_falha_7d ? `${t.emails_falha_7d} falharam · veja em Funil` : 'todos entregues ao servidor')}
     </div>
   </section>`;
-  contar($('nums')); loadAppSaude();
+  contar($('nums')); loadAppSaude(); loadVigiaErros();
   $('fatTot').textContent = brl(t.faturamento_periodo);
   G.area($('cFat'), j.faturamento, { color: '#ffd400', fmt: (v) => (v >= 1000 ? Math.round(v / 1000) + 'k' : Math.round(v)) });
   G.ring($('cConv'), t.conversao_teste, { color: '#a77bff' });

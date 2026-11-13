@@ -3,6 +3,7 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
+require_once __DIR__ . '/vigia_erros.php';
 header('X-Robots-Tag: noindex');
 $a = (string)($_GET['a'] ?? '');
 $db = db();
@@ -39,7 +40,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -354,6 +355,18 @@ switch ($a) {
     $q = $edb->query('SELECT MIN(created_at) FROM app_events'); $desde = $q->fetchColumn();
     json_out(['ok' => true, 'dias' => $days, 'cont' => $cnt, 'pessoas' => count($pessoas), 'tempo_mediano' => $med, 'tempo_max' => $seg ? max($seg) : 0,
       'usos' => $usos, 'desde' => $desde, 'aparelhos' => array_slice(array_values($disp), 0, 12), 'problemas' => $prob]);
+  }
+  case 'vigia-erros': { // vistoria de 10 em 10 min: tipos de erro do app, alertas e quando rodou
+    json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista()]);
+  }
+  case 'erro-marcar': { // resolvido (volta a avisar se acontecer de novo), ignorado (não avisa mais) ou aberto
+    erro_marcar((string)arg('sig'), (string)arg('status'));
+    json_out(['ok' => true]);
+  }
+  case 'vigia-agora': { // roda a vistoria na hora (botão do painel)
+    require_once __DIR__ . '/saude.php';
+    $r = erros_vigia(true); try { health_run(); } catch (Throwable $e) {}
+    json_out(['ok' => true, 'r' => $r]);
   }
   case 'afiliados': {
     $db = af_db(); sales_fill_net();

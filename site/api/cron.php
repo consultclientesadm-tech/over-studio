@@ -2,9 +2,10 @@
 // Tarefa agendada do funil. No Plesk: Tarefas agendadas → a cada hora → php /caminho/api/cron.php
 // Ou por URL: https://SEU-DOMINIO/api/cron.php?chave=CRON_KEY (chave do config.php)
 declare(strict_types=1);
-require __DIR__ . '/lib.php';
+require_once __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
-require __DIR__ . '/saude.php';
+require_once __DIR__ . '/saude.php';
+require_once __DIR__ . '/vigia_erros.php';
 if (PHP_SAPI !== 'cli') {
   $k = (string)cfg('cron_key');
   if ($k === '' || !hash_equals($k, (string)($_GET['chave'] ?? ''))) { http_response_code(403); exit('sem permissão'); }
@@ -21,4 +22,5 @@ try {
   db()->prepare('DELETE FROM attempts WHERE at < ?')->execute([time() - 2 * 86400]);
 } catch (Throwable $e) {}
 $r['vigia'] = health_run();
+try { $r['vigia_erros'] = erros_vigia(); } catch (Throwable $e) { $r['vigia_erros'] = 'erro: ' . $e->getMessage(); }
 echo json_encode($r, JSON_UNESCAPED_UNICODE), "\n";

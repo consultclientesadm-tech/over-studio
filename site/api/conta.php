@@ -162,6 +162,14 @@ switch ($a) {
     foreach ($d as $i => $v) $d[$i] = is_scalar($v) ? mb_substr((string)$v, 0, 200) : '';
     app_events_db()->prepare('INSERT INTO app_events (user_id, kind, data, ua, created_at) VALUES (?, ?, ?, ?, ?)')
       ->execute([$u['id'], $k, json_encode($d, JSON_UNESCAPED_UNICODE), mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 250), now()]);
+    if ($k === 'erro' || $k === 'fechou') { // erro chegou: se a vistoria não rodou nos últimos minutos, roda agora (depois de responder ao app)
+      require_once __DIR__ . '/vigia_erros.php';
+      $vl = setting('vigia_erros_last');
+      if (!$vl || strtotime($vl) < time() - VIGIA_ERROS_INTERVALO) register_shutdown_function(function () {
+        if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+        try { erros_vigia(); } catch (Throwable $e) {}
+      });
+    }
     json_out(['ok' => true]);
   }
   case 'push-chave': json_out(['ok' => true, 'chave' => vapid_public()]);

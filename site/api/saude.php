@@ -38,6 +38,9 @@ function health_check(): array {
   // o próprio vigia (cron) parado
   $last = setting('cron_last');
   if ($last && strtotime($last) < time() - 3 * 3600) $p['cron'] = 'A tarefa automática (funil e vigia) não roda desde ' . $last . '.';
+  // a vistoria de 10 em 10 minutos parada
+  $ve = setting('vigia_erros_last');
+  if ($ve && strtotime($ve) < time() - 40 * 60) $p['vistoria'] = 'A vistoria de 10 em 10 minutos não roda desde ' . $ve . '. Confira a tarefa agendada de publicação no Plesk.';
   return $p;
 }
 
