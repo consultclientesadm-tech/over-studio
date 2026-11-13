@@ -58,6 +58,31 @@ function or_marca_venda(int $saleId, array $o): void {
   origem_db()->prepare('UPDATE sales SET or_pagina = ?, or_fonte = ?, or_campanha = ?, or_caminho = ? WHERE id = ?')->execute([$o[0], $o[1], $o[2], $o[3], $saleId]);
 }
 
+// conta de anúncio de cada gasto lançado (leo, reinaldo...): casa com utm_campaign "leo-ads", "reinaldo-ads"
+function ad_gastos_conta(PDO $db): void {
+  static $ok = false; if ($ok) return;
+  $db->exec('CREATE TABLE IF NOT EXISTS ad_gastos (id INTEGER PRIMARY KEY AUTOINCREMENT, dia TEXT NOT NULL, valor REAL NOT NULL, nota TEXT, created_at TEXT NOT NULL)');
+  $c = array_column($db->query('PRAGMA table_info(ad_gastos)')->fetchAll(), 'name');
+  if (!in_array('conta', $c, true)) $db->exec("ALTER TABLE ad_gastos ADD COLUMN conta TEXT NOT NULL DEFAULT ''");
+  $ok = true;
+}
+
+// ROI por conta de anúncio no período: gasto lançado x vendas que vieram de anúncio do Meta com a campanha daquela conta
+function or_anuncios(PDO $db, string $since): array {
+  ad_gastos_conta($db);
+  $g = $db->prepare('SELECT conta, SUM(valor) v FROM ad_gastos WHERE dia >= ? GROUP BY conta'); $g->execute([substr($since, 0, 10)]);
+  $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido FROM sales WHERE status = 'pago' AND created_at >= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm')"); $s->execute([$since]);
+  $r = [];
+  $add = function (string $c) use (&$r) { $r[$c] ??= ['conta' => $c, 'gasto' => 0.0, 'vendas' => 0, 'liquido' => 0.0, 'vsl' => 0, 'home' => 0]; };
+  foreach ($g->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; }
+  foreach ($s->fetchAll() as $x) {
+    $c = $x['or_fonte'] === 'meta-sem-utm' ? '?' : (string)(explode('-', (string)$x['or_campanha'])[0] ?? '');
+    $add($c); $r[$c]['vendas']++; $r[$c]['liquido'] += (float)$x['liquido'];
+    if ($x['or_pagina'] === 'vsl') $r[$c]['vsl']++; elseif ($x['or_pagina'] === 'home') $r[$c]['home']++;
+  }
+  return array_values($r);
+}
+
 // relatório do painel
 function or_relatorio(int $dias): array {
   $db = origem_db(); sales_fill_net();
@@ -82,5 +107,5 @@ function or_relatorio(int $dias): array {
   }
   $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' ORDER BY s.id DESC LIMIT 15");
   $ult->execute();
-  return ['ok' => true, 'dias' => $dias, 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
+  return ['ok' => true, 'anuncios' => or_anuncios($db, $since), 'dias' => $dias, 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
 }

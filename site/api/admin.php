@@ -105,7 +105,7 @@ switch ($a) {
     $db->exec('CREATE TABLE IF NOT EXISTS ad_gastos (id INTEGER PRIMARY KEY AUTOINCREMENT, dia TEXT NOT NULL, valor REAL NOT NULL, nota TEXT, created_at TEXT NOT NULL)');
     $tot['anuncios_periodo'] = (float)$one('SELECT COALESCE(SUM(valor), 0) FROM ad_gastos WHERE dia >= ?', [$since]);
     $tot['anuncios_total'] = (float)$one('SELECT COALESCE(SUM(valor), 0) FROM ad_gastos');
-    $qa = $db->prepare('SELECT id, dia, valor, nota FROM ad_gastos ORDER BY dia DESC, id DESC LIMIT 60'); $qa->execute(); $tot['anuncios_lista'] = $qa->fetchAll(PDO::FETCH_ASSOC);
+    ad_gastos_conta($db); $qa = $db->prepare('SELECT id, dia, valor, nota, conta FROM ad_gastos ORDER BY dia DESC, id DESC LIMIT 60'); $qa->execute(); $tot['anuncios_lista'] = $qa->fetchAll(PDO::FETCH_ASSOC);
     $tot['ticket_medio'] = $tot['vendas_periodo'] ? $tot['faturamento_periodo'] / $tot['vendas_periodo'] : 0;
     $tot['conversao_teste'] = $tot['testes_total'] ? $tot['testes_convertidos'] / $tot['testes_total'] : 0;
     $series = function (string $sql) use ($db, $since, $days) {
@@ -382,7 +382,9 @@ switch ($a) {
     $vr = trim((string)(arg('valor', '0'))); if (preg_match('/^\d{1,3}(\.\d{3})+$/', $vr)) $vr = str_replace('.', '', $vr); // 2.000 = dois mil
     $valor = brnum($vr);
     if ($valor <= 0 || $valor > 10000000) json_out(['ok' => false, 'error' => 'Coloque um valor maior que zero.']);
-    $db->prepare('INSERT INTO ad_gastos (dia, valor, nota, created_at) VALUES (?, ?, ?, ?)')->execute([$dia, $valor, mb_substr(trim((string)(arg('nota', ''))), 0, 80), now()]);
+    ad_gastos_conta($db);
+    $conta = preg_replace('/[^a-z0-9]/', '', strtolower((string)arg('conta', ''))) ?? '';
+    $db->prepare('INSERT INTO ad_gastos (dia, valor, nota, created_at, conta) VALUES (?, ?, ?, ?, ?)')->execute([$dia, $valor, mb_substr(trim((string)(arg('nota', ''))), 0, 80), now(), substr($conta, 0, 20)]);
     json_out(['ok' => true]);
   }
   case 'anuncio-del': {
