@@ -115,7 +115,8 @@ async function ligarAvisoVenda() {
 $('somBtn').onclick = () => modal(`<h3>💰 Som e aviso de venda</h3><p>Com o painel aberto, cada venda nova toca uma <b>caixa registradora</b> bem alta. Toque em qualquer lugar do painel uma vez para o navegador liberar o som.</p><p>No celular, ligue o aviso: cada venda chega como notificação, com o valor, o nome e de onde veio.</p><button class="btn" id="mTestaSom">🔊 Ouvir o som</button> <button class="btn" id="mLigaPush" style="margin-top:10px">📲 Ligar aviso neste aparelho</button>`, (m) => { m.querySelector('#mTestaSom').onclick = chime; m.querySelector('#mLigaPush').onclick = () => { closeModal(); ligarAvisoVenda(); }; });
 // renova em silêncio (o celular às vezes troca o endereço do aviso)
 (async () => { try { if (localStorage.getItem('sc-adm-push') !== '1' || Notification.permission !== 'granted') return; const reg = await navigator.serviceWorker.getRegistration('/admin/'); const sub = reg && (await reg.pushManager.getSubscription()); if (sub) api('push-salvar', { sub: sub.toJSON() }).catch(() => {}); } catch {} })();
-let vista = 'periodo'; // 'periodo' (dia a dia do período escolhido) ou 'hora' (só hoje, por hora)
+let vista = 'hora'; // padrão: vendas de hoje hora a hora (ao vivo); o dia a dia só quando clicar
+// 'periodo' (dia a dia do período escolhido) ou 'hora' (só hoje, por hora)
 async function loadHoje() {
   const [j, sr] = await Promise.all([api('hoje'), api('serie', null, '&dias=' + dias)]); if (!j.ok) return;
   const vendas = j.hoje, ontem = j.ontem, agora = j.agora_min;
@@ -144,7 +145,7 @@ async function loadHoje() {
   const dif = ontemAte > 0 ? (total - ontemAte) / ontemAte : null;
   const novas = hojeIds ? vendas.filter((v) => !hojeIds.has(v.id) && v.liquido > 0) : [];
   hojeIds = new Set(vendas.map((v) => v.id));
-  const abas = `<div class="seg vista"><button data-v="periodo" class="${vista === 'periodo' ? 'on' : ''}">Dia a dia</button><button data-v="hora" class="${vista === 'hora' ? 'on' : ''}">Hoje por hora</button></div>`;
+  const abas = `<div class="seg vista"><button data-v="hora" class="${vista === 'hora' ? 'on' : ''}">Hoje por hora</button><button data-v="periodo" class="${vista === 'periodo' ? 'on' : ''}">Dia a dia</button></div>`;
   $('fatBox').hidden = vista !== 'periodo';
   $('vistaSeg').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === vista));
   if (vista === 'periodo') {
