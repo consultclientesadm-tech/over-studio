@@ -8,10 +8,10 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=40';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=41';
 import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=37';
-import { referenceNotes, applyReference } from './reference.js?v=38';
-import { decodeVideoAudio } from './demux.js?v=38';
+import { referenceNotes, applyReference } from './reference.js?v=39';
+import { decodeVideoAudio } from './demux.js?v=39';
 import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=37';
 import { findVoices, splitVoices } from './voices.js?v=1';
 
@@ -34,11 +34,11 @@ const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) =>
 
 // ---------- 1) Áudio do vídeo ----------
 // O navegador lê o áudio de MP4/MOV (AAC) direto, sem descompactar nada antes.
-export async function audioFromVideo(file, sr = SR) {
+export async function audioFromVideo(file, sr = SR, maxSec = 0) {
   // Vídeo MP4/MOV: tira o AAC de dentro do arquivo (funciona no iPhone e não carrega o vídeo inteiro
   // na memória). Se não der (outro formato), deixa o navegador ler o arquivo todo.
   if (/\.(mov|mp4|m4v|m4a)$/i.test(file.name || '') || /video\/(mp4|quicktime)|audio\/mp4/.test(file.type || '')) {
-    try { return await decodeVideoAudio(file, sr); } catch (e) { console.warn('leitura direta do AAC falhou:', e.message); }
+    try { return await decodeVideoAudio(file, sr, maxSec); } catch (e) { console.warn('leitura direta do AAC falhou:', e.message); }
   }
   // ler o arquivo inteiro na memória derruba o celular com vídeo grande
   if (file.size > 250 * 1048576) throw new Error(`Não consegui tirar o áudio desse vídeo (${Math.round(file.size / 1048576)} MB). Tente exportar em MP4 1080p e subir de novo.`);
@@ -229,11 +229,11 @@ export function applyFades(channels, sr, fadeIn, fadeOut) {
 export async function analyze(file, opts = {}, onStep = () => {}) {
   const o = { ...DEFAULTS, ...opts };
   onStep('audio', 0);
-  let orig = file instanceof Blob ? await audioFromVideo(file) : file; // aceita canais prontos (testes)
+  let orig = file instanceof Blob ? await audioFromVideo(file, SR, o.maxSec || 0) : file; // aceita canais prontos (testes)
   onStep('audio', 1);
   // vídeo maior que o limite: em vez de recusar, usa os primeiros minutos (a pessoa não perde o teste)
-  let cortado = 0;
-  if (o.maxSec && orig[0].length / SR > o.maxSec) { cortado = orig[0].length / SR; const n = Math.round(o.maxSec * SR); orig = orig.map((c) => c.slice(0, n)); }
+  let cortado = o.maxSec && orig.fullDur > o.maxSec + 0.5 ? orig.fullDur : 0;
+  if (o.maxSec && orig[0].length / SR > o.maxSec) { cortado = Math.max(cortado, orig[0].length / SR); const n = Math.round(o.maxSec * SR); orig = orig.map((c) => c.slice(0, n)); }
   let voice = orig, bed = null;
   if (o.separate) {
     const sepOpts = { onDownload: (p) => onStep('download', p), onProgress: (p) => onStep('separate', p) };
@@ -243,8 +243,8 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
       if (!e.lost || !(file instanceof Blob)) throw e;
       console.warn('separação de novo, sem ajudante:', e.causa);
       orig = null; onStep('audio', 0);
-      orig = await audioFromVideo(file);
-      if (cortado) { const n = Math.round(o.maxSec * SR); orig = orig.map((c) => c.slice(0, n)); }
+      orig = await audioFromVideo(file, SR, o.maxSec || 0);
+      if (o.maxSec && orig[0].length / SR > o.maxSec) { const n = Math.round(o.maxSec * SR); orig = orig.map((c) => c.slice(0, n)); }
       onStep('separate', 0);
       try { r = await separate(orig, sepOpts); } catch (e2) { if (!e2.causa) e2.causa = e.causa; throw e2; }
     }

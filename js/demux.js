@@ -64,7 +64,7 @@ function audioConfig(v, entry) {
   return { aot, sfi, ch: ch || 2 };
 }
 
-export async function extractAac(file) {
+export async function extractAac(file, maxSec = 0) {
   const v = await findMoov(file);
   const moov = { start: 8, end: v.byteLength };
   const mvhd = child(v, moov, 'mvhd');
@@ -81,7 +81,11 @@ export async function extractAac(file) {
     const cfg = audioConfig(v, entry);
     // tamanhos das amostras
     const stsz = child(v, stbl, 'stsz');
-    const fixed = u32(v, stsz.start + 4), count = u32(v, stsz.start + 8);
+    const fixed = u32(v, stsz.start + 4), all = u32(v, stsz.start + 8);
+    // vídeo mais longo que o limite: só lê o áudio dos primeiros minutos (cada quadro AAC tem 1024 amostras).
+    // Antes lia e decodificava o áudio inteiro e só depois cortava: no iPhone isso era memória à toa.
+    const fullDur = (all * 1024) / scale;
+    const count = maxSec > 0 ? Math.min(all, Math.ceil(((maxSec + 3) * scale) / 1024)) : all;
     const size = (i) => (fixed || u32(v, stsz.start + 12 + 4 * i));
     // onde começa cada pedaço (chunk)
     const stco = child(v, stbl, 'stco'), co64 = child(v, stbl, 'co64');
@@ -142,20 +146,24 @@ export async function extractAac(file) {
     // lista de edição estranha (vídeo reeditado por outro app) não pode empurrar o áudio por minutos
     if (!(delay >= 0 && delay < 2)) delay = 0;
     if (!(skip >= 0 && skip < 2)) skip = 0;
-    return { adts: out.subarray(0, p), delay, skip };
+    return { adts: p === out.length ? out : out.subarray(0, p), delay, skip, fullDur };
   }
   throw new Error('este vídeo não tem áudio');
 }
 
 // Decodifica o AAC solto no tamanho de amostra pedido, já aplicando o atraso e o pulo do aquecimento
-export async function decodeVideoAudio(file, sr) {
-  const { adts, delay, skip } = await extractAac(file);
+export async function decodeVideoAudio(file, sr, maxSec = 0) {
+  const { adts, delay, skip, fullDur } = await extractAac(file, maxSec);
   const ctx = new OfflineAudioContext(2, 1, sr);
-  const ab = await ctx.decodeAudioData(adts.buffer.slice(adts.byteOffset, adts.byteOffset + adts.byteLength));
+  // entrega o próprio buffer (sem fazer uma cópia do áudio inteiro só para decodificar)
+  const whole = adts.byteOffset === 0 && adts.byteLength === adts.buffer.byteLength;
+  const ab = await ctx.decodeAudioData(whole ? adts.buffer : adts.buffer.slice(adts.byteOffset, adts.byteOffset + adts.byteLength));
   const cut = Math.round(skip * sr), pad = Math.round(delay * sr);
   const take = (c) => {
     const src = ab.getChannelData(Math.min(c, ab.numberOfChannels - 1)).subarray(cut);
     const o = new Float32Array(src.length + pad); o.set(src, pad); return o;
   };
-  return [take(0), take(1)];
+  const out = [take(0), take(1)];
+  out.fullDur = fullDur;
+  return out;
 }
