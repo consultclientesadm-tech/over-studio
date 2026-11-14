@@ -411,3 +411,12 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .vgX { display: flex; gap: 3px; margin-top: 4px; } .vgX span { flex: 1; font-size: 10px; color: #8b90a6; text-align: center; white-space: nowrap; overflow: visible; min-width: 0; }
 @media (max-width: 1100px) { .vgK { grid-template-columns: 1fr 1fr 1fr; } .vk.big { grid-column: span 3; } .vgSg { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 760px) { .vgK { grid-template-columns: 1fr 1fr; } .vk.big { grid-column: span 2; } .vgMeio, .vgGr { grid-template-columns: 1fr; } .vgTop .vivo { margin-left: 0; } .vgBars { height: 120px; } }
+
+.vgLin { position: relative; height: 150px; margin-top: 10px; }
+.vgLin svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.vgLin .gr { stroke: rgba(255,255,255,.07); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.vgLin .ln { fill: none; stroke: var(--c); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; filter: drop-shadow(0 0 4px var(--c)); }
+.vgLin .pt { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 0 var(--c); animation: vgPulso 1.8s infinite; cursor: default; }
+.vgLin .agora { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed rgba(255,77,94,.6); }
+@keyframes vgPulso { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 70%, transparent); transform: scale(1); } 60% { box-shadow: 0 0 0 9px transparent; transform: scale(1.15); } 100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); } }
+@media (max-width: 760px) { .vgLin { height: 120px; } }
