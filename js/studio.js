@@ -144,13 +144,23 @@ const pouca = () => {
 };
 const semMemoria = (e) => /Out of memory|OOM|could not allocate memory/i.test(String(e && (e.message || e)));
 let ortP = null;
-function loadOrt() { return (ortP ||= loadOrt1()); }
+
+// Internet do celular oscilou bem na hora de baixar uma peça do app ("Failed to fetch dynamically imported module"):
+// tenta de novo sozinho, com outro endereço (o navegador guarda a falha do endereço antigo e não tentaria de novo).
+async function importar(rel, base) {
+  const u = new URL(rel, base).href;
+  for (let n = 0; ; n++) {
+    try { return await import(n ? u + (u.includes('?') ? '&' : '?') + 'r=' + n : u); }
+    catch (e) { if (n >= 3 || !/dynamically imported module|Importing a module script failed|error loading dynamically|Failed to fetch|Load failed|NetworkError/i.test(String(e && e.message))) throw e; await new Promise((r) => setTimeout(r, 1500 * (n + 1))); }
+  }
+}
+function loadOrt() { return (ortP ||= loadOrt1().catch((e) => { ortP = null; throw e; })); } // falhou: a próxima tentativa baixa de novo
 async function loadOrt1() {
   // Arquivos com extensão .js (e não .mjs): qualquer servidor manda o tipo certo, inclusive o nginx do Plesk
   // Celular: versão só-CPU do motor (12 MB em vez de 27 MB): compilar o motor grande sozinho já gastava
   // centenas de MB de memória no iPhone. Computador: versão com placa de vídeo (WebGPU).
   const lite = useLite();
-  const ort = lite ? await import('./vendor/ort/ort.wasm.min.js') : await import('./vendor/ort/ort.webgpu.min.js');
+  const ort = await importar(lite ? './vendor/ort/ort.wasm.min.js' : './vendor/ort/ort.webgpu.min.js', import.meta.url);
   ort.env.wasm.wasmPaths = lite ? {
     mjs: new URL(pouca() ? './vendor/ort/ort-wasm-simd-threaded.1g.js' : './vendor/ort/ort-wasm-simd-threaded.js', import.meta.url).href,
     wasm: new URL('./vendor/ort/ort-wasm-simd-threaded.wasm', import.meta.url).href,
@@ -173,7 +183,7 @@ async function loadPart(ort, i, onBytes) {
 // Separação leve (Spleeter 2 faixas, Deezer, MIT): trabalha em blocos de 512 quadros (~12 s).
 async function separateLite(channels, { onDownload, onProgress }) {
   const ort = await loadOrt();
-  const { fft, ifft, getHannWindow } = await import('./vendor/demucs/fft.js');
+  const { fft, ifft, getHannWindow } = await importar('./vendor/demucs/fft.js', import.meta.url);
   const N = 4096, H = 1024, BINS = 1024, FULL = N / 2 + 1, F = 512;
   const L = channels[0].length, P = N;
   const src = [channels[0], channels[1] || channels[0]];
@@ -255,7 +265,7 @@ let demucs = null;
 async function loadDemucs(onProgress) {
   if (demucs) return demucs;
   const ort = await loadOrt();
-  const { DemucsProcessor } = await import('./vendor/demucs/processor.js');
+  const { DemucsProcessor } = await importar('./vendor/demucs/processor.js', import.meta.url);
   const TOTAL = 180534758;
   let got = 0;
   const parts = [];
@@ -278,7 +288,7 @@ const bedOf = (src, voice) => voice.map((v, c) => { const s = src[c] || src[0], 
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=47', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=48', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now(), sent = false;
     const send = () => {
       if (sent) return; sent = true;
@@ -347,7 +357,7 @@ export async function separate(channels, { onDownload = () => {}, onProgress = (
 let stretchMod = null;
 async function loadStretch() {
   if (stretchMod) return stretchMod;
-  const { default: Factory } = await import('./vendor/stretch.js');
+  const { default: Factory } = await importar('./vendor/stretch.js', import.meta.url);
   stretchMod = Factory;
   return Factory;
 }

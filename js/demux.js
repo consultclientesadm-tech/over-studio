@@ -248,7 +248,7 @@ export async function decodeVideoAudio(file, sr, maxSec = 0) {
   }
   // Xiaomi/Redmi/POCO e vivo: os dois leitores do celular recusam o AAC. O FFmpeg do app lê sem depender dele.
   if (!ab && cfg.adtsOk) {
-    try { ab = await (await import('./convert.js?v=38')).decodeAudioSoft(adts, 'aac', sr); } catch (e) { err3 = e; console.warn('FFmpeg falhou no áudio:', e && e.message); }
+    try { ab = await (await import('./convert.js?v=39')).decodeAudioSoft(adts, 'aac', sr); } catch (e) { err3 = e; console.warn('FFmpeg falhou no áudio:', e && e.message); }
   }
   if (!ab) {
     const err = err1 || err2 || err3 || new Error('Unable to decode audio data');

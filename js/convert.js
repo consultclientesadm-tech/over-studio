@@ -3,10 +3,20 @@
 // O FFmpeg (32 MB) só é baixado nesse caso.
 const BASE = new URL('./vendor/ffmpeg/', import.meta.url).href;
 
+// Internet do celular oscilou bem na hora de baixar uma peça do app ("Failed to fetch dynamically imported module"):
+// tenta de novo sozinho, com outro endereço (o navegador guarda a falha do endereço antigo e não tentaria de novo).
+async function importar(rel, base) {
+  const u = new URL(rel, base).href;
+  for (let n = 0; ; n++) {
+    try { return await import(n ? u + (u.includes('?') ? '&' : '?') + 'r=' + n : u); }
+    catch (e) { if (n >= 3 || !/dynamically imported module|Importing a module script failed|error loading dynamically|Failed to fetch|Load failed|NetworkError/i.test(String(e && e.message))) throw e; await new Promise((r) => setTimeout(r, 1500 * (n + 1))); }
+  }
+}
+
 export function canConvert() { return !!(self.crossOriginIsolated && self.SharedArrayBuffer && self.WebAssembly); }
 
 async function loadFF() {
-  const { FFmpeg } = await import('./vendor/ffmpeg/ffmpeg/index.js');
+  const { FFmpeg } = await importar('./vendor/ffmpeg/ffmpeg/index.js', import.meta.url);
   const ff = new FFmpeg();
   await ff.load({ coreURL: BASE + 'core/ffmpeg-core.js', wasmURL: BASE + 'core/ffmpeg-core.wasm', workerURL: BASE + 'core/ffmpeg-core.worker.js' });
   return ff;
@@ -33,7 +43,7 @@ export async function decodeAudioSoft(bytes, ext, sr) {
 }
 
 export async function toH264(file, onProgress = () => {}) {
-  const { FFmpeg } = await import('./vendor/ffmpeg/ffmpeg/index.js');
+  const { FFmpeg } = await importar('./vendor/ffmpeg/ffmpeg/index.js', import.meta.url);
   const ff = new FFmpeg();
   let dur = 0;
   ff.on('log', ({ message }) => { const m = /Duration: (\d+):(\d+):([\d.]+)/.exec(message); if (m && !dur) dur = +m[1] * 3600 + +m[2] * 60 + +m[3]; });
