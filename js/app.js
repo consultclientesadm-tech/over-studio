@@ -228,6 +228,23 @@ async function videoReady() {
   for (let i = 0; i < 40 && !ok(); i++) { if (i === 10 || i === 25) kick(); await new Promise((r) => setTimeout(r, 200)); }
   video.pause(); // sem quadro ainda? segue mesmo assim: o iPhone entrega a imagem quando tocar
 }
+// CPI dos erros: etapa pesada em andamento depois que o estúdio abriu (afinar, mixar, exportar). Se o celular fechar
+// o app no meio, na próxima visita o diário conta "fechou" com a etapa. Se a pessoa sair por conta própria, conta "saiu".
+const PES = 'sc-pesado';
+function pesado(etapa) { try { if (etapa) localStorage.setItem(PES, JSON.stringify({ etapa, t: Date.now(), mb: file ? Math.round(file.size / 1048576) : 0 })); else localStorage.removeItem(PES); } catch {} }
+const pesAntes = (() => { try { const p = JSON.parse(localStorage.getItem(PES) || 'null'); localStorage.removeItem(PES); return p; } catch { return null; } })(); // lido já na abertura (antes de qualquer busy)
+setTimeout(() => { try {
+  const p = pesAntes;
+  if (p && Date.now() - p.t < 6 * 3600e3 && !p.saiu) {
+    ev('fechou', { etapa: p.etapa, mb: p.mb, depois: 1 });
+    if (/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)) localStorage.setItem('sc-leve', '1');
+  }
+} catch {} }, 0);
+addEventListener('pagehide', () => { try {
+  const p = JSON.parse(localStorage.getItem(PES) || 'null'), r = runInfo;
+  if (r) ev('saiu', { etapa: r.stage, pct: r.pct, mb: r.mb });
+  else if (p) { ev('saiu', { etapa: p.etapa, mb: p.mb }); p.saiu = 1; localStorage.setItem(PES, JSON.stringify(p)); }
+} catch {} });
 // Diário da última tentativa: se o celular fechar a página no meio, na volta o app conta em que ponto foi
 const RUN = 'sc-run';
 // diário enviado ao painel (só no domínio com conta): começou, abriu, exportou, erro, fechou no meio
@@ -237,11 +254,17 @@ function note(patch) { if (!runInfo) return; Object.assign(runInfo, patch); try 
 function endRun() { runInfo = null; const fp = forget(); try { localStorage.removeItem(RUN); localStorage.removeItem('sc-last'); } catch {} return fp; }
 try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
-  if (last && (last.tries || 1) < 2) { localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
+  const celular = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
+  if (last && (last.tries || 1) < 2) {
+    localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last));
+    // CPI: o celular fechou o app na 1ª tentativa. O app continua sozinho, mas a queda precisa aparecer no painel
+    ev('fechou', { etapa: last.stage, pct: last.pct, mb: last.mb, dur: last.dur, msg: last.erro || '', retomou: 1 });
+    if (celular) localStorage.setItem('sc-leve', '1');
+  }
   else if (last) {
     localStorage.removeItem(RUN);
     ev('fechou', { etapa: last.stage, pct: last.pct, mb: last.mb, dur: last.dur, msg: last.erro || '' });
-    if (/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)) localStorage.setItem('sc-leve', '1'); // a próxima tentativa já vai no modo leve
+    if (celular) localStorage.setItem('sc-leve', '1'); // a próxima tentativa já vai no modo leve
     const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v37`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => ajudaErro('O celular fechou o app no meio', `Na última tentativa o celular ficou sem memória e fechou o app em "${escH(last.stage)}". Isso acontece com vídeo longo ou pesado, ou com muitos apps abertos. Para dar certo:`, last.mb), 600);
@@ -615,7 +638,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-function busy(on, txt) { $('busy').hidden = !on; if (txt) $('busyTxt').textContent = txt; busyPct(0); }
+function busy(on, txt) { $('busy').hidden = !on; if (txt) $('busyTxt').textContent = txt; busyPct(0); pesado(on ? txt || 'processando' : ''); }
 function busyPct(p) { $('busyBar').style.strokeDashoffset = 327 * (1 - Math.max(0, Math.min(1, p))); }
 
 // ---------- 2) Afinação ----------
@@ -997,7 +1020,7 @@ $('exportBtn').onclick = async () => {
   pause();
   if (window.scAntesExportar && !(await window.scAntesExportar('o vídeo pronto'))) return;
   if (pending) toast('Você tem edições de afinação que ainda não foram aplicadas.');
-  $('exportBtn').disabled = true; $('exportBar').hidden = false; $('ready').hidden = true;
+  $('exportBtn').disabled = true; $('exportBar').hidden = false; $('ready').hidden = true; pesado('Exportando o vídeo');
   if (thumbGr) { thumbGr.release(); thumbGr = null; } // libera memória de vídeo para a gravação (as miniaturas refazem depois)
   try {
     const ch = mastered ? mastered.channels : cover.rawMix(state, state.parts ? voiceDb('e').map(dbG) : null);
@@ -1011,6 +1034,7 @@ $('exportBtn').onclick = async () => {
     $('ready').hidden = false; $('ready').scrollIntoView({ behavior: 'smooth', block: 'center' });
     toast('Vídeo pronto!'); ev('exportou', { mb: Math.round(out.blob.size / 1048576), w: out.width, h: out.height, ext: out.ext });
   } catch (e) { console.error(e); ev('erro', { etapa: 'exportar', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 7000); }
+  pesado('');
   $('exportBtn').disabled = false;
   seek(0);
 };

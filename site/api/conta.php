@@ -181,7 +181,7 @@ switch ($a) {
     $u = current_user(); if (!$u) json_out(['ok' => true]);
     throttle('ev:' . $u['id'], 120, 3600);
     $k = preg_replace('/[^a-z]/', '', (string)arg('k'));
-    if (!in_array($k, ['inicio', 'abriu', 'pronto', 'exportou', 'erro', 'fechou', 'quisbaixar', 'liberou'], true)) json_out(['ok' => true]);
+    if (!in_array($k, ['inicio', 'abriu', 'pronto', 'exportou', 'erro', 'fechou', 'saiu', 'quisbaixar', 'liberou'], true)) json_out(['ok' => true]);
     $d = arg('d', []); $d = is_array($d) ? array_slice($d, 0, 12, true) : [];
     foreach ($d as $i => $v) $d[$i] = is_scalar($v) ? mb_substr((string)$v, 0, 200) : '';
     app_events_db()->prepare('INSERT INTO app_events (user_id, kind, data, ua, created_at) VALUES (?, ?, ?, ?, ?)')

@@ -301,6 +301,13 @@ function ua_short(string $ua): string {
   return $d . ($b ? " · $b" : '');
 }
 
+// sistema + navegador (para a CPI dos erros): "iPhone · Safari", "Android · Chrome", "Computador · Chrome"…
+function ua_nav(string $ua): string {
+  $so = preg_match('/iPhone|iPad/', $ua) ? 'iPhone' : (preg_match('/Android/', $ua) ? 'Android' : (preg_match('/Windows|Mac OS X|Linux|CrOS/', $ua) ? 'Computador' : 'Outro'));
+  $b = preg_match('/Instagram/', $ua) ? 'Instagram' : (preg_match('/FBAN|FBAV|FB_IAB/', $ua) ? 'Facebook' : (preg_match('/SamsungBrowser/', $ua) ? 'Samsung Internet' : (preg_match('/EdgA?|Edg\//', $ua) ? 'Edge' : (preg_match('/Firefox|FxiOS/', $ua) ? 'Firefox' : (preg_match('/CriOS|Chrome/', $ua) ? 'Chrome' : (preg_match('/Safari/', $ua) ? 'Safari' : 'outro'))))));
+  return "$so · $b";
+}
+
 // ---------- valores de venda: bruto (preço), taxa da Eduzz e líquido que cai para os sócios ----------
 function brnum(string $v): float { $v = preg_replace('/[^\d,.\-]/', '', $v); if (str_contains($v, ',')) $v = str_replace(['.', ','], ['', '.'], $v); return (float)$v; }
 function sale_net(float $value, bool $afiliado = false): array {
