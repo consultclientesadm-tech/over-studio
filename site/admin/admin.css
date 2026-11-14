@@ -459,3 +459,4 @@ body:not([data-reg="br"]) .regBar select { box-shadow: 0 0 18px rgba(255,212,0,.
 .vigia.ok b .ic-e{color:var(--y);animation:torre 1.2s ease-in-out infinite}
 @keyframes torre{0%,100%{opacity:1;filter:drop-shadow(0 0 6px rgba(255,212,0,.8))}50%{opacity:.25;filter:none}}
 @media (prefers-reduced-motion:reduce){.vigia.ok b .ic-e{animation-duration:2.4s}}
+#tblAlunos td:nth-child(3){min-width:150px}#tblAlunos td:nth-child(3) b.ap{font-size:13px}

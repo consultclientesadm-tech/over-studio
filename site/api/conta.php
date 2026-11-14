@@ -30,6 +30,7 @@ switch ($a) {
     $u = current_user();
     if (!$u) json_out(['ok' => true, 'user' => null, 'trial_enabled' => setting('trial_enabled') === '1', 'trial_videos' => (int)setting('trial_videos')]);
     db()->prepare('UPDATE users SET last_seen = ? WHERE id = ?')->execute([now(), $u['id']]);
+    marca_aparelho($u);
     $q = db()->prepare('SELECT COUNT(*) FROM notifications WHERE user_id = ? AND read_at IS NULL'); $q->execute([$u['id']]);
     json_out(['ok' => true, 'user' => public_user($u), 'unread' => (int)$q->fetchColumn(), 'whatsapp' => setting('support_whatsapp')]);
   }
@@ -188,6 +189,7 @@ switch ($a) {
     foreach ($d as $i => $v) $d[$i] = is_scalar($v) ? mb_substr((string)$v, 0, 200) : '';
     app_events_db()->prepare('INSERT INTO app_events (user_id, kind, data, ua, created_at) VALUES (?, ?, ?, ?, ?)')
       ->execute([$u['id'], $k, json_encode($d, JSON_UNESCAPED_UNICODE), mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 250), now()]);
+    if ($k === 'inicio' || $k === 'abriu') marca_aparelho($u, (string)($d['modelo'] ?? ''));
     if ($k === 'erro' || $k === 'fechou') { // erro chegou: se a vistoria não rodou nos últimos minutos, roda agora (depois de responder ao app)
       require_once __DIR__ . '/vigia_erros.php';
       // cliente pago com erro: pedido de desculpas na hora (aviso no app/celular + e-mail), no máximo 1 a cada 24h

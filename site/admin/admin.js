@@ -676,18 +676,25 @@ async function loadAlunos() {
   const j = await api('alunos', null, `&busca=${encodeURIComponent($('busca').value)}&status=${fStatus}&pag=${pag}`); if (!j.ok) return;
   alunos = j.items;
   $('alunosSub').textContent = `${j.total} ${j.total === 1 ? 'conta' : 'contas'}`;
-  $('tblAlunos').innerHTML = alunos.length ? `<table><tr><th>Aluno</th><th>Status</th><th>Vídeos</th><th>Pagou</th><th>Acesso até</th><th>Cadastro</th><th>Visto</th></tr>${alunos.map((u) => `<tr class="click" data-id="${u.id}">
+  $('tblAlunos').innerHTML = alunos.length ? `<table><tr><th>Aluno</th><th>Status</th><th>Aparelho</th><th>Vídeos</th><th>Pagou</th><th>Acesso até</th><th>Cadastro</th><th>Visto</th></tr>${alunos.map((u) => `<tr class="click" data-id="${u.id}">
     <td><b>${esc(u.name || '—')}</b><small>${esc(u.email)}${+u.tem_senha ? '' : ' · <span style="color:#ff9d00">sem senha</span>'}</small></td>
     <td><span class="st ${stDe(u)[0]}">${stDe(u)[1]}</span>${u.status === 'trial' ? `<small>${u.trial_left} grátis</small>` : ''}</td>
-    <td>${u.videos_used}</td><td>${+u.paid_value ? brl(u.paid_value) : '—'}</td><td>${u.status === 'active' ? (u.expires_at ? dt(u.expires_at).slice(0, 8) : 'vitalício') : '—'}</td>
+    <td>${apCel(u)}</td><td>${u.videos_used}</td><td>${+u.paid_value ? brl(u.paid_value) : '—'}</td><td>${u.status === 'active' ? (u.expires_at ? dt(u.expires_at).slice(0, 8) : 'vitalício') : '—'}</td>
     <td>${dt(u.created_at).slice(0, 8)}<small>${esc(u.source)}</small></td><td>${u.last_seen ? dt(u.last_seen) : '—'}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhum aluno encontrado.</p>';
   $('tblAlunos').querySelectorAll('tr[data-id]').forEach((tr) => (tr.onclick = () => editAluno(alunos.find((u) => u.id == tr.dataset.id))));
   const pages = Math.ceil(j.total / j.por_pag);
   $('pager').innerHTML = pages > 1 ? `<button class="btn sm ghost" ${pag <= 1 ? 'disabled' : ''} data-p="-1">←</button> página ${pag} de ${pages} <button class="btn sm ghost" ${pag >= pages ? 'disabled' : ''} data-p="1">→</button>` : '';
   $('pager').querySelectorAll('[data-p]').forEach((b) => (b.onclick = () => { pag += +b.dataset.p; loadAlunos(); }));
 }
+// aparelho: o último que usou o app em destaque; embaixo o do cadastro/compra quando for outro
+function apCel(u) {
+  const a = u.aparelho || '', p = u.aparelho_1 || '';
+  if (!a && !p) return '<span class="sub">—</span>';
+  const [nome, sis] = (a || p).split(' · ');
+  return `<b class="ap">${esc(nome)}</b><small>${esc(sis || '')}${p && a && p !== a ? ` · 1º: ${esc(p.split(' · ')[0])}` : ''}</small>`;
+}
 function editAluno(u) {
-  modal(`<h3>${esc(u.name || u.email)}</h3><p class="sub">${esc(u.email)}${u.phone ? ' · ' + esc(u.phone) : ''}<br>Cadastro ${dt(u.created_at)} · origem ${esc(u.source)} · ${u.videos_used} vídeos · funil passo ${u.funnel_step}${+u.unsub ? ' · saiu da lista' : ''}</p>
+  modal(`<h3>${esc(u.name || u.email)}</h3><p class="sub">${esc(u.email)}${u.phone ? ' · ' + esc(u.phone) : ''}<br>Cadastro ${dt(u.created_at)} · origem ${esc(u.source)} · ${u.videos_used} vídeos · funil passo ${u.funnel_step}${+u.unsub ? ' · saiu da lista' : ''}${u.aparelho || u.aparelho_1 ? `<br>Aparelho: ${esc(u.aparelho || u.aparelho_1)}${u.aparelho_1 && u.aparelho && u.aparelho_1 !== u.aparelho ? ` · no cadastro/compra: ${esc(u.aparelho_1)}` : ''}` : ''}</p>
     <label>Nome<input id="eNome" value="${esc(u.name)}"></label>
     <label>Status<select id="eStatus">${Object.entries({ ...STATUS, active: 'Acesso liberado (pago ou cortesia)' }).map(([k, v]) => `<option value="${k}" ${k === u.status ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
     <label>Vídeos grátis restantes (teste)<input id="eTrial" type="number" min="0" value="${u.trial_left}"></label>
