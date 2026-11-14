@@ -149,5 +149,15 @@ function or_relatorio(int $dias, string $dia = ''): array {
   $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' AND s.created_at >= ? AND s.created_at <= ? ORDER BY s.created_at DESC, s.id DESC LIMIT 500");
   $ult->execute([$since, $ate]);
   $anun = or_anuncios($db, $since, $ate);
-  return ['ok' => true, 'anuncios' => $anun, 'campanhas_soltas' => array_keys($GLOBALS['or_soltas'] ?? []), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'dia' => $dia, 'de' => $since, 'ate' => min($ate, now()), 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
+  // de qual conta de anúncio é cada venda (mesma regra do ROI), para a coluna "Conta" da lista
+  $mapa = []; try { foreach (meta_db()->query('SELECT campanha, conta FROM meta_campanhas')->fetchAll(PDO::FETCH_NUM) as [$cp, $ct]) $mapa[$cp] = $ct; } catch (Throwable $e) {}
+  $ultimas = array_map(function ($v) use ($mapa) {
+    $f = (string)$v['or_fonte']; $cp = (string)$v['or_campanha']; $c = '';
+    if ($f === 'comentarios-ig') $c = $mapa[$cp] ?? (preg_match('/^(leo|reinaldo)-ads/', $cp, $m) ? $m[1] : '');
+    elseif (in_array($f, ['anuncio-meta', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads'], true)) {
+      if (preg_match('/^(leo|reinaldo)(-|$)/', $cp, $m)) $c = $m[1]; elseif (isset($mapa[$cp])) $c = $mapa[$cp];
+      elseif (strlen($cp) >= 10) foreach ($mapa as $k => $x) if (str_starts_with((string)$k, $cp)) { $c = $x; break; } }
+    $v['conta'] = $c; return $v;
+  }, $ult->fetchAll());
+  return ['ok' => true, 'anuncios' => $anun, 'campanhas_soltas' => array_keys($GLOBALS['or_soltas'] ?? []), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'dia' => $dia, 'de' => $since, 'ate' => min($ate, now()), 'linhas' => array_values($rows), 'ultimas' => $ultimas, 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
 }
