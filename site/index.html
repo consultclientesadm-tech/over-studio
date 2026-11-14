@@ -732,6 +732,10 @@ footer a { color: #888; }
       const g = JSON.parse(localStorage.getItem('sc-or') || 'null');
       if (fonte === 'direto' && g && Date.now() - g.t < 30 * 864e5) o = { ...g, pagina, t: Date.now() };
       localStorage.setItem('sc-or', JSON.stringify(o));
+      // primeiro clique (30 dias): se a pessoa entrou antes pelo anúncio/direct de um sócio e depois compra por outro link,
+      // a venda leva também esse primeiro clique (trk2) e o painel mostra de quem foi
+      const p1 = JSON.parse(localStorage.getItem('sc-1o') || 'null');
+      if ((!p1 || Date.now() - p1.t > 30 * 864e5) && o.fonte !== 'direto') localStorage.setItem('sc-1o', JSON.stringify({ fonte: o.fonte, campanha: o.campanha, t: Date.now() }));
     } catch (e) {}
     document.cookie = 'sc_or=' + encodeURIComponent([o.pagina, o.fonte, o.campanha].join('|')) + ';path=/;max-age=' + 30 * 86400 + ';samesite=lax' + (location.protocol === 'https:' ? ';secure' : '');
     fetch('/api/conta.php?a=visita&p=' + pagina + '&f=' + encodeURIComponent(o.fonte) + '&c=' + encodeURIComponent(o.campanha), { credentials: 'same-origin' }).catch(() => {});
@@ -745,7 +749,10 @@ footer a { color: #888; }
       if (/(^|\.)stripe\.com$/.test(u.hostname)) { // Stripe: a origem vai junto do código da compra (client_reference_id) e volta no aviso da venda
         const b = btoa(trk).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
         u.searchParams.set('client_reference_id', ((u.searchParams.get('client_reference_id') || 'sc_0_en').replace(/_o.*$/, '') + '_o' + b).slice(0, 200));
-      } else if (!u.searchParams.has('trk')) u.searchParams.set('trk', trk);
+      } else if (!u.searchParams.has('trk')) {
+        u.searchParams.set('trk', trk);
+        try { const p1 = JSON.parse(localStorage.getItem('sc-1o') || 'null'); if (p1 && (p1.fonte !== ORIGEM.fonte || p1.campanha !== ORIGEM.campanha)) u.searchParams.set('trk2', ['p', p1.fonte, p1.campanha].join('.').slice(0, 60)); } catch (e) {}
+      }
       return u.toString();
     } catch (e) { return url; }
   };
