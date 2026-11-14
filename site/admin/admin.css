@@ -420,3 +420,8 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .vgLin .agora { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed rgba(255,77,94,.6); }
 @keyframes vgPulso { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 70%, transparent); transform: scale(1); } 60% { box-shadow: 0 0 0 9px transparent; transform: scale(1.15); } 100% { box-shadow: 0 0 0 0 transparent; transform: scale(1); } }
 @media (max-width: 760px) { .vgLin { height: 120px; } }
+
+/* liga/desliga só o som da venda (a notificação continua) */
+.muteBtn { right: 392px; color: #e8e8ec; }
+.muteBtn.off { color: #ff8a95; }
+@media (max-width: 760px) { .muteBtn { right: 106px; } }

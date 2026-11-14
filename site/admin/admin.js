@@ -71,7 +71,21 @@ let hojeIds = null, hojeDesenhado = false;
 const caixa = new Audio('/admin/caixa.mp3?v=1'); caixa.preload = 'auto'; caixa.volume = 1;
 let somLiberado = false;
 addEventListener('pointerdown', () => { if (somLiberado) return; somLiberado = true; setTimeout(() => { const sb = $('somLib'); if (sb) sb.remove(); }, 400); caixa.muted = true; caixa.play().then(() => { caixa.pause(); caixa.currentTime = 0; caixa.muted = false; }).catch(() => { caixa.muted = false; }); }, { capture: true });
-function chime() { if (Date.now() - (chime.t || 0) < 5000) return; chime.t = Date.now(); try { caixa.currentTime = 0; caixa.muted = false; caixa.play().catch(() => {}); setTimeout(() => { const b = caixa.cloneNode(); b.volume = 1; b.play().catch(() => {}); }, 1700); } catch {} }
+const pushLigado = () => { try { return 'Notification' in window && Notification.permission === 'granted' && !!localStorage.getItem('sc-adm-push'); } catch { return false; } };
+// a página recarregou: tenta tocar sem clique (o Chrome deixa quando o site é muito usado); se deixar, nem pede o clique
+try { const t = new Audio('/admin/caixa.mp3?v=1'); t.volume = 0; t.play().then(() => { t.pause(); somLiberado = true; const sb = $('somLib'); if (sb) sb.remove(); }).catch(() => {}); } catch {}
+// Som ligado/desligado (fica salvo neste aparelho). Desligado: a notificação de venda continua chegando, só sem som.
+let somMudo = (() => { try { return localStorage.getItem('sc-adm-mudo') === '1'; } catch { return false; } })();
+function somAviso() { // conta ao aviso do sistema (service worker) se a notificação vem com som ou sem
+  try { if (window.caches) caches.open('sc-adm').then((c) => c.put('/admin/__som', new Response(somMudo ? '0' : '1'))); } catch {}
+}
+function pintaMudo() { const b = $('muteBtn'); if (!b) return; b.classList.toggle('off', somMudo); b.querySelector('span').textContent = somMudo ? 'Som desligado' : 'Som ligado'; const i = b.querySelector('i'); if (i && window.ic) i.innerHTML = window.ic(somMudo ? 'mute' : 'spk'); }
+if ($('muteBtn')) { pintaMudo(); somAviso(); $('muteBtn').onclick = () => { somMudo = !somMudo; try { localStorage.setItem('sc-adm-mudo', somMudo ? '1' : '0'); } catch {} pintaMudo(); somAviso(); toast(somMudo ? 'Som desligado. As notificações de venda continuam chegando.' : 'Som ligado. Cada venda toca a caixa registradora.'); if (!somMudo) { chime.t = 0; chime(); } }; }
+function chime() { if (Date.now() - (chime.t || 0) < 5000) return; chime.t = Date.now();
+  if (somMudo) { if (!pushLigado() && document.hidden && 'Notification' in window && Notification.permission === 'granted') try { new Notification('Mais uma venda do Studio Cover!', { body: 'Abra o painel para ver.', icon: '/admin/icon-192.png', silent: true }); } catch {} return; }
+  // som bloqueado pelo navegador (página recarregada sem clique) e sem o aviso do computador: avisa pela notificação do sistema, que apita sozinha
+  const semSom = () => { if (pushLigado() || !('Notification' in window) || Notification.permission !== 'granted') return; try { new Notification('Mais uma venda do Studio Cover!', { body: 'Abra o painel para ver.', icon: '/admin/icon-192.png', requireInteraction: true }); } catch {} };
+  try { caixa.currentTime = 0; caixa.muted = false; caixa.play().catch(semSom); setTimeout(() => { const b = caixa.cloneNode(); b.volume = 1; b.play().catch(() => {}); }, 1700); } catch { semSom(); } }
 // aviso no celular: o celular do administrador recebe uma notificação a cada venda
 const iosAdm = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 const instaladoAdm = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
@@ -85,7 +99,7 @@ async function vigiaVendas() {
     const novas = j.hoje.filter((v) => !vendasVistas.ids.has(v.id) && v.liquido > 0);
     if (novas.length) {
       chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}`);
-      if (document.hidden && 'Notification' in window && Notification.permission === 'granted' && !(() => { try { return localStorage.getItem('sc-adm-push'); } catch { return null; } })()) try { new Notification('💰 Mais uma venda do Studio Cover!', { body: '+' + brl(novas.reduce((a, v) => a + v.liquido, 0)) + ' líquido', icon: '/admin/icon-192.png' }); } catch {}
+      if (document.hidden && 'Notification' in window && Notification.permission === 'granted' && !(() => { try { return localStorage.getItem('sc-adm-push'); } catch { return null; } })()) try { new Notification('💰 Mais uma venda do Studio Cover!', { body: '+' + brl(novas.reduce((a, v) => a + v.liquido, 0)) + ' líquido', icon: '/admin/icon-192.png', silent: somMudo }); } catch {}
       if (!$('tGeral').hidden) loadHoje();
     }
   }
@@ -93,7 +107,16 @@ async function vigiaVendas() {
 }
 setInterval(vigiaVendas, 20000); setTimeout(vigiaVendas, 3000);
 // o navegador do computador só deixa tocar som depois de um clique na página: aviso discreto até o primeiro clique
-setTimeout(() => { if (somLiberado || !$('vPainel') || $('vPainel').hidden) return; const d = document.createElement('button'); d.id = 'somLib'; d.className = 'somLib'; d.textContent = '🔊 Clique aqui para ligar o som da caixa registradora'; d.onclick = () => { d.remove(); chime.t = 0; chime(); }; document.body.appendChild(d); }, 2500);
+// Computador: com o aviso de venda ligado (notificação do sistema, que apita mesmo com a página recarregada ou fechada), não pede mais nada.
+// Sem ele, o navegador só deixa tocar som depois de um clique: o botão liga o aviso uma vez só e fica valendo nas próximas vezes.
+setTimeout(() => {
+  if (somLiberado || pushLigado() || !$('vPainel') || $('vPainel').hidden) return;
+  const d = document.createElement('button'); d.id = 'somLib'; d.className = 'somLib';
+  const podeAviso = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window && Notification.permission !== 'denied';
+  d.textContent = podeAviso ? 'Ligar o aviso de venda neste computador (só uma vez)' : 'Clique aqui para ligar o som da caixa registradora';
+  d.onclick = async () => { d.remove(); chime.t = 0; chime(); if (podeAviso) await ligarAvisoVenda(); };
+  document.body.appendChild(d);
+}, 2500);
 if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'venda') { chime(); if (!$('tGeral').hidden) loadHoje(); } });
 async function ligarAvisoVenda() {
   if (iosAdm && !instaladoAdm) return modal(`<h3>💰 Aviso de venda no iPhone</h3><p>No iPhone o aviso só funciona com o painel instalado na tela de início:</p><p>1. Abra <b>studiocover.com.br/admin</b> no <b>Safari</b>.<br>2. Toque em <b>Compartilhar</b> (o quadrado com a seta) e em <b>Adicionar à Tela de Início</b>.<br>3. Abra o painel pelo ícone novo, toque em <b>💰 Aviso de venda</b> e em <b>Ligar aviso neste aparelho</b>.</p><button class="btn" data-fechar>Entendi</button>`);
@@ -757,7 +780,7 @@ async function loadDepo() {
   $('depoLista').innerHTML = `<section class="bloco"><div class="bh"><span class="tag g">💬 RECEBIDOS</span><small>${L.length} depoimento${L.length === 1 ? '' : 's'}. Só use nas redes o que tem ✅ autorização.</small></div>${L.length ? L.map((d) => { const s = DEPO_ST[d.status] || ['', d.status];
     return `<div class="glass dpo"><div class="ch"><b>${esc(d.nome || d.email)}${d.instagram ? ` <a href="https://instagram.com/${esc(d.instagram)}" target="_blank" rel="noopener" style="color:var(--y)">@${esc(d.instagram)}</a>` : ''} ${d.nota ? '<span style="color:var(--y)">' + '★'.repeat(+d.nota) + '</span>' : ''}</b><span class="acts"><span class="st ${s[0]}">${s[1]}</span>
       <select data-st="${d.id}">${['novo', 'aprovado', 'usado', 'recusado'].map((k) => `<option value="${k}" ${d.status === k ? 'selected' : ''}>${DEPO_ST[k][1]}</option>`).join('')}</select><button class="btn sm ghost" data-del="${d.id}">Apagar</button></span></div>
-      <p style="font-size:16px;line-height:1.5;margin:6px 0">“${esc(d.texto)}”</p>
+      <p class="raw" style="font-size:16px;line-height:1.5;margin:6px 0">“${esc(d.texto)}”</p>
       <p class="sub">${dt(d.created_at)} · ${esc(d.email)}${d.cidade ? ' · ' + esc(d.cidade) : ''} · ${+d.aut_imagem ? '✅ autorizou usar nas redes' + (+d.aut_nome ? ' com nome e @' : ' (sem mostrar o nome)') : '🔒 NÃO autorizou uso público'}${+d.bonus ? ' · 🎁 ganhou +1 vídeo' : ''}</p>
       ${d.arquivos.length ? `<div class="dpas">${d.arquivos.map((f) => arq(d, f)).join('')}</div>` : ''}</div>`; }).join('') : '<div class="vigia"><b>Nenhum depoimento ainda.</b><small>Quando alguém mandar, aparece aqui e chega um e-mail para os administradores.</small></div>'}</section>`;
   $('depoLista').querySelectorAll('[data-st]').forEach((x) => (x.onchange = async () => { await api('depo-status', { id: +x.dataset.st, status: x.value }); loadDepo(); }));

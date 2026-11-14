@@ -13,7 +13,10 @@
 <meta name="apple-mobile-web-app-title" content="Studio Cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=23">
+<link rel="stylesheet" href="admin.css?v=24">
+<link rel="stylesheet" href="/assets/rack-skin.css?v=1">
+<script src="/assets/icons.js?v=1"></script>
+<script src="/assets/sem-emoji.js?v=1" defer></script>
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -60,6 +63,7 @@
   </aside>
 
   <main class="main">
+    <button class="vistBtn muteBtn" id="muteBtn" title="Liga ou desliga só o som. As notificações de venda continuam chegando."><i data-ic="spk"></i><span>Som ligado</span></button>
     <button class="vistBtn somBtn" id="somBtn" title="Som e aviso de venda no celular"><i>💰</i><span>Aviso de venda</span></button>
     <button class="vistBtn" id="vistBtn" title="Vistoria de erros"><i>🛰️</i><span>Vistoria de erros</span><em id="vistBtnN" hidden></em></button>
     <!-- Visão geral -->
@@ -212,6 +216,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=34"></script>
+<script src="admin.js?v=35"></script>
 </body>
 </html>
