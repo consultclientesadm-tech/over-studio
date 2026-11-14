@@ -795,7 +795,7 @@ $('segOr').onclick = (e) => { const b = e.target.closest('button'); if (!b) retu
 const PAG = { home: '🎁 Página com teste grátis', vsl: '🎬 /vsl (compra direta)', 'link-afiliado': '🤝 Link de afiliado', 'sem-rastreio': '❔ Sem rastreio (antes de 13/11)' };
 // nome amigável do canal (Origens)
 function fonteNome(f, c) {
-  const N = { 'anuncio-meta': '📣 Anúncio Meta', 'meta-sem-utm': '📣 Anúncio Meta (provável, link sem UTM)', 'comentarios-ig': '💬 Comentários do Instagram (direct)', whatsapp: '🟢 WhatsApp', afiliado: '🤝 Afiliado', direto: 'Direto (digitou o site)' };
+  const N = { meta: '📣 Anúncio Meta', 'anuncio-meta': '📣 Anúncio Meta', 'meta-sem-utm': '📣 Anúncio Meta (provável, link sem UTM)', 'comentarios-ig': '💬 Comentários do Instagram (direct)', whatsapp: '🟢 WhatsApp', afiliado: '🤝 Afiliado', direto: 'Direto (digitou o site)' };
   if (N[f]) return N[f];
   if (f === 'instagram' && /reinaldo|criativo|teste-gratis|vsl/.test(c || '')) return N['comentarios-ig']; // links do direct anteriores à separação
   if (f === 'instagram') return '📷 Instagram (orgânico, sem UTM)';

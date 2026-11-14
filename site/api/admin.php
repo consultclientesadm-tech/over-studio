@@ -381,7 +381,7 @@ switch ($a) {
     $n = (int)round((strtotime($ate) - strtotime($de)) / 86400) + 1;
     $pIni = date('Y-m-d', strtotime($de) - $n * 86400) . ' 00:00:00'; $pFim = date('Y-m-d', strtotime($de) - 86400) . ' 23:59:59';
     $q = $db->prepare("SELECT created_at, liquido, bruto, afiliado_id, or_fonte, or_campanha FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? ORDER BY created_at"); $q->execute([$ini, $fim]);
-    $vendas = array_map(fn($v) => ['t' => $v['created_at'], 'l' => round((float)$v['liquido'], 2), 'af' => (bool)$v['afiliado_id'], 'ad' => in_array($v['or_fonte'], ['anuncio-meta', 'meta-sem-utm'], true)], $q->fetchAll(PDO::FETCH_ASSOC));
+    $vendas = array_map(fn($v) => ['t' => $v['created_at'], 'l' => round((float)$v['liquido'], 2), 'af' => (bool)$v['afiliado_id'], 'ad' => in_array($v['or_fonte'], ['anuncio-meta', 'meta-sem-utm', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads'], true)], $q->fetchAll(PDO::FETCH_ASSOC));
     $q = $db->prepare("SELECT created_at FROM users WHERE source = 'trial' AND created_at >= ? AND created_at <= ? ORDER BY created_at"); $q->execute([$ini, $fim]);
     $cads = array_column($q->fetchAll(PDO::FETCH_ASSOC), 'created_at');
     $q = $db->prepare("SELECT COUNT(*), COALESCE(SUM(liquido), 0) FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ?"); $q->execute([$pIni, $pFim]); [$pv, $pl] = $q->fetch(PDO::FETCH_NUM);

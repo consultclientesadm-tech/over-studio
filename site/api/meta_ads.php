@@ -12,7 +12,8 @@ function meta_db(): PDO {
   if ($ok) return $db;
   $db->exec('CREATE TABLE IF NOT EXISTS meta_contas (id INTEGER PRIMARY KEY AUTOINCREMENT, dono TEXT NOT NULL, act TEXT NOT NULL UNIQUE, token TEXT NOT NULL, nome TEXT NOT NULL DEFAULT \'\', ultimo TEXT, erro TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS meta_gasto (conta TEXT NOT NULL, act TEXT NOT NULL, ad_id TEXT NOT NULL, dia TEXT NOT NULL, valor REAL NOT NULL, PRIMARY KEY (act, ad_id, dia));
-    CREATE INDEX IF NOT EXISTS meta_gasto_dia ON meta_gasto(dia, conta)');
+    CREATE INDEX IF NOT EXISTS meta_gasto_dia ON meta_gasto(dia, conta);
+    CREATE TABLE IF NOT EXISTS meta_campanhas (campanha TEXT PRIMARY KEY, conta TEXT NOT NULL, visto TEXT NOT NULL)');
   $ok = true; return $db;
 }
 
@@ -35,6 +36,14 @@ function meta_url(string $path, array $q, string $token): string {
 function meta_conta_do_anuncio(array $creative): string {
   $t = strtolower(urldecode(json_encode($creative, JSON_UNESCAPED_SLASHES) ?: ''));
   return preg_match('/utm_campaign=([a-z0-9]+)-ads/', $t, $m) ? $m[1] : '';
+}
+
+// todas as utm_campaign que aparecem no anúncio (no link e nos parâmetros): a venda chega com a do link,
+// então guardamos que aquela campanha é da conta (leo/reinaldo) para somar a venda no ROI certo
+function meta_campanhas_do_anuncio(array $creative): array {
+  $t = strtolower(urldecode(json_encode($creative, JSON_UNESCAPED_SLASHES) ?: ''));
+  preg_match_all('/utm_campaign=([^&"\s#\\\\]+)/', $t, $m);
+  return array_values(array_unique(array_filter(array_map(fn($c) => or_limpa($c, 60), $m[1] ?? []))));
 }
 
 // confere a conta e devolve o nome dela (usado ao conectar)
@@ -60,7 +69,8 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
       $url2 = meta_url($c['act'] . '/ads', ['fields' => $campos, 'limit' => 200,
         'filtering' => json_encode([['field' => 'effective_status', 'operator' => 'IN', 'value' => ['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED', 'CAMPAIGN_PAUSED', 'ADSET_PAUSED', 'IN_PROCESS', 'WITH_ISSUES', 'DISAPPROVED', 'PENDING_REVIEW', 'PREAPPROVED', 'PENDING_BILLING_INFO']]])], (string)$c['token']);
       $pag = 0;
-      while ($url2 && $pag++ < 40) { $j = meta_get($url2); foreach ($j['data'] ?? [] as $ad) $dono[(string)$ad['id']] = meta_conta_do_anuncio((array)($ad['creative'] ?? [])); $url2 = (string)($j['paging']['next'] ?? ''); }
+      while ($url2 && $pag++ < 40) { $j = meta_get($url2); foreach ($j['data'] ?? [] as $ad) { $cr = (array)($ad['creative'] ?? []); $dono[(string)$ad['id']] = $dc = meta_conta_do_anuncio($cr);
+        if ($dc !== '') foreach (meta_campanhas_do_anuncio($cr) as $cp) $db->prepare('INSERT OR REPLACE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute([$cp, $dc, now()]); } $url2 = (string)($j['paging']['next'] ?? ''); }
       foreach (array_slice(array_diff($ids, array_keys($dono)), 0, 100) as $id) { // algum que não veio na lista: busca um por um
         try { $j = meta_get(meta_url($id, ['fields' => 'creative{url_tags,object_story_spec,asset_feed_spec,link_url}'], (string)$c['token'])); $dono[$id] = meta_conta_do_anuncio((array)($j['creative'] ?? [])); } catch (Throwable $e) { $dono[$id] = ''; }
       }
