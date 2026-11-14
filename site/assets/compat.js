@@ -1,14 +1,16 @@
 // Studio Cover — o aparelho dá conta? A IA roda dentro do aparelho, então celular fraco trava ou fecha no meio.
 // Mede de verdade (um teste de força de ~50 ms), lê a memória, o sistema e o modelo, e avisa a pessoa
 // em todas as páginas: na página de vendas (antes de comprar), no cadastro, no obrigado e dentro do app.
-// Níveis: 'ok' (não mostra nada), 'fraco' (aviso amarelo: pode demorar ou fechar) e 'incompativel' (aviso vermelho).
-// Uso: <script src="/assets/compat.js?v=1" defer></script>. Links com data-compat pedem confirmação antes de seguir.
+// Níveis: 'ok' (não mostra nada), 'fraco' (roda no MODO LEVE: mais leve para o celular, mesmo vídeo em 1080p) e
+// 'incompativel' (vermelho, só quando o navegador não tem o básico ou o aparelho é fraco demais de verdade).
+// Desde 14/11 (pedido do Leo): Samsung simples e celular de 3–4 GB não são mais barrados, usam o modo leve.
+// Uso: <script src="/assets/compat.js?v=3" defer></script>. Links com data-compat pedem confirmação antes de seguir.
 (function () {
   if (window.scCompat) return;
-  const VERSAO = 1;
+  const VERSAO = 2;
   // Força medida: ~ pontos do Geekbench 6 (1 núcleo). iPhone 13 ≈ 2300; Galaxy A12/A13/A21s ≈ 350–450; Galaxy A34/A54 ≈ 1000.
   // Ajustar aqui com os números reais do painel (cada vídeo do app manda a força do aparelho no diário).
-  const MIN_OK = 650, MIN_RODA = 300;
+  const MIN_OK = 650;
   const ua = navigator.userAgent || '';
   const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
   const android = /Android/i.test(ua);
@@ -54,15 +56,16 @@
     else if (ios && iosV && iosV < 16.4) pior('fraco', 'Atualize o iPhone (Ajustes › Geral › Atualização de Software): com iOS antigo o vídeo sai com menos qualidade.');
     if (ios && Math.min(screen.width, screen.height) <= 320) pior('incompativel', 'Este iPhone é antigo demais.');
     else if (ios && Math.min(screen.width, screen.height) === 375 && Math.max(screen.width, screen.height) === 667) pior('fraco', 'iPhone de tela pequena (8, SE ou mais antigo) pode fechar o app no meio.');
-    if (android && mem && mem < 4) pior('incompativel', 'Memória pequena (' + mem + ' GB).');
+    // Android com 2 GB ou menos não aguenta; 3–4 GB roda no modo leve
+    if (android && mem && mem <= 2) pior('incompativel', 'Memória pequena (' + mem + ' GB).');
+    else if (android && mem && mem < 6) pior('fraco', 'Memória de ' + mem + ' GB: roda no modo leve.');
     const mf = modelo ? modeloFraco(modelo) : 0;
-    if (mf === 2) pior('incompativel', 'Modelo de entrada (' + modelo + ').');
-    else if (mf === 1) pior('fraco', 'Modelo no limite (' + modelo + ').');
+    if (mf) pior('fraco', 'Modelo mais simples (' + modelo + '): roda no modo leve.');
     if (score) {
-      if (score < MIN_RODA) pior('incompativel', 'Processador fraco para a IA.');
-      else if (score < MIN_OK) pior('fraco', 'Processador no limite para a IA.');
+      // a medida varia muito (um Galaxy S20 FE que rodou bem já mediu 141 num momento ocupado): sozinha nunca barra
+      if (score < MIN_OK) pior('fraco', 'Processador mais simples: roda no modo leve.');
     }
-    return { v: VERSAO, nivel, motivos, inApp, score: score || 0, mem, modelo: modelo || '', ios: iosV, mobile, t: Date.now() };
+    return { v: VERSAO, nivel, motivos, inApp, score: score || 0, mem, modelo: modelo || '', ios: iosV, mobile, leve: mobile && nivel !== 'ok', t: Date.now() };
   }
 
   let info = null;
@@ -103,8 +106,8 @@
   const copiar = (btn) => { const ok = () => { btn.textContent = 'Link copiado ✓'; }; try { navigator.clipboard.writeText('https://' + LINK).then(ok, () => prompt('Copie o link:', 'https://' + LINK)); } catch (e) { prompt('Copie o link:', 'https://' + LINK); } };
   const textos = (i) => i.nivel === 'incompativel'
     ? { t: 'Seu aparelho não é compatível com o Studio Cover', d: 'Este celular não tem força para processar o vídeo (a IA roda dentro do aparelho) e pode travar ou fechar no meio. Use pelo computador (' + LINK + ') ou por um celular mais novo.' }
-    : { t: 'Seu aparelho está no limite', d: 'Pode funcionar, mas pode demorar ou fechar no meio, principalmente com vídeos longos. Se for mais fácil, use pelo computador (' + LINK + ').' };
-  const REQ = '<ul><li>iPhone 13 ou mais novo (iOS atualizado)</li><li>Android intermediário ou top, com 6 GB de memória ou mais (ex.: Galaxy A54, S21 ou mais novos)</li><li>Computador com Chrome, Edge ou Safari atualizado</li></ul>';
+    : { t: 'Seu celular usa o modo leve', d: 'O Studio Cover se ajusta ao seu celular: processa de um jeito mais leve e o vídeo sai em 1080p do mesmo jeito. Só leva um pouco mais de tempo. Feche os outros apps antes de começar.' };
+  const REQ = '<ul><li>iPhone 13 ou mais novo (iOS atualizado)</li><li>Android com 3 GB de memória ou mais (celulares mais simples, como Galaxy A e M, usam o modo leve automático)</li><li>Computador com Chrome, Edge ou Safari atualizado</li></ul>';
 
   // abre esta mesma página no navegador de verdade (Android: Chrome direto; iPhone: instruções do Safari)
   function abrirFora() {
@@ -127,7 +130,7 @@
     const alvo = document.getElementById('home') || document.body; alvo.insertBefore(el, alvo.firstChild);
   }
   function barra() {
-    const i = info; if (!i || i.nivel === 'ok' || sstore.get('scc-x-' + i.nivel) || document.querySelector('.scc-bar') || !document.body) return;
+    const i = info; if (!i || i.nivel !== 'incompativel' || sstore.get('scc-x-' + i.nivel) || document.querySelector('.scc-bar') || !document.body) return;
     addCss();
     const x = textos(i), el = document.createElement('div');
     el.className = 'scc-bar ' + i.nivel + (document.getElementById('home') ? ' dentro' : ''); el.setAttribute('role', 'alert');
