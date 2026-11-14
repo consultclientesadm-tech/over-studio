@@ -92,13 +92,18 @@ const mixOpts = () => ({ voiceGains: voiceDb(), voiceDb: +$('mVoice').value, bed
 
 // ---------- 1) Vídeo ----------
 const drop = $('drop');
-$('file').onchange = () => $('file').files[0] && start($('file').files[0]);
+// Copia o vídeo para o aparelho NA HORA em que a pessoa escolhe (antes dos avisos e da conferência do teste):
+// no Android o acesso ao arquivo escolhido pode cair em segundos (vídeo do Google Fotos/nuvem, galeria que troca a cópia),
+// e aí só a cópia guardada ainda abre.
+let copiaCedo = null;
+const escolheu = (f) => { if (!f) return; copiaCedo = { f, p: keep(f, refFile).then(() => true, () => false) }; start(f); };
+$('file').onchange = () => escolheu($('file').files[0]);
 // Pergunta 1 da entrada: tem instrumental ou playback? (Sim = separa a voz, Não = só voz)
 document.querySelectorAll('#sepPick .sn').forEach((b) => { b.onclick = () => {
   const sim = b.dataset.sep === '1'; $('optSeparate').checked = sim;
   document.querySelectorAll('#sepPick .sn').forEach((x) => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
 }; });
-$('audioFile').onchange = () => $('audioFile').files[0] && start($('audioFile').files[0]);
+$('audioFile').onchange = () => escolheu($('audioFile').files[0]);
 // Só o áudio: a pessoa tirou o som do vídeo e sobe ele; no fim baixa o áudio pronto e junta no editor
 const isAudio = (f) => /^audio\//.test(f.type) || (!/^video\//.test(f.type) && /\.(mp3|m4a|aac|wav|ogg|flac|opus)$/i.test(f.name || ''));
 // o celular recarregou a página no meio? continua o mesmo vídeo, sem a pessoa precisar subir de novo
@@ -115,7 +120,7 @@ setTimeout(async () => {
 }, 300);
 ['dragover', 'dragenter'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, () => drop.classList.remove('over')));
-drop.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) start(f); });
+drop.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) escolheu(f); });
 
 // ---------- Avisos que explicam (em vez de o app só travar ou mostrar um erro seco) ----------
 const MAX_SEC = 180; // limite de duração (3 minutos): o áudio inteiro fica na memória várias vezes (original, voz, base, afinada, mix)
@@ -266,11 +271,13 @@ try { const c = window.scCompat, el = $('reqMeuApp'); if (c && el) c.ready.then(
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
   // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar
-  if (tries === 1 && !(await conferirVideo(f))) { $('file').value = ''; $('audioFile').value = ''; return; }
-  if (tries === 1 && window.scGate && !(await window.scGate(f))) { $('file').value = ''; $('audioFile').value = ''; return; }
+  const cedo = copiaCedo && copiaCedo.f === f ? copiaCedo.p : null; copiaCedo = null;
+  const desistiu = () => { $('file').value = ''; $('audioFile').value = ''; if (cedo) cedo.then(() => idb('readwrite', (st) => { st.delete('video'); st.delete('ref'); })).catch(() => {}); };
+  if (tries === 1 && !(await conferirVideo(f))) return desistiu();
+  if (tries === 1 && window.scGate && !(await window.scGate(f))) return desistiu();
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
   ev('inicio', { mb: Math.round(f.size / 1048576), audio: isAudio(f) ? 1 : 0, tries });
-  if (tries === 1) await Promise.race([keep(f, refFile), new Promise((r) => setTimeout(r, 5000))]);
+  if (tries === 1) await Promise.race([cedo || keep(f, refFile), new Promise((r) => setTimeout(r, 5000))]);
   file = f;
   audioOnly = isAudio(f); app.classList.toggle('audio', audioOnly);
   if (!audioOnly && tries === 1 && f.size > 300 * 1048576 && /iPhone|iPad|Android/i.test(navigator.userAgent))
@@ -300,12 +307,14 @@ async function start(f, tries = 1) {
   } catch (e) {
     // O celular perdeu o acesso ao arquivo escolhido (vídeo na nuvem/Google Fotos, app foi para o fundo):
     // tenta de novo com a cópia que guardamos no aparelho ao escolher o vídeo
+    let copiaOk = '';
     if (tries === 1 && LEITURA.test(String(e.message) + ' ' + (e.name || ''))) {
       let copia = null;
       try { copia = await idb('readonly', (st) => st.get('video')); if (copia) await copia.slice(0, 65536).arrayBuffer(); } catch { copia = null; }
       if (copia) { console.warn('arquivo original ilegível; usando a cópia guardada'); endRun(); return start(copia, 2); }
+      copiaOk = 'sem copia';
     }
-    console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '', causa: e.causa || '' });
+    console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '', causa: e.causa || copiaOk || (tries > 1 ? 'copia tambem falhou' : '') });
     app.dataset.screen = 'home';
     const mbE = Math.round(f.size / 1048576);
     if (e.message === 'LIMITE') aviso(`Vídeo maior que ${MIN} minutos`, `Esse vídeo tem ${fmt(e.duration || video.duration)}. O limite é de ${MAX_SEC / 60} minutos.`, ['Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar e suba de novo']);
