@@ -40,6 +40,13 @@ function meta_conta_do_anuncio(array $creative): string {
   return preg_match('/utm_campaign=([a-z0-9]+)-ads/', $t, $m) ? $m[1] : '';
 }
 
+// anúncio sem link (post "comenta que eu te mando o link no direct"): não tem UTM nenhuma. Se o nome do anúncio ou da campanha
+// tem "Studio Cover", é do Studio Cover e o gasto vai para o dono da conta de anúncios conectada (Meu Gestor Pro -> leo).
+function meta_conta_pelo_nome(array $ad, string $dono): string {
+  $t = mb_strtolower((string)($ad['name'] ?? '') . ' ' . (string)($ad['campaign']['name'] ?? ''));
+  return $dono !== '' && preg_match('/studio\s*cover/u', $t) ? $dono : '';
+}
+
 // todas as utm_campaign que aparecem no anúncio (no link e nos parâmetros): a venda chega com a do link,
 // então guardamos que aquela campanha é da conta (leo/reinaldo) para somar a venda no ROI certo
 function meta_campanhas_do_anuncio(array $creative): array {
@@ -67,12 +74,12 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
       // de qual conta (UTM) é cada anúncio
       $ids = array_values(array_unique(array_map(fn($l) => (string)$l['ad_id'], $linhas))); $dono = [];
       // lista os anúncios da conta (inclusive pausados, arquivados e apagados) com o criativo; o parâmetro "ids" não existe mais na API v26+
-      $campos = 'id,creative{url_tags,object_story_spec,asset_feed_spec,link_url,effective_object_story_id}';
+      $campos = 'id,name,campaign{name},creative{url_tags,object_story_spec,asset_feed_spec,link_url,effective_object_story_id}';
       $url2 = meta_url($c['act'] . '/ads', ['fields' => $campos, 'limit' => 200,
         'filtering' => json_encode([['field' => 'effective_status', 'operator' => 'IN', 'value' => ['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED', 'CAMPAIGN_PAUSED', 'ADSET_PAUSED', 'IN_PROCESS', 'WITH_ISSUES', 'DISAPPROVED', 'PENDING_REVIEW', 'PREAPPROVED', 'PENDING_BILLING_INFO']]])], (string)$c['token']);
       $pag = 0;
       $posts = []; // anúncio feito de post existente: o link (com a utm_campaign que a venda traz) está no post, não no criativo
-      while ($url2 && $pag++ < 40) { $j = meta_get($url2); foreach ($j['data'] ?? [] as $ad) { $cr = (array)($ad['creative'] ?? []); $dono[(string)$ad['id']] = $dc = meta_conta_do_anuncio($cr);
+      while ($url2 && $pag++ < 40) { $j = meta_get($url2); foreach ($j['data'] ?? [] as $ad) { $cr = (array)($ad['creative'] ?? []); $dono[(string)$ad['id']] = $dc = meta_conta_do_anuncio($cr) ?: meta_conta_pelo_nome($ad, (string)$c['dono']);
         if ($dc !== '') { foreach (meta_campanhas_do_anuncio($cr) as $cp) $db->prepare('INSERT OR REPLACE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute([$cp, $dc, now()]);
           $sid = (string)($cr['effective_object_story_id'] ?? ''); if ($sid !== '' && in_array((string)$ad['id'], $ids, true)) $posts[$sid] = $dc; } } $url2 = (string)($j['paging']['next'] ?? ''); }
       foreach (array_slice($posts, 0, 30, true) as $sid => $dc) {
@@ -81,7 +88,7 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
         } catch (Throwable $e) { $out[$c['act'] . ':post'] = mb_substr($e->getMessage(), 0, 120); }
       }
       foreach (array_slice(array_diff($ids, array_keys($dono)), 0, 100) as $id) { // algum que não veio na lista: busca um por um
-        try { $j = meta_get(meta_url($id, ['fields' => 'creative{url_tags,object_story_spec,asset_feed_spec,link_url}'], (string)$c['token'])); $dono[$id] = meta_conta_do_anuncio((array)($j['creative'] ?? [])); } catch (Throwable $e) { $dono[$id] = ''; }
+        try { $j = meta_get(meta_url($id, ['fields' => 'name,campaign{name},creative{url_tags,object_story_spec,asset_feed_spec,link_url}'], (string)$c['token'])); $dono[$id] = meta_conta_do_anuncio((array)($j['creative'] ?? [])) ?: meta_conta_pelo_nome($j, (string)$c['dono']); } catch (Throwable $e) { $dono[$id] = ''; }
       }
       $db->beginTransaction();
       $db->prepare('DELETE FROM meta_gasto WHERE act = ? AND dia >= ?')->execute([$c['act'], $ini]);
