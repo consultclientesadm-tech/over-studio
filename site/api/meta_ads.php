@@ -5,7 +5,7 @@
 // nossa não entra (não é do Studio Cover). Impulsionamento do Instagram continua lançado à mão.
 declare(strict_types=1);
 
-const META_VER = 'v23.0';
+const META_VER = 'v26.0';
 
 function meta_db(): PDO {
   static $ok = false; $db = db();
@@ -46,7 +46,7 @@ function meta_testa(string $act, string $token): string {
 function meta_sync(bool $forcar = false, int $dias = 40): array {
   $db = meta_db(); $out = [];
   foreach ($db->query('SELECT * FROM meta_contas')->fetchAll(PDO::FETCH_ASSOC) as $c) {
-    if (!$forcar && $c['ultimo'] && strtotime((string)$c['ultimo']) > time() - 900) { $out[$c['act']] = 'recente'; continue; }
+    if (!$forcar && $c['erro'] === '' && $c['ultimo'] && strtotime((string)$c['ultimo']) > time() - 900) { $out[$c['act']] = 'recente'; continue; }
     try {
       $ini = date('Y-m-d', time() - $dias * 86400); $fim = date('Y-m-d');
       $url = meta_url($c['act'] . '/insights', ['level' => 'ad', 'fields' => 'ad_id,spend', 'time_increment' => 1, 'limit' => 500,
@@ -55,9 +55,14 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
       while ($url && $pag++ < 40) { $j = meta_get($url); foreach ($j['data'] ?? [] as $l) $linhas[] = $l; $url = (string)($j['paging']['next'] ?? ''); }
       // de qual conta (UTM) é cada anúncio
       $ids = array_values(array_unique(array_map(fn($l) => (string)$l['ad_id'], $linhas))); $dono = [];
-      foreach (array_chunk($ids, 50) as $lote) {
-        $j = meta_get(meta_url('', ['ids' => implode(',', $lote), 'fields' => 'creative{url_tags,object_story_spec,asset_feed_spec,link_url}'], (string)$c['token']));
-        foreach ($lote as $id) $dono[$id] = meta_conta_do_anuncio((array)($j[$id]['creative'] ?? []));
+      // lista os anúncios da conta (inclusive pausados, arquivados e apagados) com o criativo; o parâmetro "ids" não existe mais na API v26+
+      $campos = 'id,creative{url_tags,object_story_spec,asset_feed_spec,link_url}';
+      $url2 = meta_url($c['act'] . '/ads', ['fields' => $campos, 'limit' => 200,
+        'filtering' => json_encode([['field' => 'effective_status', 'operator' => 'IN', 'value' => ['ACTIVE', 'PAUSED', 'DELETED', 'ARCHIVED', 'CAMPAIGN_PAUSED', 'ADSET_PAUSED', 'IN_PROCESS', 'WITH_ISSUES', 'DISAPPROVED', 'PENDING_REVIEW', 'PREAPPROVED', 'PENDING_BILLING_INFO']]])], (string)$c['token']);
+      $pag = 0;
+      while ($url2 && $pag++ < 40) { $j = meta_get($url2); foreach ($j['data'] ?? [] as $ad) $dono[(string)$ad['id']] = meta_conta_do_anuncio((array)($ad['creative'] ?? [])); $url2 = (string)($j['paging']['next'] ?? ''); }
+      foreach (array_slice(array_diff($ids, array_keys($dono)), 0, 100) as $id) { // algum que não veio na lista: busca um por um
+        try { $j = meta_get(meta_url($id, ['fields' => 'creative{url_tags,object_story_spec,asset_feed_spec,link_url}'], (string)$c['token'])); $dono[$id] = meta_conta_do_anuncio((array)($j['creative'] ?? [])); } catch (Throwable $e) { $dono[$id] = ''; }
       }
       $db->beginTransaction();
       $db->prepare('DELETE FROM meta_gasto WHERE act = ? AND dia >= ?')->execute([$c['act'], $ini]);
