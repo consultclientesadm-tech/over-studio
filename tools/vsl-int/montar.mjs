@@ -23,7 +23,12 @@ const dur = (f) => +execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'fo
 // 1) quadros: gravação do app (canto 1x do quadro) e cantor
 fs.mkdirSync(`${work}/app`); fs.mkdirSync(`${work}/cantor`); fs.mkdirSync(`${work}/out`);
 run(['-i', `${recDir}/${lang}.webm`, '-vf', `fps=${FPS},crop=390:844:0:0`, '-q:v', '3', `${work}/app/%05d.jpg`]);
-run(['-i', `${root}/tools/vsl-fontes/cantor.mp4`, '-vf', `fps=${FPS},scale=${W}:${H}`, '-q:v', '3', `${work}/cantor/%05d.jpg`]);
+// cantor de cada país (tools/vsl-fontes/paises/cantor-<pais>.mp4); sem ele, o cantor original
+const PAIS = { en: 'us', es: 'es', fr: 'fr', 'pt-pt': 'pt' }[lang];
+const CANTOR = fs.existsSync(`${root}/tools/vsl-fontes/paises/cantor-${PAIS}.mp4`) ? `${root}/tools/vsl-fontes/paises/cantor-${PAIS}.mp4` : `${root}/tools/vsl-fontes/cantor.mp4`;
+// medidor do passo 2: números reais que o app mostrou na gravação (ANTES -> DEPOIS); padrão 48,4 -> 100
+const [MED0, MED1] = (process.env.MEDIDOR || '48.4,100').split(',').map(Number);
+run(['-i', CANTOR, '-vf', `fps=${FPS},scale=${W}:${H}`, '-q:v', '3', `${work}/cantor/%05d.jpg`]);
 const nApp = fs.readdirSync(`${work}/app`).length, nCantor = fs.readdirSync(`${work}/cantor`).length;
 
 // 2) linha do tempo
@@ -199,7 +204,7 @@ function frameState(T) {
     const prevHasPhone = ['s05', 's06', 's07', 's08', 's09', 's10', 's11', 's12', 's13'].includes(s.id);
     f.phoneIn = prevHasPhone ? 1 : pin / 0.45;
   }
-  if (s.id === 's07' && p > 0.66) { const q = Math.min(1, (p - 0.68) / 0.16); const v = 48.4 + 51.6 * ease(q); f.meter = (v >= 99.95 ? '100' : v.toFixed(1).replace('.', lang === 'en' ? '.' : ',')) + '%'; f.meterLabel = tx.meter; f.meterIn = (p - 0.66) / 0.04; }
+  if (s.id === 's07' && p > 0.66) { const q = Math.min(1, (p - 0.68) / 0.16); const v = MED0 + (MED1 - MED0) * ease(q); f.meter = (v >= 99.95 ? '100' : v.toFixed(1).replace('.', lang === 'en' ? '.' : ',')) + '%'; f.meterLabel = tx.meter; f.meterIn = (p - 0.66) / 0.04; }
   // legenda
   if (s.caps.length && nx >= 0 && nx <= s.nd + 0.2) {
     let c = s.caps.findIndex((g) => nx < g[g.length - 1][1] + 0.12);
@@ -235,7 +240,7 @@ const nar = scenes.map((s) => s.narr);
 const fc = scenes.map((s, i) => `[${i + 1}:a]aresample=44100,aformat=channel_layouts=stereo,adelay=${Math.round((s.start + s.off) * 1000)}:all=1[a${i}]`).join(';')
   + `;[${scenes.length + 1}:a]aresample=44100,aformat=channel_layouts=stereo,aloop=loop=3:size=2e6,atrim=0:${(scenes[2].start).toFixed(2)},volume=0.16,afade=t=out:st=${(scenes[2].start - 1.2).toFixed(2)}:d=1.2[bed]`
   + `;${scenes.map((_, i) => `[a${i}]`).join('')}[bed]amix=inputs=${scenes.length + 1}:normalize=0,loudnorm=I=-15:TP=-1.5,apad,atrim=0:${total.toFixed(2)}[a]`;
-run(['-framerate', String(FPS), '-i', `${work}/out/%05d.jpg`, ...nar.flatMap((f) => ['-i', f]), '-i', `${root}/tools/vsl-fontes/cantor.mp4`,
+run(['-framerate', String(FPS), '-i', `${work}/out/%05d.jpg`, ...nar.flatMap((f) => ['-i', f]), '-i', CANTOR,
   '-filter_complex', fc, '-map', '0:v', '-map', '[a]', '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-pix_fmt', 'yuv420p', '-r', String(FPS),
   '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', '-shortest', outFile]);
 // capa: quadro do medidor de afinação

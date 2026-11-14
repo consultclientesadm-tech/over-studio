@@ -684,12 +684,12 @@ footer a { color: #888; }
   // Enquanto a língua não tem vídeo, a página não mostra o vídeo em português: fica a imagem do cantor, sem o botão.
   const VSL_LANGS = ['en', 'es', 'fr', 'pt-pt']; const vlang = (window.scI18n && scI18n.lang) || 'pt';
   if (vlang !== 'pt' && !VSL_LANGS.includes(vlang)) { document.querySelectorAll('#vsl img.capa, #vsl img.fundo').forEach((i) => (i.src = '/assets/lp/depois.webp')); $('play').hidden = true; }
-  else if (vlang !== 'pt') document.querySelectorAll('#vsl img.capa, #vsl img.fundo').forEach((i) => (i.src = '/assets/lp/vsl-capa-' + vlang + '.webp'));
+  else if (vlang !== 'pt') document.querySelectorAll('#vsl img.capa, #vsl img.fundo').forEach((i) => (i.src = '/assets/lp/vsl-capa-' + vlang + '.webp?v=2'));
   $('play').onclick = () => {
     px('VSLPlay', {}, true);
     const vw = document.querySelector('#vsl .vw'), v = document.createElement('video');
     // o vídeo vem da CDN gratuita jsDelivr (não pesa no servidor com muita gente); se falhar, do próprio site
-    v.src = vlang !== 'pt' ? '/assets/lp/vsl-' + vlang + '.mp4' : 'https://cdn.jsdelivr.net/gh/consultclientesadm-tech/over-studio@2be6b966940bbd840065d29ce803ab1428c1302c/site/assets/lp/vsl.mp4';
+    v.src = vlang !== 'pt' ? '/assets/lp/vsl-' + vlang + '.mp4?v=2' : 'https://cdn.jsdelivr.net/gh/consultclientesadm-tech/over-studio@2be6b966940bbd840065d29ce803ab1428c1302c/site/assets/lp/vsl.mp4';
     v.addEventListener('error', () => { if (!v.dataset.local) { v.dataset.local = '1'; v.src = '/assets/lp/vsl.mp4?v=3'; v.play().catch(() => {}); } });
     v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
     vw.querySelector('.capa').remove(); $('play').remove(); vw.appendChild(v); v.play().catch(() => {});

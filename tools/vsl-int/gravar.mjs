@@ -63,7 +63,7 @@ try {
   mark('afinando'); await idle(); fim('afinando');
   await wait(600);
   await tap('#play', 3000); await tap('#play', 400);
-  fim('afinar');
+  fim('afinar'); console.log('MEDIDOR', (await page.evaluate(() => [...document.querySelectorAll('.chip')].map((c) => c.textContent.trim()).join(' | '))).slice(0, 300));
   mark('painel'); await wait(600);
   await tap('#panelBtn', 2500);
   mark('painel_aberto'); await wait(2500);
