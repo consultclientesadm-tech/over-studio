@@ -1,6 +1,6 @@
 <?php
 // Webhook da Stripe (vendas em dólar e euro, 2026-11-14). URL para cadastrar na Stripe: https://studiocover.com.br/api/stripe.php
-// Eventos: checkout.session.completed (compra), invoice.paid (renovação anual), charge.refunded e charge.dispute.created (estorno).
+// Eventos: checkout.session.completed (compra), invoice.paid (renovação anual), charge.succeeded (repasse do sócio), charge.refunded e charge.dispute.created (estorno).
 // A Stripe assina cada aviso; o segredo (whsec_...) fica no painel, Configurações. Sem segredo, nada é aceito.
 declare(strict_types=1);
 define('ESCUDO_LIVRE', true); // a Stripe nunca é barrada pelo bloqueio de IP (a assinatura protege)
@@ -31,6 +31,54 @@ function stripe_venda(PDO $db, array $u, float $valor, string $moeda, string $tr
   $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, comissao, liquido, moeda, regiao, pais) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)')
     ->execute([$u['id'], $u['email'], $trans, 'stripe', $valor, 'pago', now(), $valor, $taxa, round($valor - $taxa, 2), $moeda, $reg, $pais]);
   return (int)$db->lastInsertId();
+}
+
+// Divisão com o sócio (2026-11-14): a cada cobrança paga, o sistema manda para a conta Stripe dele a parte combinada
+// do que SOBRA depois da taxa da Stripe (líquido em reais). Ex.: sobrou R$ 97 -> R$ 48,50 para ele, R$ 48,50 fica.
+// Precisa da chave restrita da Stripe (rk_live_...) no painel e da conta dele (acct_...). Sem elas, não faz nada.
+function stripe_api(string $method, string $path, array $data = [], string $idem = ''): array {
+  $key = setting('stripe_sk'); if ($key === '' || !function_exists('curl_init')) return ['error' => ['message' => 'sem chave']];
+  $url = 'https://api.stripe.com/v1/' . $path; $body = http_build_query($data);
+  if ($method === 'GET' && $body !== '') { $url .= '?' . $body; $body = ''; }
+  $h = ['Authorization: Bearer ' . $key]; if ($idem !== '') $h[] = 'Idempotency-Key: ' . $idem;
+  $ch = curl_init($url); curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_HTTPHEADER => $h]);
+  if ($method !== 'GET') curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+  $r = json_decode((string)curl_exec($ch), true); curl_close($ch);
+  return is_array($r) ? $r : ['error' => ['message' => 'sem resposta']];
+}
+function stripe_repasse(string $chId): string {
+  $acct = setting('stripe_socio_acct'); $pct = (float)(setting('stripe_socio_pct') ?: '0');
+  if ($chId === '' || !preg_match('/^acct_\w+$/', $acct) || $pct <= 0 || setting('stripe_sk') === '') return 'sem divisão configurada';
+  if (setting('stripe_tr_' . $chId) !== '') return 'já repassado';
+  $c = stripe_api('GET', 'charges/' . $chId, ['expand' => ['balance_transaction']]);
+  $bt = $c['balance_transaction'] ?? null;
+  if (!is_array($bt) || !isset($bt['net'])) return 'ERRO: ' . ($c['error']['message'] ?? 'taxa ainda não calculada');
+  $parte = (int)floor(((int)$bt['net']) * $pct / 100); // centavos, já sem a taxa da Stripe
+  if ($parte <= 0) return 'nada a repassar';
+  $t = stripe_api('POST', 'transfers', ['amount' => $parte, 'currency' => (string)$bt['currency'], 'destination' => $acct, 'source_transaction' => $chId,
+    'description' => 'Studio Cover: parte do sócio (' . rtrim(rtrim(number_format($pct, 2, '.', ''), '0'), '.') . '% do líquido)'], 'repasse_' . $chId);
+  if (empty($t['id'])) return 'ERRO: ' . ($t['error']['message'] ?? 'repasse recusado');
+  set_setting('stripe_tr_' . $chId, $t['id'] . '|' . $parte);
+  return 'repassado ' . strtoupper((string)$bt['currency']) . ' ' . number_format($parte / 100, 2, ',', '.') . ' de ' . number_format($bt['net'] / 100, 2, ',', '.') . " líquido ({$t['id']})";
+}
+// no estorno, a parte do sócio volta na mesma proporção do valor devolvido
+function stripe_desfaz_repasse(array $ch): string {
+  [$tr, $parte] = array_pad(explode('|', setting('stripe_tr_' . ($ch['id'] ?? ''))), 2, '');
+  if ($tr === '') return '';
+  $tot = max(1, (int)($ch['amount'] ?? 1)); $dev = min($tot, (int)($ch['amount_refunded'] ?? $tot));
+  $volta = (int)floor((int)$parte * $dev / $tot);
+  $ja = (int)setting('stripe_trv_' . $ch['id']); $volta -= $ja; if ($volta <= 0) return ' (parte do sócio já devolvida)';
+  $r = stripe_api('POST', 'transfers/' . $tr . '/reversals', ['amount' => $volta], 'volta_' . $ch['id'] . '_' . $dev);
+  if (empty($r['id'])) return ' (ERRO ao devolver parte do sócio: ' . ($r['error']['message'] ?? '?') . ')';
+  set_setting('stripe_trv_' . $ch['id'], (string)($ja + $volta));
+  return ' (parte do sócio devolvida: ' . number_format($volta / 100, 2, ',', '.') . ')';
+}
+
+if ($type === 'charge.succeeded') {
+  $r = stripe_repasse((string)($o['id'] ?? ''));
+  $log('repasse sócio: ' . $r);
+  if (str_starts_with($r, 'ERRO')) fail($r, 500); // a Stripe tenta de novo sozinha
+  json_out(['ok' => true, 'repasse' => $r]);
 }
 
 if ($type === 'checkout.session.completed' || $type === 'checkout.session.async_payment_succeeded') {
@@ -88,7 +136,8 @@ if ($type === 'charge.refunded' || $type === 'charge.dispute.created') {
     $db->prepare('INSERT INTO sales (user_id, email, trans, product, value, status, created_at, bruto, taxa, comissao, liquido, moeda, regiao, pais) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?)')
       ->execute([$u['id'], $email, (string)($o['id'] ?? ''), 'stripe', -$valor, 'reembolso', now(), -$valor, -$valor, $moeda, $moeda === 'EUR' ? 'eu' : 'us', (string)$u['pais']]);
   }
-  $log("estorno: $email"); json_out(['ok' => true]);
+  $volta = $type === 'charge.refunded' ? stripe_desfaz_repasse($o) : '';
+  $log("estorno: $email" . $volta); json_out(['ok' => true]);
 }
 
 $log("ignorado: $type"); json_out(['ok' => true, 'ignorado' => $type]);

@@ -144,6 +144,7 @@ const SETTINGS_DEFAULT = [
   'price_us' => '97', 'price_eu' => '89',          // preço anual em dólar (EUA e Canadá) e em euro (Europa)
   'checkout_us' => '', 'checkout_eu' => '',          // link de pagamento da Stripe de cada região
   'stripe_whsec' => '',                             // segredo do webhook da Stripe (whsec_...)
+  'stripe_sk' => '',                                // chave restrita da Stripe (rk_live_...), só para fazer o repasse do sócio
   'stripe_socio_acct' => '', 'stripe_socio_pct' => '50', // conta Stripe do sócio (acct_...) e a parte dele em cada venda
   'stripe_taxa_pct' => '6',                         // taxa estimada da Stripe em cada venda de fora (% do valor), para o líquido do painel
 ];
