@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css?v=44">
-<link rel="stylesheet" href="css/rack.css?v=7">
+<link rel="stylesheet" href="css/rack.css?v=8">
 <script src="js/icons.js?v=1"></script>
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
@@ -34,7 +34,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v45</small></div>
+    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v46</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm manbtn" id="manBtn" title="Manual do usuário: vídeos curtos de cada função"><i data-ic="book"></i><span>Manual</span></button>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda" aria-label="Ajuda"><i data-ic="help"></i></button>
@@ -213,12 +213,12 @@
       <!-- 5) Exportar -->
       <div class="step" data-step="5">
         <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai em 1080p (o padrão do Instagram, TikTok e Reels), com os mesmos quadros por segundo e a qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
-        <div class="vols5"><b class="vols5t">Volumes</b>
+        <div class="vols5"><b class="vols5t">Ajuste o volume</b><p class="vols5s">Toque no <b>−</b> ou no <b>+</b> (ou arraste a bolinha). Toque no play lá em cima para ouvir.</p>
           <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Voz</span><input type="range" id="eVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
           <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Base</span><input type="range" id="eBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
+          <div class="voicevols" id="eVoices"></div>
         </div>
-        <div class="voicevols" id="eVoices"></div>
-        <div class="exportdock">
+        <div class="exportdock" id="exportDock">
           <button class="prime" id="exportBtn" data-help="Grava o vídeo final na qualidade do original, com o som e a cor escolhidos.">Gerar vídeo final</button>
           <div class="bar" id="exportBar" hidden><i></i></div>
         </div>
@@ -229,8 +229,10 @@
           <p id="readyInfo">1080p, com o som e a cor que você escolheu.</p>
           <a class="prime big" id="download"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zM5 18h14v3H5z"/></svg><span>Baixar meu vídeo pronto</span></a>
         </div>
+        <details class="maisdl" id="maisDl"><summary><span>Outros downloads<small>só o áudio, só a voz ou só a base</small></span></summary>
         <button class="pill" id="dlWav" data-help="Baixa só o áudio final em WAV, sem o vídeo, para usar no Spotify ou num editor.">Baixar só o áudio (WAV)</button>
         <div class="stems"><button class="pill" id="dlVoice" data-help="Baixa só a voz (afinada, se você afinou), sem a música de fundo. Bom para editar ou usar em outra base.">Baixar só a voz</button><button class="pill" id="dlBed" data-help="Baixa só a música de fundo (violão, banda ou playback), sem a voz.">Baixar só a música</button></div>
+        </details>
         <div class="summary" id="summary"></div>
       </div>
 
@@ -255,7 +257,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=69"></script>
+<script type="module" src="js/app.js?v=70"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

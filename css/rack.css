@@ -404,3 +404,36 @@ body.mixbig .stepper { visibility: hidden; }
   #studio .step[data-step="5"] .head p.sub { display: none; }
   #studio .step[data-step="5"] .row { min-height: 40px; margin: 2px 0; }
 }
+/* v46: Exportar organizado para todo mundo (inclusive quem tem pouca prática): blocos fixos, botões grandes */
+@media (max-width: 899px), (max-aspect-ratio: 1/1) { #studio[data-step="5"] { grid-template-rows: minmax(0, 30%) minmax(0, 1fr) auto; } }
+.vols5 { border: 1px solid #26262d; border-radius: 16px; background: linear-gradient(#141418, #0f0f12); padding: 12px 12px 6px; }
+.vols5t { display: block; font: 800 15px 'Space Grotesk', sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; color: #f0f0f4 !important; }
+.vols5s { margin: 2px 0 6px; font-size: 12.5px; color: #9a9aa6; line-height: 1.35; } .vols5s b { color: var(--y); }
+#studio .step[data-step="5"] .row { display: grid !important; grid-template-columns: 52px minmax(0, 1fr) 52px !important; grid-template-areas: "lab lab val" "min sl plus"; gap: 6px 10px !important; align-items: center; margin: 0 !important; padding: 8px 0 10px; border-top: 1px solid #1f1f25; min-height: 0 !important; }
+#studio .step[data-step="5"] .vols5 > .row:first-of-type { border-top: 0; }
+#studio .step[data-step="5"] .row[hidden] { display: none !important; }
+#studio .step[data-step="5"] .row > span { grid-area: lab; font: 700 15px 'Space Grotesk', sans-serif !important; }
+#studio .step[data-step="5"] .row output { grid-area: val; text-align: right; font-size: 14px !important; }
+#studio .step[data-step="5"] .row input[type=range] { grid-area: sl; width: 100%; margin: 0; }
+#studio .step[data-step="5"] .row .stp:first-of-type { grid-area: min; } #studio .step[data-step="5"] .row .stp:last-of-type { grid-area: plus; }
+.stp { width: 52px; height: 48px; border-radius: 12px; border: 1.5px solid #3a3a44; background: linear-gradient(#25252c, #18181d); color: #fff; font: 800 26px/1 'Space Grotesk', sans-serif; box-shadow: 0 3px 0 #000; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.stp:active { transform: translateY(2px); box-shadow: 0 1px 0 #000; border-color: var(--y); color: var(--y); }
+#studio .step[data-step="5"] .voicevols { border-top: 1px solid #1f1f25 !important; margin: 0 !important; }
+#studio .step[data-step="5"] .voicevols .row:first-of-type { border-top: 0; }
+.exportdock #exportBtn { min-height: 60px; font-size: 18px; border-radius: 16px; }
+.audio .exportdock #dlWav { width: 100%; min-height: 60px; font-size: 17px; border-radius: 16px; }
+.maisdl { margin-top: 12px; border: 1px solid #26262d; border-radius: 14px; background: #0f0f12; }
+.maisdl summary { list-style: none; cursor: pointer; padding: 14px 16px; font: 700 14px 'Space Grotesk', sans-serif; color: #dcdce4; display: flex; align-items: center; gap: 8px; min-height: 48px; }
+.maisdl summary::-webkit-details-marker { display: none; }
+.maisdl summary::after { content: '+'; margin-left: auto; font-size: 22px; color: var(--y); } .maisdl[open] summary::after { content: '−'; }
+.maisdl summary small { display: block; font-weight: 500; color: #8a8a96; font-size: 12px; margin-top: 2px; }
+.maisdl summary span { display: block; }
+.maisdl > .pill, .maisdl .stems { margin: 0 12px 12px; } .maisdl > .pill { display: flex; width: calc(100% - 24px); justify-content: center; min-height: 48px; }
+.maisdl .stems { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .maisdl .stems .pill { min-height: 48px; }
+#studio .step[data-step="5"] .ready { margin-top: 12px; }
+@media (max-width: 899px), (max-aspect-ratio: 1/1) { #studio .step[data-step="5"] .summary { display: none; } }
+/* Painel de afinação pisca para chamar o toque */
+.panelbtn { position: relative; animation: panelPulse 1.8s ease-in-out infinite; }
+.panelbtn::after { content: ''; position: absolute; inset: -5px; border-radius: 18px; border: 2px solid rgba(255,212,0,.7); animation: mixBigRing 1.8s ease-out infinite; pointer-events: none; }
+@keyframes panelPulse { 50% { box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 3px 0 #8a6f00, 0 0 30px rgba(255,212,0,.6); } }
+@media (prefers-reduced-motion: reduce) { .panelbtn, .panelbtn::after { animation: none; } }

@@ -848,7 +848,7 @@ async function setVoices(K) {
 }
 $('panelBtn').onclick = () => openPop();
 // Volume de cada voz (Mix e Exportar andam juntos). No mínimo (−15 dB) a voz fica muda no vídeo final.
-function voiceVols() {
+function voiceVols() { setTimeout(passos5, 0);
   $('mVoice').closest('.row').querySelector('span').textContent = state.parts ? 'Volume de todas as vozes' : 'Volume da voz';
   $('eVoice').closest('.row').querySelector('span').textContent = state.parts ? 'Todas as vozes' : 'Voz';
   for (const pre of ['m', 'e']) {
@@ -875,6 +875,18 @@ function voiceVols() {
     });
   }
 }
+
+// Exportar: botões grandes de − e + em cada volume (fácil para quem não quer arrastar). A mix refaz 0,7 s depois do último toque.
+function passos5() {
+  document.querySelectorAll('.step[data-step="5"] .row input[type=range]').forEach((r) => {
+    if (r.dataset.st) return; r.dataset.st = '1';
+    const mk = (d, t) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'stp'; b.textContent = t; b.setAttribute('aria-label', (d < 0 ? 'Diminuir ' : 'Aumentar ') + (r.closest('.row').querySelector('span')?.textContent || 'volume'));
+      b.onclick = (e) => { e.preventDefault(); const v = Math.max(+r.min, Math.min(+r.max, +r.value + d)); if (v === +r.value) return; r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); clearTimeout(r._stT); r._stT = setTimeout(() => r.dispatchEvent(new Event('change', { bubbles: true })), 700); };
+      return b; };
+    r.before(mk(-1, '−')); r.closest('.row').append(mk(1, '+')); // o + vai no fim da linha: o número (output) continua logo depois da barra
+  });
+}
+passos5();
 
 // ---------- 3) Mix e master ----------
 async function doMaster(show = true) {
@@ -971,6 +983,7 @@ function refreshSummary() {
   const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
   $('dlBed').hidden = !state.bed;
   $('dlWav').textContent = audioOnly ? 'Baixar o áudio pronto (WAV)' : 'Baixar só o áudio (WAV)';
+  if (audioOnly) $('exportDock').prepend($('dlWav')); else $('maisDl').querySelector('summary').after($('dlWav')); // só áudio: o WAV é o botão principal
   $('exportSub').textContent = audioOnly ? 'Baixe o áudio pronto e junte de volta no seu vídeo no editor (CapCut, InShot etc.), alinhando pelo começo.' : 'O vídeo sai em 1080p (o padrão do Instagram, TikTok e Reels), com os mesmos quadros por segundo e a qualidade do original. Deixe a tela aberta até terminar.';
   if (audioOnly) {
     $('summary').innerHTML = `<div>Afinação<b>${tuned ? `sim · ${state.after.band}% na faixa` : 'não'}</b></div><div>Mix e master<b>${mastered ? 'sim' : 'não'}</b></div><div>Duração<b>${fmt(e - s)}</b></div><div>Formato<b>WAV</b></div>`;
