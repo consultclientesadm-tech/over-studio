@@ -101,8 +101,8 @@ td { border-color: #18181d !important; }
 /* ===== Entrar, obrigado, depoimento ===== */
 .box h1 em { text-shadow: none; }
 main .card h2 { font: 700 19px 'Space Grotesk', sans-serif !important; letter-spacing: 0 !important; color: var(--ink, #f4f4f7) !important; }
-div.ok:not(.msg):not(.aviso):not(.arq) { border-radius: 16px !important; color: #000; }
-div.ok:not(.msg):not(.aviso):not(.arq) .ic-e { margin: 0; color: #000; } div.ok:not(.msg):not(.aviso):not(.arq) svg.ic { width: 30px; height: 30px; stroke-width: 2.4; }
+div.ok:not(.msg):not(.aviso):not(.arq):not(.vigia) { border-radius: 16px !important; color: #000; }
+div.ok:not(.msg):not(.aviso):not(.arq):not(.vigia) .ic-e { margin: 0; color: #000; } div.ok:not(.msg):not(.aviso):not(.arq):not(.vigia) svg.ic { width: 30px; height: 30px; stroke-width: 2.4; }
 .passos span { font-family: var(--mono); font-size: 10.5px !important; letter-spacing: .06em; }
 ol.st li::before { font-family: var(--mono) !important; border-radius: 8px !important; }
 .arq { border-style: solid !important; border-color: var(--edge) !important; background: var(--strip); }
