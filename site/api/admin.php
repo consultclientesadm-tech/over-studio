@@ -347,12 +347,17 @@ switch ($a) {
     $edb = app_events_db();
     $q = $edb->prepare('SELECT e.*, u.email, u.name FROM app_events e LEFT JOIN users u ON u.id = e.user_id WHERE e.created_at >= ? ORDER BY e.id DESC'); $q->execute([$since]);
     $ev = $q->fetchAll();
-    $cnt = ['inicio' => 0, 'abriu' => 0, 'pronto' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0, 'quisbaixar' => 0, 'liberou' => 0]; $seg = []; $disp = []; $prob = []; $pessoas = [];
+    $cnt = ['inicio' => 0, 'abriu' => 0, 'pronto' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0, 'saiu' => 0, 'quisbaixar' => 0, 'liberou' => 0]; $seg = []; $disp = []; $prob = []; $pessoas = [];
+    $nav = []; $saidas = []; // CPI dos erros: resultado por sistema + navegador e em que etapa as pessoas saem no meio
     foreach ($ev as $e) {
       $k = $e['kind']; $cnt[$k] = ($cnt[$k] ?? 0) + 1; $d = json_decode((string)$e['data'], true) ?: [];
       $ap = ua_short((string)$e['ua']);
       if (!empty($d['modelo'])) $ap = preg_replace('/^[^·]+/', mb_substr((string)$d['modelo'], 0, 40) . ' ', $ap, 1); // o Chrome esconde o modelo no user agent ("K"); o app manda o modelo de verdade
-      $disp[$ap] ??= ['aparelho' => $ap, 'inicio' => 0, 'abriu' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0, 'forca' => 0, 'compat' => ''];
+      $disp[$ap] ??= ['aparelho' => $ap, 'inicio' => 0, 'abriu' => 0, 'pronto' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0, 'saiu' => 0, 'forca' => 0, 'compat' => ''];
+      $nv = ua_nav((string)$e['ua']);
+      $nav[$nv] ??= ['nav' => $nv, 'inicio' => 0, 'abriu' => 0, 'pronto' => 0, 'exportou' => 0, 'erro' => 0, 'fechou' => 0, 'saiu' => 0, 'externo' => 0];
+      if ($k === 'erro' && ($d['etapa'] ?? '') === 'externo') $nav[$nv]['externo']++; elseif (isset($nav[$nv][$k])) $nav[$nv][$k]++;
+      if ($k === 'saiu') { $sk = (string)($d['etapa'] ?? '?'); $saidas[$sk] = ($saidas[$sk] ?? 0) + 1; }
       if (!empty($d['forca'])) { $disp[$ap]['forca'] = max($disp[$ap]['forca'], (int)$d['forca']); $disp[$ap]['compat'] = (string)($d['compat'] ?? ''); }
       if (isset($disp[$ap][$k])) $disp[$ap][$k]++;
       if ($k === 'abriu' && !empty($d['seg'])) $seg[] = (int)$d['seg'];
@@ -361,10 +366,11 @@ switch ($a) {
     }
     sort($seg); $med = $seg ? $seg[intdiv(count($seg), 2)] : 0;
     usort($disp, fn($a, $b) => $b['inicio'] <=> $a['inicio']);
+    $nav = array_values($nav); usort($nav, fn($a, $b) => $b['inicio'] <=> $a['inicio']); arsort($saidas);
     $q = $db->prepare('SELECT COUNT(*) FROM usage WHERE created_at >= ?'); $q->execute([$since]); $usos = (int)$q->fetchColumn();
     $q = $edb->query('SELECT MIN(created_at) FROM app_events'); $desde = $q->fetchColumn();
     json_out(['ok' => true, 'dias' => $days, 'cont' => $cnt, 'pessoas' => count($pessoas), 'tempo_mediano' => $med, 'tempo_max' => $seg ? max($seg) : 0,
-      'usos' => $usos, 'desde' => $desde, 'aparelhos' => array_slice(array_values($disp), 0, 12), 'problemas' => $prob]);
+      'usos' => $usos, 'desde' => $desde, 'aparelhos' => array_slice(array_values($disp), 0, 12), 'problemas' => $prob, 'navegadores' => $nav, 'saidas' => array_slice($saidas, 0, 8, true)]);
   }
   case 'push-chave': json_out(['ok' => true, 'chave' => vapid_public()]);
   case 'push-salvar': { // celular do administrador: recebe o aviso de cada venda (guardado com user_id negativo = -id do admin)
