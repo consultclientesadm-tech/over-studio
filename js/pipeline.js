@@ -262,6 +262,13 @@ export async function analyze(file, opts = {}, onStep = () => {}) {
     }
     voice = r.voice; bed = r.bed; if (r.orig) orig = r.orig;
   }
+  // Modo leve (celular mais simples): a voz vira uma faixa só (mono). Voz de cover é praticamente mono, então
+  // não muda o som, mas a afinação e a análise fazem metade das contas e usam metade da memória.
+  if (o.leve && voice.length > 1 && voice[1] !== voice[0]) {
+    const L = voice[0], R = voice[1], m = new Float32Array(L.length);
+    for (let i = 0; i < m.length; i++) m[i] = (L[i] + R[i]) * 0.5;
+    voice = [m];
+  }
   // Dupla, trio, backing vocal: quantas vozes cantam? Com mais de uma, cada voz vira uma faixa própria
   let multi = null, parts = null;
   if (o.multi !== false) {
@@ -409,12 +416,13 @@ export async function retune(state, opts = {}, onStep = () => {}) {
   const plan = planTuning(state.rawNotes, state.key, { ...o, chords: state.chords }, state.edits);
   const target = 99;
   let check = null;
-  for (let pass = 0; pass < 4; pass++) {
-    onStep('tune', pass / 4);
-    state.tuned = await tuneVoice(state.voice.map((c) => c.slice()), SR, plan, (p) => onStep('tune', (pass + p) / 4));
+  const PASSES = o.leve ? 2 : 4; // modo leve: no máximo 2 rodadas (o celular simples termina bem mais rápido)
+  for (let pass = 0; pass < PASSES; pass++) {
+    onStep('tune', pass / PASSES);
+    state.tuned = await tuneVoice(state.voice.map((c) => c.slice()), SR, plan, (p) => onStep('tune', (pass + p) / PASSES));
     state.afterTrack = await pitchTrack(state.tuned, SR);
     check = bandCheck(state.afterTrack, plan.filter((n) => n.st > 0), o.band);
-    if (check.pct >= target) break;
+    if (check.pct >= target || pass === PASSES - 1) break;
     // Reforça a curva onde ainda vazou
     const tr = state.afterTrack.map((f) => f.midi);
     for (const n of plan) {

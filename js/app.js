@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=45';
+import * as cover from './pipeline.js?v=46';
 import { prefetchModel } from './studio.js?v=41';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
-import { exportVideo, exportType } from './export.js?v=39';
+import { exportVideo, exportType } from './export.js?v=40';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -76,8 +76,11 @@ const fresh = (key) => { if (srcKey !== key) return; srcKey = ''; if (curKey ===
 player.onended = () => pause();
 // iPhone: libera o som no primeiro toque na tela, para os toques seguintes já tocarem
 addEventListener('touchend', function unlock() { if (player.src) return removeEventListener('touchend', unlock); player.muted = true; const p = player.play(); if (p) p.then(() => { player.pause(); player.muted = false; }).catch(() => { player.muted = false; }); removeEventListener('touchend', unlock); }, { passive: true });
+// Modo leve: celular mais simples (Samsung A/M, 3–4 GB) ou que já fechou o app no meio. Voz em uma faixa, até 2 rodadas
+// de afinação, prévia menor e vídeo final em 1080p com 12 Mb/s e até 30 quadros. Antes esses celulares eram barrados.
+const leve = () => { try { if (localStorage.getItem('sc-leve') === '1') return true; } catch {} const i = window.scCompat && window.scCompat.info; return !!(i && i.leve); };
 const tuneOpts = () => ({ separate: $('optSeparate').checked, strength: +$('q').dataset.global || 1, scaleSnap: $('mSnap').checked,
-  straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked });
+  straighten: $('s').dataset.global != null ? +$('s').dataset.global : 1, useRef: $('mUseRef').checked, leve: leve() });
 let compMode = 'auto';
 // ---- Dupla, trio, backing vocal: cada voz tem a sua afinação, o seu mudo (na prévia) e o seu volume ----
 let cur = 0; // voz aberta no painel de afinação
@@ -238,6 +241,7 @@ try {
   else if (last) {
     localStorage.removeItem(RUN);
     ev('fechou', { etapa: last.stage, pct: last.pct, mb: last.mb, dur: last.dur, msg: last.erro || '' });
+    if (/iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)) localStorage.setItem('sc-leve', '1'); // a próxima tentativa já vai no modo leve
     const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v37`;
     try { localStorage.setItem('sc-last', msg); } catch {}
     setTimeout(() => ajudaErro('O celular fechou o app no meio', `Na última tentativa o celular ficou sem memória e fechou o app em "${escH(last.stage)}". Isso acontece com vídeo longo ou pesado, ou com muitos apps abertos. Para dar certo:`, last.mb), 600);
@@ -264,11 +268,11 @@ try {
 // Aparelho abaixo do mínimo: avisa antes de a pessoa gastar tempo
 try {
   const ua = navigator.userAgent, ios = ua.match(/OS (\d+)_\d+.* like Mac OS X/), mem = navigator.deviceMemory;
-  const old = (ios && +ios[1] < 15) || (/Android/.test(ua) && mem && mem < 4);
+  const old = (ios && +ios[1] < 15) || (/Android/.test(ua) && mem && mem <= 2);
   if (old && !window.scCompat) { const r = $('req'); r.classList.add('warn'); r.textContent = 'Este aparelho parece abaixo do mínimo (iPhone 13 ou Android com 4 GB). Pode fechar no meio. Se puder, use um celular mais novo ou o computador.'; }
 } catch {}
 // resultado do teste deste aparelho no cartão de requisitos da tela inicial
-try { const c = window.scCompat, el = $('reqMeuApp'); if (c && el) c.ready.then((i) => { el.className = 'reqmeu ' + i.nivel; el.textContent = i.nivel === 'ok' ? '✓ Testamos o seu aparelho: ele é compatível.' : i.nivel === 'fraco' ? 'Seu aparelho está no limite: use vídeos curtos (até 1 minuto) ou o computador.' : 'Seu aparelho não é compatível: use o computador ou um celular mais novo.'; }); } catch {}
+try { const c = window.scCompat, el = $('reqMeuApp'); if (c && el) c.ready.then((i) => { el.className = 'reqmeu ' + i.nivel; el.textContent = i.nivel === 'ok' ? '✓ Testamos o seu aparelho: ele é compatível.' : i.nivel === 'fraco' ? 'Seu celular usa o modo leve: o vídeo sai em 1080p do mesmo jeito, só demora um pouco mais. Feche os outros apps antes de começar.' : 'Seu aparelho não é compatível: use o computador ou um celular mais novo.'; }); } catch {}
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
   // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar
@@ -277,7 +281,8 @@ async function start(f, tries = 1) {
   if (tries === 1 && !(await conferirVideo(f))) return desistiu();
   if (tries === 1 && window.scGate && !(await window.scGate(f))) return desistiu();
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
-  ev('inicio', { mb: Math.round(f.size / 1048576), audio: isAudio(f) ? 1 : 0, tries });
+  if (window.scCompat) await Promise.race([window.scCompat.ready, new Promise((r) => setTimeout(r, 1500))]).catch(() => {}); // o teste do aparelho decide o modo leve
+  ev('inicio', { mb: Math.round(f.size / 1048576), audio: isAudio(f) ? 1 : 0, tries, leve: leve() ? 1 : 0 });
   if (tries === 1) await Promise.race([cedo || keep(f, refFile), new Promise((r) => setTimeout(r, 5000))]);
   file = f;
   audioOnly = isAudio(f); app.classList.toggle('audio', audioOnly);
@@ -373,7 +378,7 @@ function openStudio() {
   $('newBtn').hidden = false;
   const cv = $('screen'), portrait = video.videoHeight >= video.videoWidth;
   // prévia mais leve no celular (o vídeo final continua em 1080p)
-  const big = Math.min(innerWidth, innerHeight) >= 700 ? 1280 : 960, small = Math.round((big * 9) / 16);
+  const big = leve() ? 720 : Math.min(innerWidth, innerHeight) >= 700 ? 1280 : 960, small = Math.round((big * 9) / 16);
   cv.width = portrait ? small : big; cv.height = portrait ? big : small;
   // o quadro do vídeo passa antes por um canvas 2D no tamanho da prévia: a placa de vídeo recebe
   // uma imagem pequena (não o 4K do iPhone) e o iPhone sempre entrega o quadro, mesmo pausado
@@ -984,7 +989,7 @@ $('exportBtn').onclick = async () => {
   try {
     const ch = mastered ? mastered.channels : cover.rawMix(state, state.parts ? voiceDb('e').map(dbG) : null);
     const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
-    const out = await exportVideo({ file, video, filter: currentFilter(), amount, channels: ch, sr: cover.SR, start: s, end: e,
+    const out = await exportVideo({ file, video, filter: currentFilter(), amount, channels: ch, sr: cover.SR, start: s, end: e, leve: leve(),
       onProgress: (p) => { $('exportBar').firstElementChild.style.width = Math.round(p * 100) + '%'; } });
     const a = $('download');
     a.href = URL.createObjectURL(out.blob);

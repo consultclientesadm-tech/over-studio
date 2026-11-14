@@ -30,9 +30,9 @@ export async function exportVideo(o) {
   try { return await exportAny(o); } finally { freeLive(); }
 }
 
-async function exportAny({ file, video, filter, amount = 1, channels, sr, start, end, onProgress = () => {} }) {
+async function exportAny({ file, video, filter, amount = 1, channels, sr, start, end, leve = false, onProgress = () => {} }) {
   if (file && window.VideoEncoder && window.VideoDecoder) {
-    try { return await exportFull({ file, filter, amount, channels, sr, start, end, onProgress }); }
+    try { return await exportFull({ file, filter, amount, channels, sr, start, end, leve, onProgress }); }
     catch (e) { if (e.final) throw e; console.warn('gravação quadro a quadro falhou, usando a reserva:', e); }
   }
   const type = exportType();
@@ -116,7 +116,7 @@ function blobTarget(MB) {
   return { target, blob };
 }
 
-async function exportFull({ file, filter, amount, channels, sr, start, end, onProgress }) {
+async function exportFull({ file, filter, amount, channels, sr, start, end, leve, onProgress }) {
   const MB = await import('./vendor/mediabunny/mediabunny.min.js');
   const input = new MB.Input({ source: new MB.BlobSource(file), formats: MB.ALL_FORMATS });
   const vt = await input.getPrimaryVideoTrack();
@@ -136,6 +136,9 @@ async function exportFull({ file, filter, amount, channels, sr, start, end, onPr
   // 1080p: no mínimo 12 Mb/s (bem acima dos ~8 Mb/s que o Instagram usa) e até 30 Mb/s; 4K reduzido leva a
   // taxa do original proporcional ao tamanho, então não perde qualidade
   let bitrate = Math.min(30e6, Math.max(12e6 * px, srcRate * (hevcSrc ? 1.4 : 1.1) * sc * sc));
+  // Modo leve (celular simples): continua 1080p, mas com 12 Mb/s (acima dos ~8 Mb/s que o Instagram usa).
+  // O vídeo pronto fica na memória até baixar: 3 min a 30 Mb/s eram ~700 MB, a 12 Mb/s são ~270 MB.
+  if (leve) bitrate = Math.min(bitrate, 12e6);
   bitrate = Math.round(bitrate);
   let codec = await MB.getFirstEncodableVideoCodec(['avc', 'hevc'], { width: W, height: H, bitrate });
   if (!codec && Math.min(W, H) > 1080) { // aparelho que não grava 4K: grava em 1080p
@@ -153,7 +156,10 @@ async function exportFull({ file, filter, amount, channels, sr, start, end, onPr
   const { target, blob } = blobTarget(MB);
   const output = new MB.Output({ format: mov ? new MB.MovOutputFormat({ fastStart: false }) : new MB.Mp4OutputFormat({ fastStart: false }), target });
   const vs = new MB.CanvasSource(gr.c, { codec, bitrate, keyFrameInterval: 2, latencyMode: 'quality' });
-  output.addVideoTrack(vs, { frameRate: st?.averagePacketRate ? Math.round(st.averagePacketRate) : undefined });
+  // Modo leve: vídeo de 60 quadros por segundo sai com 30 (metade do trabalho; Reels e TikTok tocam a 30)
+  const srcFps = st?.averagePacketRate > 10 ? Math.round(st.averagePacketRate) : 0;
+  const fps = leve && srcFps > 31 ? 30 : srcFps;
+  output.addVideoTrack(vs, { frameRate: fps || undefined });
   const as = new MB.AudioBufferSource(mov ? { codec: 'pcm-s16' } : { codec: 'aac', bitrate: 256e3 });
   output.addAudioTrack(as);
   await output.start();
@@ -166,12 +172,15 @@ async function exportFull({ file, filter, amount, channels, sr, start, end, onPr
 
   const sink = new MB.CanvasSink(vt, { width: W, height: H, fit: 'cover', poolSize: 2 });
   let frames = 0, slot = -1;
-  const fps = st?.averagePacketRate > 10 ? Math.round(st.averagePacketRate) : 0;
   for await (const fr of sink.canvases(start, end)) {
     let t = fr.timestamp - start;
     if (t < -1e-3) continue;
     // encaixa cada quadro na grade de quadros por segundo (o iPhone grava com tempos levemente irregulares)
-    if (fps) { let k = Math.round(t * fps); if (k <= slot) k = slot + 1; slot = k; t = k / fps; }
+    if (fps) {
+      let k = Math.round(t * fps);
+      if (k <= slot) { if (fps < srcFps) continue; k = slot + 1; } // modo leve: pula o quadro que cai no mesmo lugar
+      slot = k; t = k / fps;
+    }
     gr.draw(fr.canvas);
     await vs.add(t, fps ? 1 / fps : fr.duration);
     frames++;
@@ -182,5 +191,5 @@ async function exportFull({ file, filter, amount, channels, sr, start, end, onPr
   await output.finalize();
   onProgress(1);
   const ext = mov ? 'mov' : 'mp4';
-  return { blob: blob(mov ? 'video/quicktime' : 'video/mp4'), ext, width: W, height: H, fps: st?.averagePacketRate, bitrate };
+  return { blob: blob(mov ? 'video/quicktime' : 'video/mp4'), ext, width: W, height: H, fps: fps || st?.averagePacketRate, bitrate };
 }
