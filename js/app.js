@@ -2,7 +2,7 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=48';
+import * as cover from './pipeline.js?v=49';
 import { prefetchModel } from './studio.js?v=47';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
@@ -389,7 +389,7 @@ function perdeuArquivo() {
 
 // O navegador leu o som mas não abre a imagem (Edge sem HEVC com vídeo do iPhone): converte aqui no aparelho
 async function convertVideo() {
-  let conv; try { conv = await import('./convert.js?v=37'); } catch { return; }
+  let conv; try { conv = await import('./convert.js?v=38'); } catch { return; }
   if (!conv.canConvert()) return;
   note({ stage: 'Convertendo o vídeo para este navegador', pct: 99 });
   $('workStep').textContent = 'Preparando a imagem do vídeo para este navegador (só neste caso)';

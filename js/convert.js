@@ -5,6 +5,33 @@ const BASE = new URL('./vendor/ffmpeg/', import.meta.url).href;
 
 export function canConvert() { return !!(self.crossOriginIsolated && self.SharedArrayBuffer && self.WebAssembly); }
 
+async function loadFF() {
+  const { FFmpeg } = await import('./vendor/ffmpeg/ffmpeg/index.js');
+  const ff = new FFmpeg();
+  await ff.load({ coreURL: BASE + 'core/ffmpeg-core.js', wasmURL: BASE + 'core/ffmpeg-core.wasm', workerURL: BASE + 'core/ffmpeg-core.worker.js' });
+  return ff;
+}
+
+// Último recurso para o SOM: alguns Android (Xiaomi/Redmi/POCO, vivo) recusam o AAC tanto no decodeAudioData
+// quanto no AudioDecoder (os dois usam o decodificador do próprio celular). O FFmpeg decodifica no app,
+// sem depender do celular. Entrega estéreo na taxa pedida, no mesmo formato do decodeAudioData.
+export async function decodeAudioSoft(bytes, ext, sr) {
+  if (!canConvert()) throw new Error('sem FFmpeg (página sem isolamento)');
+  const ff = await loadFF();
+  try {
+    await ff.writeFile('in.' + ext, bytes);
+    const ret = await ff.exec(['-i', 'in.' + ext, '-vn', '-ac', '2', '-ar', String(sr), '-f', 'f32le', 'out.raw']);
+    if (ret !== 0) throw new Error('FFmpeg não leu o áudio');
+    const raw = await ff.readFile('out.raw');
+    const n = Math.floor(raw.byteLength / 8);
+    if (!n) throw new Error('FFmpeg não devolveu áudio');
+    const f = new Float32Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + n * 8));
+    const L = new Float32Array(n), R = new Float32Array(n);
+    for (let i = 0, j = 0; i < n; i++, j += 2) { L[i] = f[j]; R[i] = f[j + 1]; }
+    return { numberOfChannels: 2, getChannelData: (c) => (c ? R : L) };
+  } finally { ff.terminate(); }
+}
+
 export async function toH264(file, onProgress = () => {}) {
   const { FFmpeg } = await import('./vendor/ffmpeg/ffmpeg/index.js');
   const ff = new FFmpeg();

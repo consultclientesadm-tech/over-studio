@@ -93,6 +93,8 @@ export async function extractAac(file, maxSec = 0) {
     const fixed = u32(v, stsz.start + 4), all = u32(v, stsz.start + 8);
     // vídeo mais longo que o limite: só lê o áudio dos primeiros minutos (cada quadro AAC tem 1024 amostras).
     // Antes lia e decodificava o áudio inteiro e só depois cortava: no iPhone isso era memória à toa.
+    // MP4 "fragmentado" (alguns apps de gravação): o índice não lista o áudio; deixa o leitor do arquivo inteiro tentar
+    if (!all) throw new Error('índice sem amostras de áudio (MP4 fragmentado)');
     const fullDur = (all * 1024) / scale;
     const count = maxSec > 0 ? Math.min(all, Math.ceil(((maxSec + 3) * scale) / 1024)) : all;
     const size = (i) => (fixed || u32(v, stsz.start + 12 + 4 * i));
@@ -227,11 +229,20 @@ export async function decodeVideoAudio(file, sr, maxSec = 0) {
     const buf = alt ? adts.slice().buffer : whole ? adts.buffer : adts.buffer.slice(adts.byteOffset, adts.byteOffset + adts.byteLength);
     try { ab = await ctx.decodeAudioData(buf); } catch (e) { err1 = e; console.warn('decodeAudioData recusou o AAC:', e && e.message); }
   }
+  let err2 = null, err3 = null;
   if (!ab) {
-    try { ab = await decodeWebCodecs(adts, sizes, cfg, sr); } catch (e) {
-      console.warn('leitor alternativo falhou:', e && e.message);
-      throw err1 || e;
-    }
+    try { ab = await decodeWebCodecs(adts, sizes, cfg, sr); } catch (e) { err2 = e; console.warn('leitor alternativo falhou:', e && e.message); }
+  }
+  // Xiaomi/Redmi/POCO e vivo: os dois leitores do celular recusam o AAC. O FFmpeg do app lê sem depender dele.
+  if (!ab && cfg.adtsOk) {
+    try { ab = await (await import('./convert.js?v=38')).decodeAudioSoft(adts, 'aac', sr); } catch (e) { err3 = e; console.warn('FFmpeg falhou no áudio:', e && e.message); }
+  }
+  if (!ab) {
+    const err = err1 || err2 || err3 || new Error('Unable to decode audio data');
+    const m = (x) => String((x && x.message) || x || '-').slice(0, 40);
+    err.causa = `aac ${cfg.aot}/${cfg.rate}/${cfg.ch} wc:${m(err2)} ff:${m(err3)}`;
+    err.tentouFF = true;
+    throw err;
   }
   const cut = Math.round(skip * sr), pad = Math.round(delay * sr);
   const take = (c) => {
