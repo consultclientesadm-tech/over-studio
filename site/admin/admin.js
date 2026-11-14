@@ -540,6 +540,7 @@ function vgBarras(rot, vals, sub, cor, fmt, corte = -1) {
   return `<div class="vgBars">${vals.map((v, i) => `<div class="vb${corte >= 0 && i > corte ? ' fut' : ''}" title="${esc(rot[i])}: ${fmt(v)}${sub ? ' · ' + sub[i] : ''}"><i style="height:${v ? Math.max(4, (v / mx) * 100) : 0}%;background:${cor}"></i>${v ? `<em>${fmt(v)}</em>` : ''}</div>`).join('')}</div>
     <div class="vgX">${rot.map((r, i) => `<span>${i % passo === 0 ? esc(r) : ''}</span>`).join('')}</div>`;
 }
+const vgCampAberto = {}; // campanhas de cada sócio: fechadas até clicar (Leo 14/11)
 async function loadVisao() {
   const [de, ate] = vgFaixa();
   const j = await api('visao', null, `&de=${de}&ate=${ate}`); if (!j.ok) return;
@@ -552,15 +553,15 @@ async function loadVisao() {
   const corR = roi === null ? '' : roi >= 0 ? 'g' : 'r';
   const socio = (k, nome, p, cor) => { const a = A[k] || { gasto: 0, gasto_auto: 0, gasto_manual: 0, vendas: 0, liquido: 0 }; const r = a.gasto ? (a.liquido - a.gasto) / a.gasto : null;
     return `<div class="vgSoc ${cor}"><div class="vgSh"><b>${nome}</b><small>${p}% da divisão</small><button class="btn sm ghost" style="margin-left:auto" title="Parâmetros de URL para anúncio novo" data-copia="utm_source={{site_source_name}}&utm_medium=paid&utm_campaign=${k}-ads&utm_content={{ad.name}}">Copiar UTM</button></div>
-      <div class="vgSg"><div><small>Investiu em anúncio</small><b>${brl(a.gasto)}</b><span>gerenc. ${brl0(a.gasto_auto)} · impuls. ${brl0(a.gasto_manual)}</span></div>
+      <div class="vgSg"><div><small>Investiu em anúncio</small><b>${brl(a.gasto)}</b><span title="gerenciador ${brl(a.gasto_auto)} · impulsionar ${brl(a.gasto_manual)}">gerenc. ${brl0(a.gasto_auto)} · impuls. ${brl0(a.gasto_manual)}</span></div>
       ${(() => { const tk = nV ? liq / nV : 279.96, cm = a.compras_meta || 0, lm = cm * tk, rm = a.gasto ? (lm - a.gasto) / a.gasto : null; // regra do Leo (14/11): anúncio = o que o Meta computou; link fica numa linha à parte
-        return `<div><small>Vendas do anúncio (Meta)</small><b>${cm}</b><span>≈ ${brl(lm)} líquido${cm && a.gasto ? ' · ' + brl(a.gasto / cm) + ' por venda' : ''}</span></div>
-      <div><small>ROI do anúncio</small><b class="${rm === null ? '' : rm >= 0 ? 'g' : 'r'}">${rm === null ? '—' : (rm >= 0 ? '+' : '') + Math.round(rm * 100) + '%'}</b><span>${a.gasto ? brl(lm / a.gasto) + ' por ' + MO() + '1 investido' : 'sem gasto no período'}</span></div>`; })()}
-      <div class="parte"><small>Ganho dele · igual à Eduzz (${p}%)</small><b>${brl(liq * p / 100)}</b><span>tirando os anúncios dele: ${brl(liq * p / 100 - a.gasto)}</span></div>
-      ${(() => { const L = (j.por_anuncio || []).filter((x) => x.conta === k); if (!L.length) return ''; const tk = nV ? liq / nV : 279.96;
-        return `<div style="grid-column:1/-1;border-top:1px dashed rgba(255,255,255,.12);padding-top:8px"><small>Cada anúncio (igual ao Gerenciador do Meta)</small><div class="tbl"><table><tr><th>Anúncio</th><th>Investiu</th><th>Vendas</th><th>Custo por venda</th><th>ROI</th></tr>${L.map((x) => { const ro = x.gasto ? (x.compras * tk - x.gasto) / x.gasto : null;
-          return `<tr><td><b>${esc(x.nome || x.ad_id)}</b><small>${esc(x.campanha)}</small></td><td>${brl(x.gasto)}</td><td><b>${x.compras}</b></td><td>${x.compras ? brl(x.gasto / x.compras) : '—'}</td><td><b class="${ro === null ? '' : ro >= 0 ? 'g' : 'r'}">${ro === null ? '—' : (ro >= 0 ? '+' : '') + Math.round(ro * 100) + '%'}</b></td></tr>`; }).join('')}</table></div></div>`; })()}
-      <div style="grid-column:1/-1;border-top:1px dashed rgba(255,255,255,.12);padding-top:8px"><small>Vendas pelo link dele (conversas, direct, teste grátis)</small><b>${a.vendas_link ?? a.vendas}</b><span>${brl(a.liquido_link ?? a.liquido)} líquido · quem clicou no link dele e comprou</span></div></div></div>`; };
+        return `<div><small>Vendas do anúncio (Meta)</small><b>${cm}</b><span title="≈ ${brl(lm)} líquido">≈ ${brl0(lm)} líquido${cm && a.gasto ? ' · ' + brl(a.gasto / cm) + '/venda' : ''}</span></div>
+      <div><small>ROI do anúncio</small><b class="${rm === null ? '' : rm >= 0 ? 'g' : 'r'}">${rm === null ? '—' : (rm >= 0 ? '+' : '') + Math.round(rm * 100) + '%'}</b><span>${a.gasto ? brl(lm / a.gasto) + ' por ' + MO() + '1' : 'sem gasto no período'}</span></div>`; })()}
+      <div class="parte"><small>Ganho dele (${p}%)</small><b>${brl(liq * p / 100)}</b><span title="igual à Eduzz · tirando os anúncios dele">sem anúncios: ${brl(liq * p / 100 - a.gasto)}</span></div></div>
+      ${(() => { const L = (j.por_anuncio || []).filter((x) => x.conta === k); if (!L.length) return ''; const tk = nV ? liq / nV : 279.96, ab = !!vgCampAberto[k];
+        return `<div class="vgCamp"><button class="btn sm ghost" data-camp="${k}" data-n="${L.length}">${ab ? 'Ocultar campanhas ▴' : 'Exibir campanhas (' + L.length + ') ▾'}</button><div class="tbl"${ab ? '' : ' hidden'}><table><tr><th>Anúncio</th><th>Investiu</th><th>Vendas</th><th>Custo/venda</th><th>ROI</th></tr>${L.map((x) => { const ro = x.gasto ? (x.compras * tk - x.gasto) / x.gasto : null;
+          return `<tr><td><b>${esc(x.nome || x.ad_id)}</b><small>${esc(x.campanha)}</small></td><td class="nw">${brl(x.gasto)}</td><td class="nw"><b>${x.compras}</b></td><td class="nw">${x.compras ? brl(x.gasto / x.compras) : '—'}</td><td class="nw"><b class="${ro === null ? '' : ro >= 0 ? 'g' : 'r'}">${ro === null ? '—' : (ro >= 0 ? '+' : '') + Math.round(ro * 100) + '%'}</b></td></tr>`; }).join('')}</table></div></div>`; })()}
+      <div class="vgLink"><small>Vendas pelo link dele (conversas, direct, teste grátis)</small><b>${a.vendas_link ?? a.vendas}</b><span>${brl(a.liquido_link ?? a.liquido)} líquido</span></div></div>`; };
   // gráficos: por hora (1 dia), por dia (até 90) ou por mês (1 ano)
   let rot, kv, kc, corte = -1;
   if (j.dias === 1) { rot = [...Array(24).keys()].map((h) => h + 'h'); kv = (t) => +t.slice(11, 13); if (de === spDia(0)) corte = +j.agora.slice(11, 13); }
@@ -993,6 +994,7 @@ boot();
 
 // botão "Copiar UTM" (aba Origens)
 document.addEventListener('click', async (e) => {
+  const cb = e.target.closest('[data-camp]'); if (cb) { const k = cb.dataset.camp, ab = (vgCampAberto[k] = !vgCampAberto[k]), t = cb.nextElementSibling; if (t) t.hidden = !ab; cb.textContent = ab ? 'Ocultar campanhas ▴' : `Exibir campanhas (${cb.dataset.n}) ▾`; return; }
   const b = e.target.closest('[data-copia]'); if (!b) return;
   const t = b.dataset.copia;
   try { await navigator.clipboard.writeText(t); } catch (_) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); }
