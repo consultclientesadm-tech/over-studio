@@ -467,3 +467,4 @@ body:not([data-reg="br"]) .regBar select { box-shadow: 0 0 18px rgba(255,212,0,.
 .vgCamp .tbl { margin-top: 8px; } .vgCamp td.nw, .vgCamp th { white-space: nowrap; } .vgCamp td small { display: block; color: #8b90a6; font-size: 11px; }
 .vgLink { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-top: 1px dashed rgba(255,255,255,.12); margin-top: 10px; padding-top: 8px; }
 .vgLink small { color: #a9adc0; font-size: 11px; } .vgLink b { font-size: 17px; } .vgLink span { font-size: 11px; color: #8b90a6; }
+.vgCamp b.g { color: #2ee59d; } .vgCamp b.r { color: #ff6b78; }
