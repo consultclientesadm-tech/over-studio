@@ -78,8 +78,13 @@ try {
   // 1) Começar: subir o vídeo e Deixar tudo pronto
   await session('a', async (s) => {
     s.begin('comecar');
-    s.say('Toque em Escolher o vídeo e pegue o seu cover na galeria do celular.');
-    await s.wait(1500);
+    s.say('Primeiro, responda: a sua música tem instrumental ou playback? Toque em Sim ou em Não.');
+    await s.wait(1600);
+    await s.tap('.sn[data-sep="1"]', 1400);
+    s.say('Se quiser, suba a música do cantor original. É opcional: o app afina você pela melodia dele.');
+    await s.point('#refPick', 2600);
+    s.say('Agora toque em Escolher o vídeo e pegue o seu cover na galeria do celular.');
+    await s.wait(1000);
     await s.upload(solo, true);
     await s.wait(1500);
     s.say('A IA separa a sua voz do violão ou da base, no seu próprio celular. Deixe esta tela aberta.');
@@ -146,11 +151,18 @@ try {
     await s.wait(500);
     s.say('Compare: ORIGINAL, AFINADA e MIXADA.');
     await s.tap('#abA', 900); await s.tap('#abB', 900); await s.tap('#abC', 1000);
-    s.say('Voz baixa ou alta demais? Arraste o Volume da voz. O mesmo vale para a base.');
-    await s.point('#mVoice', 600);
-    await s.page.evaluate(() => { const r = document.getElementById('mVoice'); r.value = '3'; r.dispatchEvent(new Event('input')); r.dispatchEvent(new Event('change')); });
+    s.say('Voz baixa ou alta demais? Gire o botão Volume da voz: arraste para cima para aumentar. O mesmo vale para a base.');
+    { // gira o potenciômetro de verdade, com o dedo
+      const b = await s.box('.row:has(#mVoice) .pot'); const x = b.x + b.width / 2, y = b.y + b.height / 2;
+      await s.ring(x, y); await s.wait(500);
+      await s.page.mouse.move(x, y); await s.page.mouse.down();
+      for (let i = 1; i <= 12; i++) { await s.page.mouse.move(x, y - i * 2.5); await s.wait(45); }
+      await s.page.mouse.up();
+    }
     await s.wait(500); await s.idle(); await s.wait(1200);
-    await s.point('#mBed', 1800);
+    await s.point('.row:has(#mBed) .pot', 1600);
+    s.say('Embaixo tem mais: equalizador, compressor, reverb e fades. Role a tela para ver.');
+    await s.page.evaluate(() => document.querySelector('.step.on').scrollBy({ top: 600, behavior: 'smooth' })); await s.wait(2600);
     s.end();
 
     s.begin('cor');

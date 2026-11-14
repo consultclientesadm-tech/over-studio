@@ -982,7 +982,7 @@ document.addEventListener('click', (e) => {
 }, true);
 $('tipOk').onclick = () => ($('tip').hidden = true);
 // Manual do usuário (vídeos curtos): o código e os vídeos só carregam quando a pessoa abre
-const abrirManual = (id) => { ev('manual', { tela: app.dataset.screen || '' }); import('./manual.js?v=2').then((m) => m.openManual(id, (v) => ev('manual_video', { video: v }))).catch(() => toast('Não deu para abrir o manual. Confira a internet e tente de novo.')); };
+const abrirManual = (id) => { ev('manual', { tela: app.dataset.screen || '' }); import('./manual.js?v=3').then((m) => m.openManual(id, (v) => ev('manual_video', { video: v }))).catch(() => toast('Não deu para abrir o manual. Confira a internet e tente de novo.')); };
 $('manBtn').onclick = () => abrirManual();
 $('manHome').onclick = () => abrirManual();
 $('helpBtn').onclick = () => {
