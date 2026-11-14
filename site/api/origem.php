@@ -72,7 +72,8 @@ function ad_gastos_conta(PDO $db): void {
 function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'): array {
   ad_gastos_conta($db);
   $g = $db->prepare('SELECT conta, SUM(valor) v FROM ad_gastos WHERE dia >= ? AND dia <= ? GROUP BY conta'); $g->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
-  $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido, created_at FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads')"); $s->execute([$since, $ate]);
+  $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido, created_at FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads', 'comentarios-ig')"); $s->execute([$since, $ate]);
+  try { meta_db()->prepare('INSERT OR IGNORE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute(['criativo1-teste-gratis', 'leo', now()]); } catch (Throwable $e) {} // post "comenta" do Leo (anúncio na Meu Gestor Pro, 13/11)
   $mapa = []; try { foreach (meta_db()->query('SELECT campanha, conta FROM meta_campanhas')->fetchAll(PDO::FETCH_NUM) as [$cp, $ct]) $mapa[$cp] = $ct; } catch (Throwable $e) {}
   // de quem é a venda de anúncio: campanha começando com leo-/reinaldo- ou uma campanha que está no link de um anúncio daquela conta
   // (a Eduzz corta o rastreio em 40 letras, então vale o começo do nome)
@@ -97,6 +98,13 @@ function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'
   try { $m = meta_db()->prepare('SELECT conta, SUM(valor) v, SUM(compras) cp FROM meta_gasto WHERE dia >= ? AND dia <= ? GROUP BY conta'); $m->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
     foreach ($m->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_auto'] += (float)$x['v']; $r[$c]['compras_meta'] = (int)round((float)$x['cp']); } } catch (Throwable $e) {} // Gerenciador, automático pela UTM
   foreach ($s->fetchAll() as $x) {
+    // comentário→direct: só é anúncio quando o post foi turbinado por uma conta (campanha do direct ligada a leo/reinaldo,
+    // ou utm_campaign leo-ads/reinaldo-ads no link do direct). Comentário orgânico (reinaldo-vsl etc.) fica fora do ROI.
+    if ($x['or_fonte'] === 'comentarios-ig') { $cp = (string)$x['or_campanha'];
+      if (isset($mapa[$cp])) $c = $mapa[$cp]; elseif (preg_match('/^(leo|reinaldo)-ads/', $cp, $m)) $c = $m[1]; else continue;
+      $add($c); $r[$c]['vendas']++; $r[$c]['liquido'] += (float)$x['liquido'];
+      if ($x['or_pagina'] === 'vsl') $r[$c]['vsl']++; elseif ($x['or_pagina'] === 'home') $r[$c]['home']++;
+      continue; }
     $c = $x['or_fonte'] === 'meta-sem-utm' ? '?' : $contaDa((string)$x['or_campanha'], substr((string)$x['created_at'], 0, 10));
     $add($c); $r[$c]['vendas']++; $r[$c]['liquido'] += (float)$x['liquido'];
     if ($x['or_pagina'] === 'vsl') $r[$c]['vsl']++; elseif ($x['or_pagina'] === 'home') $r[$c]['home']++;
