@@ -680,12 +680,16 @@ footer a { color: #888; }
   document.querySelectorAll('a[href^="/entrar/?teste"]').forEach((a) => a.addEventListener('click', () => px('Lead', { content_name: 'Teste grátis Studio Cover' })));
   document.querySelectorAll('a[href="#oferta"]').forEach((a) => a.addEventListener('click', () => px('VerOferta', {}, true)));
 
-  // VSL: o vídeo só baixa quando a pessoa toca (página leve)
+  // VSL de fora do Brasil: cada língua tem o seu vídeo (assets/lp/vsl-<lingua>.mp4) quando estiver pronto.
+  // Enquanto a língua não tem vídeo, a página não mostra o vídeo em português: fica a imagem do cantor, sem o botão.
+  const VSL_LANGS = []; const vlang = (window.scI18n && scI18n.lang) || 'pt';
+  if (vlang !== 'pt' && !VSL_LANGS.includes(vlang)) { document.querySelectorAll('#vsl img.capa, #vsl img.fundo').forEach((i) => (i.src = '/assets/lp/depois.webp')); $('play').hidden = true; }
+  else if (vlang !== 'pt') document.querySelectorAll('#vsl img.capa, #vsl img.fundo').forEach((i) => (i.src = '/assets/lp/vsl-capa-' + vlang + '.webp'));
   $('play').onclick = () => {
     px('VSLPlay', {}, true);
     const vw = document.querySelector('#vsl .vw'), v = document.createElement('video');
     // o vídeo vem da CDN gratuita jsDelivr (não pesa no servidor com muita gente); se falhar, do próprio site
-    v.src = 'https://cdn.jsdelivr.net/gh/consultclientesadm-tech/over-studio@2be6b966940bbd840065d29ce803ab1428c1302c/site/assets/lp/vsl.mp4';
+    v.src = vlang !== 'pt' ? '/assets/lp/vsl-' + vlang + '.mp4' : 'https://cdn.jsdelivr.net/gh/consultclientesadm-tech/over-studio@2be6b966940bbd840065d29ce803ab1428c1302c/site/assets/lp/vsl.mp4';
     v.addEventListener('error', () => { if (!v.dataset.local) { v.dataset.local = '1'; v.src = '/assets/lp/vsl.mp4?v=3'; v.play().catch(() => {}); } });
     v.controls = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', '');
     vw.querySelector('.capa').remove(); $('play').remove(); vw.appendChild(v); v.play().catch(() => {});
