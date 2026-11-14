@@ -454,3 +454,8 @@ body:not([data-reg="br"]) .regBar select { box-shadow: 0 0 18px rgba(255,212,0,.
 
 .atuBtn { right: 548px; color: #e8e8ec; } .atuBtn i { display: inline-block; font-size: 17px; transition: transform .9s; } .atuBtn.gira i { transform: rotate(360deg); }
 @media (max-width: 760px) { .atuBtn { right: 154px; } }
+/* faixa "Site funcionando": texto e torrinha em amarelo, torrinha piscando (a barra continua verde) */
+.vigia.ok b{color:var(--y)}
+.vigia.ok b .ic-e{color:var(--y);animation:torre 1.2s ease-in-out infinite}
+@keyframes torre{0%,100%{opacity:1;filter:drop-shadow(0 0 6px rgba(255,212,0,.8))}50%{opacity:.25;filter:none}}
+@media (prefers-reduced-motion:reduce){.vigia.ok b .ic-e{animation-duration:2.4s}}
