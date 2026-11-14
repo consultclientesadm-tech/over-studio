@@ -408,6 +408,12 @@ switch ($a) {
   }
   case 'meta-remover': { meta_db()->prepare('DELETE FROM meta_contas WHERE id = ?')->execute([(int)arg('id', 0)]); json_out(['ok' => true]); }
   case 'meta-sync': json_out(['ok' => true, 'sync' => meta_sync(true)]);
+  case 'meta-campanha': { // liga uma campanha (utm_campaign do link do anúncio) à conta do sócio
+    $cp = or_limpa((string)arg('campanha', ''), 60); $ct = (string)arg('conta', '');
+    if ($cp === '' || !in_array($ct, ['leo', 'reinaldo'], true)) json_out(['ok' => false, 'error' => 'Campanha ou conta inválida.']);
+    meta_db()->prepare('INSERT OR REPLACE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute([$cp, $ct, now()]);
+    json_out(['ok' => true]);
+  }
   case 'anuncio-add': { // gasto com anúncio: dia (AAAA-MM-DD), valor, nota
     $db->exec('CREATE TABLE IF NOT EXISTS ad_gastos (id INTEGER PRIMARY KEY AUTOINCREMENT, dia TEXT NOT NULL, valor REAL NOT NULL, nota TEXT, created_at TEXT NOT NULL)');
     $dia = (string)(arg('dia', '')); if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dia)) $dia = date('Y-m-d');
