@@ -2,8 +2,12 @@
 // Vem do "Meu Palco" do Afina.ai (js/mystage.js), sem as partes de exercício.
 import { detectPitch } from './pitch.js?v=37';
 import { freqToMidi } from './music.js?v=38';
-// em inglês e alemão as notas são letras (C D E...); nas outras línguas fica Dó Ré Mi
-const NAMES = /^(en|de)/.test((globalThis.scI18n && globalThis.scI18n.lang) || '') ? ['C', 'C#', 'D', 'E♭', 'E', 'F', 'F#', 'G', 'A♭', 'A', 'B♭', 'B'] : ['Dó', 'Dó#', 'Ré', 'Mi♭', 'Mi', 'Fá', 'Fá#', 'Sol', 'Lá♭', 'Lá', 'Si♭', 'Si'];
+// em inglês e alemão as notas são letras (C D E...); espanhol/italiano Do Re Mi, francês Do Ré Mi, português Dó Ré Mi
+const NAMES = (() => { const l = (globalThis.scI18n && globalThis.scI18n.lang) || '';
+  if (/^(en|de)/.test(l)) return ['C', 'C#', 'D', 'E♭', 'E', 'F', 'F#', 'G', 'A♭', 'A', 'B♭', 'B'];
+  if (/^(es|it)/.test(l)) return ['Do', 'Do#', 'Re', 'Mi♭', 'Mi', 'Fa', 'Fa#', 'Sol', 'La♭', 'La', 'Si♭', 'Si'];
+  if (/^fr/.test(l)) return ['Do', 'Do#', 'Ré', 'Mi♭', 'Mi', 'Fa', 'Fa#', 'Sol', 'La♭', 'La', 'Si♭', 'Si'];
+  return ['Dó', 'Dó#', 'Ré', 'Mi♭', 'Mi', 'Fá', 'Fá#', 'Sol', 'Lá♭', 'Lá', 'Si♭', 'Si']; })();
 const MAJOR = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
 const MINOR = [6.33, 2.68, 3.52, 5.38, 2.6, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
 

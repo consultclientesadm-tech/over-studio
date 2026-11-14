@@ -4,7 +4,7 @@
    brasileira nunca muda. Textos que faltam no dicionário são avisados ao servidor (/api/i18n.php) para traduzir. */
 (function () {
   'use strict';
-  var V = 93265940; // sobe quando os dicionários mudam (tools/i18n-montar.mjs atualiza sozinho)
+  var V = 156639518; // sobe quando os dicionários mudam (tools/i18n-montar.mjs atualiza sozinho)
   var LANGS = { pt: 'Português (Brasil)', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano', 'pt-pt': 'Português (Portugal)' };
   var HTMLLANG = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr', de: 'de', it: 'it', 'pt-pt': 'pt-PT' };
   var BR_TZ = /^America\/(Sao_Paulo|Fortaleza|Recife|Bahia|Manaus|Belem|Cuiaba|Campo_Grande|Porto_Velho|Boa_Vista|Rio_Branco|Araguaina|Maceio|Santarem|Noronha|Eirunepe)$/;
@@ -209,7 +209,7 @@
     var host = document.querySelector('[data-lang-flags]');
     var bar = document.createElement('div'); bar.className = 'sc-flags'; bar.setAttribute('data-noi18n', ''); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Language');
     // faixa fina no topo da página (não fica por cima de nenhum botão)
-    bar.style.cssText = host ? 'display:flex;gap:6px;justify-content:center;margin:10px auto' : 'position:relative;z-index:50;display:flex;gap:10px;justify-content:center;align-items:center;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px;background:#000;border-bottom:1px solid rgba(255,214,0,.25)';
+    bar.style.cssText = host ? 'display:flex;gap:6px;justify-content:center;margin:10px auto' : 'position:relative;z-index:1;display:flex;gap:10px;justify-content:center;align-items:center;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px;background:#000;border-bottom:1px solid rgba(255,214,0,.25)';
     EU_LANGS.forEach(function (l) {
       var b = document.createElement('button'); b.type = 'button'; b.innerHTML = FLAGS[l]; b.title = FLAG_NAME[l]; b.setAttribute('aria-label', FLAG_NAME[l]);
       b.style.cssText = 'all:unset;cursor:pointer;display:block;line-height:0;border-radius:3px;overflow:hidden;width:30px;height:20px;outline:2px solid ' + (l === lang ? '#FFD600' : 'transparent') + ';outline-offset:1px;opacity:' + (l === lang ? '1' : '.8');
@@ -218,6 +218,8 @@
     });
     if (host) { host.appendChild(bar); return; }
     document.body.insertBefore(bar, document.body.firstChild);
+    // no app, o painel de afinação abre em tela cheia: a faixa some enquanto ele está aberto
+    var st = document.createElement('style'); st.textContent = 'body:has(.popopen) > .sc-flags{display:none!important}'; document.head.appendChild(st);
     // se a página tem cabeçalho grudado no topo, ele desce a altura da faixa para nada ficar escondido
     var h = bar.offsetHeight;
     [].forEach.call(document.querySelectorAll('body > header, body > .top, body > .topo, body > nav, header.top'), function (el) {

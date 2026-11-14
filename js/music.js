@@ -1,7 +1,11 @@
 // Conversões entre frequência, nota MIDI e nomes de notas em português.
 
-// em inglês e alemão as notas são letras (C D E...); nas outras línguas fica Dó Ré Mi
-const NAMES = /^(en|de)/.test((globalThis.scI18n && globalThis.scI18n.lang) || '') ? ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] : ['Dó', 'Dó#', 'Ré', 'Ré#', 'Mi', 'Fá', 'Fá#', 'Sol', 'Sol#', 'Lá', 'Lá#', 'Si'];
+// em inglês e alemão as notas são letras (C D E...); espanhol/italiano Do Re Mi, francês Do Ré Mi, português Dó Ré Mi
+const NAMES = (() => { const l = (globalThis.scI18n && globalThis.scI18n.lang) || '';
+  if (/^(en|de)/.test(l)) return ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  if (/^(es|it)/.test(l)) return ['Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'];
+  if (/^fr/.test(l)) return ['Do', 'Do#', 'Ré', 'Ré#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si'];
+  return ['Dó', 'Dó#', 'Ré', 'Ré#', 'Mi', 'Fá', 'Fá#', 'Sol', 'Sol#', 'Lá', 'Lá#', 'Si']; })();
 
 // Sílabas do solfejo de dó móvel, por distância em semitons da tônica
 const SOLFEGE = {

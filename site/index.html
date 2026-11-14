@@ -682,7 +682,7 @@ footer a { color: #888; }
 
   // VSL de fora do Brasil: cada língua tem o seu vídeo (assets/lp/vsl-<lingua>.mp4) quando estiver pronto.
   // Enquanto a língua não tem vídeo, a página não mostra o vídeo em português: fica a imagem do cantor, sem o botão.
-  const VSL_LANGS = []; const vlang = (window.scI18n && scI18n.lang) || 'pt';
+  const VSL_LANGS = ['en', 'es', 'fr', 'pt-pt']; const vlang = (window.scI18n && scI18n.lang) || 'pt';
   if (vlang !== 'pt' && !VSL_LANGS.includes(vlang)) { document.querySelectorAll('#vsl img.capa, #vsl img.fundo').forEach((i) => (i.src = '/assets/lp/depois.webp')); $('play').hidden = true; }
   else if (vlang !== 'pt') document.querySelectorAll('#vsl img.capa, #vsl img.fundo').forEach((i) => (i.src = '/assets/lp/vsl-capa-' + vlang + '.webp'));
   $('play').onclick = () => {
