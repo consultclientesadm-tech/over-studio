@@ -33,7 +33,12 @@ export async function exportVideo(o) {
 async function exportAny({ file, video, filter, amount = 1, channels, sr, start, end, leve = false, onProgress = () => {} }) {
   if (file && window.VideoEncoder && window.VideoDecoder) {
     try { return await exportFull({ file, filter, amount, channels, sr, start, end, leve, onProgress }); }
-    catch (e) { if (e.final) throw e; console.warn('gravação quadro a quadro falhou, usando a reserva:', e); }
+    catch (e) {
+      // o aparelho tirou o acesso ao arquivo: a reserva toca o mesmo arquivo e falharia igual. Devolve para o app,
+      // que tenta de novo com a cópia guardada no aparelho.
+      if (e.final || LEITURA.test(String(e.message) + ' ' + (e.name || ''))) throw e;
+      console.warn('gravação quadro a quadro falhou, usando a reserva:', e);
+    }
   }
   const type = exportType();
   if (!type) throw new Error('Este navegador não grava vídeo. Use o Chrome ou o Safari atualizados.');
@@ -91,6 +96,7 @@ async function exportAny({ file, video, filter, amount = 1, channels, sr, start,
   return { blob: new Blob(parts, { type: type.split(';')[0] }), ext, width: canvas.width, height: canvas.height };
 }
 
+const LEITURA = /could not be read|NotReadable|I\/O read operation|permission problems|file or directory could not be found|NotFoundError/i;
 const even = (n) => Math.max(2, Math.round(n / 2) * 2);
 
 // Junta os pedaços do arquivo em Blobs (ficam fora da memória do JavaScript sempre que o navegador pode).
@@ -118,7 +124,11 @@ function blobTarget(MB) {
 
 async function exportFull({ file, filter, amount, channels, sr, start, end, leve, onProgress }) {
   const MB = await import('./vendor/mediabunny/mediabunny.min.js');
-  const input = new MB.Input({ source: new MB.BlobSource(file), formats: MB.ALL_FORMATS });
+  // A leitura antecipada (segundo plano) do arquivo, quando falha, virava "erro do app" solto no iPhone
+  // ("The I/O read operation failed."). Agora só registra: se o pedaço for mesmo necessário, a leitura de verdade
+  // falha aqui dentro e a exportação trata (tenta com a cópia guardada).
+  let leituraFalhou = null;
+  const input = new MB.Input({ source: new MB.BlobSource(file, { handleUnhandledError: (e) => { leituraFalhou = e; console.warn('leitura antecipada do vídeo falhou:', e); } }), formats: MB.ALL_FORMATS });
   const vt = await input.getPrimaryVideoTrack();
   if (!vt || !(await vt.canDecode())) throw new Error('não decodifica este vídeo');
   const st = await vt.computePacketStats(120).catch(() => null);
@@ -186,7 +196,7 @@ async function exportFull({ file, filter, amount, channels, sr, start, end, leve
     frames++;
     onProgress(Math.min(0.99, t / (end - start)));
   }
-  if (!frames) throw new Error('nenhum quadro lido');
+  if (!frames) throw leituraFalhou || new Error('nenhum quadro lido');
   vs.close();
   await output.finalize();
   onProgress(1);

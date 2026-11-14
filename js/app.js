@@ -6,7 +6,7 @@ import * as cover from './pipeline.js?v=47';
 import { prefetchModel } from './studio.js?v=47';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
-import { exportVideo, exportType } from './export.js?v=40';
+import { exportVideo, exportType } from './export.js?v=41';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -127,7 +127,7 @@ $('audioFile').onchange = () => escolheu($('audioFile').files[0]);
 const isAudio = (f) => /^audio\//.test(f.type) || (!/^video\//.test(f.type) && /\.(mp3|m4a|aac|wav|ogg|flac|opus)$/i.test(f.name || ''));
 // o celular recarregou a página no meio? continua o mesmo vídeo, sem a pessoa precisar subir de novo
 setTimeout(async () => {
-  if (!resumeInfo) return;
+  if (!resumeInfo) { idb('readwrite', (st) => { st.delete('video'); st.delete('ref'); }).catch(() => {}); return; }
   let f = null, ref = null;
   try { f = await idb('readonly', (st) => st.get('video')); ref = await idb('readonly', (st) => st.get('ref')); } catch {}
   if (!f) return;
@@ -267,7 +267,9 @@ const RUN = 'sc-run';
 const ev = (k, d = {}) => { try { window.scLog && window.scLog(k, d); } catch {} };
 let runInfo = null;
 function note(patch) { if (!runInfo) return; Object.assign(runInfo, patch); try { localStorage.setItem(RUN, JSON.stringify(runInfo)); } catch {} }
-function endRun() { runInfo = null; const fp = forget(); try { localStorage.removeItem(RUN); localStorage.removeItem('sc-last'); } catch {} return fp; }
+// manterCopia: o vídeo abriu. A cópia guardada no aparelho fica até a página fechar: se o celular tirar o acesso ao
+// arquivo original durante a exportação (iPhone: "The I/O read operation failed."), o vídeo sai da cópia.
+function endRun(manterCopia = false) { runInfo = null; const fp = manterCopia ? idb('readwrite', (st) => { st.delete('ref'); st.delete('pendente'); }).catch(() => {}) : forget(); try { localStorage.removeItem(RUN); localStorage.removeItem('sc-last'); } catch {} return fp; }
 try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
   const celular = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
@@ -346,7 +348,7 @@ async function start(f, tries = 1) {
     ev('abriu', { seg: Math.round((performance.now() - t0) / 1000), dur: Math.round(state.duration || 0), mb: Math.round(f.size / 1048576), vozes: state.voices?.count || 1, junto: state.voices?.together || 0 });
     if (window.scOk) window.scOk(); // teste grátis: conta aqui, quando a pessoa já vê e ouve o antes e depois
     if (state.cortado) toast(`Seu vídeo tem ${fmt(state.cortado)}. Usei os primeiros ${MAX_SEC / 60} minutos (o limite por vídeo). Se quiser outro trecho, corte no celular e suba de novo.`, 9000);
-    const fp = endRun();
+    const fp = endRun(true);
     // teste grátis: guarda o vídeo no aparelho; se a pessoa comprar e a página recarregar, ele sai pronto de novo sem subir outra vez
     if (window.scTeste && window.scTeste()) fp.then(() => idb('readwrite', (st) => st.put(f, 'pendente'))).catch(() => {});
   } catch (e) {
@@ -1043,8 +1045,21 @@ $('exportBtn').onclick = async () => {
   try {
     const ch = mastered ? mastered.channels : cover.rawMix(state, state.parts ? voiceDb('e').map(dbG) : null);
     const s = mastered ? mastered.start : 0, e = mastered ? mastered.end : state.duration;
-    const out = await exportVideo({ file, video, filter: currentFilter(), amount, channels: ch, sr: cover.SR, start: s, end: e, leve: leve(),
+    const gravar = () => exportVideo({ file, video, filter: currentFilter(), amount, channels: ch, sr: cover.SR, start: s, end: e, leve: leve(),
       onProgress: (p) => { $('exportBar').firstElementChild.style.width = Math.round(p * 100) + '%'; } });
+    let out;
+    try { out = await gravar(); } catch (err) {
+      // o celular tirou o acesso ao vídeo original (app em segundo plano, vídeo do iCloud): grava de novo a partir da cópia guardada
+      if (!LEITURA.test(String(err.message) + ' ' + (err.name || ''))) throw err;
+      let copia = null;
+      try { copia = await idb('readonly', (st) => st.get('video')); if (copia && copia.size !== file.size) copia = null; if (copia) await copia.slice(0, 65536).arrayBuffer(); } catch { copia = null; }
+      if (!copia) { ev('erro', { etapa: 'exportar', msg: String(err.message).slice(0, 160), causa: 'sem copia' }); pesado(''); $('exportBtn').disabled = false;
+        aviso('O celular perdeu o acesso a esse vídeo', 'O aparelho não deixou mais o app ler o vídeo original para gravar o vídeo final. Isso acontece quando o vídeo está na nuvem (iCloud, Google Fotos) ou quando o app fica em segundo plano.', ['Toque em <b>Exportar</b> de novo com o app aberto na tela', 'Se não der, abra o vídeo na galeria, espere baixar inteiro e toque em <b>Novo vídeo</b>', 'Você também pode baixar só o áudio pronto (WAV) e juntar no editor']); return; }
+      console.warn('arquivo original ilegível na exportação; usando a cópia guardada');
+      const nome = file.name; file = copia.name ? copia : new File([copia], nome || 'video', { type: copia.type });
+      const t = video.currentTime; URL.revokeObjectURL(video.src); video.src = URL.createObjectURL(file); video.load(); kick(); await videoReady(); video.currentTime = t;
+      out = await gravar();
+    }
     const a = $('download');
     a.href = URL.createObjectURL(out.blob);
     a.download = `${(file.name || 'cover').replace(/\.[^.]+$/, '')}-studio-cover.${out.ext}`;
