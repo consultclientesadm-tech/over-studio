@@ -261,3 +261,54 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
   .vtab .vmute { min-width: 46px; }
   .vbtabs:has(.vall) .vtab::before, .vbtabs:has(.vall) .vtab .vsel small { display: none !important; }
 }
+
+/* ===== Entrada (v40): perguntas numeradas, Sim/Não, botões com contorno ===== */
+.passo-h { display: flex; align-items: center; gap: 10px; margin: 18px 0 8px; text-align: left; }
+.passo-h span { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--keyy); color: #000; font: 700 13px var(--mono, monospace); box-shadow: var(--keyysh); }
+.passo-h b { font: 700 15.5px 'Space Grotesk', sans-serif; color: var(--ink); letter-spacing: 0; }
+.passo-h em { font-style: normal; margin-left: auto; padding: 3px 8px; border-radius: 6px; border: 1px solid #3a3a44; color: #b9b9c4; font: 600 10.5px var(--mono, monospace); letter-spacing: .1em; text-transform: uppercase; }
+.simnao { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.simnao .sn { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 13px 14px 12px 36px; border-radius: 14px; border: 1.5px solid #4a4a55; background: linear-gradient(#1d1d23, #141418); color: var(--ink); text-align: left; font: inherit; cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 3px 0 #000, 0 6px 16px rgba(0, 0, 0, .5); }
+.simnao .sn b { font: 700 17px 'Space Grotesk', sans-serif; }
+.simnao .sn small { color: #b0b0bb; font-size: 12px; line-height: 1.3; }
+.simnao .sn .snled { position: absolute; left: 14px; top: 17px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #55555f; background: #000; }
+.simnao .sn.on { border-color: var(--y); background: linear-gradient(#2a2410, #17150c); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 0 0 1px rgba(255, 212, 0, .35), 0 0 22px rgba(255, 212, 0, .22); }
+.simnao .sn.on b { color: var(--y); }
+.simnao .sn.on .snled { border-color: var(--y); background: var(--y); box-shadow: 0 0 8px var(--y); }
+.simnao .sn:active { transform: translateY(2px); }
+/* contorno claro em tudo que é clicável na entrada */
+.home .drop { border: 1.5px solid rgba(255, 212, 0, .6) !important; box-shadow: inset 0 0 0 5px #111115, 0 0 0 1px rgba(255, 212, 0, .12), 0 0 26px rgba(255, 212, 0, .14), 0 6px 20px rgba(0, 0, 0, .5) !important; }
+.home .audioonly, .home .refcard:not(.mini), .home .mancard { border: 1.5px solid #4a4a55 !important; background: linear-gradient(#1b1b21, #131317) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 3px 0 #000, 0 6px 16px rgba(0, 0, 0, .45) !important; }
+.home .refcard:not(.mini) { border-color: rgba(255, 212, 0, .45) !important; }
+.home .audioonly:hover, .home .refcard:not(.mini):hover, .home .mancard:hover { border-color: var(--y) !important; }
+.home .audioonly::after, .home .refcard:not(.mini)::after, .home .mancard::after { content: '›'; margin-left: auto; padding-left: 6px; color: var(--y); font: 700 22px 'Space Grotesk', sans-serif; line-height: 1; }
+.home .reqcard { margin-top: 14px; opacity: .85; }
+@media (max-width: 480px) { .passo-h { margin: 14px 0 7px; } .simnao .sn { padding: 11px 10px 10px 32px; } .simnao .sn .snled { left: 11px; top: 15px; } .simnao .sn b { font-size: 16px; } }
+
+/* ===== Manual: o Fechar fica abaixo da barra do celular e há mais formas de sair ===== */
+.man-ov { padding-top: calc(12px + env(safe-area-inset-top, 0px)) !important; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; z-index: 120 !important; }
+.man { max-height: none !important; }
+.man-h { padding: 10px 12px !important; }
+.man-x { min-height: 44px; padding: 0 16px !important; background: var(--keyy) !important; color: #000 !important; border: 0 !important; font-weight: 800 !important; box-shadow: var(--keyysh) !important; }
+.man-x .ic { stroke-width: 2.6; }
+.man-sair { width: 100%; min-height: 48px; margin-top: 6px; font-weight: 700; }
+.man-nav { flex-wrap: wrap; }
+.man-nav .pill[data-x] { flex: 0 0 auto; padding: 0 14px; }
+
+/* ===== Carregando: a logo (quadrado amarelo) e a onda sonora se desenhando de 0 a 100% ===== */
+.logoload { display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 0 auto; }
+.ll-key { position: relative; width: 136px; height: 136px; border-radius: 34px; background: var(--keyy); padding: 22px; overflow: hidden;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), 0 4px 0 #8a6f00, 0 0 40px rgba(255, 212, 0, .35); animation: llpulse 1.8s ease-in-out infinite; }
+.ll-key::after { content: ''; position: absolute; inset: -40% auto -40% -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .45), transparent); transform: skewX(-18deg); animation: llshine 2.4s ease-in-out infinite; }
+.ll-key svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.ll-key path { fill: none; stroke: #000; stroke-linecap: round; stroke-linejoin: round; }
+.ll-d { stroke-width: 1.7; }
+.ll-w0 { stroke-width: 1.9; opacity: .2; }
+.ll-w { stroke-width: 2.1; stroke-dasharray: 327; stroke-dashoffset: 327; transition: stroke-dashoffset .35s ease; }
+#ringPct { position: static; font: 700 15px var(--mono, monospace); color: var(--y); letter-spacing: .08em; }
+@keyframes llpulse { 0%, 100% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), 0 4px 0 #8a6f00, 0 0 26px rgba(255, 212, 0, .25); } 50% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), 0 4px 0 #8a6f00, 0 0 56px rgba(255, 212, 0, .5); } }
+@keyframes llshine { 0% { left: -60%; } 60%, 100% { left: 130%; } }
+@media (prefers-reduced-motion: reduce) { .ll-key, .ll-key::after { animation: none; } }
+.ll-key::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--p, 0) * 1%); background: linear-gradient(rgba(138, 111, 0, .0), rgba(138, 111, 0, .28)); border-top: 2px solid rgba(0, 0, 0, .18); transition: height .35s ease; pointer-events: none; }
+.ll-key svg { position: relative; z-index: 1; }

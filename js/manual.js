@@ -19,16 +19,17 @@ function build() {
   ov = document.createElement('div');
   ov.className = 'man-ov'; ov.hidden = true;
   ov.innerHTML = `<div class="man" role="dialog" aria-modal="true" aria-label="Manual do usuário">
-    <header class="man-h"><b>${window.ic ? window.ic('book') : ''} Manual do usuário</b><button type="button" class="pill" data-x>${window.ic ? window.ic('close') : ''} Fechar</button></header>
+    <header class="man-h"><b>${window.ic ? window.ic('book') : ''} Manual do usuário</b><button type="button" class="pill man-x" data-x aria-label="Fechar o manual">${window.ic ? window.ic('close') : ''} Fechar</button></header>
     <div class="man-list">
       <p class="man-sub">Vídeos curtos, sem som. Toque num para assistir.</p>
       ${VIDEOS.map((v, i) => `<button type="button" class="man-item" data-i="${i}"><span class="man-img"><img alt="" data-src="${BASE}${v.id}.jpg?v=${V}"><i>${window.ic ? window.ic('play') : ''}</i></span>
         <span class="man-txt"><b>${i + 1}. ${v.t}</b><small>${v.d}</small>${v.s ? `<em>${dur(v.s)}</em>` : ''}</span></button>`).join('')}
+      <button type="button" class="pill man-sair" data-x>Fechar o manual e voltar ao app</button>
     </div>
     <div class="man-play" hidden>
       <div class="man-vt"><b></b></div>
       <video playsinline controls preload="none"></video>
-      <div class="man-nav"><button type="button" class="pill" data-back>← Todos os vídeos</button><button type="button" class="pill" data-next>Próximo →</button></div>
+      <div class="man-nav"><button type="button" class="pill" data-x>Fechar</button><button type="button" class="pill" data-back>← Todos os vídeos</button><button type="button" class="pill" data-next>Próximo →</button></div>
     </div>
   </div>`;
   document.getElementById('app').appendChild(ov);
@@ -39,6 +40,7 @@ function build() {
     if (e.target.closest('[data-next]')) return play((cur + 1) % VIDEOS.length);
     const it = e.target.closest('.man-item'); if (it) play(+it.dataset.i);
   });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ov.hidden) close(); });
   vid.addEventListener('ended', () => { ov.querySelector('[data-next]').classList.add('on'); });
 }
 function list() {
