@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css?v=44">
-<link rel="stylesheet" href="css/rack.css?v=1">
+<link rel="stylesheet" href="css/rack.css?v=2">
 <script src="js/icons.js?v=1"></script>
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
@@ -34,7 +34,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v39</small></div>
+    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v40</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm manbtn" id="manBtn" title="Manual do usuário: vídeos curtos de cada função"><i data-ic="book"></i><span>Manual</span></button>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda" aria-label="Ajuda"><i data-ic="help"></i></button>
@@ -45,7 +45,20 @@
   <section class="screen home" id="home">
     <div class="hero">
       <h1>Seu cover com <em>som de estúdio</em><br>e cara de cinema.</h1>
-      <p>Grave no celular, suba aqui. Você vai em 5 passos: vídeo, afinação, mix e master, cor e exportar. Em cada passo dá para comparar com o original e desfazer.</p>
+      <p>Responda as duas perguntas e escolha o seu vídeo. Depois são 5 passos: vídeo, afinação, mix e master, cor e exportar. Em cada passo dá para comparar e desfazer.</p>
+      <div class="passo-h"><span>1</span><b>A sua música tem instrumental ou playback?</b></div>
+      <div class="simnao" id="sepPick" role="radiogroup" aria-label="A sua música tem instrumental ou playback?" data-help="Sim: no vídeo tem violão, banda ou playback junto com a voz. A IA separa a sua voz para afinar só ela. Não: você cantou só com a voz (à capela).">
+        <button type="button" class="sn on" data-sep="1" role="radio" aria-checked="true"><i class="snled"></i><b>Sim</b><small>Tem violão, banda ou playback junto</small></button>
+        <button type="button" class="sn" data-sep="0" role="radio" aria-checked="false"><i class="snled"></i><b>Não</b><small>Só a minha voz, sem música</small></button>
+        <input type="checkbox" id="optSeparate" checked hidden>
+      </div>
+      <div class="passo-h"><span>2</span><b>Música do cantor original</b><em>opcional</em></div>
+      <label class="refcard" id="refPick" data-help="Opcional. Suba o MP3 ou vídeo da música original (do cantor que você está cantando). O app lê a melodia dela, passa para o seu tom e afina cada nota sua por ela. Sem a original, o app afina pela escala do tom da música.">
+        <input type="file" id="refFile" accept="audio/*,video/*" hidden>
+        <span class="upic"><i data-ic="note"></i></span>
+        <span><b>Subir a música do cantor original</b><small id="refName">A gente pega a melodia do cantor no seu tom e afina você por ela.</small></span>
+      </label>
+      <div class="passo-h"><span>3</span><b>Escolha o seu vídeo</b></div>
       <label class="drop" id="drop">
         <input type="file" id="file" accept="video/*" hidden>
         <span class="droprow"><span class="dropvu" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="dropicon"><i data-ic="upload"></i></span><span class="dropvu r" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
@@ -67,20 +80,12 @@
         </ul>
         <p class="reqmeu" id="reqMeuApp"></p>
       </details>
-      <div class="opts">
-        <label class="switch" data-help="Deixe ligado se no vídeo tem violão, banda ou playback junto com a voz. A IA separa a voz do instrumental para afinar só a voz. Desligue se você cantou à capela."><input type="checkbox" id="optSeparate" checked><span></span> Tem instrumental ou playback (separar a voz)</label>
-      </div>
-      <label class="refcard" id="refPick" data-help="Opcional. Suba o MP3 ou vídeo da música original (do cantor que você está cantando). O app lê a melodia dela, passa para o seu tom e afina cada nota sua por ela. Sem a original, o app afina pela escala do tom da música.">
-        <input type="file" id="refFile" accept="audio/*,video/*" hidden>
-        <span class="upic"><i data-ic="note"></i></span>
-        <span><b>Subir a música original</b><small id="refName">Opcional: a gente pega a melodia do cantor original no seu tom e afina você por ela.</small></span>
-      </label>
     </div>
   </section>
 
   <!-- Preparando (separação da voz) -->
   <section class="screen work" id="work">
-    <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="ringBar" cx="60" cy="60" r="52"/></svg><span id="ringPct">0%</span></div>
+    <div class="logoload" aria-hidden="true"><div class="ll-key"><svg viewBox="0 0 24 24"><path class="ll-d" d="M12 1.5l10.5 10.5L12 22.5 1.5 12z"/><path class="ll-w0" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/><path id="ringBar" class="ll-w" pathLength="327" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/></svg></div><span id="ringPct">0%</span></div>
     <h2 id="workStep">Preparando…</h2>
     <p class="eta" id="eta"></p>
     <ol class="steps" id="steps">
@@ -237,7 +242,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=62"></script>
+<script type="module" src="js/app.js?v=63"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

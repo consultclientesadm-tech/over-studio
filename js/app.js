@@ -93,6 +93,11 @@ const mixOpts = () => ({ voiceGains: voiceDb(), voiceDb: +$('mVoice').value, bed
 // ---------- 1) Vídeo ----------
 const drop = $('drop');
 $('file').onchange = () => $('file').files[0] && start($('file').files[0]);
+// Pergunta 1 da entrada: tem instrumental ou playback? (Sim = separa a voz, Não = só voz)
+document.querySelectorAll('#sepPick .sn').forEach((b) => { b.onclick = () => {
+  const sim = b.dataset.sep === '1'; $('optSeparate').checked = sim;
+  document.querySelectorAll('#sepPick .sn').forEach((x) => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
+}; });
 $('audioFile').onchange = () => $('audioFile').files[0] && start($('audioFile').files[0]);
 // Só o áudio: a pessoa tirou o som do vídeo e sobe ele; no fim baixa o áudio pronto e junta no editor
 const isAudio = (f) => /^audio\//.test(f.type) || (!/^video\//.test(f.type) && /\.(mp3|m4a|aac|wav|ogg|flac|opus)$/i.test(f.name || ''));
@@ -200,7 +205,7 @@ function progress(st, p) {
   }
   if (st === 'separate' && progress.sepStart == null) progress.sepStart = el;
   if (st !== 'separate' && st !== 'download') $('eta').textContent = '';
-  $('ringBar').style.strokeDashoffset = 327 * (1 - v / 100);
+  $('ringBar').style.strokeDashoffset = 327 * (1 - v / 100); $('ringBar').closest('.ll-key')?.style.setProperty('--p', v);
   $('ringPct').textContent = v + '%';
   $('workStep').textContent = st === 'download' && p >= 1 ? 'Ligando a IA' : LABEL[st] || '';
   const order = Object.keys(W), alias = { ref: 'refsep', refnotes: 'refsep' };
@@ -326,7 +331,7 @@ async function convertVideo() {
   note({ stage: 'Convertendo o vídeo para este navegador', pct: 99 });
   $('workStep').textContent = 'Preparando a imagem do vídeo para este navegador (só neste caso)';
   $('eta').textContent = '';
-  const ring = (p) => { $('ringBar').style.strokeDashoffset = 327 * (1 - p); $('ringPct').textContent = Math.round(p * 100) + '%'; };
+  const ring = (p) => { $('ringBar').style.strokeDashoffset = 327 * (1 - p); $('ringBar').closest('.ll-key')?.style.setProperty('--p', Math.round(p * 100)); $('ringPct').textContent = Math.round(p * 100) + '%'; };
   ring(0);
   try {
     const tc = performance.now();
@@ -968,7 +973,7 @@ document.addEventListener('click', (e) => {
 }, true);
 $('tipOk').onclick = () => ($('tip').hidden = true);
 // Manual do usuário (vídeos curtos): o código e os vídeos só carregam quando a pessoa abre
-const abrirManual = (id) => { ev('manual', { tela: app.dataset.screen || '' }); import('./manual.js?v=1').then((m) => m.openManual(id, (v) => ev('manual_video', { video: v }))).catch(() => toast('Não deu para abrir o manual. Confira a internet e tente de novo.')); };
+const abrirManual = (id) => { ev('manual', { tela: app.dataset.screen || '' }); import('./manual.js?v=2').then((m) => m.openManual(id, (v) => ev('manual_video', { video: v }))).catch(() => toast('Não deu para abrir o manual. Confira a internet e tente de novo.')); };
 $('manBtn').onclick = () => abrirManual();
 $('manHome').onclick = () => abrirManual();
 $('helpBtn').onclick = () => {
