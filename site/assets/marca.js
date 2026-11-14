@@ -1,33 +1,42 @@
-// Logo animada do Studio Cover (losango girando, barras de som pulsando, órbita com brilho) + fundo de estrelas.
+// Logo animada do Studio Cover (tecla amarela com losango e onda: a onda corre, o brilho passa, o halo respira) + fundo de estrelas.
 // Uso: <div class="marca"></div> e <canvas class="estrelas"></canvas>; chame Marca.montar().
 window.Marca = {
+  // logo nova (2026-11): tecla amarela com o losango e a onda; a onda corre, o losango se desenha, um brilho passa e o halo respira
   svg() {
+    const u = 'mk' + Math.random().toString(36).slice(2, 7);
     return `<svg class="marca-svg" viewBox="-160 -160 320 320" aria-label="Studio Cover">
   <defs>
-    <radialGradient id="mg" r="0.6"><stop offset="0" stop-color="#ffd400" stop-opacity=".35"/><stop offset="1" stop-color="#ffd400" stop-opacity="0"/></radialGradient>
-    <linearGradient id="ml" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6b0"/><stop offset=".45" stop-color="#ffd400"/><stop offset="1" stop-color="#ff9d00"/></linearGradient>
-    <filter id="mb" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <radialGradient id="${u}h" r="0.6"><stop offset="0" stop-color="#ffd400" stop-opacity=".45"/><stop offset="1" stop-color="#ffd400" stop-opacity="0"/></radialGradient>
+    <linearGradient id="${u}k" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe14d"/><stop offset="1" stop-color="#f2c400"/></linearGradient>
+    <linearGradient id="${u}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <clipPath id="${u}c"><rect x="-96" y="-96" width="192" height="192" rx="44"/></clipPath>
   </defs>
-  <circle r="150" fill="url(#mg)" class="m-halo"/>
-  <g class="m-orbita"><ellipse rx="138" ry="46" fill="none" stroke="rgba(255,212,0,.35)" stroke-width="1.5" stroke-dasharray="4 7"/><circle cx="138" r="5" fill="#ffd400" filter="url(#mb)"/></g>
-  <g class="m-orbita m-o2"><ellipse rx="128" ry="40" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/><circle cx="-128" r="3.5" fill="#fff"/></g>
-  <g class="m-losango" filter="url(#mb)"><rect x="-62" y="-62" width="124" height="124" rx="16" transform="rotate(45)" fill="none" stroke="url(#ml)" stroke-width="12"/></g>
-  <g class="m-barras" fill="url(#ml)">
-    <rect x="-33" y="-15" width="11" height="30" rx="5.5"/><rect x="-15" y="-30" width="11" height="60" rx="5.5"/><rect x="3" y="-40" width="11" height="80" rx="5.5"/><rect x="21" y="-20" width="11" height="40" rx="5.5"/>
+  <circle r="155" fill="url(#${u}h)" class="m-halo"/>
+  <g class="m-tecla">
+    <rect x="-96" y="-88" width="192" height="192" rx="44" fill="#8a6f00"/>
+    <rect x="-96" y="-96" width="192" height="192" rx="44" fill="url(#${u}k)"/>
+    <rect x="-96" y="-96" width="192" height="192" rx="44" fill="none" stroke="#fff6b0" stroke-opacity=".7" stroke-width="2.5"/>
+    <g clip-path="url(#${u}c)"><rect class="m-brilho" x="-60" y="-140" width="50" height="280" fill="url(#${u}s)" transform="skewX(-18)"/></g>
+    <g transform="scale(5.6) translate(-12 -12)" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
+      <path class="m-los" d="M12 1.5l10.5 10.5L12 22.5 1.5 12z" stroke-width="1.9" pathLength="100"/>
+      <path d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6" stroke-width="2" opacity=".18"/>
+      <path class="m-onda" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6" stroke-width="2.2"/>
+    </g>
   </g>
 </svg>`;
   },
   css: `.marca-svg{width:100%;height:100%;overflow:visible}
-.m-losango{transform-origin:0 0;animation:mGira 9s cubic-bezier(.6,0,.4,1) infinite}
-.m-orbita{transform-origin:0 0;animation:mOrb 6s linear infinite}.m-o2{animation-duration:9s;animation-direction:reverse}
-.m-halo{animation:mPulsa 2.4s ease-in-out infinite}
-.m-barras rect{transform-box:fill-box;transform-origin:center;animation:mBar 1.1s ease-in-out infinite}
-.m-barras rect:nth-child(2){animation-delay:-.3s}.m-barras rect:nth-child(3){animation-delay:-.6s}.m-barras rect:nth-child(4){animation-delay:-.85s}
-@keyframes mGira{0%,15%{transform:rotate(0)}45%,65%{transform:rotate(180deg)}95%,100%{transform:rotate(360deg)}}
-@keyframes mOrb{to{transform:rotate(360deg)}}
-@keyframes mPulsa{50%{opacity:.45;transform:scale(.92)}}
-@keyframes mBar{50%{transform:scaleY(.35)}}
-@media (prefers-reduced-motion:reduce){.m-losango,.m-orbita,.m-halo,.m-barras rect{animation:none}}`,
+.m-tecla{transform-origin:0 0;animation:mResp 2.6s ease-in-out infinite}
+.m-halo{transform-origin:0 0;animation:mPulsa 2.6s ease-in-out infinite}
+.m-onda{stroke-dasharray:16 16;animation:mOnda 1.4s linear infinite}
+.m-los{stroke-dasharray:100;animation:mLos 1.6s ease-out both}
+.m-brilho{animation:mBrilho 3.2s ease-in-out infinite}
+@keyframes mResp{50%{transform:scale(1.045)}}
+@keyframes mPulsa{50%{opacity:.5;transform:scale(.9)}}
+@keyframes mOnda{from{stroke-dashoffset:32}to{stroke-dashoffset:0}}
+@keyframes mLos{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+@keyframes mBrilho{0%{transform:translateX(-120px) skewX(-18deg)}55%,100%{transform:translateX(260px) skewX(-18deg)}}
+@media (prefers-reduced-motion:reduce){.m-tecla,.m-halo,.m-onda,.m-los,.m-brilho{animation:none}}`,
   montar() {
     if (!document.getElementById('marca-css')) { const s = document.createElement('style'); s.id = 'marca-css'; s.textContent = this.css; document.head.appendChild(s); }
     document.querySelectorAll('.marca').forEach((el) => (el.innerHTML = this.svg()));

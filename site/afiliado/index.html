@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#050506">
 <meta name="robots" content="noindex">
 <title>Painel do Afiliado · Studio Cover</title>
-<link rel="icon" href="/assets/logo.svg">
+<link rel="icon" href="/assets/logo.svg?v=2">
 <link rel="manifest" href="/afiliado/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/afiliado/icon-180.png">
+<link rel="apple-touch-icon" href="/afiliado/icon-180.png?v=2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SC Afiliado">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,6 +90,7 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; font-size: 13px; color: var(--mut); line-height: 1.5; } .check input { width: 18px; height: 18px; flex: none; margin-top: 1px; accent-color: var(--y); }
 .hp { position: absolute; left: -9999px; }
 @media (max-width: 760px) { .grid3, .regras { grid-template-columns: 1fr; } .rot dl { grid-template-columns: 1fr; gap: 2px; } .rot dd { margin-bottom: 8px; } .passo { grid-template-columns: 36px 1fr; gap: 10px; } .passo .num { width: 36px; height: 36px; font-size: 14px; } }
+.marca { display: flex; align-items: center; gap: 10px; } .marca .mk { width: 40px; height: 40px; flex: none; }
 </style>
 <link rel="stylesheet" href="/assets/rack-skin.css?v=1">
 <script src="/assets/icons.js?v=1"></script>
@@ -98,7 +99,7 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 </head>
 <body>
 <div class="w">
-  <header><div class="marca">STUDIO <em>COVER</em><small>PAINEL DO AFILIADO</small></div><span class="hacts"><button class="sair aviso" id="avisoBtn" hidden>💰 Aviso de venda</button><button class="sair" id="sair" hidden>Sair</button></span></header>
+  <header><div class="marca"><span class="mk"></span><span>STUDIO <em>COVER</em><small>PAINEL DO AFILIADO</small></span></div><span class="hacts"><button class="sair aviso" id="avisoBtn" hidden>💰 Aviso de venda</button><button class="sair" id="sair" hidden>Sair</button></span></header>
 
   <div class="box" id="vLogin" hidden><div class="card">
     <h1>Entrar</h1><p class="sub">Acompanhe os seus cliques, cadastros e vendas.</p>
@@ -253,7 +254,7 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
           <a class="btn sm ghost" href="/assets/lp/antes.mp3" download>🔈 Áudio antes</a>
           <a class="btn sm ghost" href="/assets/lp/depois.mp3" download>🔊 Áudio depois</a>
           <a class="btn sm ghost" href="/assets/produto-capa.jpg" download>🖼️ Imagem do produto</a>
-          <a class="btn sm ghost" href="/assets/lp/painel.webp" download>🖼️ Tela do painel</a>
+          <a class="btn sm ghost" href="/assets/lp/painel.webp?v=3" download>🖼️ Tela do painel</a>
           <a class="btn sm ghost" href="/assets/lp/antes.webp" download>🖼️ Tela antes</a>
           <a class="btn sm ghost" href="/assets/lp/depois.webp" download>🖼️ Tela depois</a>
         </div>
@@ -401,5 +402,7 @@ if (tk) {
   });
 } else if (new URLSearchParams(location.search).has('cadastro')) { api('painel').then((j) => (j.ok ? painel() : ver('vCadastro'))); } else painel();
 </script>
+<script src="/assets/marca.js?v=2"></script>
+<script>(function () { if (!window.Marca) return; var st = document.createElement('style'); st.textContent = Marca.css; document.head.appendChild(st); document.querySelectorAll('.marca .mk').forEach(function (e) { e.innerHTML = Marca.svg(); }); })();</script>
 </body>
 </html>

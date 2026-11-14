@@ -101,7 +101,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
         ${safari ? '' : '<p style="color:#ffd400">Abra este link no <b>Safari</b> para instalar (copie o endereço <b>studiocover.com.br/app</b> e cole no Safari).</p>'}
         <div class="sc-ios"><div><span>1</span>${shareIcon}<p style="margin:0">Toque em <b>Compartilhar</b> na barra do Safari</p></div>
         <div><span>2</span>${addIcon}<p style="margin:0">Role e toque em <b>Adicionar à Tela de Início</b></p></div>
-        <div><span>3</span><img src="/assets/icon-180.png" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Toque em <b>Adicionar</b> e abra pelo ícone novo. Pronto!</p></div></div>
+        <div><span>3</span><img src="/assets/icon-180.png?v=2" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Toque em <b>Adicionar</b> e abra pelo ícone novo. Pronto!</p></div></div>
         <button class="sc-b2" data-fechar>Entendi</button>`);
       return;
     }
@@ -111,7 +111,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       ${chrome ? '' : `<p style="color:#ffd400">Para instalar, abra no <b>Chrome</b>:</p><a class="sc-b" href="${abrirChrome}">ABRIR NO CHROME</a>`}
       <div class="sc-ios"><div><span>1</span><p style="margin:0">No Chrome, toque nos <b>⋮ três pontinhos</b> (em cima, à direita)</p></div>
       <div><span>2</span>${addIcon}<p style="margin:0">Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b></p></div>
-      <div><span>3</span><img src="/assets/icon-180.png" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Confirme e abra pelo ícone novo. Pronto!</p></div></div>
+      <div><span>3</span><img src="/assets/icon-180.png?v=2" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Confirme e abra pelo ícone novo. Pronto!</p></div></div>
       <button class="sc-b2" data-fechar>Entendi</button>`);
   }
   // cliente pago usando pelo navegador do celular: lembra de instalar (bem visível), no máximo 1 vez a cada 12 h
