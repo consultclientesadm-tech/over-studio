@@ -71,9 +71,9 @@ function ad_gastos_conta(PDO $db): void {
 // ROI por conta de anúncio no período: gasto lançado x vendas que vieram de anúncio do Meta com a campanha daquela conta
 function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'): array {
   ad_gastos_conta($db);
+  try { meta_db()->prepare('INSERT OR IGNORE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute(['criativo1-teste-gratis', 'leo', now()]); } catch (Throwable $e) {} // post "comenta" do Leo (anúncio na Meu Gestor Pro, 13/11)
   $g = $db->prepare('SELECT conta, SUM(valor) v FROM ad_gastos WHERE dia >= ? AND dia <= ? GROUP BY conta'); $g->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
   $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido, created_at FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads', 'comentarios-ig')"); $s->execute([$since, $ate]);
-  try { meta_db()->prepare('INSERT OR IGNORE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute(['criativo1-teste-gratis', 'leo', now()]); } catch (Throwable $e) {} // post "comenta" do Leo (anúncio na Meu Gestor Pro, 13/11)
   $mapa = []; try { foreach (meta_db()->query('SELECT campanha, conta FROM meta_campanhas')->fetchAll(PDO::FETCH_NUM) as [$cp, $ct]) $mapa[$cp] = $ct; } catch (Throwable $e) {}
   // de quem é a venda de anúncio: campanha começando com leo-/reinaldo- ou uma campanha que está no link de um anúncio daquela conta
   // (a Eduzz corta o rastreio em 40 letras, então vale o começo do nome)
@@ -130,8 +130,17 @@ function or_relatorio(int $dias, string $dia = ''): array {
   $vis = $db->prepare('SELECT pagina, fonte, campanha, COUNT(*) n FROM visitas WHERE created_at >= ? AND created_at <= ? GROUP BY pagina, fonte, campanha'); $vis->execute([$since, $ate]);
   $cad = $db->prepare("SELECT origem, COUNT(*) n FROM users WHERE source = 'trial' AND created_at >= ? AND created_at <= ? GROUP BY origem"); $cad->execute([$since, $ate]);
   $ven = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, or_caminho, COUNT(*) n, COALESCE(SUM(liquido), 0) l FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? GROUP BY or_pagina, or_fonte, or_campanha, or_caminho"); $ven->execute([$since, $ate]);
+  try { meta_db()->prepare('INSERT OR IGNORE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute(['criativo1-teste-gratis', 'leo', now()]); } catch (Throwable $e) {} // post "comenta" do Leo (anúncio na Meu Gestor Pro, 13/11)
+  $mapa = []; try { foreach (meta_db()->query('SELECT campanha, conta FROM meta_campanhas')->fetchAll(PDO::FETCH_NUM) as [$cp, $ct]) $mapa[$cp] = $ct; } catch (Throwable $e) {}
+  // comentário→direct de post turbinado por uma conta (ex.: criativo1-teste-gratis, post do Leo na Meu Gestor Pro) aparece como
+  // anúncio daquela conta, igual aos anúncios com link: "Anúncio Meta · leo-ads"
+  $norm = function (string $f, string $c) use ($mapa): array {
+    if (in_array($f, ['comentarios-ig', 'instagram'], true) && isset($mapa[$c])) return ['anuncio-meta', $mapa[$c] . '-ads'];
+    return [$f, $c];
+  };
   $rows = [];
-  $add = function (string $p, string $f, string $c, string $k, $v) use (&$rows) {
+  $add = function (string $p, string $f, string $c, string $k, $v) use (&$rows, $norm) {
+    [$f, $c] = $norm($f, $c);
     $p = $p === '' ? 'sem-rastreio' : $p;
     $key = "$p|$f|$c";
     $rows[$key] ??= ['pagina' => $p, 'fonte' => $f, 'campanha' => $c, 'visitas' => 0, 'cadastros' => 0, 'vendas' => 0, 'liquido' => 0.0, 'direta' => 0, 'teste' => 0, 'afiliado' => 0];
@@ -150,8 +159,8 @@ function or_relatorio(int $dias, string $dia = ''): array {
   $ult->execute([$since, $ate]);
   $anun = or_anuncios($db, $since, $ate);
   // de qual conta de anúncio é cada venda (mesma regra do ROI), para a coluna "Conta" da lista
-  $mapa = []; try { foreach (meta_db()->query('SELECT campanha, conta FROM meta_campanhas')->fetchAll(PDO::FETCH_NUM) as [$cp, $ct]) $mapa[$cp] = $ct; } catch (Throwable $e) {}
-  $ultimas = array_map(function ($v) use ($mapa) {
+  $ultimas = array_map(function ($v) use ($mapa, $norm) {
+    [$v['or_fonte'], $v['or_campanha']] = $norm((string)$v['or_fonte'], (string)$v['or_campanha']);
     $f = (string)$v['or_fonte']; $cp = (string)$v['or_campanha']; $c = '';
     if ($f === 'comentarios-ig') $c = $mapa[$cp] ?? (preg_match('/^(leo|reinaldo)-ads/', $cp, $m) ? $m[1] : '');
     elseif (in_array($f, ['anuncio-meta', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads'], true)) {
