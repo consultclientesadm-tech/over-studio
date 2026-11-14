@@ -78,7 +78,7 @@ let hojeIds = null, hojeDesenhado = false;
 // som de caixa registradora a cada venda nova (o navegador só deixa tocar depois do primeiro toque na página)
 const caixa = new Audio('/admin/caixa.mp3?v=1'); caixa.preload = 'auto'; caixa.volume = 1;
 let somLiberado = false;
-addEventListener('pointerdown', () => { if (somLiberado) return; somLiberado = true; setTimeout(() => { const sb = $('somLib'); if (sb) sb.remove(); }, 400); caixa.muted = true; caixa.play().then(() => { caixa.pause(); caixa.currentTime = 0; caixa.muted = false; }).catch(() => { caixa.muted = false; }); }, { capture: true });
+addEventListener('pointerdown', () => { if (somLiberado) return; somLiberado = true; setTimeout(() => { try { vigiaVendas(); } catch {} }, 600); setTimeout(() => { const sb = $('somLib'); if (sb) sb.remove(); }, 400); caixa.muted = true; caixa.play().then(() => { caixa.pause(); caixa.currentTime = 0; caixa.muted = false; }).catch(() => { caixa.muted = false; }); }, { capture: true });
 const pushLigado = () => { try { return 'Notification' in window && Notification.permission === 'granted' && !!localStorage.getItem('sc-adm-push'); } catch { return false; } };
 // a página recarregou: tenta tocar sem clique (o Chrome deixa quando o site é muito usado); se deixar, nem pede o clique
 try { const t = new Audio('/admin/caixa.mp3?v=1'); t.volume = 0; t.play().then(() => { t.pause(); somLiberado = true; const sb = $('somLib'); if (sb) sb.remove(); }).catch(() => {}); } catch {}
@@ -89,25 +89,37 @@ function somAviso() { // conta ao aviso do sistema (service worker) se a notific
   try { if (window.caches) caches.open('sc-adm').then((c) => c.put('/admin/__som', new Response(somMudo ? '0' : '1'))); } catch {}
 }
 function pintaMudo() { const b = $('muteBtn'); if (!b) return; b.classList.toggle('off', somMudo); b.querySelector('span').textContent = somMudo ? 'Som desligado' : 'Som ligado'; const i = b.querySelector('i'); if (i && window.ic) i.innerHTML = window.ic(somMudo ? 'mute' : 'spk'); }
-if ($('muteBtn')) { pintaMudo(); somAviso(); $('muteBtn').onclick = () => { somMudo = !somMudo; try { localStorage.setItem('sc-adm-mudo', somMudo ? '1' : '0'); } catch {} pintaMudo(); somAviso(); toast(somMudo ? 'Som desligado. As notificações de venda continuam chegando.' : 'Som ligado. Cada venda toca a caixa registradora.'); if (!somMudo) { chime.t = 0; chime(); } }; }
+if ($('muteBtn')) { pintaMudo(); somAviso(); $('muteBtn').onclick = () => { somMudo = !somMudo; try { localStorage.setItem('sc-adm-mudo', somMudo ? '1' : '0'); } catch {} pintaMudo(); somAviso(); toast(somMudo ? 'Som desligado. As notificações de venda continuam chegando.' : 'Som ligado. Cada venda toca a caixa registradora.'); if (!somMudo) vigiaVendas(); }; } // religou: toca só se tiver venda que ainda não tocou
 function chime() { if (Date.now() - (chime.t || 0) < 5000) return; chime.t = Date.now();
   if (somMudo) { if (!pushLigado() && document.hidden && 'Notification' in window && Notification.permission === 'granted') try { new Notification('Mais uma venda do Studio Cover!', { body: 'Abra o painel para ver.', icon: '/admin/icon-192.png', silent: true }); } catch {} return; }
   // som bloqueado pelo navegador (página recarregada sem clique) e sem o aviso do computador: avisa pela notificação do sistema, que apita sozinha
-  const semSom = () => { if (pushLigado() || !('Notification' in window) || Notification.permission !== 'granted') return; try { new Notification('Mais uma venda do Studio Cover!', { body: 'Abra o painel para ver.', icon: '/admin/icon-192.png', requireInteraction: true }); } catch {} };
-  try { caixa.currentTime = 0; caixa.muted = false; caixa.play().catch(semSom); setTimeout(() => { const b = caixa.cloneNode(); b.volume = 1; b.play().catch(() => {}); }, 1700); } catch { semSom(); } }
+  const semSom = () => { if (Date.now() - (chime.semT || 0) < 600000) return; chime.semT = Date.now(); if (pushLigado() || !('Notification' in window) || Notification.permission !== 'granted') return; try { new Notification('Mais uma venda do Studio Cover!', { body: 'Abra o painel para ver.', icon: '/admin/icon-192.png', requireInteraction: true }); } catch {} };
+  try { caixa.currentTime = 0; caixa.muted = false; const pr = caixa.play(); setTimeout(() => { const b = caixa.cloneNode(); b.volume = 1; b.play().catch(() => {}); }, 1700); return pr.then(() => true, () => { semSom(); return false; }); } catch { semSom(); return Promise.resolve(false); } }
 // aviso no celular: o celular do administrador recebe uma notificação a cada venda
 const iosAdm = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 const instaladoAdm = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 // vigia de vendas: confere a cada 20 s em qualquer aba, mesmo com o painel em segundo plano ou minimizado (antes só conferia com a Visão geral aberta e visível)
 const vendasVistas = { ids: null };
+// regra do Leo (14/11): a caixa só toca quando sai venda. Atualizar a página não toca. Venda que chegou com o som desligado
+// (ou com o navegador bloqueando o som) fica guardada como "não tocou" e toca na próxima vez que der, uma vez só.
+const tocadas = (() => { try { return JSON.parse(localStorage.getItem('sc-adm-tocadas') || 'null'); } catch { return null; } })();
+const salvaTocadas = (ids) => { try { localStorage.setItem('sc-adm-tocadas', JSON.stringify(ids.slice(-300))); } catch {} };
+let tocadasSet = tocadas ? new Set(tocadas) : null;
 async function vigiaVendas() {
   if (!$('vPainel') || $('vPainel').hidden) return;
   const j = await api('hoje', null, '&reg=todas').catch(() => null); if (!j || !j.ok) return; // toca a caixa com venda de qualquer país (Brasil e Stripe)
   const ids = new Set(j.hoje.map((v) => v.id));
+  if (!tocadasSet) { tocadasSet = new Set(ids); salvaTocadas([...tocadasSet]); } // primeira vez neste aparelho: não toca o que já tinha
+  const pendentes = j.hoje.filter((v) => !tocadasSet.has(v.id) && v.liquido > 0);
+  if (pendentes.length && !somMudo && !vigiaVendas.tocando) {
+    vigiaVendas.tocando = true; chime.t = 0;
+    const ok = await chime(); vigiaVendas.tocando = false;
+    if (ok) { pendentes.forEach((v) => tocadasSet.add(v.id)); salvaTocadas([...tocadasSet]); }
+  }
   if (vendasVistas.ids) {
     const novas = j.hoje.filter((v) => !vendasVistas.ids.has(v.id) && v.liquido > 0);
     if (novas.length) {
-      chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}`);
+      toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}`);
       if (document.hidden && 'Notification' in window && Notification.permission === 'granted' && !(() => { try { return localStorage.getItem('sc-adm-push'); } catch { return null; } })()) try { new Notification('💰 Mais uma venda do Studio Cover!', { body: '+' + brl(novas.reduce((a, v) => a + v.liquido, 0)) + ' líquido', icon: '/admin/icon-192.png', silent: somMudo }); } catch {}
       if (!$('tGeral').hidden) loadHoje();
     }
@@ -129,7 +141,7 @@ setTimeout(() => {
 }, 2500);
 // botão Atualizar: recarrega os números da aba aberta sem recarregar a página, então o som continua liberado e ligado
 if ($('atuBtn')) $('atuBtn').onclick = () => { const b = $('atuBtn'); b.classList.add('gira'); setTimeout(() => b.classList.remove('gira'), 900); vigiaVendas(); tab(location.hash.slice(1) || 'geral'); toast('Atualizado'); };
-if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'venda') { chime(); if (!$('tGeral').hidden) loadHoje(); } });
+if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'venda') { vigiaVendas(); if (!$('tGeral').hidden) loadHoje(); } });
 async function ligarAvisoVenda() {
   if (iosAdm && !instaladoAdm) return modal(`<h3>💰 Aviso de venda no iPhone</h3><p>No iPhone o aviso só funciona com o painel instalado na tela de início:</p><p>1. Abra <b>studiocover.com.br/admin</b> no <b>Safari</b>.<br>2. Toque em <b>Compartilhar</b> (o quadrado com a seta) e em <b>Adicionar à Tela de Início</b>.<br>3. Abra o painel pelo ícone novo, toque em <b>💰 Aviso de venda</b> e em <b>Ligar aviso neste aparelho</b>.</p><button class="btn" data-fechar>Entendi</button>`);
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return toast('Este navegador não recebe avisos. Use o Chrome ou o Safari.');
@@ -213,7 +225,7 @@ async function loadHoje() {
   [...$('hoje').querySelectorAll('.vista button'), ...$('vistaSeg').querySelectorAll('button')].forEach((b) => (b.onclick = () => { vista = b.dataset.v; hojeDesenhado = false; loadHoje.ja = false; loadHoje(); if (vista === 'periodo') desenhaFat(); }));
   const hv = $('hoje').querySelector('.hv .cnt'); if (hv) { if (novas.length || !loadHoje.ja) contar($('hoje')); else { hv.textContent = brl(+hv.dataset.to); } }
   loadHoje.ja = true;
-  if (novas.length) { chime(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}${novas.some((v) => v.af) ? ' (afiliado)' : ''}`); }
+  if (novas.length) { vigiaVendas(); toast(`💰 Nova venda! +${brl(novas.reduce((a, v) => a + v.liquido, 0))}${novas.some((v) => v.af) ? ' (afiliado)' : ''}`); }
   loadCad(j);
 }
 // vendas dia a dia (ou semana a semana no 1 ano) do período escolhido, atualizando ao vivo
