@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css?v=44">
-<link rel="stylesheet" href="css/rack.css?v=4">
+<link rel="stylesheet" href="css/rack.css?v=5">
 <script src="js/icons.js?v=1"></script>
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
@@ -34,7 +34,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v42</small></div>
+    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v43</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm manbtn" id="manBtn" title="Manual do usuário: vídeos curtos de cada função"><i data-ic="book"></i><span>Manual</span></button>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda" aria-label="Ajuda"><i data-ic="help"></i></button>
@@ -97,6 +97,7 @@
       <li data-s="refsep" class="refstep">Lendo a melodia da música original</li>
     </ol>
     <p class="hint">A IA roda no seu aparelho, sem mandar seu vídeo para ninguém. Leva mais ou menos 1 minuto para cada minuto de vídeo no computador, um pouco mais no celular. Deixe esta tela aberta.</p>
+    <button class="ghost sm workback" id="workBack" type="button"><i data-ic="back"></i><span>Cancelar e voltar ao início</span></button>
     <p class="hint req" id="req">Funciona em iPhone 13 ou mais novo, Android intermediário ou top de linha (6 GB de memória ou mais) e no computador. No celular, feche os outros apps antes de começar.</p>
   </section>
 
@@ -169,11 +170,13 @@
 
       <!-- 3) Mix e master -->
       <div class="step" data-step="3">
+        <div class="mixbar" id="mixBar"><button class="icon play" id="mixPlay" title="Tocar" aria-label="Tocar"><i data-ic="play"></i></button><span class="time" id="mixTime">0:00</span><b>Ajustar a mix</b><button class="prime" id="mixDone"><i data-ic="check"></i>Pronto</button></div>
         <div class="head">
           <div><h3>Mix e master</h3><p class="sub">Junta a voz com o instrumental, equaliza, comprime e deixa no volume das redes.</p></div>
           <div class="actions">
             <button class="prime" id="mixApply" data-help="Junta sua voz afinada com o instrumental, equaliza, comprime e deixa no volume certo para Instagram, TikTok e YouTube.">Mixar e masterizar</button>
             <button class="pill" id="mixUndo" hidden data-help="Tira a mix e o master e volta para o som só afinado.">Desfazer mix e master</button>
+            <button class="pill mixbigbtn" id="mixBig" data-help="Abre os botões da mix grandes, na tela toda, para mexer com o dedo. Depois toque em Pronto para voltar."><i data-ic="full"></i><span>Ampliar os botões</span></button>
           </div>
         </div>
         <div class="potgrid">
@@ -250,7 +253,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=66"></script>
+<script type="module" src="js/app.js?v=67"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);

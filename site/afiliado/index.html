@@ -94,6 +94,7 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 <link rel="stylesheet" href="/assets/rack-skin.css?v=1">
 <script src="/assets/icons.js?v=1"></script>
 <script src="/assets/sem-emoji.js?v=1" defer></script>
+<script src="/assets/voltar-app.js?v=1" defer></script>
 </head>
 <body>
 <div class="w">
@@ -347,7 +348,11 @@ $('salvarEduzz').onclick = async () => { const v = $('lkEduzz').value.trim(); co
 const prev = () => { const c = $('cCodigo').value.toLowerCase().replace(/[^a-z0-9_-]/g, ''); const n = $('cNome').value.normalize('NFD').replace(/[^a-zA-Z0-9]/g, ' ').trim().split(' ')[0].toLowerCase(); $('cPrev').textContent = 'studiocover.com.br/?af=' + (c || n || '…'); };
 $('cCodigo').oninput = prev; $('cNome').oninput = prev;
 // cliente do app (já logado neste navegador): vira afiliado num toque
-api('app').then((j) => { if (j && j.logado && j.paid) { $('cApp').hidden = false; $('cAppMail').textContent = j.email; $('cExcl').hidden = true; } }).catch(() => {});
+api('app').then(async (j) => {
+  if (j && j.logado && j.paid) { $('cApp').hidden = false; $('cAppMail').textContent = j.email; $('cExcl').hidden = true; }
+  // já é afiliado e está logado no app: entra direto no painel, sem pedir senha de novo
+  if (j && j.logado && j.paid && j.afiliado && $('vPainel').hidden) { const v = await api('virar', {}); if (v.ok) painel(); }
+}).catch(() => {});
 $('cAppBtn').onclick = async () => {
   const b = $('cAppBtn'); b.disabled = true; $('cAppMsg').textContent = '';
   const j = await api('virar', {}); b.disabled = false;

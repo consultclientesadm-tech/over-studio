@@ -189,6 +189,7 @@ function ajudaErro(titulo, texto, mb) {
   return aviso(titulo, texto, passos);
 }
 $('newBtn').onclick = () => location.reload();
+$('workBack').onclick = async () => { if (await aviso('Cancelar e voltar ao início?', 'O app para de preparar este vídeo. Você pode escolher o mesmo vídeo ou outro depois.', [], [{ t: 'Sim, voltar ao início', v: true, b: 1 }, { t: 'Continuar preparando', v: false }])) location.reload(); };
 // IA já vai para o aparelho enquanto a pessoa escolhe o vídeo (direto para o armazenamento, sem pesar na memória)
 setTimeout(() => { prefetchModel(); }, 1500);
 $('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refName').textContent = refFile ? '✓ ' + refFile.name + ' (vamos afinar pela melodia dela)' : 'Opcional: a gente pega a melodia do cantor original no seu tom e afina você por ela.'; $('refPick').classList.toggle('on', !!refFile); };
@@ -424,6 +425,15 @@ $('quickAll').onclick = async () => {
 };
 
 // Etapas
+// números das etapas depois do vídeo: 1 Afinação, 2 Mix, 3 Cor, 4 Exportar (só áudio: sem Cor)
+function numerar() {
+  let i = 0;
+  [2, 3, 4, 5].forEach((k) => {
+    const t = audioOnly && k === 4 ? '' : String(++i);
+    const sp = document.querySelector(`#stepper button[data-step="${k}"] span`); if (sp) sp.dataset.n = t;
+    const h = document.querySelector(`.step[data-step="${k}"] h3`); if (h) h.dataset.n = t;
+  });
+}
 function go(n) {
   if (n !== 2) closePop();
   if (n >= 3 && masterStale && mastered) { masterStale = false; busy(true, 'Atualizando a mix…'); doMaster(false).then(() => { busy(false); refreshAB(); if (step === 5) refreshSummary(); }); }
@@ -437,6 +447,8 @@ function go(n) {
   $('viewer').classList.add('live');
   document.querySelectorAll('.step').forEach((s) => s.classList.toggle('on', +s.dataset.step === n));
   document.querySelectorAll('#stepper button').forEach((b) => { const k = +b.dataset.step; b.classList.toggle('on', k === n); b.classList.toggle('done', k < n); });
+  numerar();
+  if (n !== 3 && mixStep && mixStep.classList.contains('big')) mixGrande(false);
   $('prev').style.visibility = n > 2 ? 'visible' : 'hidden';
   $('next').hidden = n === 5;
   document.querySelectorAll('.bedrow').forEach((r) => (r.hidden = !state.bed));
@@ -712,6 +724,19 @@ addEventListener('keyup', (e) => { if ((e.code === 'Space' || e.key === ' ') && 
 $('expandBtn').onclick = () => (isPop() ? closePop() : openPop());
 $('popClose').onclick = () => closePop();
 $('popPlay').onclick = () => $('play').click();
+// Mix ampliada: os potenciômetros abrem grandes na tela toda; "Pronto" volta para a tela normal
+const mixStep = document.querySelector('.step[data-step="3"]');
+function mixGrande(on) {
+  mixStep.classList.toggle('big', on); document.body.classList.toggle('mixbig', on);
+  if (on) { mixStep.scrollTop = 0; syncMix(); }
+}
+function syncMix() { if ($('mixPlay').dataset.on !== $('play').dataset.on) { $('mixPlay').innerHTML = $('play').innerHTML; $('mixPlay').dataset.on = $('play').dataset.on; } $('mixTime').textContent = $('tNow').textContent; }
+$('mixBig').onclick = () => mixGrande(true);
+$('mixDone').onclick = () => mixGrande(false);
+$('mixPlay').onclick = () => $('play').click();
+new MutationObserver(() => mixStep.classList.contains('big') && syncMix()).observe($('play'), { childList: true, subtree: true });
+new MutationObserver(() => mixStep.classList.contains('big') && syncMix()).observe($('tNow'), { childList: true, characterData: true, subtree: true });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && mixStep.classList.contains('big')) mixGrande(false); });
 function syncPop() { if ($('popPlay').dataset.on !== $('play').dataset.on) { $('popPlay').innerHTML = $('play').innerHTML; $('popPlay').dataset.on = $('play').dataset.on; } $('popTime').textContent = $('tNow').textContent; }
 new MutationObserver(() => isPop() && syncPop()).observe($('play'), { childList: true, characterData: true, subtree: true });
 new MutationObserver(() => isPop() && syncPop()).observe($('tNow'), { childList: true, characterData: true, subtree: true });
