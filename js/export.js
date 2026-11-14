@@ -122,8 +122,18 @@ function blobTarget(MB) {
   return { target, blob };
 }
 
+// Internet do celular oscilou bem na hora de baixar uma peça do app ("Failed to fetch dynamically imported module"):
+// tenta de novo sozinho, com outro endereço (o navegador guarda a falha do endereço antigo e não tentaria de novo).
+async function importar(rel, base) {
+  const u = new URL(rel, base).href;
+  for (let n = 0; ; n++) {
+    try { return await import(n ? u + (u.includes('?') ? '&' : '?') + 'r=' + n : u); }
+    catch (e) { if (n >= 3 || !/dynamically imported module|Importing a module script failed|error loading dynamically|Failed to fetch|Load failed|NetworkError/i.test(String(e && e.message))) throw e; await new Promise((r) => setTimeout(r, 1500 * (n + 1))); }
+  }
+}
+
 async function exportFull({ file, filter, amount, channels, sr, start, end, leve, onProgress }) {
-  const MB = await import('./vendor/mediabunny/mediabunny.min.js');
+  const MB = await importar('./vendor/mediabunny/mediabunny.min.js', import.meta.url);
   // A leitura antecipada (segundo plano) do arquivo, quando falha, virava "erro do app" solto no iPhone
   // ("The I/O read operation failed."). Agora só registra: se o pedaço for mesmo necessário, a leitura de verdade
   // falha aqui dentro e a exportação trata (tenta com a cópia guardada).

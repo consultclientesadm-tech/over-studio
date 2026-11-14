@@ -8,6 +8,8 @@
 declare(strict_types=1);
 
 const VIGIA_ERROS_INTERVALO = 8 * 60; // a tarefa chama a cada 5 min; roda de fato a cada ~10 min
+const VIGIA_ERROS_RAPIDO = 60;        // quando o app manda um erro, a vistoria roda na hora (no máximo 1x por minuto)
+const ALARME_CLAUDE_INTERVALO = 10 * 60; // chama o Claude no máximo 1x a cada 10 min (o resto vai junto na próxima)
 
 function erros_db(): PDO {
   static $ok = false; $db = app_events_db();
@@ -43,9 +45,9 @@ function erro_aparelho(array $e, array $d): string {
   return $ap;
 }
 
-function erros_vigia(bool $forcar = false): array {
+function erros_vigia(bool $forcar = false, int $intervalo = VIGIA_ERROS_INTERVALO): array {
   $last = setting('vigia_erros_last');
-  if (!$forcar && $last && strtotime($last) > time() - VIGIA_ERROS_INTERVALO) return ['vigia_erros' => 'cedo'];
+  if (!$forcar && $last && strtotime($last) > time() - $intervalo) return ['vigia_erros' => 'cedo'];
   $lock = @fopen(rtrim((string)cfg('data_dir'), '/') . '/vigia.lock', 'c');
   if ($lock && !flock($lock, LOCK_EX | LOCK_NB)) return ['vigia_erros' => 'ocupado'];
   set_setting('vigia_erros_last', now());
@@ -127,6 +129,7 @@ function erros_vigia(bool $forcar = false): array {
 
   usort($alertas, fn($a, $b) => [$b['h1'], $b['h24']] <=> [$a['h1'], $a['h24']]);
   if ($alertas) erros_avisar(array_slice($alertas, 0, 10), $fluxo);
+  try { alarme_claude($alertas); } catch (Throwable $e) {}
   if ($lock) { flock($lock, LOCK_UN); fclose($lock); }
   return ['vigia_erros' => 'ok', 'lidos' => $lidos, 'alertas' => array_map(fn($a) => $a['motivo'] . ': ' . $a['etapa'] . ' · ' . $a['msg'], $alertas)];
 }
@@ -241,3 +244,33 @@ function desculpa_cliente(array $u, string $causa = ''): void {
     try { send_mail(null, $to, 'alerta', '💛 Cliente PAGO teve erro: ' . (string)$u['email'], 'Cliente pago com erro', '<p>' . h((string)$u['name']) . ' (' . h((string)$u['email']) . ') teve erro no app. Causa provável: <b>' . h($porque) . '</b>. Ele já recebeu o aviso com a solução no app e por e-mail. O Claude corrige esse erro primeiro na próxima rodada.</p>', 'Abrir o painel', site_url() . '/admin/'); } catch (Throwable $e) {}
 }
 function desculpa_cliente_pago(array $u): void { desculpa_cliente($u, 'vendo'); }
+
+// ---------- alarme do Claude ----------
+// Erro novo, que voltou ou que aumentou: chama na hora a tarefa agendada do Claude (gatilho de API da claude.ai),
+// sem esperar a rodada de hora em hora. Endereço e chave ficam só no banco (Painel > Visão geral > Alarme do Claude).
+// No máximo 1 chamada a cada 10 min; o que chegar nesse meio tempo fica guardado e vai na chamada seguinte.
+function alarme_claude(array $alertas): array {
+  $url = setting('claude_fire_url'); $tok = setting('claude_fire_token');
+  if ($url === '' || $tok === '' || !function_exists('curl_init')) return ['alarme' => 'desligado'];
+  $pend = json_decode(setting('claude_fire_pend') ?: '[]', true) ?: [];
+  foreach ($alertas as $a) $pend[$a['sig']] = ['motivo' => $a['motivo'], 'etapa' => $a['etapa'], 'msg' => mb_substr((string)$a['msg'], 0, 200), 'h1' => $a['h1'], 'h24' => $a['h24'], 'aparelhos' => array_keys($a['aparelhos'])];
+  if (!$pend) return ['alarme' => 'nada'];
+  $last = setting('claude_fire_last');
+  if ($last && strtotime($last) > time() - ALARME_CLAUDE_INTERVALO) { set_setting('claude_fire_pend', json_encode($pend, JSON_UNESCAPED_UNICODE)); return ['alarme' => 'aguardando']; }
+  $txt = "Alarme do site (" . date('d/m H:i') . "): erro(s) do app acabaram de acontecer. Corrija estes primeiro:\n";
+  foreach ($pend as $sig => $p) $txt .= "- sig $sig | " . strip_tags(erro_rotulo($p['motivo'])) . " | etapa: {$p['etapa']} | \"{$p['msg']}\" | {$p['h1']} na última hora, {$p['h24']} em 24h | " . implode(', ', $p['aparelhos']) . "\n";
+  $r = alarme_claude_post($url, $tok, $txt);
+  set_setting('claude_fire_last', now());
+  set_setting('claude_fire_res', json_encode(['quando' => now(), 'http' => $r['http'], 'erros' => count($pend), 'sessao' => $r['sessao']], JSON_UNESCAPED_UNICODE));
+  set_setting('claude_fire_pend', $r['http'] === 200 ? '[]' : json_encode($pend, JSON_UNESCAPED_UNICODE));
+  return ['alarme' => $r['http'] === 200 ? 'chamou' : 'falhou ' . $r['http']];
+}
+function alarme_claude_post(string $url, string $tok, string $txt): array {
+  $ch = curl_init($url);
+  curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 8,
+    CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $tok, 'anthropic-beta: experimental-cc-routine-2026-04-01', 'anthropic-version: 2023-06-01', 'Content-Type: application/json'],
+    CURLOPT_POSTFIELDS => json_encode(['text' => $txt], JSON_UNESCAPED_UNICODE)]);
+  $body = (string)curl_exec($ch); $http = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+  $j = json_decode($body, true) ?: [];
+  return ['http' => $http, 'sessao' => (string)($j['claude_code_session_url'] ?? ''), 'erro' => $http === 200 ? '' : mb_substr((string)($j['error']['message'] ?? $body), 0, 200)];
+}

@@ -8,10 +8,10 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=47';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=48';
 import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=38';
-import { referenceNotes, applyReference } from './reference.js?v=39';
-import { decodeVideoAudio } from './demux.js?v=42';
+import { referenceNotes, applyReference } from './reference.js?v=40';
+import { decodeVideoAudio } from './demux.js?v=43';
 import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=37';
 import { findVoices, splitVoices, forceVoices } from './voices.js?v=4';
 
@@ -59,7 +59,7 @@ export async function audioFromVideo(file, sr = SR, maxSec = 0) {
   if (!ab && soft) {
     try {
       const ext = ((/\.(\w+)$/.exec(file.name || '') || [, 'mp4'])[1] || 'mp4').toLowerCase();
-      ab = await (await import('./convert.js?v=38')).decodeAudioSoft(new Uint8Array(buf), ext, sr);
+      ab = await (await import('./convert.js?v=39')).decodeAudioSoft(new Uint8Array(buf), ext, sr);
     } catch (e2) { console.warn('FFmpeg falhou no áudio:', e2 && e2.message); }
   }
   if (!ab) {

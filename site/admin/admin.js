@@ -351,6 +351,14 @@ document.querySelectorAll('.segP').forEach((sg) => (sg.onclick = (e) => { const 
 // ---------- vistoria de erros (de 10 em 10 minutos) ----------
 const ROT = { novo: ['🆕 NOVO', 'r'], aumentou: ['📈 AUMENTOU', 'r'], voltou: ['🔁 VOLTOU', 'r'] };
 const desde = (s) => { if (!s) return '—'; const m = Math.round((Date.now() - new Date(s.replace(' ', 'T') + '-03:00')) / 60000); return m < 1 ? 'agora' : m < 60 ? `há ${m} min` : m < 1440 ? `há ${Math.floor(m / 60)} h` : dt(s); };
+// Alarme do Claude: erro novo chama a tarefa do Claude na hora (gatilho de API), sem esperar a rodada de hora em hora
+function alarmeHtml(al) {
+  al = al || {}; const u = al.ultimo;
+  const ult = u ? ` · última chamada ${desde(u.quando)}${u.http === 200 ? (u.teste ? ' (teste)' : ` (${u.erros} erro${u.erros === 1 ? '' : 's'})`) : ` <b style="color:#ff6b6b">falhou (HTTP ${u.http})</b>`}${u.sessao ? ` · <a href="${esc(u.sessao)}" target="_blank" rel="noopener">ver a correção</a>` : ''}` : '';
+  return `<details class="vh" ${al.ligado ? '' : 'open'}><summary>${al.ligado ? '🚨 Alarme do Claude: <b>ligado</b>. Erro novo chama o Claude na hora' : '🚨 Alarme do Claude: <b>desligado</b>. Ligue para o Claude corrigir na hora, sem esperar 1 hora'}${ult}</summary>
+    <small>Na claude.ai/code/routines, abra a tarefa "Studio Cover: corrigir erros do app" › Editar › na linha Gatilho clique + › API › copie o Fire URL › Gerar token e copie a chave. Cole os dois aqui. A chave fica guardada só no servidor e não aparece de novo. Deixe os dois vazios e salve para desligar.</small>
+    <form id="alarmeF" class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><input name="url" placeholder="Fire URL (https://api.anthropic.com/…/fire)" style="flex:2;min-width:220px"><input name="token" type="password" placeholder="Chave (token)" autocomplete="off" style="flex:1;min-width:160px"><button class="btn sm">Salvar e testar</button></form></details>`;
+}
 async function loadVigiaErros() {
   const j = await api('vigia-erros'); if (!j.ok) return;
   const v = j.vigia, gs = j.grupos || [], alertas = (v && v.alertas) || [];
@@ -372,13 +380,15 @@ async function loadVigiaErros() {
     : pend.length ? `<b>🟡 Nada acontecendo agora. ${pend.length} erro${pend.length === 1 ? '' : 's'} ainda pendente${pend.length === 1 ? '' : 's'}: aconteceu nas últimas 24h e ninguém marcou como corrigido.</b>`
     : '<b>✅ Nenhum erro pendente</b>';
   $('vigiaErros').innerHTML = `<section class="bloco">
-    <div class="bh"><span class="tag ${agora.length ? 'r' : 'g'}">🛰️ VISTORIA DE ERROS · A CADA 10 MIN</span><small>${v ? `última vistoria ${desde(v.quando)} · ${v.erros_1h} erro${v.erros_1h === 1 ? '' : 's'} na última hora · ${v.erros_24h} em 24h` : 'ainda não rodou'} <button class="btn sm ghost" id="vigiaAgora">Vistoriar agora</button></small></div>
+    <div class="bh"><span class="tag ${agora.length ? 'r' : 'g'}">🛰️ VISTORIA DE ERROS · NA HORA</span><small>${v ? `última vistoria ${desde(v.quando)} · ${v.erros_1h} erro${v.erros_1h === 1 ? '' : 's'} na última hora · ${v.erros_24h} em 24h` : 'ainda não rodou'} <button class="btn sm ghost" id="vigiaAgora">Vistoriar agora</button></small></div>
     <div class="vigia ${agora.length ? 'mal' : pend.length ? '' : 'ok'}">${resumo}
-      <small><b>Como funciona:</b> a vistoria encontra os erros a cada 10 minutos. O Claude confere esta lista de hora em hora, corrige no código e, quando a correção entra no ar, o erro fica verde sozinho (✅ Corrigido pelo Claude). Você não precisa avisar nem marcar nada, só acompanhar. Se um erro corrigido voltar, ele reaparece aqui como 🔁 VOLTOU e o Claude olha de novo. Erro de cliente pago (💛) vem primeiro na fila, e o cliente recebe na hora um pedido de desculpas no app e por e-mail.</small></div>
+      <small><b>Como funciona:</b> a vistoria roda assim que o app manda um erro (e a cada 10 minutos). Com o alarme ligado, erro novo chama o Claude na mesma hora (e a conferência de hora em hora continua como reserva); ele corrige no código e, quando a correção entra no ar, o erro fica verde sozinho (✅ Corrigido pelo Claude). Você não precisa avisar nem marcar nada, só acompanhar. Se um erro corrigido voltar, ele reaparece aqui como 🔁 VOLTOU e o Claude olha de novo. Erro de cliente pago (💛) vem primeiro na fila, e o cliente recebe na hora um pedido de desculpas no app e por e-mail.</small></div>
+    ${alarmeHtml(j.alarme)}
     ${agora.length ? `<h4 class="vh">🔴 Acontecendo agora</h4>${tabela(agora)}` : ''}
     ${pend.length ? `<h4 class="vh">🟡 Pendentes (aconteceram nas últimas 24h, não na última hora)</h4>${tabela(pend)}` : ''}
     ${ok.length ? `<details class="vh"><summary>✅ Resolvidos e ignorados (${ok.length})</summary>${tabela(ok)}</details>` : ''}
   </section>`;
+  const af = $('alarmeF'); if (af) af.onsubmit = async (e) => { e.preventDefault(); toast('Testando com a claude.ai…'); const r = await api('alarme-claude', Object.fromEntries(new FormData(e.target))); if (!r.ok) return toast(r.error || 'Não deu.', 9000); toast(r.ligado ? 'Alarme ligado! O Claude foi chamado num teste.' : 'Alarme desligado.'); loadVigiaErros(); };
   $('vigiaAgora').onclick = async (e) => { e.target.disabled = true; e.target.textContent = 'Vistoriando…'; await api('vigia-agora', {}); toast('Vistoria feita.'); loadVigiaErros(); };
   $('vigiaErros').querySelectorAll('[data-erro]').forEach((b) => (b.onclick = async () => { const r = await api('erro-marcar', { sig: b.dataset.erro, status: b.dataset.st }); if (!r.ok) return toast(r.error || 'Não deu.'); toast(b.dataset.st === 'resolvido' ? 'Marcado como corrigido. Se voltar, a vistoria avisa.' : b.dataset.st === 'ignorado' ? 'Esse erro não vai mais gerar aviso.' : 'Reaberto.'); loadVigiaErros(); }));
 }

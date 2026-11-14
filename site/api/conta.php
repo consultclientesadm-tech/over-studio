@@ -200,9 +200,9 @@ switch ($a) {
         try { desculpa_cliente($uu, $causa); } catch (Throwable $e) {}
       }); }
       $vl = setting('vigia_erros_last');
-      if (!$vl || strtotime($vl) < time() - VIGIA_ERROS_INTERVALO) register_shutdown_function(function () {
+      if (!$vl || strtotime($vl) < time() - VIGIA_ERROS_RAPIDO) register_shutdown_function(function () {
         if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
-        try { erros_vigia(); } catch (Throwable $e) {}
+        try { erros_vigia(false, VIGIA_ERROS_RAPIDO); } catch (Throwable $e) {}
       });
     }
     json_out(['ok' => true]);

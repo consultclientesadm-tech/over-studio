@@ -2,11 +2,11 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=50';
-import { prefetchModel } from './studio.js?v=47';
+import * as cover from './pipeline.js?v=51';
+import { prefetchModel } from './studio.js?v=48';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
-import { exportVideo, exportType } from './export.js?v=41';
+import { exportVideo, exportType } from './export.js?v=42';
 
 const $ = (id) => document.getElementById(id);
 const app = $('app');
@@ -408,6 +408,12 @@ async function start(f, tries = 1) {
     // O celular perdeu o acesso ao arquivo escolhido (vídeo na nuvem/Google Fotos, app foi para o fundo):
     // tenta de novo com a cópia que guardamos no aparelho ao escolher o vídeo
     let copiaOk = '';
+    // Internet oscilou ao baixar uma peça do app (mesmo já tentando de novo lá dentro): espera e recomeça sozinho uma vez
+    if (tries === 1 && REDE.test(String(e && e.message))) {
+      endRun(); toast('A internet oscilou. Tentando de novo…', 5000);
+      await new Promise((r) => setTimeout(r, 4000));
+      return start(f, 2);
+    }
     if (tries === 1 && LEITURA.test(String(e.message) + ' ' + (e.name || ''))) {
       let copia = null;
       try { copia = await idb('readonly', (st) => st.get('video')); if (copia && copia.size !== f.size) copia = null; if (copia) await copia.slice(0, 65536).arrayBuffer(); } catch { copia = null; }
@@ -428,6 +434,7 @@ async function start(f, tries = 1) {
 // "could not be read" (Chrome) / "The I/O read operation failed." (Safari/iPhone): o aparelho tirou o acesso ao arquivo.
 // "A requested file or directory could not be found" (Chrome/Android, NotFoundError): o arquivo sumiu depois de escolhido
 // (vídeo do Google Fotos/Drive que era só uma cópia temporária, ou a galeria apagou/moveu a cópia).
+const REDE = /dynamically imported module|Importing a module script failed|error loading dynamically/i;
 const LEITURA = /could not be read|NotReadable|I\/O read operation|permission problems|file or directory could not be found|NotFoundError/i;
 function perdeuArquivo() {
   app.dataset.screen = 'home';
@@ -437,7 +444,7 @@ function perdeuArquivo() {
 
 // O navegador leu o som mas não abre a imagem (Edge sem HEVC com vídeo do iPhone): converte aqui no aparelho
 async function convertVideo() {
-  let conv; try { conv = await import('./convert.js?v=38'); } catch { return; }
+  let conv; try { conv = await import('./convert.js?v=39'); } catch { return; }
   if (!conv.canConvert()) return;
   note({ stage: 'Convertendo o vídeo para este navegador', pct: 99 });
   $('workStep').textContent = 'Preparando a imagem do vídeo para este navegador (só neste caso)';

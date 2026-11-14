@@ -434,7 +434,21 @@ switch ($a) {
   }
   case 'origens': try { meta_sync(false); } catch (Throwable $e) {} json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))), (string)($_GET['dia'] ?? ''))); // de qual página e canal vêm visitas, testes e vendas
   case 'vigia-erros': { // vistoria de 10 em 10 min: tipos de erro do app, alertas e quando rodou
-    json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista()]);
+    json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista(),
+      'alarme' => ['ligado' => setting('claude_fire_url') !== '' && setting('claude_fire_token') !== '', 'ultimo' => json_decode(setting('claude_fire_res') ?: 'null', true)]]);
+  }
+  // alarme do Claude: gatilho de API da tarefa agendada (claude.ai). A chave nunca volta para a tela.
+  case 'alarme-claude': {
+    $url = trim((string)arg('url', '')); $tok = trim((string)arg('token', ''));
+    if ($url === '' && $tok === '') { set_setting('claude_fire_url', ''); set_setting('claude_fire_token', ''); json_out(['ok' => true, 'ligado' => false]); }
+    if (!preg_match('#^https://api\.anthropic\.com/v1/claude_code/routines/trig_[A-Za-z0-9]+/fire$#', $url)) json_out(['ok' => false, 'error' => 'O endereço tem que ser o Fire URL da tarefa (https://api.anthropic.com/v1/claude_code/routines/trig_.../fire).']);
+    if (strlen($tok) < 20) json_out(['ok' => false, 'error' => 'Cole a chave (token) gerada na tarefa.']);
+    require_once __DIR__ . '/vigia_erros.php';
+    $r = alarme_claude_post($url, $tok, 'Teste do alarme do painel (' . date('d/m H:i') . '): só confira /api/erros.php como de costume.');
+    if ($r['http'] !== 200) json_out(['ok' => false, 'error' => "A claude.ai recusou (HTTP {$r['http']}): {$r['erro']}"]);
+    set_setting('claude_fire_url', $url); set_setting('claude_fire_token', $tok);
+    set_setting('claude_fire_last', now()); set_setting('claude_fire_res', json_encode(['quando' => now(), 'http' => 200, 'erros' => 0, 'sessao' => $r['sessao'], 'teste' => 1], JSON_UNESCAPED_UNICODE));
+    json_out(['ok' => true, 'ligado' => true]);
   }
   // conta de anúncios do Meta: puxa o gasto real sozinho (só leitura). O token nunca volta para a tela.
   case 'meta-conectar': {
