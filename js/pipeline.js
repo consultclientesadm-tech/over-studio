@@ -8,7 +8,7 @@
 //   5) mixa, masteriza, reverb opcional
 //   6) corta o silêncio do começo e do fim (opcional) e faz fade-in e fade-out (opcionais)
 // Nada muda a duração do áudio: o vídeo é cortado nos mesmos pontos, então a boca continua batendo.
-import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=41';
+import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=47';
 import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=37';
 import { referenceNotes, applyReference } from './reference.js?v=39';
 import { decodeVideoAudio } from './demux.js?v=40';

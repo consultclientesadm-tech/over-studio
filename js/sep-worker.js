@@ -1,8 +1,9 @@
 // Ajudante da IA leve (celular): separa a voz aqui e depois é desligado, devolvendo toda a memória.
-import { separateLite } from './studio.js?v=41';
+import { separateLite } from './studio.js?v=47';
 onmessage = async (e) => {
   try {
-    const { L, R } = e.data;
+    const { L, R, m1g } = e.data;
+    if (m1g) self.scWasm1g = true;
     separateLite.noBed = true;
     const r = await separateLite([L, R], { onDownload: (p) => postMessage({ t: 'd', p }), onProgress: (p) => postMessage({ t: 'p', p }) });
     // sem copiar: manda os blocos de memória inteiros e o app pega só o trecho certo

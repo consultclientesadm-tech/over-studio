@@ -134,6 +134,15 @@ export async function modelCached() {
   } catch { return false; }
 }
 
+// Memória da IA: o motor pede ao navegador uma área de até 4 GB logo ao ligar. No iPhone com iOS 16 (Safari ou
+// Chrome) essa reserva falha ("RangeError: Out of memory") e a separação nem começa. Nesses aparelhos, e em
+// qualquer um onde isso já aconteceu, usa a cópia do motor que pede no máximo 1 GB (a IA leve usa bem menos).
+const pouca = () => {
+  if (self.scWasm1g) return true; // no ajudante (sem localStorage) o app manda a escolha junto com o áudio
+  try { if (localStorage.getItem('sc-wasm-1g') === '1') return true; } catch {}
+  try { const ios = (navigator.userAgent || '').match(/OS (\d+)_\d+.* like Mac OS X/); return !!ios && +ios[1] < 17; } catch { return false; }
+};
+const semMemoria = (e) => /Out of memory|OOM|could not allocate memory/i.test(String(e && (e.message || e)));
 let ortP = null;
 function loadOrt() { return (ortP ||= loadOrt1()); }
 async function loadOrt1() {
@@ -143,7 +152,7 @@ async function loadOrt1() {
   const lite = useLite();
   const ort = lite ? await import('./vendor/ort/ort.wasm.min.js') : await import('./vendor/ort/ort.webgpu.min.js');
   ort.env.wasm.wasmPaths = lite ? {
-    mjs: new URL('./vendor/ort/ort-wasm-simd-threaded.js', import.meta.url).href,
+    mjs: new URL(pouca() ? './vendor/ort/ort-wasm-simd-threaded.1g.js' : './vendor/ort/ort-wasm-simd-threaded.js', import.meta.url).href,
     wasm: new URL('./vendor/ort/ort-wasm-simd-threaded.wasm', import.meta.url).href,
   } : {
     mjs: new URL('./vendor/ort/ort-wasm-simd-threaded.asyncify.js', import.meta.url).href,
@@ -269,13 +278,13 @@ const bedOf = (src, voice) => voice.map((v, c) => { const s = src[c] || src[0], 
 function separateInWorker(channels, { onDownload, onProgress }) {
   return new Promise((resolve, reject) => {
     let w;
-    try { w = new Worker(new URL('./sep-worker.js?v=41', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
+    try { w = new Worker(new URL('./sep-worker.js?v=47', import.meta.url), { type: 'module' }); } catch (e) { return reject(e); }
     let started = false, last = Date.now(), sent = false;
     const send = () => {
       if (sent) return; sent = true;
       // manda o próprio áudio (sem cópia); ele volta junto com a voz
       const L = channels[0], R = channels[1] && channels[1] !== channels[0] ? channels[1] : channels[0].slice();
-      w.postMessage({ L, R }, [L.buffer, R.buffer]);
+      w.postMessage({ L, R, m1g: pouca() }, [L.buffer, R.buffer]);
     };
     const guard = setInterval(() => { if (Date.now() - last > 120000) done(reject, new Error('ajudante parou de responder')); }, 5000);
     const done = (fn, v) => { clearInterval(guard); w.terminate(); if (v instanceof Error) v.lost = sent; fn(v); };
@@ -307,6 +316,8 @@ export async function separate(channels, { onDownload = () => {}, onProgress = (
       try { return await separateInWorker(channels, { onDownload, onProgress }); } catch (e) {
         // o ajudante caiu (pouca memória no celular) e levou o áudio junto: quem chamou relê o áudio e tenta direto
         separate.noWorker = true;
+        // faltou memória para ligar a IA: daqui em diante usa o motor de 1 GB (inclusive na nova tentativa logo abaixo)
+        if (semMemoria(e)) try { localStorage.setItem('sc-wasm-1g', '1'); } catch {}
         if (e.lost || channels[0].length === 0) { const x = new Error('A separação da voz parou no meio. Toque em Novo vídeo e tente de novo.'); x.lost = true; x.causa = String(e.message || '').slice(0, 80); throw x; }
         console.warn('ajudante da IA falhou, rodando direto:', e.message);
       }
