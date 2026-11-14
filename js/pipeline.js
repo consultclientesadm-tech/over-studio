@@ -535,7 +535,8 @@ export async function mixMaster(voice, bed, sr, reverb = 0.2, { voiceLift = 1.1,
   const L = await measureCompDelay(sr);
   const D = Math.round(3 * L * sr);
   const ctx = new OfflineAudioContext(2, len + D, sr);
-  const buf = (chs) => { const b = ctx.createBuffer(2, len, sr); b.copyToChannel(chs[0], 0); b.copyToChannel(chs[1] || chs[0], 1); return b; };
+  // voz mono (modo leve, dupla/trio) vira buffer de 1 canal: o navegador toca igual nos dois lados, com metade da memória
+  const buf = (chs) => { const mono = !chs[1] || chs[1] === chs[0], b = ctx.createBuffer(mono ? 1 : 2, len, sr); b.copyToChannel(chs[0], 0); if (!mono) b.copyToChannel(chs[1], 1); return b; };
   const f = (type, freq, gain = 0, Q = 0.7) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = freq; b.gain.value = gain; b.Q.value = Q; return b; };
   const bus = ctx.createGain();
   const vs = ctx.createBufferSource(); vs.buffer = buf(voice);
@@ -587,13 +588,14 @@ export async function render(state, opts = {}) {
   const len = state.orig[0].length;
   let mix = await mixMaster(voiceMix(state, o.voiceGains, false, true), state.bed, SR, o.reverb, { voiceDb: o.voiceDb || 0, bedDb: o.bedDb || 0, eq: o.eq, comp: o.comp });
   const info = { lufs: mix.lufs, comp: mix.comp };
-  mix = mix.map((c) => c.subarray(0, len)); // mesma duração do vídeo (a cauda do reverb fica no fade)
   const { start, end } = o.trim ? findTrim(state.orig, SR) : { start: 0, end: len / SR };
   const a = Math.round(start * SR), b = Math.round(end * SR);
-  const out = mix.map((c) => c.slice(a, b));
+  // full: mesma linha do tempo do vídeo inteiro (silêncio fora do corte), para comparar lado a lado.
+  // channels é um "pedaço" do próprio full (sem cópia): antes eram 4 cópias da música a cada ajuste de volume,
+  // e o celular simples (Galaxy A30s) fechava o app em "Ajustando os volumes…".
+  const full = mix.map((c) => { const f = c.length === len ? c : c.subarray(0, len); f.fill(0, 0, a); f.fill(0, b); return f; });
+  const out = full.map((f) => f.subarray(a, b));
   applyFades(out, SR, o.fadeIn, o.fadeOut);
-  // full: mesma linha do tempo do vídeo inteiro (silêncio fora do corte), para comparar lado a lado
-  const full = out.map((c) => { const f = new Float32Array(len); f.set(c, a); return f; });
   return { channels: out, full, sr: SR, start, end, ...info };
 }
 

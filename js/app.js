@@ -2,7 +2,7 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=47';
+import * as cover from './pipeline.js?v=48';
 import { prefetchModel } from './studio.js?v=47';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
@@ -208,7 +208,9 @@ function ajudaErro(titulo, texto, mb) {
   return aviso(titulo, texto, passos);
 }
 $('newBtn').onclick = () => location.reload();
-$('workBack').onclick = async () => { if (await aviso('Cancelar e voltar ao início?', 'O app para de preparar este vídeo. Você pode escolher o mesmo vídeo ou outro depois.', [], [{ t: 'Sim, voltar ao início', v: true, b: 1 }, { t: 'Continuar preparando', v: false }])) location.reload(); };
+// Cancelar de verdade: apaga o diário da tentativa antes de recarregar. Antes o app achava, na volta, que o celular
+// tinha fechado no meio: contava "fechou" no painel e voltava a preparar sozinho o vídeo que a pessoa cancelou.
+$('workBack').onclick = async () => { if (await aviso('Cancelar e voltar ao início?', 'O app para de preparar este vídeo. Você pode escolher o mesmo vídeo ou outro depois.', [], [{ t: 'Sim, voltar ao início', v: true, b: 1 }, { t: 'Continuar preparando', v: false }])) { try { localStorage.removeItem(PES); } catch {} await Promise.race([endRun(), new Promise((r) => setTimeout(r, 1500))]); location.reload(); } };
 // IA já vai para o aparelho enquanto a pessoa escolhe o vídeo (direto para o armazenamento, sem pesar na memória)
 setTimeout(() => { prefetchModel(); }, 1500);
 $('refFile').onchange = () => { refFile = $('refFile').files[0] || null; $('refName').textContent = refFile ? '✓ ' + refFile.name + ' (vamos afinar pela melodia dela)' : 'Opcional: a gente pega a melodia do cantor original no seu tom e afina você por ela.'; $('refPick').classList.toggle('on', !!refFile); };
@@ -258,7 +260,9 @@ setTimeout(() => { try {
 } catch {} }, 0);
 addEventListener('pagehide', () => { try {
   const p = JSON.parse(localStorage.getItem(PES) || 'null'), r = runInfo;
-  if (r) ev('saiu', { etapa: r.stage, pct: r.pct, mb: r.mb });
+  // saiu por conta própria (fechou a aba, recarregou, foi para outro site): não é queda do celular. O diário guarda
+  // isso para a próxima abertura não contar "fechou" nem ligar o modo leve (o app ainda retoma o vídeo)
+  if (r) { ev('saiu', { etapa: r.stage, pct: r.pct, mb: r.mb }); note({ saiu: 1 }); }
   else if (p) { ev('saiu', { etapa: p.etapa, mb: p.mb }); p.saiu = 1; localStorage.setItem(PES, JSON.stringify(p)); }
 } catch {} });
 // Diário da última tentativa: se o celular fechar a página no meio, na volta o app conta em que ponto foi
@@ -273,7 +277,8 @@ function endRun(manterCopia = false) { runInfo = null; const fp = manterCopia ? 
 try {
   const last = JSON.parse(localStorage.getItem(RUN) || 'null');
   const celular = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
-  if (last && (last.tries || 1) < 2) {
+  if (last && last.saiu) { localStorage.removeItem(RUN); delete last.saiu; if ((last.tries || 1) < 2) localStorage.setItem(RUN + '-resume', JSON.stringify(last)); }
+  else if (last && (last.tries || 1) < 2) {
     localStorage.removeItem(RUN); localStorage.setItem(RUN + '-resume', JSON.stringify(last));
     // CPI: o celular fechou o app na 1ª tentativa. O app continua sozinho, mas a queda precisa aparecer no painel
     ev('fechou', { etapa: last.stage, pct: last.pct, mb: last.mb, dur: last.dur, msg: last.erro || '', retomou: 1 });
@@ -954,7 +959,7 @@ const syncing = new Set(); // as duas réguas disparam "change": mixa uma vez s�
 ['mVoice', 'mBed', 'eVoice', 'eBed'].forEach((id) => $(id).addEventListener('change', async () => {
   if (syncing.size) return; syncing.add(id);
   const was = playing(), t = clipT(); pause(); busy(true, 'Ajustando os volumes…');
-  await doMaster(false); busy(false);
+  try { await doMaster(false); } catch (err) { console.error(err); } finally { busy(false); }
   if (step === 3) side = 'C'; refreshAB(); if (step === 5) refreshSummary(); seek(t); if (was) play();
   syncing.delete(id);
 }));
