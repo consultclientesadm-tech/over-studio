@@ -448,6 +448,7 @@ function go(n) {
   document.querySelectorAll('.step').forEach((s) => s.classList.toggle('on', +s.dataset.step === n));
   document.querySelectorAll('#stepper button').forEach((b) => { const k = +b.dataset.step; b.classList.toggle('on', k === n); b.classList.toggle('done', k < n); });
   numerar();
+  fsLabel();
   if (n !== 3 && mixStep && mixStep.classList.contains('big')) mixGrande(false);
   $('prev').style.visibility = n > 2 ? 'visible' : 'hidden';
   $('next').hidden = n === 5;
@@ -569,8 +570,10 @@ addEventListener('pagehide', () => { if (want) pause(); });
 $('screen').addEventListener('webglcontextlost', (e) => e.preventDefault());
 $('screen').addEventListener('webglcontextrestored', () => { try { grader = new Grader($('screen')); refreshAB(); loop.dirty = true; } catch (e) { console.warn(e); } });
 // Prévia em tela cheia (a mesma prévia, só que grande; o arquivo final sai em 1080p)
-function theater(on) { app.classList.toggle('theater', on); $('fsTxt').textContent = on ? 'Fechar' : 'Tela cheia'; const fi = $('fsBtn').querySelector('i[data-ic]'); if (fi) fi.innerHTML = icn(on ? 'close' : 'full'); loop.dirty = true; }
-$('fsBtn').onclick = () => theater(!app.classList.contains('theater'));
+function fsLabel() { $('fsTxt').textContent = app.classList.contains('theater') ? 'Fechar' : step === 5 ? 'Assistir uma prévia' : 'Tela cheia'; }
+function theater(on) { app.classList.toggle('theater', on); fsLabel(); const fi = $('fsBtn').querySelector('i[data-ic]'); if (fi) fi.innerHTML = icn(on ? 'close' : 'full'); loop.dirty = true; }
+// na etapa Exportar o botão do cantinho vira "Assistir uma prévia": abre em tela cheia e toca do começo
+$('fsBtn').onclick = () => { if (!app.classList.contains('theater') && step === 5) { $('watchBtn').onclick(); return; } theater(!app.classList.contains('theater')); };
 $('watchBtn').onclick = () => { theater(true); seek(mastered ? mastered.start : 0); if (!playing()) play(); };
 addEventListener('keydown', (e) => { if (e.key === 'Escape') theater(false); });
 $('back5').onclick = () => seek(clipT() - 5);
@@ -841,7 +844,8 @@ async function setVoices(K) {
 $('panelBtn').onclick = () => openPop();
 // Volume de cada voz (Mix e Exportar andam juntos). No mínimo (−15 dB) a voz fica muda no vídeo final.
 function voiceVols() {
-  for (const pre of ['m', 'e']) $(pre + 'Voice').closest('.row').querySelector('span').textContent = state.parts ? 'Volume de todas as vozes' : 'Volume da voz';
+  $('mVoice').closest('.row').querySelector('span').textContent = state.parts ? 'Volume de todas as vozes' : 'Volume da voz';
+  $('eVoice').closest('.row').querySelector('span').textContent = state.parts ? 'Todas as vozes' : 'Voz';
   for (const pre of ['m', 'e']) {
     const box = $(pre + 'Voices'); box.innerHTML = '';
     if (!state.parts) continue;

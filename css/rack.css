@@ -377,3 +377,30 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 #studio .step[data-step="3"].big .potgrid .row.pot-on > span:first-child { font-size: 14px; }
 @media (max-width: 380px) { #studio .step[data-step="3"].big .pot { width: 84px; height: 84px; } #studio .step[data-step="3"].big .pot .pk { inset: 16px; } }
 body.mixbig .stepper { visibility: hidden; }
+/* Exportar simples (v45): volumes de arrastar, Gerar vídeo final preso embaixo, prévia no cantinho do vídeo */
+.vols5 { display: grid; gap: 4px; margin: 6px 0 2px; }
+#studio .step[data-step="5"] .row { grid-template-columns: minmax(96px, 34%) 1fr 54px; gap: 12px; margin: 6px 0; min-height: 44px; }
+#studio .step[data-step="5"] .row > span { font: 600 13.5px 'Space Grotesk', sans-serif; color: #dcdce4; }
+#studio .step[data-step="5"] .row output { font: 700 13px var(--mono, monospace); color: var(--y); }
+#studio .step[data-step="5"] input[type=range] { height: 8px; border-radius: 8px; background: linear-gradient(90deg, #3a3a44, #26262f); touch-action: pan-y; }
+#studio .step[data-step="5"] input[type=range]::-webkit-slider-thumb { width: 30px; height: 30px; border: 4px solid #000; box-shadow: 0 0 0 2px var(--y), 0 0 12px rgba(255,212,0,.5); }
+#studio .step[data-step="5"] input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border: 4px solid #000; }
+#studio .step[data-step="5"] .voicevols { padding: 6px 10px; margin-top: 4px; }
+#studio .step[data-step="5"] .voicevols .vvhead small { display: none; }
+.exportdock { position: sticky; bottom: 0; z-index: 6; margin: 10px -2px 0; padding: 10px 2px calc(4px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(rgba(14,14,18,0), #0e0e12 22%); }
+.exportdock #exportBtn { width: 100%; min-height: 54px; font-size: 16px; box-shadow: 0 0 0 1.5px var(--y), 0 0 20px rgba(255,212,0,.35); }
+.exportdock .bar { margin-top: 8px; }
+#studio .step[data-step="5"] > .maisbaixo { display: none !important; }
+#watchBtn { display: none !important; }
+#studio[data-step="5"] #fsTxt { display: inline !important; }
+#studio[data-step="5"] .fsbtn { width: auto !important; padding: 0 12px !important; gap: 6px; }
+#studio .step[data-step="5"] .summary { margin-top: 14px; opacity: .85; }
+.vols5t { font: 700 11px var(--mono, monospace); letter-spacing: .14em; text-transform: uppercase; color: #8a8a96; }
+#studio .step[data-step="5"] .voicevols { border: 0; background: none; padding: 0; margin: 0; }
+#studio .step[data-step="5"] .voicevols .vvhead { display: none; }
+#studio .step[data-step="5"] .voicevols .row span small { display: none; }
+@media (max-width: 899px), (max-aspect-ratio: 1/1) {
+  #studio[data-step="5"] #ab { display: none; }
+  #studio .step[data-step="5"] .head p.sub { display: none; }
+  #studio .step[data-step="5"] .row { min-height: 40px; margin: 2px 0; }
+}

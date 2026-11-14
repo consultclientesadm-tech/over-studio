@@ -37,7 +37,7 @@ try {
       check(st.t && st.m && st.band >= 97, `celular: "Deixar tudo pronto" afinou (${st.band}%), mixou e foi para Exportar`);
       await page.waitForTimeout(800);
       await page.screenshot({ path: `${dir}/${name}-2c-tudo-pronto.png` });
-      await page.click('#watchBtn'); await page.waitForTimeout(1200);
+      await page.click('#fsBtn'); await page.waitForTimeout(1200);
       await page.screenshot({ path: `${dir}/${name}-8-telacheia.png` });
       await page.click('#fsBtn'); await page.click('#stepper button[data-step="2"]'); await page.waitForTimeout(600);
       await page.screenshot({ path: `${dir}/${name}-3-afinacao.png` });
@@ -142,7 +142,7 @@ try {
       await page.waitForTimeout(600);
     }
     await page.screenshot({ path: `${dir}/${name}-7-exportar.png` });
-    await page.click('#watchBtn'); await page.waitForTimeout(1500);
+    await page.click('#fsBtn'); await page.waitForTimeout(1500);
     const th = await page.evaluate(() => { const r = document.getElementById('video').getBoundingClientRect(); return [document.getElementById('app').classList.contains('theater'), Math.round(r.height), innerHeight]; });
     check(th[0] && th[1] > th[2] * 0.6, `${name}: prévia em tela cheia (${th[1]}px de ${th[2]}px)`);
     await page.screenshot({ path: `${dir}/${name}-8-telacheia.png` });
