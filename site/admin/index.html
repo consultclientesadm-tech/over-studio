@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Studio Cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=24">
+<link rel="stylesheet" href="admin.css?v=25">
 <link rel="stylesheet" href="/assets/rack-skin.css?v=1">
 <script src="/assets/icons.js?v=1"></script>
 <script src="/assets/sem-emoji.js?v=1" defer></script>
@@ -98,7 +98,9 @@
         <div class="seg" id="segOr"><button data-d="1">Hoje</button><button data-d="7" class="on">7d</button><button data-d="30">30d</button><button data-d="90">90d</button></div></header>
       <div id="orNums"></div>
       <div class="glass"><div class="ch"><b>Por página</b></div><div class="tbl" id="orPag"></div></div>
-      <div class="glass" style="margin-top:16px"><div class="ch"><b>📣 Anúncios por conta (ROI)</b></div><p class="sub" style="margin:0 0 10px">Parâmetros de URL no anúncio: <code>utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=leo-ads&amp;utm_content={{ad.name}}</code> (no do Reinaldo, <code>reinaldo-ads</code>).</p><div class="tbl" id="orAds"></div>
+      <div class="glass" style="margin-top:16px"><div class="ch"><b>📣 Anúncios por conta (ROI)</b></div><div class="utmBox"><p class="sub" style="margin:0 0 8px">UTM de cada sócio: cole em "Parâmetros de URL" do anúncio (anúncio duplicado já leva a UTM junto; só precisa colar em anúncio criado do zero).</p>
+          <div class="utmL"><b>Leo</b><code>utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=leo-ads&amp;utm_content={{ad.name}}</code><button class="btn sm" data-copia="utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=leo-ads&amp;utm_content={{ad.name}}">Copiar UTM</button></div>
+          <div class="utmL"><b>Reinaldo</b><code>utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=reinaldo-ads&amp;utm_content={{ad.name}}</code><button class="btn sm" data-copia="utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=reinaldo-ads&amp;utm_content={{ad.name}}">Copiar UTM</button></div></div><div class="tbl" id="orAds"></div>
         <details style="margin-top:14px"><summary><b>🔗 Contas de anúncios conectadas (gasto automático do Gerenciador)</b></summary>
           <p class="sub">Cada sócio conecta a própria conta. O painel puxa sozinho, de hora em hora, quanto cada anúncio gastou e soma na conta da UTM do anúncio (leo-ads ou reinaldo-ads). O token é só de leitura: não mexe em nada no Meta e não aparece de volta na tela.</p>
           <div class="tbl" id="orMeta"></div></details></div>
@@ -216,6 +218,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=37"></script>
+<script src="admin.js?v=38"></script>
 </body>
 </html>
