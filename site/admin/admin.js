@@ -484,16 +484,18 @@ function vgFaixa() {
 }
 const pct = (a, b) => (b ? Math.round(((a - b) / b) * 100) : null);
 // linha acumulada (fina) com bolinhas piscando onde entrou venda/cadastro
-function vgLinha(rot, vals, sub, cor, fmt, corte = -1) {
-  const n = vals.length, ate = corte >= 0 ? Math.min(corte, n - 1) : n - 1, cum = []; let c = 0;
-  vals.forEach((v, i) => { c += v; cum.push(c); });
-  const mx = Math.max(cum[ate] || 0, 0.0001) * 1.12, X = (i) => (n === 1 ? 50 : ((i + 0.5) / n) * 100), Y = (v) => 100 - (v / mx) * 100;
-  const pts = [[0, 100], ...cum.slice(0, ate + 1).map((v, i) => [X(i), Y(v)])];
-  const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join(' ');
-  const area = d + ` L${pts[pts.length - 1][0].toFixed(2)} 100 Z`, id = 'g' + Math.random().toString(36).slice(2, 7), passo = Math.ceil(rot.length / 12);
-  return `<div class="vgLin" style="--c:${cor}"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cor}" stop-opacity=".28"/><stop offset="1" stop-color="${cor}" stop-opacity="0"/></linearGradient></defs>
-      ${[25, 50, 75].map((y) => `<line x1="0" x2="100" y1="${y}" y2="${y}" class="gr"/>`).join('')}<path d="${area}" fill="url(#${id})"/><path d="${d}" class="ln"/></svg>
+function vgLinha(rot, vals, sub, cor, fmt, corte = -1, ex = null) {
+  const n = vals.length, ate = corte >= 0 ? Math.min(corte, n - 1) : n - 1;
+  const acum = (vs) => { let c = 0; return vs.map((v) => (c += v)); }, cum = acum(vals);
+  const tem = ex && ex.vals.some((v) => v), cumE = tem ? acum(ex.vals) : [];
+  const mx = Math.max(cum[ate] || 0, tem ? cumE[ate] || 0 : 0, 0.0001) * 1.12, X = (i) => (n === 1 ? 50 : ((i + 0.5) / n) * 100), Y = (v) => 100 - (v / mx) * 100;
+  const caminho = (cs) => [[0, 100], ...cs.slice(0, ate + 1).map((v, i) => [X(i), Y(v)])].map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join(' ');
+  const d = caminho(cum), pts = [X(ate), Y(cum[ate] || 0)];
+  const area = d + ` L${pts[0].toFixed(2)} 100 Z`, id = 'g' + Math.random().toString(36).slice(2, 7), passo = Math.ceil(rot.length / 12);
+  return `<div class="vgLin" style="--c:${cor}${tem ? ';--c2:' + ex.cor : ''}"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cor}" stop-opacity=".28"/><stop offset="1" stop-color="${cor}" stop-opacity="0"/></linearGradient></defs>
+      ${[25, 50, 75].map((y) => `<line x1="0" x2="100" y1="${y}" y2="${y}" class="gr"/>`).join('')}<path d="${area}" fill="url(#${id})"/><path d="${d}" class="ln"/>${tem ? `<path d="${caminho(cumE)}" class="ln ln2"/>` : ''}</svg>
     ${vals.map((v, i) => (v && i <= ate ? `<span class="pt" style="left:${X(i)}%;top:${Y(cum[i])}%" title="${esc(rot[i])}: +${fmt(v)}${sub ? ' (' + sub[i] + ')' : ''} · total ${fmt(cum[i])}"></span>` : '')).join('')}
+    ${tem ? ex.vals.map((v, i) => (v && i <= ate ? `<span class="pt p2" style="left:${X(i)}%;top:${Y(cumE[i])}%" title="${esc(rot[i])}: ${ex.nome} ${fmt(v)}${ex.sub ? ' (' + ex.sub[i] + ')' : ''} · total ${fmt(cumE[i])}"></span>` : '')).join('') : ''}
     ${corte >= 0 ? `<span class="agora" style="left:${X(ate)}%"></span>` : ''}</div>
     <div class="vgX">${rot.map((r, i) => `<span>${i % passo === 0 ? esc(r) : ''}</span>`).join('')}</div>`;
 }
@@ -525,7 +527,8 @@ async function loadVisao() {
   else { rot = []; const ini = new Date(de + 'T12:00:00Z'); for (let i = 0; i < 13; i++) { const d = new Date(Date.UTC(ini.getUTCFullYear(), ini.getUTCMonth() + i, 1)).toISOString().slice(0, 7); if (d > ate.slice(0, 7)) break; rot.push(d); } const ix = Object.fromEntries(rot.map((d, i) => [d, i])); kv = (t) => ix[t.slice(0, 7)]; rot = rot.map((d) => ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'][+d.slice(5, 7) - 1]); }
   const vV = rot.map(() => 0), vN = rot.map(() => 0), vC = rot.map(() => 0);
   j.vendas.forEach((v) => { const i = kv(v.t); if (i !== undefined) { vV[i] += v.l; vN[i]++; } });
-  ES.forEach((v) => { const i = kv(v.t); if (i !== undefined) vV[i] += v.l; }); // estorno desconta no dia/hora em que aconteceu
+  const vE = rot.map(() => 0), nE = rot.map(() => 0); // estornos: linha vermelha à parte (valor positivo do que saiu)
+  ES.forEach((v) => { const i = kv(v.t); if (i !== undefined) { vE[i] += Math.abs(v.l); nE[i]++; } });
   j.cadastros.forEach((t) => { const i = kv(t); if (i !== undefined) vC[i]++; });
   const ult = j.vendas.length ? j.vendas[j.vendas.length - 1].t : null;
   const P = [['hoje', 'Hoje'], ['ontem', 'Ontem'], ['7d', '7 dias'], ['30d', '30 dias'], ['90d', '90 dias'], ['1a', '1 ano']];
@@ -542,7 +545,7 @@ async function loadVisao() {
     </div>
     <div class="vgMeio">${socio('leo', 'Leo', lp, 'y')}${socio('reinaldo', 'Reinaldo', sp, 'c')}</div>
     <div class="vgGr">
-      <div class="glass vgC"><div class="vgCh"><b>💰 Vendas ${j.dias === 1 ? 'por hora' : j.dias <= 90 ? 'por dia' : 'por mês'}</b><small>${nV} venda${nV === 1 ? '' : 's'} · ${brl(liq)}</small></div>${vgLinha(rot, vV, vN.map((n) => n + ' venda' + (n === 1 ? '' : 's')), '#ffd400', brl0, corte)}</div>
+      <div class="glass vgC"><div class="vgCh"><b>💰 Vendas ${j.dias === 1 ? 'por hora' : j.dias <= 90 ? 'por dia' : 'por mês'}</b><small><i class="lg" style="--c:#ffd400"></i>${nV} venda${nV === 1 ? '' : 's'} ${brl(liq - est)}${ES.length ? ` · <i class="lg" style="--c:#ff4d5e"></i>${ES.length} estorno${ES.length === 1 ? '' : 's'} ${brl(-est)} · líquido ${brl(liq)}` : ''}</small></div>${vgLinha(rot, vV, vN.map((n) => n + ' venda' + (n === 1 ? '' : 's')), '#ffd400', brl0, corte, { vals: vE, cor: '#ff4d5e', nome: 'estorno', sub: nE.map((n) => n + ' estorno' + (n === 1 ? '' : 's')) })}</div>
       <div class="glass vgC"><div class="vgCh"><b>🎁 Cadastros no teste grátis</b><small>${nC} no período · ${cmp(nC, j.anterior.cadastros, (x) => x)}</small></div>${vgLinha(rot, vC, null, '#5ad1ff', (x) => x, corte)}</div>
     </div>`;
   $('vg').querySelectorAll('.vgP button').forEach((b) => (b.onclick = () => { VG.p = b.dataset.p; loadVisao(); }));
