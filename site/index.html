@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<script src="/assets/i18n.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050506">
 <title>Studio Cover · Voz afinada e som de estúdio gravando no celular</title>
@@ -747,7 +748,10 @@ footer a { color: #888; }
     if (o.price) {
       $('preco').hidden = false;
       const n = parseInt(o.installments, 10) || 0;
-      if (n > 1 && o.installment_value) {
+      if (o.preco_fmt) { // fora do Brasil: preço anual em dólar ou euro, sem parcelas
+        $('precoPor').textContent = o.preco_fmt;
+        $('precoVista').innerHTML = 'assinatura anual · acesso por 12 meses'; $('precoVista').hidden = false;
+      } else if (n > 1 && o.installment_value) {
         $('precoPor').innerHTML = '<small>' + n + 'x de</small> R$ ' + o.installment_value;
         $('precoVista').innerHTML = 'ou <b>R$ ' + o.price + '</b> à vista';
         $('precoVista').hidden = false;
@@ -792,6 +796,7 @@ footer a { color: #888; }
   $('tList').innerHTML = STEPS.map((s) => `<li>${s[1]}</li>`).join('');
   const bars = [...$('tProg').querySelectorAll('b')], items = [...$('tList').children];
   const scramble = (el, txt) => {
+    if (window.scI18n) txt = scI18n.t(txt);
     if (calm) { el.textContent = txt; return; }
     const abc = '▮▯▓▒░<>/\\|=+#ABCDEFGHX0123456789'; let f = 0; const n = 16; cancelAnimationFrame(el._r);
     const go = () => { f++; const k = f / n; el.textContent = [...txt].map((c, i) => (c === ' ' || i / txt.length < k) ? c : abc[(Math.random() * abc.length) | 0]).join(''); if (f < n) el._r = requestAnimationFrame(go); else el.textContent = txt; };

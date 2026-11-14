@@ -107,7 +107,8 @@ SQL);
     $db->exec('ALTER TABLE users ADD COLUMN baixar_livre INTEGER NOT NULL DEFAULT 0');
     // quem já ganhou o vídeo de presente pelo depoimento (antes desta regra) também ganha o download liberado
     try { $db->exec("UPDATE users SET baixar_livre = 1 WHERE status = 'trial' AND id IN (SELECT user_id FROM depoimentos WHERE bonus = 1)"); } catch (Throwable $e) {}
-  }
+  }  // clientes de fora do Brasil (2026-11-14): língua, país e região de cada pessoa e de cada venda
+  try { i18n_migra($db); } catch (Throwable $e) {}
 }
 
 // ---------- configurações editáveis no painel ----------
@@ -139,6 +140,12 @@ const SETTINGS_DEFAULT = [
   'empresa_doc' => '',               // CNPJ ou CPF de quem vende
   'depo_bonus' => '1',               // quem está no teste ganha +1 vídeo ao mandar o antes e depois (1 vez)
   'dpo_email' => 'contato@studiocover.com.br', // e-mail do encarregado de dados (LGPD): pedidos de acesso, correção e exclusão
+  // fora do Brasil (2026-11-14): preço e checkout da Stripe por região. Vazio = região sem venda ainda (cai no teste grátis)
+  'price_us' => '97', 'price_eu' => '89',          // preço anual em dólar (EUA e Canadá) e em euro (Europa)
+  'checkout_us' => '', 'checkout_eu' => '',          // link de pagamento da Stripe de cada região
+  'stripe_whsec' => '',                             // segredo do webhook da Stripe (whsec_...)
+  'stripe_socio_acct' => '', 'stripe_socio_pct' => '50', // conta Stripe do sócio (acct_...) e a parte dele em cada venda
+  'stripe_taxa_pct' => '6',                         // taxa estimada da Stripe em cada venda de fora (% do valor), para o líquido do painel
 ];
 function setting(string $k): string {
   static $cache = null;
@@ -249,6 +256,16 @@ function access(array $u): array {
   ];
 }
 function checkout_url(?array $u = null): string {
+  $reg = $u ? user_regiao($u) : req_regiao();
+  if ($u && $reg === 'br' && ($u['regiao'] ?? '') === '' && req_regiao() !== 'br') $reg = req_regiao();
+  $reg = reg_venda($reg);
+  if ($reg !== 'br') { // Stripe (dólar ou euro): o link leva o e-mail e o código da pessoa para a compra cair na conta certa
+    $url = setting('checkout_' . $reg); if ($url === '') return '';
+    $lang = $u ? user_lang($u) : req_lang(); if ($lang === 'pt') $lang = 'en';
+    $q = ['client_reference_id' => 'sc_' . ($u ? (int)$u['id'] : 0) . '_' . str_replace('-', '', $lang)];
+    if ($u && !empty($u['email'])) $q['prefilled_email'] = $u['email'];
+    return $url . (strpos($url, '?') === false ? '?' : '&') . http_build_query($q);
+  }
   $url = setting('checkout_url');
   // lead de afiliado (ou visitante que veio pelo link dele): compra pelo link de afiliado da Eduzz
   $af = $u ? af_by_id(isset($u['afiliado_id']) ? (int)$u['afiliado_id'] : null) : af_visitante();
@@ -259,9 +276,17 @@ function checkout_url(?array $u = null): string {
   if ($u && !preg_match('/[?&]trk=/', $url)) $url .= (strpos($url, '?') === false ? '?' : '&') . 'trk=teste';
   return $url;
 }
+// preço mostrado na página e no app: em reais com parcelas (Brasil) ou anual em dólar/euro (fora)
+// região que vende em dólar/euro só depois que o link da Stripe dela estiver no painel; antes disso, todo mundo compra em reais
+function reg_venda(string $reg): string { return ($reg === 'us' || $reg === 'eu') && setting('checkout_' . $reg) !== '' ? $reg : 'br'; }
+function oferta_preco(string $reg): array {
+  $reg = reg_venda($reg);
+  if ($reg === 'us' || $reg === 'eu') { $p = setting('price_' . $reg); return ['price' => $p, 'installments' => 0, 'installment_value' => '', 'moeda' => $reg === 'us' ? 'USD' : 'EUR', 'preco_fmt' => ($reg === 'us' ? '$' : '€') . $p, 'regiao' => $reg]; }
+  return ['price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value'), 'moeda' => 'BRL', 'regiao' => 'br'];
+}
 function public_user(array $u): array {
   return ['id' => (int)$u['id'], 'email' => $u['email'], 'name' => $u['name'], 'status' => $u['status'], 'expires_at' => $u['expires_at'],
-    'videos_used' => (int)$u['videos_used'], 'baixar_livre' => (int)($u['baixar_livre'] ?? 0), 'afiliado' => af_e_afiliado((string)$u['email'])] + access($u) + ['checkout_url' => checkout_url($u), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value')];
+    'videos_used' => (int)$u['videos_used'], 'baixar_livre' => (int)($u['baixar_livre'] ?? 0), 'afiliado' => af_e_afiliado((string)$u['email'])] + access($u) + ['checkout_url' => checkout_url($u)] + oferta_preco(user_regiao($u) === 'br' && ($u['regiao'] ?? '') === '' ? req_regiao() : user_regiao($u));
 }
 
 function app_events_db(): PDO {
@@ -332,6 +357,7 @@ function sales_fill_net(): void {
 }
 
 function notify(int $uid, string $title, string $body, string $url = ''): void {
+  if ($uid > 0) { $q = db()->prepare('SELECT lang FROM users WHERE id = ?'); $q->execute([$uid]); $l = sc_lang_ok((string)$q->fetchColumn()); if ($l !== '' && $l !== 'pt') { $title = tr($title, $l); $body = tr($body, $l); } }
   db()->prepare('INSERT INTO notifications (user_id, title, body, url, created_at) VALUES (?, ?, ?, ?, ?)')->execute([$uid, $title, $body, $url, now()]);
   try { push_user($uid, $title, $body, $url); } catch (Throwable $e) {} // celular de quem instalou e deixou avisar
 }
@@ -355,6 +381,7 @@ function set_password_link(array $u, int $days = 7): string {
   return site_url() . '/entrar/?criar=' . $t;
 }
 
+require_once __DIR__ . '/i18n_lib.php';
 require_once __DIR__ . '/mail.php';
 require_once __DIR__ . '/push.php';
 require_once __DIR__ . '/afiliados.php';

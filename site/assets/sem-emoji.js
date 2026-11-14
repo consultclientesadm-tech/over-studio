@@ -50,5 +50,7 @@
     new MutationObserver(function (ms) { ms.forEach(function (m) { if (m.type === 'characterData') trocaNo(m.target); else m.addedNodes.forEach(varre); }); })
       .observe(document.body, { childList: true, subtree: true, characterData: true });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', liga); else liga();
+  // com a tradução ligada, espera ela trocar os textos primeiro (senão o ícone parte a frase e ela não acha a tradução)
+  function vai() { if (window.scI18n && window.scI18n.ready && window.scI18n.lang !== 'pt') { var f = false, um = function () { if (!f) { f = true; liga(); } }; window.scI18n.ready.then(um, um); setTimeout(um, 3000); } else liga(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vai); else vai();
 })();

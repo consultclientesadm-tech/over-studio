@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="admin.css?v=26">
 <link rel="stylesheet" href="/assets/rack-skin.css?v=1">
 <script src="/assets/icons.js?v=1"></script>
-<script src="/assets/sem-emoji.js?v=1" defer></script>
+<script src="/assets/sem-emoji.js?v=2" defer></script>
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -180,6 +180,17 @@
           <label>Vídeo do passo a passo dos afiliados <small>(link .mp4)</small><input name="af_tutorial_url" placeholder="https://..."></label>
           <label class="full">Pixels da Meta (página de vendas) <small>separe por vírgula; vazio = sem pixel</small><input name="meta_pixel" placeholder="1595086872316004, 1631589557846072"></label>
           <label class="full">Pixel que já está no checkout da Eduzz <small>a página de obrigado manda a Compra só para os outros</small><input name="eduzz_pixel" placeholder="1595086872316004"></label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>🌎 Fora do Brasil (Stripe: dólar e euro)</b> <small>o cliente de fora vê o app e a página na língua dele; vazio = região ainda sem venda</small></div>
+          <label>Preço anual nos EUA e Canadá (US$)<input name="price_us" placeholder="97"></label>
+          <label>Preço anual na Europa (€)<input name="price_eu" placeholder="89"></label>
+          <label class="full">Link de pagamento da Stripe em dólar <small>buy.stripe.com/...</small><input name="checkout_us" placeholder="https://buy.stripe.com/..."></label>
+          <label class="full">Link de pagamento da Stripe em euro<input name="checkout_eu" placeholder="https://buy.stripe.com/..."></label>
+          <label class="full">URL do webhook para colar na Stripe<input readonly value="https://studiocover.com.br/api/stripe.php"></label>
+          <label>Segredo do webhook da Stripe <small>whsec_...</small><input name="stripe_whsec" autocomplete="off"></label>
+          <label>Taxa estimada da Stripe (%) <small>para o líquido do painel</small><input name="stripe_taxa_pct" placeholder="6"></label>
+          <label>Conta Stripe do sócio <small>acct_... (a parte dele cai sozinha)</small><input name="stripe_socio_acct" placeholder="acct_..."></label>
+          <label>Parte do sócio nas vendas da Stripe (%)<input name="stripe_socio_pct" placeholder="50"></label>
         </div>
         <div class="glass formgrid"><div class="ch"><b>🔒 LGPD (aparece na Política de privacidade e nos Termos)</b></div>
           <label>Razão social ou nome de quem vende<input name="empresa_nome" placeholder="Ex.: Studio Cover Ltda"></label>

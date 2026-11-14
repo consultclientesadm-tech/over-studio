@@ -1,6 +1,7 @@
 // Conversões entre frequência, nota MIDI e nomes de notas em português.
 
-const NAMES = ['Dó', 'Dó#', 'Ré', 'Ré#', 'Mi', 'Fá', 'Fá#', 'Sol', 'Sol#', 'Lá', 'Lá#', 'Si'];
+// em inglês e alemão as notas são letras (C D E...); nas outras línguas fica Dó Ré Mi
+const NAMES = /^(en|de)/.test((globalThis.scI18n && globalThis.scI18n.lang) || '') ? ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] : ['Dó', 'Dó#', 'Ré', 'Ré#', 'Mi', 'Fá', 'Fá#', 'Sol', 'Sol#', 'Lá', 'Lá#', 'Si'];
 
 // Sílabas do solfejo de dó móvel, por distância em semitons da tônica
 const SOLFEGE = {

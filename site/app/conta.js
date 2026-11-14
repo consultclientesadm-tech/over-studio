@@ -144,6 +144,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 
   // ---------- teste grátis e cobrança ----------
   const precoHtml = () => {
+    if (me.preco_fmt) return `<div class="sc-preco"><b>${esc(me.preco_fmt)}</b><small>1 ano de acesso</small></div>`; // fora do Brasil (dólar ou euro)
     const n = +me.installments || 0, v = me.installment_value;
     if (n > 1 && v) return `<div class="sc-preco"><small>${n}x de</small><b>R$ ${esc(v)}</b><small>ou R$ ${esc(me.price)} à vista · 1 ano de acesso</small></div>`;
     return me.price ? `<div class="sc-preco"><b>R$ ${esc(me.price)}</b><small>1 ano de acesso</small></div>` : '';

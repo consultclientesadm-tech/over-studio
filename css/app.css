@@ -386,6 +386,7 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .audio #stepCor, .audio #exportBtn, .audio #watchBtn, .audio #exportBar { display: none !important; }
 .audio #viewer video, .audio #viewer canvas { visibility: hidden; }
 .audio #viewer::after { content: '♪ Só o áudio\A Baixe o áudio pronto no fim e junte no seu vídeo no editor'; white-space: pre-line; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; color: var(--y); font: 600 14px/1.5 'Space Grotesk', sans-serif; pointer-events: none; }
+html[lang^=en] .audio #viewer::after { content: '♪ Audio only\A Download the finished audio at the end and add it to your video in your editor'; }
 .audio #dlWav { background: var(--y); color: #000; font-weight: 700; padding: 14px 18px; }
 .audio #tag, .audio #fsBtn { display: none !important; }
 .stems { display: flex; gap: 8px; } .stems .pill { flex: 1; }

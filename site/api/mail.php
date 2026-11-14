@@ -59,6 +59,8 @@ function email_link(string $tok, string $url): string {
 
 // Manda e registra. $kind: senha | esqueci | funil-N | teste-acabou | boas-vindas | teste
 function send_mail(?array $u, string $to, string $kind, string $subject, string $title, string $bodyHtml, string $btnText = '', string $btnUrl = ''): bool {
+  $lang = user_lang($u); // e-mail na língua da pessoa (quem é do Brasil recebe igual sempre recebeu)
+  if ($lang !== 'pt') { $subject = tr($subject, $lang); $title = tr_html($title, $lang); $bodyHtml = tr_html($bodyHtml, $lang); if ($btnText !== '') $btnText = tr($btnText, $lang); }
   $from = setting('mail_from');
   if (!$from) { $host = preg_replace('/^www\./', '', (string)parse_url(site_url(), PHP_URL_HOST)); if ($host && str_contains($host, '.') && !preg_match('/^[\d.]+$/', $host)) $from = 'contato@' . $host; }
   $unsub = $u && !empty($u['unsub_token']) ? site_url() . '/api/conta.php?a=sair-lista&t=' . $u['unsub_token'] : '';
@@ -66,8 +68,9 @@ function send_mail(?array $u, string $to, string $kind, string $subject, string 
   $trk = fn($url) => email_link($tok, $url);
   $bodyT = preg_replace_callback('#href="(https?://[^"]+)"#i', fn($m) => 'href="' . h($trk(html_entity_decode($m[1]))) . '"', $bodyHtml);
   $html = mail_template($title, $bodyT, $btnText, $btnUrl ? $trk($btnUrl) : '', $unsub);
+  if ($lang !== 'pt') $html = tr_html($html, $lang); // rodapé do modelo
   $html = str_replace('</body>', '<img src="' . h(site_url() . '/api/e.php?o=' . $tok) . '" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;opacity:0"></body>', $html);
-  $text = trim(html_entity_decode(strip_tags(str_replace(['<br>', '</p>'], ["\n", "\n\n"], $bodyHtml)))) . ($btnUrl ? "\n\n$btnText: $btnUrl" : '') . ($unsub ? "\n\nNão quer mais receber? $unsub" : '');
+  $text = trim(html_entity_decode(strip_tags(str_replace(['<br>', '</p>'], ["\n", "\n\n"], $bodyHtml)))) . ($btnUrl ? "\n\n$btnText: $btnUrl" : '') . ($unsub ? "\n\n" . tr("Não quer mais receber? $unsub", $lang) : '');
   $err = null;
   if (!$from) $err = 'Configure o e-mail de envio no painel (Configurações).';
   elseif (setting('smtp_host') !== '') $err = smtp_send($to, $subject, $html, $text, ['from' => $from]);

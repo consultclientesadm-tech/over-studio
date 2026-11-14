@@ -9,8 +9,8 @@ $a = (string)($_GET['a'] ?? '');
 
 switch ($a) {
   case 'oferta': // dados públicos para a página de vendas
-    header('Cache-Control: public, max-age=300');
-    json_out(['ok' => true, 'checkout_url' => checkout_url(), 'price' => setting('price'), 'installments' => (int)setting('installments'), 'installment_value' => setting('installment_value'), 'trial' => setting('trial_enabled') === '1', 'trial_videos' => (int)setting('trial_videos'), 'whatsapp' => setting('support_whatsapp'), 'pixel' => setting('meta_pixel'), 'eduzz_pixel' => setting('eduzz_pixel')]);
+    header('Cache-Control: private, max-age=120'); header('Vary: Cookie'); // o preço muda com a região (Brasil, EUA, Europa)
+    json_out(['ok' => true, 'checkout_url' => checkout_url()] + oferta_preco(req_regiao()) + ['trial' => setting('trial_enabled') === '1', 'trial_videos' => (int)setting('trial_videos'), 'whatsapp' => setting('support_whatsapp'), 'pixel' => setting('meta_pixel'), 'eduzz_pixel' => setting('eduzz_pixel')]);
 
   case 'clique': { // visita pelo link do afiliado (?af=CODIGO): guarda 60 dias e conta o clique
     $af = af_by_codigo((string)($_GET['af'] ?? ''));
@@ -49,6 +49,7 @@ switch ($a) {
     db()->prepare('UPDATE users SET pass_hash = ?, last_login = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), now(), $u['id']]);
     if ($af = af_visitante()) af_db()->prepare('UPDATE users SET afiliado_id = ? WHERE id = ?')->execute([$af['id'], $u['id']]); // lead do afiliado
     registra_aceite((int)$u['id']);
+    if (req_lang() !== 'pt' || req_regiao() !== 'br') marca_regiao((int)$u['id']); // cliente de fora: língua, país e região
     if ($or = or_visitante()) origem_db()->prepare('UPDATE users SET origem = ? WHERE id = ?')->execute([$or, $u['id']]); // de qual página/canal veio o teste
     $q->execute([$email]); $u = $q->fetch();
     login_user($u);
@@ -69,6 +70,7 @@ switch ($a) {
     }
     if (password_needs_rehash($u['pass_hash'], PASSWORD_DEFAULT)) db()->prepare('UPDATE users SET pass_hash = ? WHERE id = ?')->execute([password_hash($pass, PASSWORD_DEFAULT), $u['id']]);
     db()->prepare('UPDATE users SET last_login = ? WHERE id = ?')->execute([now(), $u['id']]);
+    if (req_lang() !== 'pt' && ($u['lang'] ?? '') === '') { marca_regiao((int)$u['id']); $q->execute([$email]); $u = $q->fetch(); }
     login_user($u);
     json_out(['ok' => true, 'user' => public_user($u)]);
   }

@@ -273,7 +273,7 @@ switch ($a) {
 
   case 'config': {
     $out = [];
-    foreach (SETTINGS_DEFAULT as $k => $_) $out[$k] = $k === 'smtp_pass' ? (setting($k) !== '' ? '••••••••' : '') : setting($k);
+    foreach (SETTINGS_DEFAULT as $k => $_) $out[$k] = in_array($k, ['smtp_pass', 'stripe_whsec'], true) ? (setting($k) !== '' ? '••••••••' : '') : setting($k);
     $out['webhook_url'] = site_url() . '/api/webhook.php?token=' . setting('webhook_token');
     $out['cron_last'] = setting('cron_last');
     json_out(['ok' => true, 'config' => $out]);
@@ -283,11 +283,12 @@ switch ($a) {
     foreach (SETTINGS_DEFAULT as $k => $_) {
       if (!array_key_exists($k, $in) || $k === 'webhook_token') continue;
       $v = trim((string)$in[$k]);
-      if ($k === 'smtp_pass' && $v === '••••••••') continue;
+      if (in_array($k, ['smtp_pass', 'stripe_whsec'], true) && $v === '••••••••') continue;
       if (in_array($k, ['trial_videos', 'access_days', 'smtp_port'], true)) $v = (string)max(0, (int)$v);
       if ($k === 'meta_pixel' || $k === 'eduzz_pixel') $v = implode(',', array_filter(preg_split('/\D+/', $v)));
       if ($k === 'installments') $v = (string)max(0, min(12, (int)$v));
       if ($k === 'checkout_url' && $v !== '' && !preg_match('#^https://#', $v)) fail('O link do checkout precisa começar com https://');
+      if (in_array($k, ['checkout_us', 'checkout_eu'], true) && $v !== '' && !preg_match('#^https://[^\s"<>]+$#', $v)) fail('O link de pagamento da Stripe precisa começar com https://');
       if ($k === 'af_tutorial_url' && $v !== '' && !preg_match('#^https://[^\s"<>]+$#', $v)) fail('O link do vídeo dos afiliados precisa começar com https://');
       set_setting($k, $v);
     }

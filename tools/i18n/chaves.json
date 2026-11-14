@@ -1,0 +1,4708 @@
+{
+ "! Toque no botão para criar a sua nova senha. O link vale por 24 horas.": [
+  "site/api/conta.php"
+ ],
+ "\" style=\"color:#999\">Sair da lista</a></p>": [
+  "site/api/mail.php"
+ ],
+ "\"Agora eu arrumo isso no celular. Comenta COVER que eu te mando o link do teste grátis.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Comenta COVER que eu te mando o link do teste grátis.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Comenta uma música que eu gravo agora no celular e deixo com som de estúdio.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Como eu deixo o meu cover com som de estúdio usando só o celular.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Desafinou aqui\"": [
+  "site/index.html"
+ ],
+ "\"Desafinou aqui\" dói, né?": [
+  "site/api/funil.php"
+ ],
+ "\"Esse é o meu cover gravado no celular... e esse é o MESMO vídeo depois do Studio Cover.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Faz as contas e testa grátis primeiro. Link na bio.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Fiz no celular, em poucos minutos. Tem teste grátis no link da bio.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Mandem uma música que eu gravo e afino aqui no celular agora.\" Gera comentário e conversa.": [
+  "site/afiliado/index.html"
+ ],
+ "\"Nos stories: caixinha de pergunta 'quer o link?' e manda o link para quem responder.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Ou suba só o áudio\"": [
+  "js/app.js"
+ ],
+ "\"Quantas vezes você gravou um cover, ouviu UMA nota fora e apagou tudo?\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Quer fazer o mesmo com a sua voz? Teste grátis no link da bio.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Salva esse vídeo e faz o teste grátis pelo link da bio.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Se você canta e nunca posta porque não gosta do som, faz o teste: é grátis.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Se você canta, testa no seu vídeo. É grátis, link na bio.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Testa grátis no seu próprio vídeo, sem cartão. Link na bio.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Um ano de estúdio no bolso custa menos que uma mixagem.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Uma mixagem no estúdio custa de 100 a 300 reais. Por música.\"": [
+  "site/afiliado/index.html"
+ ],
+ "\"Vou ouvir pela primeira vez como ficou o meu cover depois do Studio Cover.\"": [
+  "site/afiliado/index.html"
+ ],
+ "% por venda": [
+  "site/afiliado/index.html"
+ ],
+ "(8 ou mais, com letras e números)": [
+  "site/afiliado/index.html"
+ ],
+ "(de preferência o mesmo que você vai usar na Eduzz)": [
+  "site/afiliado/index.html"
+ ],
+ "(o padrão do Instagram, com a mesma qualidade), e o 4K pesa até 3 vezes mais para o celular": [
+  "js/app.js"
+ ],
+ "(o seu tinha {0} MB)": [
+  "js/app.js"
+ ],
+ "(olhe também o spam).": [
+  "site/obrigado/index.html"
+ ],
+ "(ou no Safari/Chrome), nunca pelo navegador do Instagram": [
+  "js/app.js"
+ ],
+ "(se for maior, o app usa só os {0} primeiros)": [
+  "js/app.js"
+ ],
+ "(vamos afinar pela melodia dela)": [
+  "js/app.js"
+ ],
+ "({0} vozes, cada uma separada)": [
+  "js/app.js"
+ ],
+ ") acabou de criar a conta de afiliado pelo link de cadastro.": [
+  "site/api/afiliados.php"
+ ],
+ ") e aceite os termos. A aprovação é": [
+  "site/afiliado/index.html"
+ ],
+ ") ou por um celular mais novo.": [
+  "site/assets/compat.js"
+ ],
+ "). Tente de novo.": [
+  "site/api/escudo.php"
+ ],
+ "): roda no modo leve.": [
+  "site/assets/compat.js"
+ ],
+ ", abra o Safari, cole na barra de endereço e entre com o seu e-mail e senha.": [
+  "site/obrigado/index.html"
+ ],
+ ", abra o Studio Cover e copie o seu link de divulgação (o link de checkout com o seu código). Cole no campo abaixo e toque em Salvar.": [
+  "site/afiliado/index.html"
+ ],
+ ", de preferência gravado em": [
+  "js/app.js"
+ ],
+ ", e você ganha mais 1 vídeo grátis no app, liberado para baixar": [
+  "site/api/depo_lib.php"
+ ],
+ ", faça o teste grátis e envie o vídeo.": [
+  "site/afiliado/index.html"
+ ],
+ ", inclusive receber e-mails e avisos sobre a minha conta (posso sair quando quiser).": [
+  "site/entrar/index.html"
+ ],
+ ", leva 2 minutos e ajuda outros cantores a confiar no Studio Cover.": [
+  "site/depoimento/index.html"
+ ],
+ ", mais uma venda do Studio Cover!": [
+  "site/api/afiliado.php",
+  "site/api/webhook.php"
+ ],
+ ", o acesso chega quando o banco confirmar (até 3 dias úteis).": [
+  "site/obrigado/index.html"
+ ],
+ ", o link para criar a senha chega no seu e-mail em alguns minutos. Se pagou com": [
+  "site/obrigado/index.html"
+ ],
+ ", pico em −1 dB.": [
+  "js/app.js"
+ ],
+ ", responsável pelo site studiocover.com.br e pelo app Studio Cover. O encarregado de dados (LGPD, art. 41) atende pelo e-mail": [
+  "site/privacidade/index.html"
+ ],
+ ", também nas renovações anuais.": [
+  "site/afiliado/index.html"
+ ],
+ ". Abra o e-mail e toque em": [
+  "site/obrigado/index.html"
+ ],
+ ". Acima de {0} MB o celular pode ficar sem memória e fechar o app no meio (não é defeito do app, é o limite do aparelho).": [
+  "js/app.js"
+ ],
+ ". Estes Termos seguem as leis do Brasil. Fica eleito o foro do domicílio do consumidor.": [
+  "site/termos/index.html"
+ ],
+ ". O limite é de": [
+  "js/app.js"
+ ],
+ ". Sem cartão.": [
+  "site/index.html"
+ ],
+ ". Toque em": [
+  "site/obrigado/index.html"
+ ],
+ ". Você sobe um vídeo cantando e o app separa a voz, afina, mixa, masteriza, aplica filtros de cor e devolve o vídeo pronto para publicar. Ao criar uma conta, comprar ou usar o app, você concorda com estes Termos e com a": [
+  "site/termos/index.html"
+ ],
+ ". Vídeo em 4K é aceito, mas o seu cover sempre sai em": [
+  "js/app.js"
+ ],
+ "0 de 5": [
+  "site/afiliado/index.html"
+ ],
+ "1 indicação por semana ≈ R$ 600 por mês. Vire afiliado.": [
+  "site/api/funil.php"
+ ],
+ "1 voz": [
+  "js/app.js"
+ ],
+ "1 vídeo": [
+  "site/api/funil.php"
+ ],
+ "1 vídeo seu": [
+  "site/entrar/index.html"
+ ],
+ "1. Criar a senha": [
+  "site/obrigado/index.html"
+ ],
+ "1. Os seus vídeos": [
+  "site/depoimento/index.html"
+ ],
+ "1. Toque nos <b>três pontinhos (…)</b> no canto da tela do {0}.": [
+  "site/assets/compat.js"
+ ],
+ "1080p, com o som e a cor que você escolheu.": [
+  "index.html"
+ ],
+ "2. Instalar o app": [
+  "site/obrigado/index.html"
+ ],
+ "2. O que você achou?": [
+  "site/depoimento/index.html"
+ ],
+ "2. Toque em <b>Abrir no navegador</b> (ou \"Abrir no Safari\").": [
+  "site/assets/compat.js"
+ ],
+ "3. Como você aparece": [
+  "site/depoimento/index.html"
+ ],
+ "30 dias de e-mails": [
+  "site/afiliados/index.html"
+ ],
+ ": a inteligência artificial roda dentro dele. Guardamos só o necessário para a sua conta funcionar (nome, e-mail, compra e números de uso do app). Não vendemos seus dados. Você pode baixar uma cópia ou apagar a sua conta a qualquer momento, pelo app (menu da conta › Privacidade e meus dados) ou pelo e-mail": [
+  "site/privacidade/index.html"
+ ],
+ ": o app vai usar só os {0} primeiros.": [
+  "js/app.js"
+ ],
+ "</b> · link de divulgação:": [
+  "site/api/afiliados.php"
+ ],
+ "</b> à vista": [
+  "site/index.html"
+ ],
+ "<b style=\"color:#2ee59d\">Indique e ganhe</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style=\"color:#ffd400\">Ver como funciona →</u>": [
+  "site/app/conta.js"
+ ],
+ "<b><i data-ic=\"bolt\"></i> Deixar tudo pronto</b><small>afina, mixa, masteriza e coloca cor de cinema sozinho</small>": [
+  "index.html"
+ ],
+ "<b>Afinação</b>A4 · 440 Hz · ±3 cents": [
+  "site/index.html"
+ ],
+ "<b>Amanhã você vai postar mais um cover desafinado, ou vai postar com som de estúdio?</b>": [
+  "site/api/funil.php"
+ ],
+ "<b>Autoridades</b>: quando a lei ou uma ordem judicial exigir.": [
+  "site/privacidade/index.html"
+ ],
+ "<b>Dados do cartão.</b> O pagamento é feito no checkout da Eduzz. Nós não vemos nem guardamos o número do cartão.": [
+  "site/privacidade/index.html"
+ ],
+ "<b>Eduzz</b>: pagamento, nota, assinatura, reembolso e comissão de afiliados (ela tem a sua própria política de privacidade).": [
+  "site/privacidade/index.html"
+ ],
+ "<b>Funciona bem em:</b>": [
+  "site/assets/compat.js"
+ ],
+ "<b>Funciona bem:</b> iPhone 13 ou mais novo com o iOS atualizado; Android intermediário ou top de linha com 6 GB de memória ou mais (ex.: Galaxy A54, S21 ou mais novos); computador com Chrome, Edge ou Safari atualizado.": [
+  "site/termos/index.html"
+ ],
+ "<b>Garantia de 7 dias:</b> em até 7 dias da compra você pode pedir o reembolso integral, como prevê o art. 49 do Código de Defesa do Consumidor, pela Eduzz ou pelo nosso suporte.": [
+  "site/termos/index.html"
+ ],
+ "<b>Garantia incondicional de 7 dias.</b> Testou e não gostou? Devolvemos 100% do seu dinheiro. Sem perguntas.": [
+  "site/index.html"
+ ],
+ "<b>Hospedagem</b>: o servidor onde ficam o site e o banco de dados, contratado no Brasil.": [
+  "site/privacidade/index.html"
+ ],
+ "<b>Indique e ganhe</b><small>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura.</small>": [
+  "site/app/conta.js"
+ ],
+ "<b>Manual em vídeo</b><small>Vídeos curtos mostrando cada função do app</small>": [
+  "index.html"
+ ],
+ "<b>Meta (Facebook e Instagram)</b>: só se você não recusar o Pixel na página de vendas.": [
+  "site/privacidade/index.html"
+ ],
+ "<b>No limite:</b> iPhones e Androids mais antigos podem funcionar, mas demorar mais ou fechar no meio com vídeos longos.": [
+  "site/termos/index.html"
+ ],
+ "<b>Não compatível:</b> celulares de entrada (ex.: Galaxy A03, A12, A13, linhas J e M de entrada) e aparelhos com menos de 4 GB de memória.": [
+  "site/termos/index.html"
+ ],
+ "<b>O mais importante.</b> O Studio Cover processa o vídeo <b>dentro do seu aparelho</b>, então ele precisa ter força: funciona em <b>iPhone 13 ou mais novo, Android intermediário ou top de linha (6 GB de memória ou mais) e no computador</b>. O site testa o seu aparelho e avisa se ele não for compatível. A assinatura é anual e renova sozinha; você tem 7 dias de garantia.": [
+  "site/termos/index.html"
+ ],
+ "<b>Ou suba só o áudio</b><small>MP3, M4A ou WAV · você baixa o áudio pronto e junta no seu vídeo</small>": [
+  "index.html"
+ ],
+ "<b>Painel de afinação</b><small>mexer nota por nota</small>": [
+  "index.html"
+ ],
+ "<b>R$ {0}</b><small>1 ano de acesso</small>": [
+  "site/app/conta.js"
+ ],
+ "<b>Redes de entrega de arquivos</b> (jsDelivr, Google Fonts e as que entregam os modelos de IA): baixam os arquivos do app e do vídeo da página. Elas veem apenas dados técnicos da conexão, como o IP.": [
+  "site/privacidade/index.html"
+ ],
+ "<b>Se comprar, use pelo computador ou por um desses aparelhos.</b>": [
+  "site/assets/compat.js"
+ ],
+ "<b>Serviços de notificação</b> (Google, Apple, Mozilla ou Microsoft, conforme o seu aparelho): só para entregar as notificações que você ativou.": [
+  "site/privacidade/index.html"
+ ],
+ "<b>Seus vídeos, áudios e a sua voz.</b> Todo o processamento (separar a voz, afinar, mixar, aplicar a cor e exportar) acontece no seu celular ou computador. Os arquivos não são enviados para o nosso servidor nem para ninguém.": [
+  "site/privacidade/index.html"
+ ],
+ "<b>Você tem a assinatura ativa.</b> Apagar a conta não cancela a cobrança: cancele a renovação na Eduzz (no e-mail da compra, ou em \"Minhas compras\" da Eduzz) antes de apagar.": [
+  "site/app/conta.js"
+ ],
+ "<b>Volume de cada voz</b><small>Toda para a esquerda = a voz fica muda no vídeo final</small>": [
+  "js/app.js"
+ ],
+ "<b>Vídeo de até 3 minutos</b> (maior usa só os 3 primeiros)": [
+  "index.html"
+ ],
+ "<b>apagar</b> a sua conta e os dados tratados com base no seu consentimento;": [
+  "site/privacidade/index.html"
+ ],
+ "<b>corrigir</b> dados incompletos ou errados;": [
+  "site/privacidade/index.html"
+ ],
+ "<b>iPhone 13 ou mais novo</b>, <b>Android com 6 GB de memória ou mais</b> ou <b>computador</b>": [
+  "index.html"
+ ],
+ "<b>retirar o consentimento</b> e sair das listas de e-mail;": [
+  "site/privacidade/index.html"
+ ],
+ "<b>⚠️ Pode funcionar com vídeos curtos:</b> iPhone 11, 12 e SE; Android com 4 GB de memória.": [
+  "site/index.html"
+ ],
+ "<b>⛔ Não funciona:</b> iPhone 8, X, XR, XS ou mais antigos, iOS abaixo de 15; Android de entrada com 3 GB ou menos (ex.: Galaxy A03, A04, A12, A13, A14, M14, J, Android Go).": [
+  "site/index.html"
+ ],
+ "<b>✅ Funciona bem:</b> iPhone 13 ou mais novo com o iOS atualizado; Android intermediário ou top de linha com 6 GB de memória ou mais (ex.: Galaxy S21 ou mais novos, A35, A54, A55, Moto G54, G84, Edge, Redmi Note 12 Pro ou mais novos); computador com Chrome, Edge ou Safari.": [
+  "site/index.html"
+ ],
+ "<em>ANTES · OPCIONAL</em><b>Vídeo original, sem o app</b><small>O mesmo vídeo como você gravou</small>": [
+  "site/depoimento/index.html"
+ ],
+ "<em>BÔNUS · OPCIONAL</em><b>Você falando do resultado</b><small>10 a 20 segundos, olhando para a câmera</small>": [
+  "site/depoimento/index.html"
+ ],
+ "<em>DEPOIS</em><b>Vídeo que o app entregou</b><small>Toque para escolher na galeria</small>": [
+  "site/depoimento/index.html"
+ ],
+ "<em>Veja</em> a diferença.": [
+  "site/index.html"
+ ],
+ "<i class=\"snled\"></i><b>Não</b><small>Só a minha voz, sem música</small>": [
+  "index.html"
+ ],
+ "<i class=\"snled\"></i><b>Sim</b><small>Tem violão, banda ou playback junto</small>": [
+  "index.html"
+ ],
+ "<i data-ic=\"check\"></i>Pronto": [
+  "index.html"
+ ],
+ "<i data-ic=\"close\"></i> Fechar painel": [
+  "index.html"
+ ],
+ "<i data-ic=\"full\"></i> Assistir a prévia em tela cheia": [
+  "index.html"
+ ],
+ "<i data-ic=\"phone\"></i> Veja se o seu aparelho é compatível": [
+  "index.html"
+ ],
+ "<i style=\"background:var(--c)\"></i>Cliques": [
+  "site/afiliado/index.html"
+ ],
+ "<i style=\"background:var(--y)\"></i>Cadastros": [
+  "site/afiliado/index.html"
+ ],
+ "<i>{0}</i>Avisos {1}": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Baixar uma cópia dos meus dados": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Instalar na tela de início": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Ligar avisos no celular": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Meu aparelho é compatível?": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Meu painel de afiliado": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Política de privacidade": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Privacidade e meus dados": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Sair da conta": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Suporte no WhatsApp": [
+  "site/app/conta.js"
+ ],
+ "<i>{0}</i>Termos de uso": [
+  "site/app/conta.js"
+ ],
+ "<small>{0}x de</small><b>R$ {1}</b><small>ou R$ {2} à vista · 1 ano de acesso</small>": [
+  "site/app/conta.js"
+ ],
+ "@ do Instagram": [
+  "site/depoimento/index.html"
+ ],
+ "A Eduzz é a plataforma que processa as vendas e paga a sua comissão. Toque em <b>Começar gratuitamente</b>, crie a conta com o seu e-mail, complete o cadastro e coloque a sua conta bancária (é para lá que a comissão vai).": [
+  "site/afiliado/index.html"
+ ],
+ "A IA roda no seu aparelho, sem mandar seu vídeo para ninguém. Leva mais ou menos 1 minuto para cada minuto de vídeo no computador, um pouco mais no celular. Deixe esta tela aberta.": [
+  "index.html"
+ ],
+ "A IA separa a sua voz da base": [
+  "site/index.html"
+ ],
+ "A assinatura renova sozinha e a sua comissão também.": [
+  "site/afiliados/index.html"
+ ],
+ "A chave funciona, mas não tem acesso ao repositório over-studio. Ao criar, escolha esse repositório.": [
+  "site/api/escudo.php"
+ ],
+ "A comissão é sua, no dia 1 ou no dia 30.": [
+  "site/afiliados/index.html"
+ ],
+ "A compra é feita pela <b>Eduzz</b>, que cuida do pagamento, do parcelamento, da nota e dos reembolsos.": [
+  "site/termos/index.html"
+ ],
+ "A conexão caiu.": [
+  "site/depoimento/index.html"
+ ],
+ "A conta é pessoal e intransferível. Não compartilhe a sua senha.": [
+  "site/termos/index.html"
+ ],
+ "A diferença não é a voz. É o acabamento.": [
+  "site/api/funil.php"
+ ],
+ "A galeria cheia e o perfil parado": [
+  "site/api/funil.php"
+ ],
+ "A gente pega a melodia do cantor no seu tom e afina você por ela.": [
+  "index.html"
+ ],
+ "A inteligência artificial roda dentro do seu aparelho (o seu vídeo não sai dele), então ele precisa ter força.": [
+  "site/index.html"
+ ],
+ "A inteligência artificial roda no seu próprio aparelho (seus vídeos não são enviados para nenhum servidor). Por isso o aparelho precisa ter processador e memória suficientes:": [
+  "site/termos/index.html"
+ ],
+ "A mesma ideia dos grandes estúdios, separação de voz e afinação nota por nota, num app que você usa com o polegar.": [
+  "site/index.html"
+ ],
+ "A nota escapou": [
+  "site/index.html"
+ ],
+ "A nota que fez você apagar o vídeo": [
+  "site/afiliado/index.html"
+ ],
+ "A pessoa fica marcada como sua por 60 dias.": [
+  "site/afiliados/index.html"
+ ],
+ "A pessoa testa no próprio vídeo, sem cartão. Ouviu a voz afinada, entendeu o valor.": [
+  "site/afiliados/index.html"
+ ],
+ "A placa de vídeo do aparelho ficou sem memória. Feche outros apps e abas e toque em exportar de novo.": [
+  "js/filters.js"
+ ],
+ "A porta continua aberta": [
+  "site/api/funil.php"
+ ],
+ "A senha precisa ter pelo menos 8 caracteres.": [
+  "site/api/lib.php"
+ ],
+ "A separação da voz parou no meio. Toque em Novo vídeo e tente de novo.": [
+  "js/studio.js"
+ ],
+ "A sua conta de afiliado está pausada. Fale com o suporte:": [
+  "site/api/afiliado.php"
+ ],
+ "A sua música tem instrumental ou playback?": [
+  "index.html"
+ ],
+ "A voz ainda não foi afinada. Toque em \"Afinar automático\", ou em Próximo de novo para seguir sem afinar.": [
+  "js/app.js"
+ ],
+ "A voz some no violão": [
+  "site/index.html"
+ ],
+ "A voz vai ficar com efeito robô?": [
+  "site/index.html"
+ ],
+ "ABRIR A EDUZZ": [
+  "site/afiliado/index.html"
+ ],
+ "ABRIR NO CHROME": [
+  "site/app/conta.js"
+ ],
+ "ABRIR NO {0}": [
+  "site/app/conta.js"
+ ],
+ "ABRIR O APP E INSTALAR": [
+  "site/obrigado/index.html"
+ ],
+ "ABRIR O STUDIO COVER": [
+  "site/depoimento/index.html"
+ ],
+ "ABRIR O STUDIO COVER NA EDUZZ": [
+  "site/afiliado/index.html"
+ ],
+ "ASSINAR O STUDIO COVER": [
+  "site/afiliado/index.html"
+ ],
+ "ASSISTIR AO VÍDEO": [
+  "site/afiliados/index.html"
+ ],
+ "ATIVAR MINHA CONTA DE AFILIADO": [
+  "site/afiliado/index.html"
+ ],
+ "Ab": [
+  "js/analysis.js"
+ ],
+ "Abra este link no <b>Safari</b> para instalar (copie o endereço <b>studiocover.com.br/app</b> e cole no Safari).": [
+  "site/app/conta.js"
+ ],
+ "Abra no <b>Safari</b> ou no <b>Chrome</b>, não no navegador do Instagram": [
+  "index.html"
+ ],
+ "Abra no {0} antes de começar": [
+  "site/app/conta.js"
+ ],
+ "Abra no {0} para usar o Studio Cover": [
+  "site/assets/compat.js"
+ ],
+ "Abra o vídeo na galeria e espere ele baixar inteiro no aparelho": [
+  "js/app.js"
+ ],
+ "Abra pelo": [
+  "js/app.js"
+ ],
+ "Abrindo a imagem do vídeo": [
+  "js/app.js"
+ ],
+ "Abrindo o estúdio": [
+  "js/app.js"
+ ],
+ "Abrindo o vídeo": [
+  "js/app.js"
+ ],
+ "Abrir meu painel": [
+  "site/api/afiliado.php"
+ ],
+ "Abrir no Safari": [
+  "site/assets/compat.js"
+ ],
+ "Abrir no {0}": [
+  "site/assets/compat.js"
+ ],
+ "Abrir o Studio Cover": [
+  "site/api/funil.php"
+ ],
+ "Abrir o painel": [
+  "site/api/escudo.php"
+ ],
+ "Abriu endereço que só robô de invasão procura": [
+  "site/api/escudo.php"
+ ],
+ "Acesso bloqueado por segurança por algumas horas. Se for engano, fale com": [
+  "site/api/escudo.php"
+ ],
+ "Acesso completo": [
+  "site/index.html"
+ ],
+ "Acesso completo liberado": [
+  "site/api/funil.php"
+ ],
+ "Acesso liberado!": [
+  "site/app/conta.js"
+ ],
+ "Acesso na hora": [
+  "site/index.html"
+ ],
+ "Acesso suspenso": [
+  "site/app/conta.js"
+ ],
+ "Achando as notas": [
+  "js/app.js"
+ ],
+ "Achando as notas e o tom": [
+  "index.html"
+ ],
+ "Acompanhe os seus cliques, cadastros e vendas.": [
+  "site/afiliado/index.html"
+ ],
+ "Acordes": [
+  "site/index.html"
+ ],
+ "Administrador criado": [
+  "site/api/escudo.php"
+ ],
+ "Afiliados: nome, e-mail, WhatsApp e vendas indicadas": [
+  "site/privacidade/index.html"
+ ],
+ "Afiliações": [
+  "site/afiliado/index.html"
+ ],
+ "Afilie-se ao Studio Cover": [
+  "site/afiliado/index.html",
+  "site/afiliados/index.html"
+ ],
+ "Afina, mixa e exporta, tudo no celular.": [
+  "site/afiliados/index.html"
+ ],
+ "Afinado{0}: {1}% da voz na faixa verde. Compare no ANTES | DEPOIS.": [
+  "js/app.js"
+ ],
+ "Afinando e conferindo cada nota…": [
+  "js/app.js"
+ ],
+ "Afinar a voz inteira e comparar o ANTES e o DEPOIS.": [
+  "js/manual.js"
+ ],
+ "Afinar automático": [
+  "index.html",
+  "js/manual.js"
+ ],
+ "Afinar de novo": [
+  "index.html"
+ ],
+ "Afinar os meus covers": [
+  "site/api/funil.php"
+ ],
+ "Afinar pela música original": [
+  "site/index.html"
+ ],
+ "Afinação": [
+  "index.html",
+  "site/index.html"
+ ],
+ "Afinação automática": [
+  "site/index.html"
+ ],
+ "Afinação automática e natural": [
+  "site/index.html"
+ ],
+ "Afinação desfeita: a voz voltou a ser a original.": [
+  "js/app.js"
+ ],
+ "Afinação natural, mix, master e cor de cinema": [
+  "site/app/conta.js"
+ ],
+ "Afinação natural, sem voz de robô": [
+  "site/app/conta.js"
+ ],
+ "Afinação sem voz de robô": [
+  "site/index.html"
+ ],
+ "Afinação<b>{0}</b>": [
+  "js/app.js"
+ ],
+ "Agendar e esperar dias": [
+  "site/index.html"
+ ],
+ "Agora crie a sua senha. É com ela e com o e-mail": [
+  "site/obrigado/index.html"
+ ],
+ "Agora não": [
+  "site/app/conta.js"
+ ],
+ "Agora você tem o mesmo acabamento no seu celular. A diferença entre o seu vídeo e o deles não é a voz, é o tratamento.": [
+  "site/api/funil.php"
+ ],
+ "Agora é só tocar em Baixar: o seu vídeo sai na hora.": [
+  "site/app/conta.js"
+ ],
+ "Agudo": [
+  "index.html"
+ ],
+ "Ainda falta terminar o envio de \"": [
+  "site/api/depoimento.php"
+ ],
+ "Ainda não assino: quero assinar": [
+  "site/afiliado/index.html"
+ ],
+ "Ainda não recebemos a confirmação. Se você pagou com": [
+  "site/obrigado/index.html"
+ ],
+ "Ainda não tem acesso?": [
+  "site/entrar/index.html"
+ ],
+ "Ainda não é afiliado?": [
+  "site/afiliado/index.html"
+ ],
+ "Ainda sem leads. Compartilhe o seu link e eles aparecem aqui na hora.": [
+  "site/afiliado/index.html"
+ ],
+ "Ainda sem mix e master. Toque em \"Mixar e masterizar\", ou em Próximo de novo para seguir assim.": [
+  "js/app.js"
+ ],
+ "Ajuda": [
+  "index.html"
+ ],
+ "Ajustando os volumes…": [
+  "js/app.js"
+ ],
+ "Ajustar a mix": [
+  "index.html"
+ ],
+ "Ajuste o volume": [
+  "index.html"
+ ],
+ "Ajustes": [
+  "index.html"
+ ],
+ "Alguma coisa não ficou boa? Responda este e-mail e me conte. É assim que a gente melhora.": [
+  "site/api/depo_lib.php"
+ ],
+ "Alguns desses serviços podem processar dados fora do Brasil. Nesses casos a transferência segue o art. 33 da LGPD, com empresas que adotam proteção adequada.": [
+  "site/privacidade/index.html"
+ ],
+ "Amanhã você posta desafinado ou com som de estúdio?": [
+  "site/api/funil.php"
+ ],
+ "Amanhã você vai postar mais um cover desafinado, ou vai postar com som de estúdio? A escolha é sua, e ela custa menos do que uma mixagem.": [
+  "site/api/funil.php"
+ ],
+ "Amanhã você vai postar mais um cover desafinado... ou vai postar com som de estúdio?": [
+  "site/app/conta.js"
+ ],
+ "Amanhã você vai postar mais um cover desafinado?": [
+  "site/app/conta.js"
+ ],
+ "Amigo que canta na igreja, colega da banda, quem posta cover toda semana: todos sofrem com o áudio do celular. Você já tem a solução no bolso.": [
+  "site/api/funil.php"
+ ],
+ "Ampliar os botões": [
+  "index.html"
+ ],
+ "Android com 3 GB de memória ou mais (celulares mais simples, como Galaxy A e M, usam o modo leve automático)": [
+  "site/assets/compat.js"
+ ],
+ "Antes": [
+  "site/index.html"
+ ],
+ "Antes (vídeo original)": [
+  "site/api/depo_lib.php"
+ ],
+ "Antes de escolher o vídeo": [
+  "js/app.js"
+ ],
+ "Antes e depois": [
+  "site/afiliado/index.html"
+ ],
+ "Antes e depois (o clássico)": [
+  "site/afiliado/index.html"
+ ],
+ "Antes × Depois": [
+  "site/index.html"
+ ],
+ "Apagar a conta não cancela a assinatura na Eduzz: cancele a renovação lá antes, para não ser cobrado de novo.": [
+  "site/privacidade/index.html"
+ ],
+ "Apagar minha conta": [
+  "site/app/conta.js"
+ ],
+ "Aparelho inválido.": [
+  "site/api/push.php"
+ ],
+ "Aparelhos compatíveis": [
+  "site/assets/compat.js",
+  "site/termos/index.html"
+ ],
+ "Aplicando…": [
+  "index.html"
+ ],
+ "App completo no iPhone, Android e computador": [
+  "site/index.html"
+ ],
+ "Aquela nota que escapou não precisa ir para o ar.": [
+  "site/app/conta.js"
+ ],
+ "Aquele comentário que dói. E faz você pensar duas vezes antes de gravar o próximo.": [
+  "site/index.html"
+ ],
+ "Aquele cover não precisa ficar parado na galeria.": [
+  "site/api/funil.php"
+ ],
+ "Aquele que você gravou no celular e achou que o áudio \"não ficou bom\".": [
+  "site/index.html"
+ ],
+ "Arquivo alterado no servidor e restaurado": [
+  "site/api/escudo.php"
+ ],
+ "Arquivo estranho no site e não consegui mover: {0}": [
+  "site/api/escudo.php"
+ ],
+ "Arquivo estranho no site foi para a quarentena": [
+  "site/api/escudo.php"
+ ],
+ "Arquivo inválido.": [
+  "site/api/depoimento.php"
+ ],
+ "Arquivo secreto abrindo pela internet:": [
+  "site/api/escudo.php"
+ ],
+ "Arquivos que não são do Studio Cover continuam no site (estavam lá antes do escudo):": [
+  "site/api/escudo.php"
+ ],
+ "Arquivos que não são do Studio Cover já estavam no site na 1ª checagem (não mexi):": [
+  "site/api/escudo.php"
+ ],
+ "Arrastar a nota para a linha verde": [
+  "site/index.html"
+ ],
+ "Arraste para o verde": [
+  "site/index.html"
+ ],
+ "Arrastou para o verde, ficou certo": [
+  "site/index.html"
+ ],
+ "As duas senhas não são iguais.": [
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "As suas páginas de venda ficam prontas na hora.": [
+  "site/afiliados/index.html"
+ ],
+ "Assinatura, renovação e garantia": [
+  "site/termos/index.html"
+ ],
+ "Assistir ao vídeo": [
+  "site/afiliados/index.html",
+  "site/index.html"
+ ],
+ "Assistir uma prévia": [
+  "js/app.js"
+ ],
+ "Ative a sua conta de afiliado num toque, com o mesmo e-mail e a mesma senha do app:": [
+  "site/afiliado/index.html"
+ ],
+ "Atualizando a mix…": [
+  "js/app.js"
+ ],
+ "Atualize o iPhone (Ajustes › Geral › Atualização de Software): com iOS antigo o vídeo sai com menos qualidade.": [
+  "site/assets/compat.js"
+ ],
+ "Até {0} MB": [
+  "js/app.js"
+ ],
+ "AudioDecoder não devolveu áudio": [
+  "js/demux.js"
+ ],
+ "AudioDecoder não lê este AAC": [
+  "js/demux.js"
+ ],
+ "Aumentar": [
+  "js/app.js"
+ ],
+ "Authorization:": [
+  "site/api/push.php"
+ ],
+ "Auto": [
+  "index.html"
+ ],
+ "Automático": [
+  "index.html"
+ ],
+ "Automático escolheu": [
+  "js/app.js"
+ ],
+ "Autorizo o Studio Cover a usar os vídeos que enviei, a minha voz, a minha imagem e este depoimento em posts, reels, stories e anúncios (Instagram, TikTok, Facebook, YouTube) e no site, sem pagamento e por tempo indeterminado. Posso pedir para retirar quando quiser pelo contato@studiocover.com.br.": [
+  "site/api/depo_lib.php"
+ ],
+ "Avançar 5 s": [
+  "index.html"
+ ],
+ "Avançar 5 segundos": [
+  "index.html"
+ ],
+ "Avisos": [
+  "site/app/conta.js"
+ ],
+ "Avisos bloqueados": [
+  "site/app/conta.js"
+ ],
+ "Avisos ligados": [
+  "site/app/conta.js"
+ ],
+ "Ação desconhecida.": [
+  "site/api/afiliado.php",
+  "site/api/conta.php",
+  "site/api/depoimento.php"
+ ],
+ "BAIXAR AGORA": [
+  "site/app/conta.js"
+ ],
+ "Baixa <b>este mesmo vídeo</b> na hora, sem refazer": [
+  "site/app/conta.js"
+ ],
+ "Baixando a IA": [
+  "js/app.js"
+ ],
+ "Baixando a IA (só na primeira vez)": [
+  "index.html"
+ ],
+ "Baixar meu vídeo pronto": [
+  "index.html"
+ ],
+ "Baixar o áudio pronto (WAV)": [
+  "js/app.js"
+ ],
+ "Baixar só a música": [
+  "index.html"
+ ],
+ "Baixar só a voz": [
+  "index.html"
+ ],
+ "Baixar só o áudio (WAV)": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Baixe este cover na hora, sem refazer": [
+  "site/app/conta.js"
+ ],
+ "Baixe o áudio pronto e junte de volta no seu vídeo no editor (CapCut, InShot etc.), alinhando pelo começo.": [
+  "js/app.js"
+ ],
+ "Baixe pelo {0}": [
+  "site/app/conta.js"
+ ],
+ "Base": [
+  "index.html"
+ ],
+ "Bateu no limite de tentativas várias vezes": [
+  "site/api/escudo.php"
+ ],
+ "Bb": [
+  "js/analysis.js"
+ ],
+ "Bed": [
+  "js/app.js"
+ ],
+ "Bem naquele agudo. Você ouve de novo e sente vergonha de postar.": [
+  "site/index.html"
+ ],
+ "Bem-vindo ao <em>Studio Cover</em>": [
+  "site/obrigado/index.html"
+ ],
+ "Bem-vindo ao Studio Cover, {nome}!": [
+  "site/api/funil.php"
+ ],
+ "Botão ? (ajuda)": [
+  "js/manual.js"
+ ],
+ "COMEÇAR O TESTE": [
+  "site/entrar/index.html"
+ ],
+ "COPIAR LINK P/ O COMPUTADOR": [
+  "site/assets/compat.js"
+ ],
+ "CRIAR E ENTRAR": [
+  "site/entrar/index.html"
+ ],
+ "CRIAR SENHA E CONTINUAR": [
+  "site/obrigado/index.html"
+ ],
+ "CRIAR SENHA E ENTRAR": [
+  "site/afiliado/index.html"
+ ],
+ "Cache-Control: no-cache": [
+  "site/vsl/index.php"
+ ],
+ "Cache-Control: no-store": [
+  "site/api/armadilha.php",
+  "site/api/e.php",
+  "site/api/lib.php"
+ ],
+ "Cache-Control: no-store, no-cache, must-revalidate, max-age=0": [
+  "site/api/e.php"
+ ],
+ "Cada cover parado é um momento que você não mostrou para ninguém. Com o acesso completo, você afina, mixa e posta tudo, direto do celular.": [
+  "site/api/funil.php"
+ ],
+ "Cada nota vai para o centro do tom, sem efeito robô. O seu vibrato continua seu.": [
+  "site/index.html"
+ ],
+ "Cada roteiro tem o gancho (os primeiros 3 segundos), o meio e a chamada. Toque em Copiar para levar o texto inteiro.": [
+  "site/afiliado/index.html"
+ ],
+ "Cada vídeo pode ter até 3 minutos (vídeo maior usa os 3 primeiros). Abra no Safari ou no Chrome, não no navegador do Instagram.": [
+  "site/index.html"
+ ],
+ "Cadastros grátis": [
+  "site/afiliado/index.html"
+ ],
+ "Cadastrou": [
+  "site/afiliado/index.html"
+ ],
+ "Cancelar": [
+  "js/app.js",
+  "site/app/conta.js"
+ ],
+ "Cancelar e voltar ao início": [
+  "index.html"
+ ],
+ "Cancelar e voltar ao início?": [
+  "js/app.js"
+ ],
+ "Chame para o teste grátis. Quem testa no próprio vídeo compra muito mais.": [
+  "site/afiliado/index.html"
+ ],
+ "Chega de cover com áudio abafado, voz desafinada e som \"mastigado\" do celular. Você sobe o vídeo, e o Studio Cover afina a sua voz, separa do violão, mixa, masteriza e deixa a imagem com cara de clipe. <b style=\"color:#fff\">Em minutos.</b>": [
+  "site/index.html"
+ ],
+ "Chega de postar cover com áudio abafado e voz desafinada. Grave no celular, saia com som de estúdio.": [
+  "site/index.html"
+ ],
+ "Chega de postar desafinado.": [
+  "site/api/funil.php"
+ ],
+ "Chegou um depoimento novo": [
+  "site/api/depoimento.php"
+ ],
+ "Clique no seu link": [
+  "site/afiliados/index.html"
+ ],
+ "Cliques": [
+  "site/afiliado/index.html"
+ ],
+ "Cole o seu link de afiliado da Eduzz (começa com https:// e tem eduzz.com).": [
+  "site/api/afiliado.php"
+ ],
+ "Cole o seu link no painel": [
+  "site/afiliados/index.html"
+ ],
+ "Colorista ajustando a cor…": [
+  "js/app.js"
+ ],
+ "Colorista analisando a luz do vídeo…": [
+  "js/app.js"
+ ],
+ "Colorista automático e filtros de cinema que corrigem a luz e a pele.": [
+  "site/index.html"
+ ],
+ "Colorista automático e filtros que tiram a luz amarela do quarto e dão cara de clipe.": [
+  "site/index.html"
+ ],
+ "Colorista e filtros de cinema": [
+  "site/index.html"
+ ],
+ "Com este convite você cria a sua conta de afiliado direto, sem precisar assinar.": [
+  "site/afiliado/index.html"
+ ],
+ "Com quem compartilhamos": [
+  "site/privacidade/index.html"
+ ],
+ "Começar a postar toda semana": [
+  "site/api/funil.php"
+ ],
+ "Começar: subir o vídeo": [
+  "js/manual.js"
+ ],
+ "Como agradecimento, você ganha <b>mais 1 vídeo grátis, já liberado para baixar</b>, assim que enviar.": [
+  "site/api/depo_lib.php"
+ ],
+ "Como começar": [
+  "site/afiliados/index.html"
+ ],
+ "Como eu recebo a comissão?": [
+  "site/afiliados/index.html"
+ ],
+ "Como pedir:": [
+  "site/privacidade/index.html"
+ ],
+ "Como recebo o acesso?": [
+  "site/index.html"
+ ],
+ "Como você divulga no Instagram": [
+  "site/afiliados/index.html"
+ ],
+ "Comparar": [
+  "index.html"
+ ],
+ "Compra feita! Em 2 passos você já está usando.": [
+  "site/obrigado/index.html"
+ ],
+ "Compraram": [
+  "site/afiliado/index.html"
+ ],
+ "Compressor": [
+  "index.html",
+  "site/index.html"
+ ],
+ "Compressor da voz": [
+  "index.html"
+ ],
+ "Compressão": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Comprou?": [
+  "site/afiliados/index.html"
+ ],
+ "Computador": [
+  "site/api/lib.php"
+ ],
+ "Computador com Chrome, Edge ou Safari atualizado": [
+  "site/assets/compat.js"
+ ],
+ "Computador potente": [
+  "site/index.html"
+ ],
+ "Configure o e-mail de envio no painel (Configurações).": [
+  "site/api/mail.php"
+ ],
+ "Confira o e-mail do afiliado.": [
+  "site/api/afiliados.php"
+ ],
+ "Confira o seu e-mail.": [
+  "site/api/afiliado.php",
+  "site/api/conta.php",
+  "site/obrigado/index.html"
+ ],
+ "Confirmando o seu pagamento…": [
+  "site/obrigado/index.html"
+ ],
+ "Confirme e abra pelo ícone novo. Pronto!": [
+  "site/app/conta.js"
+ ],
+ "Confirme e abra sempre pelo ícone do Studio Cover na sua tela!": [
+  "site/obrigado/index.html"
+ ],
+ "Conhece outros cantores? Indique e ganhe com cada assinatura.": [
+  "site/api/funil.php"
+ ],
+ "Conhecer o programa": [
+  "site/api/funil.php"
+ ],
+ "Conheça o app": [
+  "site/afiliados/index.html"
+ ],
+ "Constância com qualidade": [
+  "site/api/funil.php"
+ ],
+ "Conta": [
+  "site/termos/index.html"
+ ],
+ "Conta (nome, e-mail, senha): enquanto ela existir. Se você apagar a conta, esses dados são apagados na hora.": [
+  "site/privacidade/index.html"
+ ],
+ "Contato, lei e foro": [
+  "site/termos/index.html"
+ ],
+ "Continuar com os {0} primeiros minutos": [
+  "js/app.js"
+ ],
+ "Continuar preparando": [
+  "js/app.js"
+ ],
+ "Convertendo o vídeo para este navegador": [
+  "js/app.js"
+ ],
+ "Cookie de login e cookie de indicação (60 dias)": [
+  "site/privacidade/index.html"
+ ],
+ "Cookies e Pixel da Meta na página de vendas": [
+  "site/privacidade/index.html"
+ ],
+ "Copiar o link": [
+  "site/obrigado/index.html"
+ ],
+ "Copiar o link para abrir no Chrome": [
+  "js/app.js"
+ ],
+ "Copie o link:": [
+  "site/assets/compat.js",
+  "site/obrigado/index.html"
+ ],
+ "Copie o seu link de afiliado e cole aqui": [
+  "site/afiliado/index.html"
+ ],
+ "Cor": [
+  "index.html",
+  "site/index.html"
+ ],
+ "Cor de cinema": [
+  "site/index.html"
+ ],
+ "Cor de cinema e exportação na qualidade original": [
+  "site/app/conta.js"
+ ],
+ "Cor do vídeo": [
+  "js/manual.js"
+ ],
+ "Cor<b>{0}</b>": [
+  "js/app.js"
+ ],
+ "Cortar o silêncio do começo e do fim": [
+  "index.html"
+ ],
+ "Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar": [
+  "js/app.js"
+ ],
+ "Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar e suba de novo": [
+  "js/app.js"
+ ],
+ "Covers ilimitados": [
+  "site/index.html"
+ ],
+ "Covers ilimitados por 1 ano, direto do celular": [
+  "site/app/conta.js"
+ ],
+ "Covers ilimitados, direto do celular": [
+  "site/app/conta.js"
+ ],
+ "Criar conta grátis": [
+  "site/entrar/index.html"
+ ],
+ "Criar e proteger a sua conta, liberar o teste grátis e o acesso": [
+  "site/privacidade/index.html"
+ ],
+ "Criar minha conta de afiliado": [
+  "site/afiliado/index.html"
+ ],
+ "Criar minha conta grátis →": [
+  "site/entrar/index.html"
+ ],
+ "Criar minha senha": [
+  "site/api/afiliados.php",
+  "site/api/funil.php",
+  "site/obrigado/index.html"
+ ],
+ "Criar nova senha": [
+  "site/api/afiliado.php",
+  "site/api/conta.php"
+ ],
+ "Criar perfil ou página como se fosse o Studio Cover oficial.": [
+  "site/afiliado/index.html"
+ ],
+ "Criar senha": [
+  "site/afiliado/index.html"
+ ],
+ "Crie a conta grátis na Eduzz": [
+  "site/afiliados/index.html"
+ ],
+ "Crie a senha do seu painel de afiliado.": [
+  "site/afiliado/index.html"
+ ],
+ "Crie a sua conta e veja o antes e depois com o seu vídeo. Sem cartão.": [
+  "site/entrar/index.html"
+ ],
+ "Crie a sua conta e veja o antes e depois com {0}, aqui no app. Gostou? Libere o acesso e baixe. Sem cartão.": [
+  "site/entrar/index.html"
+ ],
+ "Crie a sua conta grátis na Eduzz": [
+  "site/afiliado/index.html"
+ ],
+ "Crie a sua senha": [
+  "site/entrar/index.html"
+ ],
+ "Crie a sua senha pelo link que chegou no seu e-mail (ou toque em \"Esqueci a senha\").": [
+  "site/api/afiliado.php"
+ ],
+ "Crie uma nova senha": [
+  "site/api/conta.php"
+ ],
+ "Crie uma nova senha do painel de afiliado": [
+  "site/api/afiliado.php"
+ ],
+ "Crie uma senha": [
+  "site/afiliado/index.html",
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Curva de aprendizado": [
+  "site/index.html"
+ ],
+ "Câmera de Cinema": [
+  "js/filters.js"
+ ],
+ "Código: <b></b>": [
+  "site/api/afiliados.php"
+ ],
+ "Dados": [
+  "site/privacidade/index.html"
+ ],
+ "Dados da compra que a Eduzz nos envia: nome, e-mail, telefone (se houver), código da transação, valor, situação e afiliado que indicou": [
+  "site/privacidade/index.html"
+ ],
+ "Dar acabamento na minha voz": [
+  "site/api/funil.php"
+ ],
+ "Date:": [
+  "site/api/mail.php"
+ ],
+ "De onde vem (aproximado): <b></b>": [
+  "site/api/escudo.php"
+ ],
+ "Deixar muda": [
+  "js/app.js"
+ ],
+ "Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.": [
+  "site/app/conta.js"
+ ],
+ "Deixe o app aberto na tela até terminar de abrir": [
+  "js/app.js"
+ ],
+ "Depois (vídeo que o app entregou)": [
+  "site/api/depo_lib.php"
+ ],
+ "Depois com cor de cinema": [
+  "site/index.html"
+ ],
+ "Depois de entrar, toque em <b>Instalar</b> para deixar o app na tela de início do seu celular.": [
+  "site/api/funil.php"
+ ],
+ "Depois de pagar, volte para esta tela: o download libera aqui mesmo, sozinho.": [
+  "site/app/conta.js"
+ ],
+ "Depois do clique, o sistema trabalha por você": [
+  "site/afiliados/index.html"
+ ],
+ "Depois que você escuta a sua voz no tom, com a base no lugar e o som cheio, o áudio cru do celular fica difícil de engolir.": [
+  "site/api/funil.php"
+ ],
+ "Depois que você ouve, não tem volta": [
+  "site/api/funil.php"
+ ],
+ "Desafio": [
+  "site/afiliado/index.html"
+ ],
+ "Desafio nos comentários": [
+  "site/afiliado/index.html"
+ ],
+ "Descer": [
+  "index.html"
+ ],
+ "Desculpa pelo erro! Seu vídeo grátis voltou. Toque para testar de novo.": [
+  "site/api/lib.php"
+ ],
+ "Desculpa pelo erro. Seu teste voltou!": [
+  "site/api/lib.php"
+ ],
+ "Desfazer": [
+  "index.html"
+ ],
+ "Desfazer afinação": [
+  "index.html"
+ ],
+ "Desfazer mix e master": [
+  "index.html"
+ ],
+ "Desfeito.": [
+  "js/app.js"
+ ],
+ "Destino": [
+  "site/index.html"
+ ],
+ "Desvio": [
+  "site/index.html"
+ ],
+ "Deu erro:": [
+  "js/app.js"
+ ],
+ "Dica: abra pelo <b>Safari</b> (iPhone) ou <b>Chrome</b> (Android), não pelo navegador do Instagram, e use um vídeo de até 3 minutos.": [
+  "site/api/lib.php"
+ ],
+ "Dica: escolha um cover que você gravou e achou que \"não ficou bom\". É nele que a diferença aparece.": [
+  "site/api/funil.php"
+ ],
+ "Digite a sua senha para confirmar": [
+  "site/app/conta.js"
+ ],
+ "Digite o <b>mesmo e-mail que você usou na compra</b>.": [
+  "site/obrigado/index.html"
+ ],
+ "Digite o seu WhatsApp com DDD.": [
+  "site/api/afiliado.php"
+ ],
+ "Digite o seu e-mail acima.": [
+  "site/afiliado/index.html"
+ ],
+ "Digite o seu e-mail. Vamos mandar um link para criar uma nova senha.": [
+  "site/entrar/index.html"
+ ],
+ "Digite o seu nome.": [
+  "site/api/afiliado.php",
+  "site/api/conta.php"
+ ],
+ "Diminuir": [
+  "js/app.js"
+ ],
+ "Direto para o Reels, TikTok e Shorts. Ou baixe só a voz, só a base ou só o áudio.": [
+  "site/index.html"
+ ],
+ "Direto para o teste grátis (ótimo para anúncio e stories)": [
+  "site/afiliado/index.html"
+ ],
+ "Divulgue o Studio Cover no seu Instagram e ganhe perto de R$ 140 por venda, com comissão também nas renovações. Exclusivo para assinantes.": [
+  "site/afiliados/index.html"
+ ],
+ "Diário de uso do app: 180 dias. Avisos recebidos do pagamento (webhooks): 1 ano. Tentativas de login por IP: 2 dias.": [
+  "site/privacidade/index.html"
+ ],
+ "Do celular ao som de estúdio em 5 passos": [
+  "site/index.html"
+ ],
+ "Dor do cantor": [
+  "site/afiliado/index.html"
+ ],
+ "Download de presente": [
+  "site/app/conta.js"
+ ],
+ "Duas indicações e o seu ano já está pago. É só postar o seu antes e depois e deixar o seu link na bio.": [
+  "site/api/funil.php"
+ ],
+ "Dupla": [
+  "js/app.js"
+ ],
+ "Dupla e trio": [
+  "js/manual.js"
+ ],
+ "Duração<b>{0}</b>": [
+  "js/app.js"
+ ],
+ "Dó": [
+  "js/analysis.js",
+  "js/music.js"
+ ],
+ "Dúvidas": [
+  "site/afiliados/index.html"
+ ],
+ "Dúvidas, suporte e pedidos:": [
+  "site/termos/index.html"
+ ],
+ "Dúvidas:": [
+  "site/afiliados/index.html"
+ ],
+ "Dúvidas?": [
+  "site/index.html"
+ ],
+ "E avisos no celular, sempre com o seu link de compra.": [
+  "site/afiliados/index.html"
+ ],
+ "E receba de novo a cada renovação anual. Assista ao vídeo e veja como funciona na prática.": [
+  "site/afiliados/index.html"
+ ],
+ "E se a pessoa comprar dias depois do clique?": [
+  "site/afiliados/index.html"
+ ],
+ "E se eu não gostar?": [
+  "site/index.html"
+ ],
+ "E se já decidiu, o seu acesso está a um toque daqui.": [
+  "site/api/funil.php"
+ ],
+ "E, se você autorizar, o seu cover aparece no": [
+  "site/api/depo_lib.php"
+ ],
+ "E-mail da compra": [
+  "site/obrigado/index.html"
+ ],
+ "E-mail ou senha não conferem.": [
+  "site/api/afiliado.php",
+  "site/api/conta.php"
+ ],
+ "E-mails da conta e de novidades, avisos dentro do app e notificações no celular (só se você ativar)": [
+  "site/privacidade/index.html"
+ ],
+ "ESCOLHER O VÍDEO": [
+  "js/app.js"
+ ],
+ "Eb": [
+  "js/analysis.js"
+ ],
+ "Editadas <b>{0}</b>": [
+  "js/app.js"
+ ],
+ "Ela afina o próprio cover no app.": [
+  "site/afiliados/index.html"
+ ],
+ "Ela fica marcada como sua por 60 dias. Durante o teste, ela recebe e-mails e avisos sempre com o seu link de compra.": [
+  "site/afiliados/index.html"
+ ],
+ "Ele já está vendo o passo a passo no painel. Você pode desativar a conta na aba Afiliados se precisar.": [
+  "site/api/afiliados.php"
+ ],
+ "Ele tem": [
+  "js/app.js"
+ ],
+ "Eles ficam guardados na pasta quarentena, fora do site. Troque a senha do Plesk e do FTP.": [
+  "site/api/escudo.php"
+ ],
+ "Em 1 ano": [
+  "site/afiliados/index.html"
+ ],
+ "Em 4 passos, hoje": [
+  "site/afiliados/index.html"
+ ],
+ "Em minutos": [
+  "site/index.html"
+ ],
+ "Em uma ou duas frases, com sinceridade": [
+  "site/depoimento/index.html"
+ ],
+ "Encerramento da conta": [
+  "site/termos/index.html"
+ ],
+ "Endereço IP e horário das tentativas": [
+  "site/privacidade/index.html"
+ ],
+ "Endireitar nota": [
+  "js/app.js"
+ ],
+ "Endireitar tudo": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Entendi": [
+  "index.html",
+  "js/app.js",
+  "site/app/conta.js"
+ ],
+ "Entrada": [
+  "site/index.html"
+ ],
+ "Entrar": [
+  "site/afiliado/index.html",
+  "site/entrar/index.html"
+ ],
+ "Entrar <small>· já sou aluno</small>": [
+  "site/index.html"
+ ],
+ "Entrar no Studio Cover": [
+  "site/api/funil.php"
+ ],
+ "Entre com o e-mail e a senha que você usa no app e o seu painel de afiliado fica pronto.": [
+  "site/afiliados/index.html"
+ ],
+ "Entre em": [
+  "site/afiliado/index.html"
+ ],
+ "Entre na sua conta de afiliado.": [
+  "site/api/afiliado.php"
+ ],
+ "Entre na sua conta.": [
+  "site/api/conta.php"
+ ],
+ "Entre no app Studio Cover primeiro.": [
+  "site/api/afiliado.php"
+ ],
+ "Entregar o acesso, lembrar do teste e mostrar novidades. Medimos se o e-mail foi aberto e se o link foi clicado": [
+  "site/privacidade/index.html"
+ ],
+ "Entrou no painel": [
+  "site/api/escudo.php"
+ ],
+ "Enviando {0} de {1} · {2}%": [
+  "site/depoimento/index.html"
+ ],
+ "Envio não encontrado. Recarregue a página e tente de novo.": [
+  "site/api/depoimento.php"
+ ],
+ "Equalizador": [
+  "index.html"
+ ],
+ "Erro no servidor (": [
+  "site/depoimento/index.html"
+ ],
+ "Erro:": [
+  "js/app.js"
+ ],
+ "Errou a senha da área do aluno várias vezes": [
+  "site/api/escudo.php"
+ ],
+ "Errou a senha do painel várias vezes": [
+  "site/api/escudo.php"
+ ],
+ "Escala": [
+  "site/index.html"
+ ],
+ "Escape": [
+  "js/app.js",
+  "js/manual.js"
+ ],
+ "Escolha o seu vídeo": [
+  "index.html"
+ ],
+ "Escolha o vídeo do seu cover": [
+  "site/index.html"
+ ],
+ "Escolher o filtro e a intensidade.": [
+  "js/manual.js"
+ ],
+ "Escolher o vídeo": [
+  "index.html"
+ ],
+ "Escolher outro vídeo": [
+  "js/app.js"
+ ],
+ "Escreva em uma frase o que você achou.": [
+  "site/api/depoimento.php",
+  "site/depoimento/index.html"
+ ],
+ "Escudo do Studio Cover": [
+  "site/api/escudo.php"
+ ],
+ "Esperando o pagamento… Pix e cartão liberam em segundos.": [
+  "site/app/conta.js"
+ ],
+ "Espere separar voz e música, escolha a afinação automática e, se quiser, ajuste as notas no painel.": [
+  "site/afiliado/index.html"
+ ],
+ "Esqueci a senha": [
+  "site/afiliado/index.html",
+  "site/entrar/index.html"
+ ],
+ "Essa é a sua voz afinada e mixada, do jeito que vai para o ar. Toque no play e compare o antes e o depois.": [
+  "site/app/conta.js"
+ ],
+ "Esse vídeo tem {0}. O limite é de {1} minutos.": [
+  "js/app.js"
+ ],
+ "Esta página testa o seu aparelho sozinha e avisa se ele não for compatível.": [
+  "site/index.html"
+ ],
+ "Este aparelho não tem WebGL": [
+  "js/filters.js"
+ ],
+ "Este aparelho parece abaixo do mínimo (iPhone 13 ou Android com 4 GB). Pode fechar no meio. Se puder, use um celular mais novo ou o computador.": [
+  "js/app.js"
+ ],
+ "Este celular não tem força para processar o vídeo (a IA roda dentro do aparelho) e pode travar ou fechar no meio. Use pelo computador (": [
+  "site/assets/compat.js"
+ ],
+ "Este convite venceu ou já foi usado. Peça um novo para quem te convidou.": [
+  "site/afiliado/index.html"
+ ],
+ "Este e-mail já tem cadastro. Entre com a sua senha ou use \"Esqueci a senha\".": [
+  "site/api/conta.php"
+ ],
+ "Este e-mail já tem conta de afiliado. Toque em \"Já tenho conta\" para entrar.": [
+  "site/api/afiliado.php"
+ ],
+ "Este e-mail já é afiliado.": [
+  "site/api/afiliados.php"
+ ],
+ "Este envio já terminou.": [
+  "site/api/depoimento.php"
+ ],
+ "Este iPhone é antigo demais.": [
+  "site/assets/compat.js"
+ ],
+ "Este link venceu ou já foi usado. Peça um novo em \"Esqueci a senha\".": [
+  "site/api/afiliado.php",
+  "site/api/conta.php",
+  "site/entrar/index.html"
+ ],
+ "Este link venceu. Volte e toque em \"Esqueci a senha\".": [
+  "site/afiliado/index.html"
+ ],
+ "Este navegador": [
+  "js/app.js"
+ ],
+ "Este navegador não grava vídeo. Use o Chrome ou o Safari atualizados.": [
+  "js/export.js"
+ ],
+ "Este navegador não recebe avisos. Use o Chrome ou o Safari.": [
+  "site/afiliado/index.html"
+ ],
+ "Este vídeo foi aberto sem a análise de vozes. Suba de novo.": [
+  "js/pipeline.js"
+ ],
+ "Este vídeo não tem áudio (parece que foi gravado sem som). Grave de novo com o som ligado ou use \"Ou suba só o áudio\".": [
+  "js/pipeline.js"
+ ],
+ "Este é o seu vídeo grátis: você vê e ouve o antes e depois aqui no app. Para baixar, é só liberar o acesso completo.": [
+  "site/app/conta.js"
+ ],
+ "Este é o último e-mail sobre isso. Se um dia quiser ganhar indicando o Studio Cover, o caminho fica no menu da sua conta no app, em <b>Ganhe como afiliado</b>.": [
+  "site/api/funil.php"
+ ],
+ "Este é o último lembrete. Não vou mais encher a sua caixa.": [
+  "site/api/funil.php"
+ ],
+ "Estes arquivos apareceram no site sem terem sido publicados por nós (pode ser porta dos fundos de invasor) e foram tirados do ar:": [
+  "site/api/escudo.php"
+ ],
+ "Estes arquivos estavam diferentes da versão publicada e voltaram ao original:": [
+  "site/api/escudo.php"
+ ],
+ "Estes são os seus links. Quem entrar por eles fica marcado como seu por 60 dias: vê a nossa página com o vídeo, faz o teste grátis, recebe os nossos e-mails e avisos e, quando compra, a compra vai pelo <b>seu</b> link da Eduzz.": [
+  "site/afiliado/index.html"
+ ],
+ "Está demorando um pouco mais que o normal. Pode esperar aqui: assim que confirmar, a tela muda sozinha.": [
+  "site/obrigado/index.html"
+ ],
+ "Estúdio": [
+  "site/index.html"
+ ],
+ "Estúdio cobra R$ 150 por música. Aqui é ilimitado.": [
+  "site/app/conta.js"
+ ],
+ "Estúdio cobra R$ 150 por música. Faz as contas.": [
+  "site/api/funil.php"
+ ],
+ "Estúdio cobra por música. Aqui é ilimitado.": [
+  "site/api/funil.php"
+ ],
+ "Estúdio custa caro e tem fila. Programa de mixagem é difícil. Afinador comum deixa a voz de robô. Por isso criamos um estúdio que cabe no seu celular e faz tudo isso por você.": [
+  "site/index.html"
+ ],
+ "Estúdio x celular": [
+  "site/afiliado/index.html"
+ ],
+ "Etapa": [
+  "site/afiliado/index.html"
+ ],
+ "Execução do contrato (V)": [
+  "site/privacidade/index.html"
+ ],
+ "Execução do contrato (V) e legítimo interesse (IX)": [
+  "site/privacidade/index.html"
+ ],
+ "Execução do contrato (V) e legítimo interesse (IX). Você sai da lista pelo link no fim de cada e-mail e desliga as notificações no celular": [
+  "site/privacidade/index.html"
+ ],
+ "Execução do contrato (V) e obrigação legal e fiscal (II)": [
+  "site/privacidade/index.html"
+ ],
+ "Exemplo com R$ 140 por venda e": [
+  "site/afiliados/index.html"
+ ],
+ "Exporta na mesma qualidade do original. Ou baixe só a voz, só a base ou só o áudio.": [
+  "site/index.html"
+ ],
+ "Exporta na qualidade original": [
+  "site/index.html"
+ ],
+ "Exportando o vídeo": [
+  "js/app.js"
+ ],
+ "Exportar": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Exportar e baixar": [
+  "js/manual.js"
+ ],
+ "Exportação na qualidade original": [
+  "site/index.html"
+ ],
+ "Exporte o vídeo pronto. Guarde também o vídeo original: o antes e depois é o seu melhor criativo.": [
+  "site/afiliado/index.html"
+ ],
+ "FAZER E BAIXAR MEU VÍDEO": [
+  "site/app/conta.js"
+ ],
+ "FAZER MEU TESTE GRÁTIS": [
+  "site/afiliado/index.html"
+ ],
+ "Facebook": [
+  "site/api/lib.php",
+  "site/assets/compat.js"
+ ],
+ "Faixa verde antes <b>{0}%</b>": [
+  "js/app.js"
+ ],
+ "Faixas": [
+  "site/index.html"
+ ],
+ "Falar do teste grátis e do preço real (R$ 297 por ano, em até 10x).": [
+  "site/afiliado/index.html"
+ ],
+ "Fale de quem grava, ouve uma nota fora e apaga o vídeo. Quem canta se reconhece na hora.": [
+  "site/afiliado/index.html"
+ ],
+ "Fale no WhatsApp": [
+  "site/index.html"
+ ],
+ "Falta o seu link de afiliado da Eduzz. Sem ele a comissão das vendas do funil pode não cair para você.": [
+  "site/afiliado/index.html"
+ ],
+ "Falta só isso para entrar no Studio Cover.": [
+  "site/entrar/index.html"
+ ],
+ "Falta uns {0} min": [
+  "js/app.js"
+ ],
+ "Falta uns {0} s": [
+  "js/app.js"
+ ],
+ "Faltam cabeçalhos de segurança:": [
+  "site/api/escudo.php"
+ ],
+ "Faz a conta: 1 indicação por semana": [
+  "site/api/funil.php"
+ ],
+ "Faz uma semana que você testou o Studio Cover. Pensa em quantos vídeos você gravou e não postou porque \"não ficou bom\".": [
+  "site/api/funil.php"
+ ],
+ "Fazer anúncio com o seu link de divulgação.": [
+  "site/afiliado/index.html"
+ ],
+ "Fazer passo a passo": [
+  "index.html"
+ ],
+ "Faça a conta": [
+  "site/afiliados/index.html"
+ ],
+ "Faça as contas": [
+  "site/index.html"
+ ],
+ "Faça login de administrador.": [
+  "site/api/lib.php"
+ ],
+ "Faça o teste grátis com um vídeo seu: o seu próprio antes e depois é o melhor material de divulgação que existe. Depois escolha um roteiro pronto na aba <b>Conteúdo e roteiros</b> e poste com o seu link na bio ou nos stories.": [
+  "site/afiliado/index.html"
+ ],
+ "Fechar": [
+  "js/app.js",
+  "js/manual.js",
+  "site/app/conta.js",
+  "site/assets/compat.js"
+ ],
+ "Fechar aviso": [
+  "site/assets/compat.js"
+ ],
+ "Fechar o manual": [
+  "js/manual.js"
+ ],
+ "Fechar o manual e voltar ao app": [
+  "js/manual.js"
+ ],
+ "Feche os outros apps e abas e tente de novo": [
+  "js/app.js"
+ ],
+ "Feche os outros apps e deixe esta tela aberta": [
+  "index.html"
+ ],
+ "Feche os outros apps e deixe o Studio Cover aberto na tela até terminar": [
+  "js/app.js"
+ ],
+ "Feito para o celular": [
+  "site/index.html"
+ ],
+ "Fica tudo embolado. Ninguém entende a letra, e o seu timbre desaparece.": [
+  "site/index.html"
+ ],
+ "Ficou alguma dúvida?": [
+  "site/api/funil.php"
+ ],
+ "Ficou alguma dúvida? Estamos aqui para ajudar.": [
+  "site/api/funil.php"
+ ],
+ "Ficou com som de estúdio": [
+  "site/app/conta.js"
+ ],
+ "Filtro": [
+  "site/index.html"
+ ],
+ "Filtros de cinema": [
+  "site/index.html"
+ ],
+ "Foi criado acesso de administrador para: <b></b>": [
+  "site/api/escudo.php"
+ ],
+ "Formato<b>{0}</b>": [
+  "js/app.js"
+ ],
+ "From:": [
+  "site/api/mail.php"
+ ],
+ "Funciona com violão, teclado ou playback?": [
+  "site/index.html"
+ ],
+ "Funciona em iPhone 13 ou mais novo, Android intermediário ou top de linha (6 GB de memória ou mais) e no computador. No celular, feche os outros apps antes de começar.": [
+  "index.html"
+ ],
+ "Funciona em iPhone 13+, Android com 6 GB+ ou computador · vídeos de até 3 min ·": [
+  "site/entrar/index.html"
+ ],
+ "Funciona no navegador do celular (iPhone 13 em diante e a maioria dos Android atuais).": [
+  "site/afiliado/index.html"
+ ],
+ "Funcionamento e mudanças": [
+  "site/termos/index.html"
+ ],
+ "Fá": [
+  "js/analysis.js",
+  "js/music.js"
+ ],
+ "G · D · Em · C": [
+  "site/index.html"
+ ],
+ "GB: roda no modo leve.": [
+  "site/assets/compat.js"
+ ],
+ "Ganha de novo todo ano": [
+  "site/afiliados/index.html"
+ ],
+ "Ganhe perto de <em>R$ 140 por venda</em> divulgando o Studio Cover no seu Instagram": [
+  "site/afiliados/index.html"
+ ],
+ "Ganho também quando o cliente renova?": [
+  "site/afiliados/index.html"
+ ],
+ "Gerar o vídeo final e baixar para postar.": [
+  "js/manual.js"
+ ],
+ "Gerar vídeo final": [
+  "index.html"
+ ],
+ "Gostou do resultado?": [
+  "site/api/funil.php"
+ ],
+ "Gostou do resultado? É só liberar o acesso completo e baixar o mesmo vídeo na hora, sem refazer.": [
+  "site/api/funil.php"
+ ],
+ "Grava a sua reação real com o fone, ouvindo o resultado. Depois mostra um trecho do vídeo final.": [
+  "site/afiliado/index.html"
+ ],
+ "Grava, afina, mixa e posta no mesmo dia.": [
+  "site/api/funil.php"
+ ],
+ "Gravação de tela: 1) envia o vídeo, 2) o app separa a voz da música, 3) afinação automática, 4) exporta. Narração rápida em cada passo.": [
+  "site/afiliado/index.html"
+ ],
+ "Gravação de tela: envia o vídeo, afina, exporta. Mostra que é fácil e rápido.": [
+  "site/afiliado/index.html"
+ ],
+ "Grave": [
+  "index.html"
+ ],
+ "Grave a tela do celular enquanto usa o app (gravação de tela do iPhone ou do Android). Mostrar o app funcionando passa confiança.": [
+  "site/afiliado/index.html"
+ ],
+ "Grave com a câmera do próprio celular (MP4 ou MOV)": [
+  "js/app.js"
+ ],
+ "Grave em": [
+  "js/app.js"
+ ],
+ "Grave no celular.": [
+  "site/index.html"
+ ],
+ "Grave um cover": [
+  "site/afiliados/index.html"
+ ],
+ "Grave um trecho de cover no celular (30 a 60 segundos já bastam). Pode ser no quarto, no carro, onde for.": [
+  "site/afiliado/index.html"
+ ],
+ "Grave, médio, agudo, compressor automático e volume no padrão do Spotify.": [
+  "site/index.html"
+ ],
+ "Gravou no celular": [
+  "site/index.html"
+ ],
+ "Horas": [
+  "site/index.html"
+ ],
+ "IA de separação de voz + afinação natural": [
+  "site/index.html"
+ ],
+ "IA grande falhou, usando a leve:": [
+  "js/studio.js"
+ ],
+ "IA no aparelho": [
+  "site/index.html"
+ ],
+ "IA separa a voz do violão": [
+  "site/index.html"
+ ],
+ "IA separando a voz": [
+  "site/index.html"
+ ],
+ "Ilimitado": [
+  "site/index.html"
+ ],
+ "Importante: instale o app {0}": [
+  "site/app/conta.js"
+ ],
+ "Indica pelo seu link, a pessoa testa grátis no próprio vídeo e, se assinar, a comissão é sua. No painel de afiliado tem roteiros prontos, material para baixar e os seus números em tempo real.": [
+  "site/api/funil.php"
+ ],
+ "Indique e ganhe": [
+  "site/app/conta.js"
+ ],
+ "Indique o Studio Cover e ganhe perto de R$ 140 por assinatura.": [
+  "site/api/funil.php"
+ ],
+ "Indique o Studio Cover para cantores e ganhe <b style=\"color:var(--y)\">50% de comissão</b> em cada venda, também nas renovações. Leva 1 minuto para criar a conta, e lá dentro tem o passo a passo para começar.": [
+  "site/afiliado/index.html"
+ ],
+ "Instagram": [
+  "site/api/lib.php",
+  "site/assets/compat.js",
+  "site/index.html"
+ ],
+ "Instagram, TikTok e YouTube são marcas de seus respectivos donos. O Studio Cover não é afiliado, patrocinado nem endossado por essas empresas.": [
+  "site/index.html"
+ ],
+ "Instalar": [
+  "site/app/conta.js"
+ ],
+ "Instalar {0}": [
+  "site/app/conta.js"
+ ],
+ "Intensidade": [
+  "index.html"
+ ],
+ "Inventar desconto, cupom ou bônus que não existe.": [
+  "site/afiliado/index.html"
+ ],
+ "Ir para o site": [
+  "site/depoimento/index.html"
+ ],
+ "Isso leva alguns segundos. Não feche esta página.": [
+  "site/obrigado/index.html"
+ ],
+ "Isso não parece uma chave do GitHub. Ela começa com github_pat_ (ou ghp_).": [
+  "site/api/escudo.php"
+ ],
+ "Isto apaga o seu nome, e-mail, senha, avisos e o histórico do app, e você perde o acesso na hora. Não dá para desfazer.": [
+  "site/app/conta.js"
+ ],
+ "Junta a voz com o instrumental, equaliza, comprime e deixa no volume das redes.": [
+  "index.html"
+ ],
+ "Juntando as vozes…": [
+  "js/app.js"
+ ],
+ "Juntar voz e base, comparar e girar os botões de volume.": [
+  "js/manual.js"
+ ],
+ "JÁ CRIEI, QUERO ENTRAR": [
+  "site/obrigado/index.html"
+ ],
+ "Já corrigimos e <b>devolvemos o seu vídeo grátis</b>. Agora ele só é descontado quando você baixar o vídeo pronto.": [
+  "site/api/lib.php"
+ ],
+ "Já está como uma voz só.": [
+  "js/app.js"
+ ],
+ "Já está separado em {0} vozes.": [
+  "js/app.js"
+ ],
+ "Já logado na Eduzz, abra a página do Studio Cover e toque em": [
+  "site/afiliado/index.html"
+ ],
+ "Já me afiliei": [
+  "site/afiliado/index.html"
+ ],
+ "Já postei": [
+  "site/afiliado/index.html"
+ ],
+ "Já sou afiliado · Entrar": [
+  "site/afiliados/index.html"
+ ],
+ "Já tem conta?": [
+  "site/afiliado/index.html"
+ ],
+ "Já tenho conta na Eduzz": [
+  "site/afiliado/index.html"
+ ],
+ "LIBERAR E BAIXAR AGORA": [
+  "site/app/conta.js"
+ ],
+ "LIBERAR E BAIXAR MEU COVER": [
+  "site/app/conta.js"
+ ],
+ "LIBERAR MEU ACESSO AGORA": [
+  "site/app/conta.js"
+ ],
+ "Lead": [
+  "site/index.html"
+ ],
+ "Legítimo interesse (IX) e cumprimento do Marco Civil da Internet (II)": [
+  "site/privacidade/index.html"
+ ],
+ "Legítimo interesse (IX), sem o conteúdo dos vídeos": [
+  "site/privacidade/index.html"
+ ],
+ "Legítimo interesse (IX). Você pode recusar na barra de cookies e o Pixel para": [
+  "site/privacidade/index.html"
+ ],
+ "Lendo a melodia da música original": [
+  "index.html"
+ ],
+ "Lendo a melodia da original": [
+  "js/app.js"
+ ],
+ "Lendo a melodia da original…": [
+  "js/app.js"
+ ],
+ "Lendo a original": [
+  "js/app.js"
+ ],
+ "Lendo o áudio": [
+  "js/app.js"
+ ],
+ "Lendo o áudio do vídeo": [
+  "index.html"
+ ],
+ "Leva 2 minutos e ajuda outros cantores a confiar no Studio Cover.": [
+  "site/depoimento/index.html"
+ ],
+ "Leva 2 minutos: mande o vídeo que o app entregou, o original (se ainda estiver na galeria) e uma frase sincera sobre o que achou. Se você autorizar, ele vai para o <b>@studiocoveroficial</b> com você marcado, e mais gente conhece o seu trabalho.": [
+  "site/api/depo_lib.php"
+ ],
+ "Leva 2 minutos: mande o vídeo que o app entregou, o original (se ainda estiver na galeria) e uma frase sincera, gostando ou não.": [
+  "site/api/depo_lib.php"
+ ],
+ "Leva direto para o cadastro do teste grátis (ótimo para anúncio).": [
+  "site/afiliado/index.html"
+ ],
+ "Li e aceito as regras: não prometo seguidores, fama ou números de visualização, não faço spam, não uso o nome Studio Cover como se fosse o perfil oficial e não ofereço desconto que não existe. Também aceito os": [
+  "site/afiliado/index.html"
+ ],
+ "Li e aceito os": [
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Liberar acesso": [
+  "site/app/conta.js"
+ ],
+ "Liberar e baixar meu cover": [
+  "site/api/funil.php"
+ ],
+ "Liberar meu acesso": [
+  "site/api/funil.php"
+ ],
+ "Liberar o acesso, renovar ou cancelar, atender reembolsos e pagar comissões": [
+  "site/privacidade/index.html"
+ ],
+ "Libere as notificações do Studio Cover nos ajustes do celular.": [
+  "site/app/conta.js"
+ ],
+ "Libere o seu <em>Studio Cover</em> agora": [
+  "site/index.html"
+ ],
+ "Libere o seu acesso": [
+  "site/obrigado/index.html"
+ ],
+ "Ligando a IA": [
+  "js/app.js"
+ ],
+ "Ligando…": [
+  "site/afiliado/index.html"
+ ],
+ "Ligar": [
+  "js/app.js"
+ ],
+ "Ligar os avisos?": [
+  "site/app/conta.js"
+ ],
+ "Linha verde é a escala, amarela é a tônica. Ou leve a nota para onde quiser.": [
+  "site/index.html"
+ ],
+ "Link copiado ✓ Agora abra o Safari e cole": [
+  "site/obrigado/index.html"
+ ],
+ "Link copiado. Cole no Chrome.": [
+  "js/app.js"
+ ],
+ "Link inválido": [
+  "site/depoimento/index.html"
+ ],
+ "Link inválido. Abra pelo link que mandamos no seu e-mail ou WhatsApp.": [
+  "site/api/depoimento.php"
+ ],
+ "Location:": [
+  "site/api/e.php"
+ ],
+ "Logo depois do pagamento, chega um e-mail com o link para criar a sua senha. Você entra e já pode usar.": [
+  "site/index.html"
+ ],
+ "Lá": [
+  "js/analysis.js",
+  "js/music.js"
+ ],
+ "Lê o tom e os acordes da música": [
+  "site/index.html"
+ ],
+ "MANDAR O LINK": [
+  "site/entrar/index.html"
+ ],
+ "MP4 · MOV · até 3 min": [
+  "site/index.html"
+ ],
+ "Mac": [
+  "site/api/lib.php"
+ ],
+ "Mais zoom": [
+  "index.html"
+ ],
+ "Mandamos o link para criar a sua senha no e-mail": [
+  "site/obrigado/index.html"
+ ],
+ "Mandar mensagem em massa ou spam.": [
+  "site/afiliado/index.html"
+ ],
+ "Mandar meu antes e depois": [
+  "site/api/depo_lib.php"
+ ],
+ "Mande o vídeo que o Studio Cover entregou. Se ainda tiver o original na galeria, mande também: é o antes e depois que convence.": [
+  "site/depoimento/index.html"
+ ],
+ "Manter você conectado e saber qual afiliado indicou a compra": [
+  "site/privacidade/index.html"
+ ],
+ "Manual": [
+  "index.html"
+ ],
+ "Manual do usuário": [
+  "js/manual.js"
+ ],
+ "Manual do usuário: vídeos curtos de cada função": [
+  "index.html"
+ ],
+ "Marque que leu e aceita os Termos e a Política de privacidade.": [
+  "site/api/conta.php",
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Master": [
+  "site/index.html"
+ ],
+ "Me conta como ficou o seu vídeo": [
+  "site/api/depo_lib.php"
+ ],
+ "Medir os anúncios (quem visitou, assistiu ao vídeo, começou a compra ou comprou)": [
+  "site/privacidade/index.html"
+ ],
+ "Memória de": [
+  "site/assets/compat.js"
+ ],
+ "Memória pequena (": [
+  "site/assets/compat.js"
+ ],
+ "Menores de idade": [
+  "site/privacidade/index.html"
+ ],
+ "Menos zoom": [
+  "index.html"
+ ],
+ "Mesmo vídeo do celular: depois de passar pelo app, com cor de cinema, voz afinada e som mixado.": [
+  "site/index.html"
+ ],
+ "Mesmo vídeo, mesma voz, só passei no Studio Cover 🎙️ Testa grátis no seu próprio vídeo, link na bio.": [
+  "site/afiliado/index.html"
+ ],
+ "Mesmo vídeo, mesmo celular. Arraste a linha para comparar.": [
+  "site/index.html"
+ ],
+ "Meu celular é compatível?": [
+  "site/index.html"
+ ],
+ "Meus vídeos ficam guardados em algum servidor?": [
+  "site/index.html"
+ ],
+ "Mexer nota por nota: subir, descer, desfazer e ouvir.": [
+  "js/manual.js"
+ ],
+ "Mi": [
+  "js/analysis.js",
+  "js/music.js"
+ ],
+ "Minha cara ouvindo meu cover com som de estúdio 😮 Testa grátis, link na bio.": [
+  "site/afiliado/index.html"
+ ],
+ "Minha conta": [
+  "site/app/conta.js"
+ ],
+ "Mix e master": [
+  "index.html",
+  "js/manual.js",
+  "site/index.html"
+ ],
+ "Mix e master de estúdio": [
+  "site/index.html"
+ ],
+ "Mix e master desfeitos.": [
+  "js/app.js"
+ ],
+ "Mix e master na hora, sem pagar estúdio": [
+  "site/app/conta.js"
+ ],
+ "Mix e master no padrão das plataformas": [
+  "site/index.html"
+ ],
+ "Mix e master profissional": [
+  "site/index.html"
+ ],
+ "Mix e master prontos. Alterne entre ORIGINAL, AFINADA e MIXADA.": [
+  "js/app.js"
+ ],
+ "Mix e master<b>{0}</b>": [
+  "js/app.js"
+ ],
+ "Mix<em> e master</em>": [
+  "index.html"
+ ],
+ "Mixando e masterizando…": [
+  "js/app.js"
+ ],
+ "Mixando…": [
+  "js/app.js"
+ ],
+ "Mixar e masterizar": [
+  "index.html"
+ ],
+ "Modelo mais simples (": [
+  "site/assets/compat.js"
+ ],
+ "Modo ajuda desligado.": [
+  "js/app.js"
+ ],
+ "Modo ajuda ligado: toque em qualquer botão com borda tracejada para saber o que ele faz. Toque no ? de novo para usar o app.": [
+  "js/app.js"
+ ],
+ "Mostra na tela: estúdio, R$ 100 a R$ 300 por música. Studio Cover, R$ 297 por ano, quantas músicas quiser. Mostra o app trabalhando.": [
+  "site/afiliado/index.html"
+ ],
+ "Mostra um trecho com a nota desafinada. Depois mostra a mesma nota corrigida no painel do app, nota por nota, sem voz de robô.": [
+  "site/afiliado/index.html"
+ ],
+ "Mostrar antes e depois que não foi feito no app.": [
+  "site/afiliado/index.html"
+ ],
+ "Mostrar os seus covers antes e depois, sempre reais.": [
+  "site/afiliado/index.html"
+ ],
+ "Mostre um antes e depois de um cover: o mesmo trecho cru e depois afinado.": [
+  "site/afiliado/index.html"
+ ],
+ "Motivo: <b></b>": [
+  "site/api/escudo.php"
+ ],
+ "Mudanças nesta política": [
+  "site/privacidade/index.html"
+ ],
+ "Muitas tentativas. Espere alguns minutos e tente de novo.": [
+  "site/api/lib.php"
+ ],
+ "Médio": [
+  "index.html"
+ ],
+ "Mínimo de 8 caracteres, com letras e números.": [
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Música do cantor original": [
+  "index.html"
+ ],
+ "Na Eduzz, vá em": [
+  "site/afiliado/index.html"
+ ],
+ "Na hora, no celular": [
+  "site/index.html"
+ ],
+ "Na legenda: “Comenta COVER que eu te mando o link do teste grátis”. Ou deixe o seu link na bio.": [
+  "site/afiliados/index.html"
+ ],
+ "Na prática": [
+  "site/afiliados/index.html"
+ ],
+ "Na vitrine da Eduzz, com aprovação automática.": [
+  "site/afiliados/index.html"
+ ],
+ "Na última tentativa o celular ficou sem memória e fechou o app em \"{0}\". Isso acontece com vídeo longo ou pesado, ou com muitos apps abertos. Para dar certo:": [
+  "js/app.js"
+ ],
+ "Nada de prometer seguidores, views ou fama. O Studio Cover entrega som de estúdio no celular.": [
+  "site/afiliado/index.html"
+ ],
+ "Nada foi invadido: a tentativa foi barrada. Se foi engano (por exemplo, você mesmo errando a senha), desbloqueie na aba Vistoria do painel.": [
+  "site/api/escudo.php"
+ ],
+ "Nada para desfazer": [
+  "js/app.js"
+ ],
+ "Nenhum aviso por enquanto.": [
+  "site/app/conta.js"
+ ],
+ "No Chrome, toque nos <b>⋮ três pontinhos</b> (em cima, à direita)": [
+  "site/app/conta.js"
+ ],
+ "No Studio Cover você faz quantos covers quiser, na hora, sem sair de casa. Dois covers já pagam o ano inteiro.": [
+  "site/api/funil.php"
+ ],
+ "No iPhone o aviso só funciona com o painel na tela de início: 1. Abra studiocover.com.br/afiliado no Safari. 2. Toque em Compartilhar e em \"Adicionar à Tela de Início\". 3. Abra pelo ícone novo e toque de novo em 💰 Aviso de venda.": [
+  "site/afiliado/index.html"
+ ],
+ "No teste grátis você vê e ouve o antes e depois aqui no app. Para baixar {0} e postar, libere o acesso completo.": [
+  "site/app/conta.js"
+ ],
+ "No teste você vê e ouve o antes e depois. Libere o acesso completo para baixar os seus vídeos e fazer quantos covers quiser.": [
+  "site/app/conta.js"
+ ],
+ "No tom": [
+  "site/index.html"
+ ],
+ "No vídeo seguinte, responde ao comentário escolhido: grava o trecho, mostra o cru e o resultado do app.": [
+  "site/afiliado/index.html"
+ ],
+ "Nome artístico": [
+  "site/depoimento/index.html"
+ ],
+ "Nome, e-mail e senha (guardada embaralhada, com hash; ninguém consegue ler)": [
+  "site/privacidade/index.html"
+ ],
+ "Nos dois jeitos você pode comparar o ANTES e o DEPOIS e mudar qualquer etapa.": [
+  "index.html"
+ ],
+ "Nota": [
+  "js/app.js"
+ ],
+ "Nota por nota, mantendo o seu vibrato. Lê o tom e os acordes da música.": [
+  "site/index.html"
+ ],
+ "Notification": [
+  "site/afiliado/index.html",
+  "site/app/conta.js"
+ ],
+ "Nova senha": [
+  "site/afiliado/index.html",
+  "site/api/afiliado.php",
+  "site/entrar/index.html"
+ ],
+ "Novo administrador:": [
+  "site/api/escudo.php"
+ ],
+ "Novo afiliado cadastrado": [
+  "site/api/afiliados.php"
+ ],
+ "Novo vídeo": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Nunca mais apaguei um cover por causa de uma nota 😅 Comenta COVER que te mando o link.": [
+  "site/afiliado/index.html"
+ ],
+ "Não aceito": [
+  "site/index.html"
+ ],
+ "Não achamos a compra deste e-mail. Use o link que chegou no seu e-mail.": [
+  "site/api/conta.php"
+ ],
+ "Não conectou no SMTP: {0}": [
+  "site/api/mail.php"
+ ],
+ "Não consegui falar com o GitHub agora (código": [
+  "site/api/escudo.php"
+ ],
+ "Não consegui gravar a chave no servidor.": [
+  "site/api/escudo.php"
+ ],
+ "Não consegui ler a música original:": [
+  "js/app.js"
+ ],
+ "Não consegui ler o áudio desse vídeo": [
+  "js/app.js"
+ ],
+ "Não consegui restaurar {0}": [
+  "site/api/escudo.php"
+ ],
+ "Não consegui tirar o áudio desse vídeo ({0} MB). Tente exportar em MP4 1080p e subir de novo.": [
+  "js/pipeline.js"
+ ],
+ "Não copie, revenda, desmonte ou tente burlar o app ou os limites da conta.": [
+  "site/termos/index.html"
+ ],
+ "Não cuida do vídeo": [
+  "site/index.html"
+ ],
+ "Não deu certo desta vez": [
+  "js/app.js"
+ ],
+ "Não deu certo.": [
+  "site/app/conta.js"
+ ],
+ "Não deu certo. Tente de novo.": [
+  "site/afiliado/index.html",
+  "site/api/afiliado.php",
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Não deu para abrir o manual. Confira a internet e tente de novo.": [
+  "js/app.js"
+ ],
+ "Não deu para abrir os avisos agora. Confira a internet e tente de novo.": [
+  "site/app/conta.js"
+ ],
+ "Não deu para ligar o aviso:": [
+  "site/afiliado/index.html"
+ ],
+ "Não deu para ligar os avisos": [
+  "site/app/conta.js"
+ ],
+ "Não encontrado.": [
+  "site/api/armadilha.php"
+ ],
+ "Não feche esta página enquanto o vídeo sobe. Arquivos grandes podem levar alguns minutos no 4G; no Wi-Fi é mais rápido.": [
+  "site/depoimento/index.html"
+ ],
+ "Não feche esta tela.": [
+  "site/app/conta.js"
+ ],
+ "Não pode": [
+  "site/afiliado/index.html"
+ ],
+ "Não precisa vender na hora: quem se cadastra pelo seu link recebe o nosso funil de e-mails e avisos no app, sempre com o seu link de compra.": [
+  "site/afiliado/index.html"
+ ],
+ "Não quer mais receber estes e-mails?": [
+  "site/api/mail.php"
+ ],
+ "Não quer mais receber? {0}": [
+  "site/api/mail.php"
+ ],
+ "Não use o Studio Cover para conteúdo ilegal, ofensivo ou que viole direitos de terceiros.": [
+  "site/termos/index.html"
+ ],
+ "Não vendemos nem alugamos seus dados. Eles passam só por empresas que ajudam o serviço a funcionar:": [
+  "site/privacidade/index.html"
+ ],
+ "Não é falta de talento.": [
+  "site/index.html"
+ ],
+ "Não é falta de talento. É falta de acabamento. Foi isso que você viu no Studio Cover: a sua voz afinada, mixada e com som de estúdio, saindo do próprio celular.": [
+  "site/api/funil.php"
+ ],
+ "Não é obrigatório. O que mais vende é mostrar o antes e depois de um cover. Quanto mais você posta, mais gente testa.": [
+  "site/afiliados/index.html"
+ ],
+ "Não. A afinação é nota por nota, mantendo o seu vibrato e o seu jeito de cantar. Você ainda pode ajustar cada nota no painel.": [
+  "site/index.html"
+ ],
+ "Não. Funciona direto no navegador do celular e também no computador. Dá para instalar na tela de início como um app.": [
+  "site/index.html"
+ ],
+ "Não. O vídeo sai em 1080p, o padrão do Instagram, TikTok e Reels, com a qualidade do original, o som tratado e a cor que você escolher. Gravou em 4K? Pode subir: ele sai em 1080p, sem perder nitidez.": [
+  "site/index.html"
+ ],
+ "Não. Todo o processamento acontece no seu aparelho. O seu vídeo não é enviado para ninguém.": [
+  "site/index.html"
+ ],
+ "Nítido HD": [
+  "js/filters.js"
+ ],
+ "O Colorista automático corrige luz, contraste e cor da pele. Os outros filtros vão por cima dele.": [
+  "index.html"
+ ],
+ "O Firefox": [
+  "js/app.js"
+ ],
+ "O GitHub recusou esta chave (venceu ou foi copiada pela metade).": [
+  "site/api/escudo.php"
+ ],
+ "O Microsoft Edge": [
+  "js/app.js"
+ ],
+ "O Studio Cover está na sua tela de início. Use sempre pelo ícone.": [
+  "site/app/conta.js"
+ ],
+ "O Studio Cover fica no seu celular igual a um aplicativo e você nunca perde o link.": [
+  "site/obrigado/index.html"
+ ],
+ "O Studio Cover lê o tom da música e afina cada nota mantendo o seu vibrato. Sem voz de robô. Ninguém percebe que passou por um app, só que ficou bom.": [
+  "site/api/funil.php"
+ ],
+ "O Studio Cover melhora o som e a imagem da sua gravação, mas o resultado depende da qualidade da gravação original (ruído, distância do microfone, iluminação). Não prometemos seguidores, visualizações, contratos ou qualquer resultado nas redes sociais.": [
+  "site/termos/index.html"
+ ],
+ "O Studio Cover se ajusta ao seu celular: processa de um jeito mais leve e o vídeo sai em 1080p do mesmo jeito. Só leva um pouco mais de tempo. Feche os outros apps antes de começar.": [
+  "site/assets/compat.js"
+ ],
+ "O Studio Cover é para maiores de 18 anos. Menores podem usar com o consentimento e o acompanhamento dos pais ou responsáveis, que fazem a compra e respondem pela conta (LGPD, art. 14).": [
+  "site/privacidade/index.html"
+ ],
+ "O Studio Cover é um <b>estúdio de gravação no celular</b>: o cantor grava o cover, envia o vídeo e recebe o vídeo de volta com a voz afinada, mixada e com cor de cinema.": [
+  "site/afiliado/index.html"
+ ],
+ "O Studio Cover é um app que funciona no navegador, oferecido por": [
+  "site/termos/index.html"
+ ],
+ "O acesso libera sozinho nesta mesma conta ({0}) assim que o pagamento cair. O vídeo que você testou fica guardado neste aparelho e sai pronto para baixar.": [
+  "site/app/conta.js"
+ ],
+ "O acesso é uma <b>assinatura anual</b> que <b>renova automaticamente</b> a cada 12 meses pelo mesmo meio de pagamento. Você pode cancelar a renovação quando quiser, pela Eduzz, e continua com acesso até o fim do período pago.": [
+  "site/termos/index.html"
+ ],
+ "O aparelho não deixou mais o app ler o arquivo. Isso acontece quando o vídeo está na nuvem (iCloud, Google Fotos, Drive) ou quando o app fica em segundo plano enquanto abre.": [
+  "js/app.js"
+ ],
+ "O aparelho não deixou mais o app ler o vídeo original para gravar o vídeo final. Isso acontece quando o vídeo está na nuvem (iCloud, Google Fotos) ou quando o app fica em segundo plano.": [
+  "js/app.js"
+ ],
+ "O app ainda não carregou. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.": [
+  "index.html"
+ ],
+ "O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.": [
+  "index.html"
+ ],
+ "O app para de preparar este vídeo. Você pode escolher o mesmo vídeo ou outro depois.": [
+  "js/app.js"
+ ],
+ "O app separa a voz da música, afina nota por nota (automático ou ajustando no painel) e faz mix e master. Sem computador, sem estúdio, sem saber mixar.": [
+  "site/afiliado/index.html"
+ ],
+ "O arquivo \"{0}\" não é um vídeo ou áudio que a gente aceita.": [
+  "site/api/depoimento.php"
+ ],
+ "O arquivo \"{0}\" passou de": [
+  "site/api/depoimento.php"
+ ],
+ "O arquivo chegou maior do que o esperado. Tente de novo.": [
+  "site/api/depoimento.php"
+ ],
+ "O arquivo de senhas do site (config.php) está com permissão aberta.": [
+  "site/api/escudo.php"
+ ],
+ "O banco de dados está dentro da pasta pública do site.": [
+  "site/api/escudo.php"
+ ],
+ "O banco de dados está no plano B (dentro do site, bloqueado). O ideal é fora do httpdocs.": [
+  "site/api/escudo.php"
+ ],
+ "O cantor grava o cover, envia o vídeo e recebe de volta a voz afinada, mixada e com cor de cinema. Sem computador e sem estúdio. Quem posta cover toda semana e sofre com o áudio do celular é o seu público.": [
+  "site/afiliados/index.html"
+ ],
+ "O celular espreme o som. A voz perde o brilho e fica com cara de gravação caseira.": [
+  "site/index.html"
+ ],
+ "O celular fechou o app no meio": [
+  "js/app.js"
+ ],
+ "O celular perdeu o acesso a esse vídeo": [
+  "js/app.js"
+ ],
+ "O celular precisou recarregar a página. Continuando o seu vídeo de onde parou…": [
+  "js/app.js"
+ ],
+ "O comentário que ninguém quer ler": [
+  "site/api/funil.php"
+ ],
+ "O controlador dos dados é": [
+  "site/privacidade/index.html"
+ ],
+ "O código \"{0}\" já é de outro afiliado.": [
+  "site/api/afiliados.php"
+ ],
+ "O código \"{0}\" já é de outro afiliado. Escolha outro.": [
+  "site/api/afiliado.php"
+ ],
+ "O código precisa ter pelo menos 3 letras ou números.": [
+  "site/api/afiliados.php"
+ ],
+ "O escudo bloqueou o IP <b></b>": [
+  "site/api/escudo.php"
+ ],
+ "O funil": [
+  "site/afiliados/index.html"
+ ],
+ "O link de acesso também chegou no seu e-mail. Guarde: <b>studiocover.com.br/entrar</b>": [
+  "site/obrigado/index.html"
+ ],
+ "O link de afiliado precisa ser um link da Eduzz (https://...eduzz.com/...).": [
+  "site/api/afiliados.php"
+ ],
+ "O mesmo trecho do cover: primeiro cru, depois afinado e mixado. Corte seco no meio. É o formato número 1.": [
+  "site/afiliado/index.html"
+ ],
+ "O navegador do {0} costuma não deixar salvar o vídeo pronto no celular.": [
+  "site/app/conta.js"
+ ],
+ "O navegador não tem": [
+  "site/assets/compat.js"
+ ],
+ "O plano é R$ 297 por ano. Metade é sua, já descontada a taxa da plataforma.": [
+  "site/afiliados/index.html"
+ ],
+ "O produto": [
+  "site/afiliados/index.html"
+ ],
+ "O programa de afiliados fica no menu da sua conta.": [
+  "site/api/funil.php"
+ ],
+ "O programa é exclusivo para quem assina o Studio Cover: você divulga o que usa de verdade. Use o mesmo e-mail e a mesma senha do app. Recebeu um convite nosso? Aí pode entrar direto pelo link do convite. A conta de afiliado e a da Eduzz são grátis.": [
+  "site/afiliados/index.html"
+ ],
+ "O que NÃO coletamos": [
+  "site/privacidade/index.html"
+ ],
+ "O que esperar do resultado": [
+  "site/termos/index.html"
+ ],
+ "O servidor recusou o envio": [
+  "site/api/mail.php"
+ ],
+ "O servidor recusou um pedaço do arquivo.": [
+  "site/depoimento/index.html"
+ ],
+ "O seu acesso foi cancelado (reembolso ou bloqueio). Se acha que é um engano, fale com o suporte.": [
+  "site/app/conta.js"
+ ],
+ "O seu antes e depois pode inspirar outro cantor": [
+  "site/api/depo_lib.php"
+ ],
+ "O seu depoimento chegou para a nossa equipe.": [
+  "site/depoimento/index.html"
+ ],
+ "O seu depoimento chegou só para a nossa equipe. Não vamos publicar nada sem a sua autorização.": [
+  "site/depoimento/index.html"
+ ],
+ "O seu vídeo do teste continua guardado no app, no mesmo aparelho. Libere o acesso completo, baixe ele pronto e faça quantos covers quiser.": [
+  "site/api/funil.php"
+ ],
+ "O site e o app fazem um teste automático no seu aparelho e mostram um aviso quando ele não é compatível ou está no limite, inclusive antes da compra. Se você comprar mesmo assim, poderá usar o Studio Cover pelo computador ou por outro aparelho compatível. Se nada funcionar para você, use a garantia de 7 dias.": [
+  "site/termos/index.html"
+ ],
+ "O site não conseguiu buscar a versão nova no GitHub. Confira a chave do GitHub na aba Vistoria.": [
+  "site/api/escudo.php"
+ ],
+ "O site usa conexão criptografada (HTTPS). As senhas são guardadas com hash, o painel administrativo tem acesso restrito com senha e limite de tentativas, e cada pessoa só vê os próprios dados. Se acontecer um incidente de segurança que possa causar risco a você, avisamos você e a ANPD, como manda o art. 48 da LGPD.": [
+  "site/privacidade/index.html"
+ ],
+ "O teste de compatibilidade do aparelho roda dentro do seu navegador e o resultado fica guardado nele. Só vai para o nosso painel junto com o diário do app, quando você usa o app logado.": [
+  "site/privacidade/index.html"
+ ],
+ "O teste grátis está fechado no momento.": [
+  "site/api/conta.php"
+ ],
+ "O vídeo perde qualidade?": [
+  "site/index.html"
+ ],
+ "O vídeo que você testou (<b>{0}</b>) ficou guardado neste aparelho. Toque abaixo e ele sai pronto de novo, afinado, mixado e com cor de cinema, para você baixar.": [
+  "site/app/conta.js"
+ ],
+ "O vídeo sai em 1080p (o padrão do Instagram, TikTok e Reels), com os mesmos quadros por segundo e a qualidade do original. Deixe a tela aberta até terminar.": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Obrigado pela compra! Agora é ilimitado.": [
+  "site/api/funil.php"
+ ],
+ "Obrigado pelo seu antes e depois! 🎁": [
+  "site/api/depoimento.php"
+ ],
+ "Obrigado pelo seu depoimento! Este vídeo está liberado para baixar.": [
+  "site/app/conta.js"
+ ],
+ "Oi": [
+  "site/api/conta.php"
+ ],
+ "Oi, {0}! Aqui é o Leonardo, do Studio Cover. Obrigado por confiar na gente logo no começo 🙏 Posso te pedir um favor rápido? Manda pra gente o seu antes e depois (o vídeo original e o que o app entregou) e uma frase sincera do que achou. Se você autorizar, a gente posta no @studiocoveroficial com você marcado. É por aqui, leva 2 minutos: {1}": [
+  "site/api/depo_lib.php"
+ ],
+ "Oi, {0}! Aqui é o Leonardo, do Studio Cover. Vi que você testou o app e baixou o seu cover. O que achou do resultado? Se puder, manda o seu antes e depois e uma frase sincera por este link (leva 2 minutos)": [
+  "site/api/depo_lib.php"
+ ],
+ "Ok": [
+  "site/index.html"
+ ],
+ "Olá{0}! Crie a senha da conta {1}.": [
+  "site/entrar/index.html"
+ ],
+ "Olá{0}! Crie a senha do painel ({1}).": [
+  "site/afiliado/index.html"
+ ],
+ "Opcional: a gente pega a melodia do cantor original no seu tom e afina você por ela.": [
+  "js/app.js"
+ ],
+ "Original": [
+  "index.html",
+  "js/filters.js"
+ ],
+ "Original <b>{0}{1} semitons</b>": [
+  "js/app.js"
+ ],
+ "Original lida: diferença de {0} semitons.": [
+  "js/app.js"
+ ],
+ "Os cantores que você admira não gravam perfeito de primeira. Eles têm um estúdio que afina, equaliza e mixa antes de qualquer pessoa ouvir.": [
+  "site/api/funil.php"
+ ],
+ "Os dados do cadastro precisam ser verdadeiros. O e-mail é por onde chegam o acesso e os avisos.": [
+  "site/termos/index.html"
+ ],
+ "Os registros de compra ficam guardados pelo prazo da lei (obrigação fiscal), sem o seu nome.": [
+  "site/app/conta.js"
+ ],
+ "Os valores são exemplos de cálculo e não garantia de ganho. Instagram é marca de seu respectivo dono.": [
+  "site/afiliados/index.html"
+ ],
+ "Os vídeos que você produz são seus. O Studio Cover não tem nenhum direito sobre eles.": [
+  "site/termos/index.html"
+ ],
+ "Ou copie o link e cole no Safari.": [
+  "site/assets/compat.js"
+ ],
+ "Ou use": [
+  "js/app.js"
+ ],
+ "Outro": [
+  "site/api/lib.php"
+ ],
+ "Outros downloads<small>só o áudio, só a voz ou só a base</small>": [
+  "index.html"
+ ],
+ "PRÉVIA · TESTE GRÁTIS": [
+  "site/app/conta.js"
+ ],
+ "Paga de novo a cada cover": [
+  "site/index.html"
+ ],
+ "Pagamento confirmado!": [
+  "site/app/conta.js",
+  "site/obrigado/index.html"
+ ],
+ "Pagamento confirmado. Agora é só criar a sua senha para entrar no Studio Cover.": [
+  "site/api/funil.php"
+ ],
+ "Pagamento confirmado. Entre com o mesmo e-mail e senha que você já usa e aproveite: vídeos ilimitados.": [
+  "site/api/funil.php"
+ ],
+ "Painel de afinação": [
+  "index.html",
+  "js/manual.js"
+ ],
+ "Painel de notas": [
+  "site/index.html"
+ ],
+ "Painel de notas com campo harmônico": [
+  "site/index.html"
+ ],
+ "Painel de notas em tela cheia": [
+  "site/index.html"
+ ],
+ "Painel do Afiliado · Studio Cover": [
+  "site/afiliado/index.html"
+ ],
+ "Painel do afiliado": [
+  "site/afiliados/index.html"
+ ],
+ "Painel do afiliado com roteiros prontos": [
+  "site/afiliados/index.html"
+ ],
+ "Painel do afiliado e pagamento de comissões": [
+  "site/privacidade/index.html"
+ ],
+ "Painel em tela cheia com as notas da sua voz e a cifra da base, como num estúdio.": [
+  "site/index.html"
+ ],
+ "Painel em tela cheia: linha verde é a escala, amarela é a tônica. Arrastou, ficou no tom.": [
+  "site/index.html"
+ ],
+ "Painel grande": [
+  "index.html"
+ ],
+ "Para <b>baixar este vídeo</b> e fazer todos os próximos assim, libere o acesso completo: sem limite de vídeos, sem pagar estúdio.": [
+  "site/app/conta.js"
+ ],
+ "Para criar a conta, aceite as regras de divulgação.": [
+  "site/api/afiliado.php"
+ ],
+ "Para instalar, abra no <b>Chrome</b>:": [
+  "site/app/conta.js"
+ ],
+ "Para o seu cover sair rápido e sem travar:": [
+  "js/app.js"
+ ],
+ "Para quem posta cover no Instagram e no TikTok": [
+  "site/index.html"
+ ],
+ "Para quê": [
+  "site/privacidade/index.html"
+ ],
+ "Para se afiliar, você precisa ser cliente do Studio Cover. Depois de comprar, você recupera o valor indicando. Use o": [
+  "site/afiliado/index.html"
+ ],
+ "Para ser afiliado, primeiro você precisa ser cliente do Studio Cover. Assine, use o app e recupere o valor indicando: cada assinatura que você indica rende perto de R$ 140.": [
+  "site/api/afiliado.php"
+ ],
+ "Para ser afiliado, primeiro você precisa ser cliente do Studio Cover. Se já é, use o mesmo e-mail da sua assinatura. Se ainda não é, assine, use o app e recupere o valor indicando: cada assinatura que você indica rende perto de R$ 140.": [
+  "site/api/afiliado.php"
+ ],
+ "Passe no Studio Cover": [
+  "site/afiliados/index.html"
+ ],
+ "Passo 1 de 5": [
+  "site/index.html"
+ ],
+ "Passo 2 de 5": [
+  "site/index.html"
+ ],
+ "Passo 3 de 5": [
+  "site/index.html"
+ ],
+ "Passo 4 de 5": [
+  "site/index.html"
+ ],
+ "Passo 5 de 5": [
+  "site/index.html"
+ ],
+ "Passo a passo para deixar o cover com som de estúdio no celular 📱 Salva e testa grátis.": [
+  "site/afiliado/index.html"
+ ],
+ "Passou de {0} MB. Escolha um vídeo menor ou mais curto.": [
+  "site/depoimento/index.html"
+ ],
+ "Pausar": [
+  "js/app.js"
+ ],
+ "Pedido de vocês, gravado no celular e finalizado no Studio Cover 🎤 Manda a próxima nos comentários.": [
+  "site/afiliado/index.html"
+ ],
+ "Pela Eduzz, direto na conta bancária que você cadastrar lá. A Eduzz separa a sua parte em cada venda.": [
+  "site/afiliados/index.html"
+ ],
+ "Pela música original": [
+  "index.html"
+ ],
+ "Pelo ícone da tela de início o Studio Cover <b>trava bem menos</b>: abre sozinho, com a memória do celular só para ele, sem o navegador do Instagram, tradutor ou outras abas atrapalhando.": [
+  "site/app/conta.js"
+ ],
+ "Perguntas frequentes": [
+  "site/afiliados/index.html",
+  "site/index.html"
+ ],
+ "Perto de R$ 140 por venda": [
+  "site/afiliados/index.html"
+ ],
+ "Perto de R$ 140 por venda e comissão de novo a cada renovação. Assista ao vídeo e comece hoje.": [
+  "site/afiliados/index.html"
+ ],
+ "Pessoa": [
+  "site/afiliado/index.html"
+ ],
+ "Pix ou cartão": [
+  "site/obrigado/index.html"
+ ],
+ "Plugins caros": [
+  "site/index.html"
+ ],
+ "Pode": [
+  "site/afiliado/index.html"
+ ],
+ "Pode mostrar o meu nome e marcar o meu @.": [
+  "site/depoimento/index.html"
+ ],
+ "Pode usar nos seus posts, stories e anúncios. O melhor material continua sendo o seu próprio antes e depois.": [
+  "site/afiliado/index.html"
+ ],
+ "Pode, sempre com o seu link. Só não vale prometer fama, seguidores ou contrato, criar perfil se passando pelo Studio Cover ou inventar desconto. As regras completas ficam no painel.": [
+  "site/afiliados/index.html"
+ ],
+ "Política de privacidade": [
+  "site/afiliado/index.html",
+  "site/entrar/index.html",
+  "site/obrigado/index.html",
+  "site/privacidade/index.html",
+  "site/termos/index.html"
+ ],
+ "Política de privacidade · Studio Cover": [
+  "site/privacidade/index.html"
+ ],
+ "Por dentro do app": [
+  "site/index.html"
+ ],
+ "Por mês": [
+  "site/afiliados/index.html"
+ ],
+ "Por quanto tempo guardamos": [
+  "site/privacidade/index.html"
+ ],
+ "Posso fazer anúncio?": [
+  "site/afiliados/index.html"
+ ],
+ "Posso te ajudar a decidir?": [
+  "site/api/funil.php"
+ ],
+ "Postando seu cover": [
+  "site/index.html"
+ ],
+ "Postar os meus covers": [
+  "site/api/funil.php"
+ ],
+ "Poste com a voz": [
+  "site/index.html"
+ ],
+ "Poste o antes e depois": [
+  "site/afiliados/index.html"
+ ],
+ "Preciso de computador ou de algum equipamento?": [
+  "site/index.html"
+ ],
+ "Preciso ter muitos seguidores?": [
+  "site/afiliados/index.html"
+ ],
+ "Prender no tom": [
+  "index.html"
+ ],
+ "Preparando a imagem do vídeo para este navegador (só neste caso)": [
+  "js/app.js"
+ ],
+ "Preparando…": [
+  "index.html"
+ ],
+ "Presente para você": [
+  "site/index.html"
+ ],
+ "Preto e Branco de Cinema": [
+  "js/filters.js"
+ ],
+ "Primeiro quero ver o antes e depois": [
+  "site/app/conta.js"
+ ],
+ "Privacidade": [
+  "site/entrar/index.html",
+  "site/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Privacidade e meus dados": [
+  "site/app/conta.js",
+  "site/privacidade/index.html"
+ ],
+ "Processador mais simples: roda no modo leve.": [
+  "site/assets/compat.js"
+ ],
+ "Produtos": [
+  "site/afiliado/index.html"
+ ],
+ "Programa de afiliados": [
+  "site/afiliados/index.html"
+ ],
+ "Prometer seguidores, fama, contrato ou número de visualizações.": [
+  "site/afiliado/index.html"
+ ],
+ "Pronto": [
+  "index.html",
+  "site/index.html"
+ ],
+ "Pronto para Reels e TikTok": [
+  "site/index.html"
+ ],
+ "Pronto para postar no": [
+  "site/index.html"
+ ],
+ "Pronto!": [
+  "site/app/conta.js"
+ ],
+ "Pronto! Assista a prévia e baixe. Quer mudar algo? Toque na etapa lá em cima.": [
+  "js/app.js"
+ ],
+ "Pronto.": [
+  "site/api/conta.php"
+ ],
+ "Pronto: agora é uma voz só.": [
+  "js/app.js"
+ ],
+ "Pronto: as suas páginas de venda já estão geradas": [
+  "site/afiliado/index.html"
+ ],
+ "Pronto: {0} vozes separadas. A Voz 1 é a mais aguda.": [
+  "js/app.js"
+ ],
+ "Próximo": [
+  "index.html"
+ ],
+ "Próximo →": [
+  "js/manual.js"
+ ],
+ "Próximo: {0} →": [
+  "js/manual.js"
+ ],
+ "Purchase": [
+  "site/obrigado/index.html"
+ ],
+ "Página de vendas com o vídeo (use na bio e nos posts)": [
+  "site/afiliado/index.html"
+ ],
+ "Página de vendas com o vídeo. Quem entrar fica marcado como seu por 60 dias.": [
+  "site/afiliado/index.html"
+ ],
+ "Quais dados coletamos, para quê e com qual base legal": [
+  "site/privacidade/index.html"
+ ],
+ "Quando": [
+  "site/afiliado/index.html"
+ ],
+ "Quando o teste grátis está aberto, você pode processar uma quantidade limitada de vídeos sem pagar e sem cartão. Depois disso, o acesso completo precisa da assinatura. Podemos mudar ou encerrar o teste grátis a qualquer momento, sem afetar quem já pagou.": [
+  "site/termos/index.html"
+ ],
+ "Quando você testou o Studio Cover, o app deu um erro e o seu vídeo grátis foi descontado sem você ver o resultado. Isso foi falha nossa, e a gente pede desculpas.": [
+  "site/api/lib.php"
+ ],
+ "Quantas pessoas cantam": [
+  "js/app.js"
+ ],
+ "Quantizar nota": [
+  "js/app.js"
+ ],
+ "Quantizar tudo": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Quanto custa deixar um cover com som profissional?": [
+  "site/index.html"
+ ],
+ "Quanto custa uma mixagem no estúdio comparado a um ano inteiro de Studio Cover.": [
+  "site/afiliado/index.html"
+ ],
+ "Quanto você pode ganhar": [
+  "site/afiliados/index.html"
+ ],
+ "Quantos covers quiser": [
+  "site/index.html"
+ ],
+ "Quantos covers você gravou e <em>apagou</em> por causa do áudio?": [
+  "site/index.html"
+ ],
+ "Quantos covers vão ficar parados na galeria?": [
+  "site/app/conta.js"
+ ],
+ "Quem canta, ouvir só a Voz 1 ou só a Voz 2 e o volume de cada voz.": [
+  "js/manual.js"
+ ],
+ "Quem canta?": [
+  "js/app.js"
+ ],
+ "Quem cresce na música posta toda semana": [
+  "site/api/funil.php"
+ ],
+ "Quem cuida dos seus dados": [
+  "site/privacidade/index.html"
+ ],
+ "Quem está crescendo na música não é quem canta melhor. É quem aparece toda semana com um som bom.": [
+  "site/api/funil.php"
+ ],
+ "Quem pode ser afiliado?": [
+  "site/afiliados/index.html"
+ ],
+ "Quem somos e o que é o serviço": [
+  "site/termos/index.html"
+ ],
+ "Quer ganhar dinheiro com o Studio Cover?": [
+  "site/index.html"
+ ],
+ "Quero esse som nos meus covers": [
+  "site/index.html"
+ ],
+ "Quero me afiliar": [
+  "site/afiliado/index.html"
+ ],
+ "Quero me afiliar agora": [
+  "site/afiliados/index.html"
+ ],
+ "Quero o Studio Cover": [
+  "site/api/funil.php",
+  "site/index.html"
+ ],
+ "Quero o meu estúdio no bolso": [
+  "site/api/funil.php"
+ ],
+ "Quero o meu próximo cover afinado": [
+  "site/api/funil.php"
+ ],
+ "Quero ser afiliado": [
+  "site/api/funil.php"
+ ],
+ "R$ 150+<small style=\"font-size:14px\"> /música</small>": [
+  "site/index.html"
+ ],
+ "Reação": [
+  "site/afiliado/index.html"
+ ],
+ "Reação ao ouvir o resultado": [
+  "site/afiliado/index.html"
+ ],
+ "Receba no celular as dicas, novidades e avisos da sua conta do Studio Cover.": [
+  "site/app/conta.js"
+ ],
+ "Reels": [
+  "site/index.html"
+ ],
+ "Reembolso": [
+  "site/afiliado/index.html"
+ ],
+ "Refazendo a mix…": [
+  "js/app.js"
+ ],
+ "Registros de acesso ao site: 6 meses, como pede o Marco Civil da Internet.": [
+  "site/privacidade/index.html"
+ ],
+ "Registros de compra: 5 anos depois da compra, por obrigação fiscal e do Código de Defesa do Consumidor. Depois que a conta é apagada, ficam sem o seu nome.": [
+  "site/privacidade/index.html"
+ ],
+ "Renovações no ano seguinte": [
+  "site/afiliados/index.html"
+ ],
+ "Repita a senha": [
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Requisitos: iPhone 13+, Android com 6 GB+ ou computador · vídeos de até 3 min ·": [
+  "site/index.html"
+ ],
+ "Requisição bloqueada pelo escudo de segurança.": [
+  "site/api/escudo.php"
+ ],
+ "Requisição inválida.": [
+  "site/api/lib.php"
+ ],
+ "Resgatar meu teste grátis →": [
+  "site/index.html"
+ ],
+ "Resolução<b>{0} (como o original)</b>": [
+  "js/app.js"
+ ],
+ "Responda as duas perguntas e escolha o seu vídeo. Depois são 5 passos: vídeo, afinação, mix e master, cor e exportar. Em cada passo dá para comparar e desfazer.": [
+  "index.html"
+ ],
+ "Respondemos pelo serviço nos termos do Código de Defesa do Consumidor. Não respondemos por danos causados por uso fora destes Termos, por aparelho incompatível depois do aviso, por perda de arquivos que você não salvou, nem pelo conteúdo que você publica.": [
+  "site/termos/index.html"
+ ],
+ "Responder as 2 perguntas, escolher o vídeo e deixar tudo pronto num toque.": [
+  "js/manual.js"
+ ],
+ "Responsabilidade": [
+  "site/termos/index.html"
+ ],
+ "Resultado": [
+  "site/index.html"
+ ],
+ "Resumo.": [
+  "site/privacidade/index.html"
+ ],
+ "Reverb": [
+  "index.html"
+ ],
+ "Role a tela e entre no estúdio: veja o seu cover sair afinado, mixado e com cara de clipe.": [
+  "site/index.html"
+ ],
+ "Role e toque em <b>Adicionar à Tela de Início</b>": [
+  "site/app/conta.js",
+  "site/obrigado/index.html"
+ ],
+ "Role para ver mais": [
+  "js/app.js"
+ ],
+ "Ré": [
+  "js/analysis.js",
+  "js/music.js"
+ ],
+ "SEU <em>ANTES E DEPOIS</em>": [
+  "site/depoimento/index.html"
+ ],
+ "STUDIO <em>COVER</em><small>PAINEL DO AFILIADO</small>": [
+  "site/afiliado/index.html"
+ ],
+ "Saber o que cada botão faz, sem mexer em nada.": [
+  "js/manual.js"
+ ],
+ "Saber se o app está funcionando, avisar quando o aparelho não é compatível e dar suporte": [
+  "site/privacidade/index.html"
+ ],
+ "Saiba mais": [
+  "site/index.html"
+ ],
+ "Sair": [
+  "site/afiliado/index.html"
+ ],
+ "Saiu com som de estúdio.": [
+  "site/index.html"
+ ],
+ "Salvo! As compras dos seus leads vão por este link.": [
+  "site/afiliado/index.html"
+ ],
+ "Saída": [
+  "site/index.html"
+ ],
+ "Se a compra for reembolsada ou contestada, o acesso é encerrado.": [
+  "site/termos/index.html"
+ ],
+ "Se a música é séria para você, dê ao seu talento o acabamento que ele merece. Chega de postar desafinado.": [
+  "site/api/funil.php"
+ ],
+ "Se alguma coisa te travou, me responde este e-mail. Leio todas as respostas.": [
+  "site/api/funil.php"
+ ],
+ "Se continuar, use": [
+  "js/app.js"
+ ],
+ "Se esta política mudar de forma importante, avisamos por e-mail ou dentro do app. A data da versão fica no topo da página.": [
+  "site/privacidade/index.html"
+ ],
+ "Se este e-mail for de um afiliado, o link para criar a senha chegou na sua caixa.": [
+  "site/afiliado/index.html"
+ ],
+ "Se este e-mail tiver cadastro, o link chega em alguns minutos. Olhe também o spam.": [
+  "site/entrar/index.html"
+ ],
+ "Se não der, abra o vídeo na galeria, espere baixar inteiro e toque em": [
+  "js/app.js"
+ ],
+ "Se não foi você (ou o Reinaldo), troque a sua senha e apague esse acesso na aba Administradores.": [
+  "site/api/escudo.php"
+ ],
+ "Se não foi você que pediu, pode ignorar este e-mail.": [
+  "site/api/conta.php"
+ ],
+ "Se não salvar, abra o Studio Cover no {0}, entre com a mesma conta e faça de novo: com o acesso completo os vídeos são ilimitados.": [
+  "site/app/conta.js"
+ ],
+ "Se o botão não abrir a página, procure": [
+  "site/afiliado/index.html"
+ ],
+ "Se o vídeo veio de outro app ou do WhatsApp, salve o original e suba de novo": [
+  "js/app.js"
+ ],
+ "Se o vídeo veio do WhatsApp ou do Drive, salve no aparelho primeiro": [
+  "js/app.js"
+ ],
+ "Se você não mexeu no servidor, alguém pode ter tentado alterar o site. Vale trocar a senha do Plesk.": [
+  "site/api/escudo.php"
+ ],
+ "Segurança": [
+  "site/privacidade/index.html"
+ ],
+ "Segurança: bloquear tentativas repetidas de senha e cadastros falsos, contar cliques de afiliados": [
+  "site/privacidade/index.html"
+ ],
+ "Seja afiliado": [
+  "site/afiliado/index.html"
+ ],
+ "Seja afiliado do Studio Cover": [
+  "site/afiliados/index.html"
+ ],
+ "Seja afiliado: divulgue no seu Instagram e ganhe 50% de comissão em cada venda.": [
+  "site/index.html"
+ ],
+ "Seja sincero": [
+  "site/index.html"
+ ],
+ "Sem conexão": [
+  "site/app/conta.js"
+ ],
+ "Sem conexão.": [
+  "site/app/conta.js",
+  "site/depoimento/index.html"
+ ],
+ "Sem conexão. Confira a internet e tente de novo.": [
+  "site/entrar/index.html",
+  "site/obrigado/index.html"
+ ],
+ "Sem conexão. Tente de novo.": [
+  "site/afiliado/index.html",
+  "site/depoimento/index.html"
+ ],
+ "Sem estúdio isso era impossível. Com o Studio Cover é um app: grava, afina, mixa e posta no mesmo dia.": [
+  "site/api/funil.php"
+ ],
+ "Sem estúdio, sem programa, sem horas no computador. E sem vergonha de postar.": [
+  "site/index.html"
+ ],
+ "Sem estúdio, sem programa, sem passar vergonha. Só você, o celular e o Studio Cover.": [
+  "site/index.html"
+ ],
+ "Sem instalar programa": [
+  "site/index.html"
+ ],
+ "Sem precisar saber mixar": [
+  "site/index.html"
+ ],
+ "Senha": [
+  "site/afiliado/index.html",
+  "site/entrar/index.html"
+ ],
+ "Senha criada na página de obrigado sem código da fatura": [
+  "site/api/escudo.php"
+ ],
+ "Senha de administrador trocada": [
+  "site/api/escudo.php"
+ ],
+ "Senha do app Studio Cover <small>(a mesma que você usa para entrar no app)</small>": [
+  "site/afiliado/index.html"
+ ],
+ "Senha errada.": [
+  "site/api/conta.php"
+ ],
+ "Separando a voz": [
+  "js/app.js"
+ ],
+ "Separando a voz do instrumental": [
+  "index.html"
+ ],
+ "Separando as {0} vozes…": [
+  "js/app.js"
+ ],
+ "Separação": [
+  "site/index.html"
+ ],
+ "Seu acesso ao Studio Cover chegou! Crie a sua senha": [
+  "site/api/funil.php"
+ ],
+ "Seu acesso completo ao Studio Cover foi liberado": [
+  "site/api/funil.php"
+ ],
+ "Seu acesso completo está liberado nesta conta. Toque para baixar o seu cover.": [
+  "site/app/conta.js"
+ ],
+ "Seu acesso está liberado": [
+  "site/obrigado/index.html"
+ ],
+ "Seu acesso está liberado 🎉": [
+  "site/api/funil.php"
+ ],
+ "Seu antes e depois · Studio Cover": [
+  "site/depoimento/index.html"
+ ],
+ "Seu aparelho não é compatível com o Studio Cover": [
+  "site/assets/compat.js"
+ ],
+ "Seu aparelho não é compatível: use o computador ou um celular mais novo.": [
+  "js/app.js"
+ ],
+ "Seu celular usa o modo leve": [
+  "site/assets/compat.js"
+ ],
+ "Seu celular usa o modo leve: o vídeo sai em 1080p do mesmo jeito, só demora um pouco mais. Feche os outros apps antes de começar.": [
+  "js/app.js"
+ ],
+ "Seu cover com <em>som de estúdio</em>.": [
+  "site/index.html"
+ ],
+ "Seu cover com <em>som de estúdio</em><br>e cara de cinema.": [
+  "index.html"
+ ],
+ "Seu cover está pronto para baixar": [
+  "site/app/conta.js"
+ ],
+ "Seu cover pode pagar a sua assinatura": [
+  "site/api/funil.php"
+ ],
+ "Seu código no link": [
+  "site/afiliado/index.html"
+ ],
+ "Seu código: <b></b>": [
+  "site/api/afiliado.php"
+ ],
+ "Seu estúdio no bolso": [
+  "site/api/funil.php"
+ ],
+ "Seu link vai ficar:": [
+  "site/afiliado/index.html"
+ ],
+ "Seu nome": [
+  "site/afiliado/index.html",
+  "site/entrar/index.html"
+ ],
+ "Seu painel de afiliado do Studio Cover": [
+  "site/api/afiliados.php"
+ ],
+ "Seu próximo cover com <em>voz afinada</em> e som de estúdio.": [
+  "site/index.html"
+ ],
+ "Seu próximo cover está travado": [
+  "site/app/conta.js"
+ ],
+ "Seu próximo cover está travado.": [
+  "site/app/conta.js"
+ ],
+ "Seu próximo cover está travado. Libere o acesso completo.": [
+  "site/api/funil.php"
+ ],
+ "Seu próximo cover pode ser o que muda tudo": [
+  "site/api/funil.php"
+ ],
+ "Seu teste grátis está liberado": [
+  "site/api/funil.php"
+ ],
+ "Seu vídeo está pronto!": [
+  "index.html"
+ ],
+ "Seu vídeo não sai do celular": [
+  "site/index.html"
+ ],
+ "Seu vídeo tem": [
+  "js/app.js"
+ ],
+ "Seu vídeo tem {0}. Usei os primeiros {1} minutos (o limite por vídeo). Se quiser outro trecho, corte no celular e suba de novo.": [
+  "js/app.js"
+ ],
+ "Seus direitos (LGPD, art. 18)": [
+  "site/privacidade/index.html"
+ ],
+ "Seus vídeos e áudios": [
+  "site/privacidade/index.html"
+ ],
+ "Seus vídeos e áudios nunca foram enviados para nós: todo o processamento acontece no seu aparelho.": [
+  "site/api/lib.php"
+ ],
+ "Seus vídeos nunca saem do seu aparelho: todo o processamento acontece aqui. Guardamos só o necessário para a sua conta funcionar (nome, e-mail, compras e o uso do app).": [
+  "site/app/conta.js"
+ ],
+ "Shorts": [
+  "site/index.html"
+ ],
+ "Si": [
+  "js/analysis.js",
+  "js/music.js"
+ ],
+ "Sim, voltar ao início": [
+  "js/app.js"
+ ],
+ "Sim. A IA separa a sua voz da base, seja violão, teclado, banda ou playback. Também dá para usar uma gravação só de voz.": [
+  "site/index.html"
+ ],
+ "Sim. A comissão é de 50% também nas renovações anuais de quem comprou pelo seu link.": [
+  "site/afiliados/index.html"
+ ],
+ "Simples de usar. <em>Poderoso</em> por dentro.": [
+  "site/index.html"
+ ],
+ "Sinal": [
+  "site/index.html"
+ ],
+ "Sol": [
+  "js/analysis.js",
+  "js/music.js"
+ ],
+ "Som + imagem + exportação": [
+  "site/index.html"
+ ],
+ "Som de estúdio e cara de cinema no seu celular.": [
+  "site/entrar/index.html"
+ ],
+ "Space": [
+  "js/app.js"
+ ],
+ "Studio Cover · Som de estúdio no seu celular": [
+  "site/index.html"
+ ],
+ "Studio Cover · Voz afinada e som de estúdio gravando no celular": [
+  "site/index.html"
+ ],
+ "Sua comissão: R$": [
+  "site/api/afiliado.php",
+  "site/api/webhook.php"
+ ],
+ "Sua conta de afiliado do Studio Cover está pronta": [
+  "site/api/afiliado.php"
+ ],
+ "Sua conta de afiliado do Studio Cover está pronta. No painel você pega o seu link, acompanha quantas pessoas entraram, fizeram o teste grátis e compraram.": [
+  "site/api/afiliados.php"
+ ],
+ "Sua conta de afiliado está criada. Entre com o mesmo e-mail e a mesma senha do app. No painel tem o passo a passo para começar: criar a conta na Eduzz, se afiliar ao Studio Cover, colar o seu link e pegar as suas páginas prontas.": [
+  "site/api/afiliado.php"
+ ],
+ "Sua conta de afiliado está criada. No painel tem o passo a passo para começar: criar a conta na Eduzz, se afiliar ao Studio Cover, colar o seu link e pegar as suas páginas prontas. Tem também roteiros e ideias de conteúdo.": [
+  "site/api/afiliado.php"
+ ],
+ "Sua conta foi apagada. Obrigado por ter usado o Studio Cover.": [
+  "site/entrar/index.html"
+ ],
+ "Sua nota": [
+  "site/depoimento/index.html"
+ ],
+ "Sua voz e a base em faixas separadas, para tratar cada uma do jeito certo.": [
+  "site/index.html"
+ ],
+ "Suba a versão do cantor original e o app segue a melodia dela, no seu tom.": [
+  "site/index.html"
+ ],
+ "Suba o primeiro!": [
+  "site/api/funil.php"
+ ],
+ "Suba o seu!": [
+  "site/api/funil.php"
+ ],
+ "Suba o vídeo do seu cover gravado no celular: o Studio Cover afina a sua voz sem efeito robô, separa do violão, mixa, masteriza e dá cor de cinema. Em minutos.": [
+  "site/index.html"
+ ],
+ "Subir": [
+  "index.html"
+ ],
+ "Subir a música do cantor original": [
+  "index.html"
+ ],
+ "Subir música original": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Subject:": [
+  "site/api/mail.php"
+ ],
+ "Talento você já tem": [
+  "site/api/funil.php"
+ ],
+ "Tela cheia": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Tela inicial do Studio Cover": [
+  "site/index.html"
+ ],
+ "Tem <b>teste grátis</b> com 1 vídeo, sem cartão. Depois é R$ 297 por ano (em até 10x). Uma única mixagem em estúdio costuma custar de R$ 100 a R$ 300.": [
+  "site/afiliado/index.html"
+ ],
+ "Tem muita gente achando que um app no celular não consegue deixar um cover com som de estúdio. Quem pode mostrar que consegue é você, com o seu próprio vídeo.": [
+  "site/api/depo_lib.php"
+ ],
+ "Tempo": [
+  "site/index.html"
+ ],
+ "Tentar aqui mesmo assim": [
+  "site/app/conta.js"
+ ],
+ "Tentar baixar aqui mesmo": [
+  "site/app/conta.js"
+ ],
+ "Tentar mesmo assim": [
+  "js/app.js"
+ ],
+ "Tente de novo pelo menu da conta.": [
+  "site/app/conta.js"
+ ],
+ "Tentou chaves secretas erradas (webhook, tarefas, instalação)": [
+  "site/api/escudo.php"
+ ],
+ "Tentou injetar código no site": [
+  "site/api/escudo.php"
+ ],
+ "Termos de uso": [
+  "site/afiliado/index.html",
+  "site/entrar/index.html",
+  "site/index.html",
+  "site/obrigado/index.html",
+  "site/privacidade/index.html",
+  "site/termos/index.html"
+ ],
+ "Termos de uso · Studio Cover": [
+  "site/termos/index.html"
+ ],
+ "Testamos este aparelho e ele dá conta do Studio Cover. Dica: feche outros apps antes de processar vídeos longos.": [
+  "site/app/conta.js"
+ ],
+ "Testar de novo": [
+  "site/api/lib.php"
+ ],
+ "Testaram o app": [
+  "site/afiliado/index.html"
+ ],
+ "Teste do aviso: é assim que cada venda sua vai chegar. 🙏": [
+  "site/api/afiliado.php"
+ ],
+ "Teste grátis": [
+  "site/afiliados/index.html",
+  "site/app/conta.js",
+  "site/entrar/index.html",
+  "site/termos/index.html"
+ ],
+ "Teste grátis Studio Cover": [
+  "site/index.html"
+ ],
+ "Teste grátis com {0} vídeo{1}": [
+  "site/entrar/index.html"
+ ],
+ "Teste grátis vende por você": [
+  "site/afiliados/index.html"
+ ],
+ "Teste grátis: {0} vídeo{1} restante{2}": [
+  "site/app/conta.js"
+ ],
+ "Teste o app e poste o seu primeiro conteúdo": [
+  "site/afiliado/index.html"
+ ],
+ "Testou o app": [
+  "site/afiliado/index.html"
+ ],
+ "To: <{0}>": [
+  "site/api/mail.php"
+ ],
+ "Toca 5 segundos do vídeo cru. Corte seco. Toca o mesmo trecho afinado e mixado. Deixa o som falar.": [
+  "site/afiliado/index.html"
+ ],
+ "Tocando só a {0}": [
+  "js/app.js"
+ ],
+ "Tocando só: {0}": [
+  "js/app.js"
+ ],
+ "Tocando todas as vozes juntas": [
+  "js/app.js"
+ ],
+ "Tocar": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Todas as atualizações do período": [
+  "site/index.html"
+ ],
+ "Todas as vozes": [
+  "js/app.js"
+ ],
+ "Todas as vozes mudas na prévia.": [
+  "js/app.js"
+ ],
+ "Todo cantor que você conhece tem esse problema": [
+  "site/api/funil.php"
+ ],
+ "Todo mundo que entra pelo seu link e todos os e-mails e avisos do funil levam a compra para este link, e a comissão cai para você na Eduzz. Cole aqui o link de afiliado que a Eduzz te deu para o Studio Cover.": [
+  "site/afiliado/index.html"
+ ],
+ "Todo mundo que entrar pelo seu link recebe o nosso funil de e-mails e avisos, e a compra vai pelo seu link de afiliado da Eduzz.": [
+  "site/api/afiliados.php"
+ ],
+ "Todo o processamento acontece no seu aparelho. Privacidade total.": [
+  "site/index.html"
+ ],
+ "Tom": [
+  "site/index.html"
+ ],
+ "Tom <b>{0}</b>": [
+  "js/app.js"
+ ],
+ "Toque aqui para soltar a imagem": [
+  "js/app.js"
+ ],
+ "Toque em": [
+  "js/app.js"
+ ],
+ "Toque em \"Afinar automático\". Depois compare no ANTES | DEPOIS. Se quiser, mexa nota por nota no painel.": [
+  "index.html"
+ ],
+ "Toque em <b>Adicionar</b> e abra pelo ícone novo. Pronto!": [
+  "site/app/conta.js"
+ ],
+ "Toque em <b>Adicionar</b>. O ícone aparece na sua tela!": [
+  "site/obrigado/index.html"
+ ],
+ "Toque em <b>Compartilhar</b> na barra do Safari": [
+  "site/app/conta.js",
+  "site/obrigado/index.html"
+ ],
+ "Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>": [
+  "site/app/conta.js"
+ ],
+ "Toque em <b>Instalar</b> quando aparecer o aviso (ou nos <b>⋮ três pontinhos</b> e em <b>Instalar app</b> / <b>Adicionar à tela inicial</b>)": [
+  "site/obrigado/index.html"
+ ],
+ "Toque em ENVIAR para tentar de novo.": [
+  "site/depoimento/index.html"
+ ],
+ "Toque em “Quero me afiliar”": [
+  "site/afiliados/index.html"
+ ],
+ "Toque no <b>−</b> ou no <b>+</b> (ou arraste a bolinha). Toque no play lá em cima para ouvir.": [
+  "index.html"
+ ],
+ "Toque no botão amarelo abaixo para abrir o app": [
+  "site/obrigado/index.html"
+ ],
+ "Toque no botão amarelo abaixo para abrir o app no <b>Chrome</b>": [
+  "site/obrigado/index.html"
+ ],
+ "Toque no botão de tocar para ouvir o som.": [
+  "js/app.js"
+ ],
+ "Toque no botão para criar a sua nova senha do painel de afiliado do Studio Cover. O link vale por 24 horas.": [
+  "site/api/afiliado.php"
+ ],
+ "Toque numa nota e arraste para qualquer nota. Zoom: pinça com dois dedos ou rodinha do mouse. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Toque numa nota primeiro": [
+  "js/app.js"
+ ],
+ "Toque numa voz para ouvir e afinar só ela. O botão de som liga ou deixa muda cada voz.": [
+  "js/app.js"
+ ],
+ "Trabalhamos para o app funcionar sempre, mas ele pode ter pausas para manutenção, falhas da internet ou mudanças dos navegadores. Podemos melhorar, mudar ou retirar funções para manter o serviço funcionando, sem reduzir de forma relevante o que você comprou durante o período pago.": [
+  "site/termos/index.html"
+ ],
+ "Trio": [
+  "js/app.js"
+ ],
+ "Trocar música original": [
+  "js/app.js"
+ ],
+ "Tudo em um": [
+  "site/index.html"
+ ],
+ "Tutorial de 30 segundos": [
+  "site/afiliado/index.html"
+ ],
+ "Tônica": [
+  "site/index.html"
+ ],
+ "Um ano de estúdio no bolso custa menos que uma mixagem 🎧 Teste grátis no link da bio.": [
+  "site/afiliado/index.html"
+ ],
+ "Um botão \"Deixar tudo pronto\" faz o caminho inteiro sozinho. E dá para comparar e desfazer cada passo.": [
+  "site/index.html"
+ ],
+ "Um estúdio de gravação no celular": [
+  "site/afiliados/index.html"
+ ],
+ "Um estúdio inteiro <em>no seu bolso</em>": [
+  "site/index.html"
+ ],
+ "Uma indicação por semana": [
+  "site/api/funil.php"
+ ],
+ "Uma indicação por semana dá perto de <b>R$ 600 por mês</b>. E quem renovar no ano seguinte paga de novo, e você recebe de novo.": [
+  "site/api/funil.php"
+ ],
+ "Uma mixagem simples num estúdio sai por R$ 100 a R$ 300 por música, e você ainda espera dias para receber.": [
+  "site/api/funil.php"
+ ],
+ "Uma nota fora tira a atenção do vídeo inteiro.": [
+  "site/api/funil.php"
+ ],
+ "Uma pessoa cantando: a voz é afinada inteira.": [
+  "js/app.js"
+ ],
+ "Usamos cookies e o Pixel da Meta para medir os anúncios.": [
+  "site/index.html"
+ ],
+ "Usar o material desta página.": [
+  "site/afiliado/index.html"
+ ],
+ "Use a mesma senha que você usa para entrar no app Studio Cover.": [
+  "site/api/afiliado.php"
+ ],
+ "Use letras e números na senha.": [
+  "site/api/lib.php"
+ ],
+ "Use o e-mail da sua compra e a senha que você criou.": [
+  "site/entrar/index.html"
+ ],
+ "Use pelo": [
+  "js/app.js"
+ ],
+ "Use vídeo de": [
+  "js/app.js"
+ ],
+ "Usei outro e-mail": [
+  "site/obrigado/index.html"
+ ],
+ "Uso do app: quantos vídeos processou, tamanho em MB, etapas, erros, modelo e memória do aparelho, força medida do processador, navegador e tipo de conexão": [
+  "site/privacidade/index.html"
+ ],
+ "Uso permitido e direitos autorais": [
+  "site/termos/index.html"
+ ],
+ "Vamos criar uma nova senha": [
+  "site/api/conta.php"
+ ],
+ "Veja e ouça o antes e depois com": [
+  "site/index.html"
+ ],
+ "Veja o Studio Cover funcionando": [
+  "site/index.html"
+ ],
+ "Venda de R$": [
+  "site/api/webhook.php"
+ ],
+ "Vendas por dia": [
+  "site/afiliados/index.html"
+ ],
+ "Vendo se é dupla ou trio": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Ver afiliados": [
+  "site/api/afiliados.php"
+ ],
+ "Ver aparelhos compatíveis": [
+  "site/assets/compat.js"
+ ],
+ "Ver como funciona": [
+  "site/api/funil.php"
+ ],
+ "Ver no painel": [
+  "site/api/depoimento.php"
+ ],
+ "Versão de 12 de novembro de 2026": [
+  "site/termos/index.html"
+ ],
+ "Versão de 12 de novembro de 2026 · em conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018, LGPD)": [
+  "site/privacidade/index.html"
+ ],
+ "Virar afiliado agora": [
+  "site/api/funil.php"
+ ],
+ "Vitalício": [
+  "site/app/conta.js"
+ ],
+ "Vitrine": [
+  "site/afiliado/index.html"
+ ],
+ "Você ainda não criou a sua senha. Use o link que chegou no seu e-mail ou toque em \"Esqueci a senha\".": [
+  "site/api/conta.php"
+ ],
+ "Você ainda tem {0} vídeo{1} grátis depois deste.": [
+  "site/app/conta.js"
+ ],
+ "Você canta bem. Mas o que sai do microfone do celular não mostra isso.": [
+  "site/index.html"
+ ],
+ "Você conhece a cena: grava o cover, ouve de volta e aquela nota escapa. A voz fica embolada na base. Você apaga, ou pior, guarda e nunca posta.": [
+  "site/api/funil.php"
+ ],
+ "Você conhece outros cantores?": [
+  "site/api/funil.php"
+ ],
+ "Você está no navegador do {0}, que tem pouca memória e não deixa baixar o vídeo pronto.": [
+  "site/assets/compat.js"
+ ],
+ "Você está no navegador do {0}. Ele tem pouca memória (o vídeo pode parar no meio) e não deixa baixar o vídeo pronto.": [
+  "site/app/conta.js"
+ ],
+ "Você falando do resultado": [
+  "site/api/depo_lib.php"
+ ],
+ "Você foi uma das primeiras pessoas a assinar o Studio Cover, e isso significa muito para nós.": [
+  "site/api/depo_lib.php"
+ ],
+ "Você ganhou mais 1 vídeo grátis no Studio Cover, já liberado para baixar.": [
+  "site/api/depoimento.php"
+ ],
+ "Você ganhou um teste grátis": [
+  "site/vsl/index.php"
+ ],
+ "Você ganhou um teste grátis!": [
+  "site/index.html"
+ ],
+ "Você grava, ouve e apaga": [
+  "site/api/funil.php"
+ ],
+ "Você já tem senha (da sua conta de teste). Entre com o seu e-mail e senha e instale o app.": [
+  "site/obrigado/index.html"
+ ],
+ "Você já tem senha. Entre com o seu e-mail e senha.": [
+  "site/obrigado/index.html"
+ ],
+ "Você já tem senha. Toque em \"Entrar\".": [
+  "site/api/conta.php"
+ ],
+ "Você já viu o que o Studio Cover faz com a sua voz. Agora dá para ganhar indicando para outros cantores: <b>perto de R$ 140 a cada assinatura</b> que vier pelo seu link, e de novo quando a pessoa renova no ano seguinte.": [
+  "site/api/funil.php"
+ ],
+ "Você já é cliente": [
+  "site/afiliado/index.html"
+ ],
+ "Você não escolheu nenhum vídeo. Mandar só o texto?": [
+  "site/depoimento/index.html"
+ ],
+ "Você não vai mais receber os nossos e-mails de novidades.": [
+  "site/api/conta.php"
+ ],
+ "Você não é desafinado. Falta acabamento.": [
+  "site/api/funil.php"
+ ],
+ "Você ou um amigo que canta. 30 a 60 segundos já bastam.": [
+  "site/afiliados/index.html"
+ ],
+ "Você ouvindo o resultado pela primeira vez. A cara de surpresa vende sozinha.": [
+  "site/afiliado/index.html"
+ ],
+ "Você ouviu a diferença. Vai voltar para o áudio cru?": [
+  "site/api/funil.php"
+ ],
+ "Você ouviu como a sua voz fica afinada e mixada. Sem o Studio Cover, o próximo vídeo volta a ser o áudio cru do celular: a nota que escapa, a voz embolada na base.": [
+  "site/api/funil.php"
+ ],
+ "Você ouviu como a sua voz fica afinada e mixada. Sem o Studio Cover, o próximo vídeo volta a ser o áudio cru do celular: aquela nota que escapa, a voz embolada na base, o som baixinho.": [
+  "site/app/conta.js"
+ ],
+ "Você pode apagar a sua conta a qualquer momento pelo app (menu da conta › Privacidade e meus dados). Podemos suspender a conta de quem violar estes Termos, avisando o motivo.": [
+  "site/termos/index.html"
+ ],
+ "Você pode, a qualquer momento e de graça:": [
+  "site/privacidade/index.html"
+ ],
+ "Você posta com o coração e aparece aquele comentário: \"desafinou aqui\", \"o som tá ruim\". Uma nota tira a atenção do vídeo inteiro.": [
+  "site/api/funil.php"
+ ],
+ "Você precisa ter 18 anos ou mais, ou a autorização dos pais ou responsáveis.": [
+  "site/termos/index.html"
+ ],
+ "Você também pode baixar só o áudio pronto (WAV) e juntar no editor": [
+  "js/app.js"
+ ],
+ "Você tem 7 dias de garantia. É só pedir o reembolso e devolvemos 100% do valor.": [
+  "site/index.html"
+ ],
+ "Você tem <b>{0}</b> para testar o Studio Cover completo: separar a voz, afinar, mixar e colocar cor de cinema. Você vê e ouve o antes e depois ali mesmo, no app.": [
+  "site/api/funil.php"
+ ],
+ "Você tem edições de afinação que ainda não foram aplicadas.": [
+  "js/app.js"
+ ],
+ "Você tem {0} grátis.": [
+  "site/api/funil.php"
+ ],
+ "Você testou o Studio Cover e baixou o seu vídeo pronto. Queria muito saber: o que achou do resultado?": [
+  "site/api/depo_lib.php"
+ ],
+ "Você vai receber as novidades do Studio Cover aqui no celular.": [
+  "site/app/conta.js"
+ ],
+ "Você é o responsável pelos vídeos que processa e publica, inclusive pelos direitos das músicas que interpreta (autorização de autores, editoras ou plataformas, quando for o caso) e pela imagem das pessoas que aparecem.": [
+  "site/termos/index.html"
+ ],
+ "Voice": [
+  "js/app.js"
+ ],
+ "Voices": [
+  "js/app.js"
+ ],
+ "Voltar": [
+  "index.html",
+  "site/assets/compat.js"
+ ],
+ "Voltar ao app": [
+  "site/assets/voltar-app.js"
+ ],
+ "Voltar ao app Studio Cover": [
+  "site/assets/voltar-app.js"
+ ],
+ "Voltar ao primeiro →": [
+  "js/manual.js"
+ ],
+ "Volume da base": [
+  "index.html"
+ ],
+ "Volume da voz": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Volume de todas as vozes": [
+  "js/app.js"
+ ],
+ "Volume final no padrão do Spotify:": [
+  "js/app.js"
+ ],
+ "Volume final no padrão do Spotify: −14 LUFS, pico em −1 dB.": [
+  "index.html"
+ ],
+ "Volume só da {0} ({1} voz) em relação às outras e à música. Toda para a esquerda = {2} muda no vídeo final.": [
+  "js/app.js"
+ ],
+ "Voz": [
+  "index.html",
+  "js/app.js"
+ ],
+ "Voz afinada, mixada e masterizada. Direto do seu celular, em minutos.": [
+  "site/index.html"
+ ],
+ "Voz de um lado, violão ou playback do outro. Tudo dentro do seu aparelho.": [
+  "site/index.html"
+ ],
+ "Voz na frente, grave, médio, agudo, compressor e volume no padrão do Spotify.": [
+  "site/index.html"
+ ],
+ "Voz original": [
+  "index.html"
+ ],
+ "Voz separada! Como você quer seguir?": [
+  "index.html"
+ ],
+ "Voz {0}": [
+  "js/pipeline.js"
+ ],
+ "Válido até": [
+  "site/app/conta.js"
+ ],
+ "Vídeo": [
+  "index.html"
+ ],
+ "Vídeo de até {0} minutos": [
+  "js/app.js"
+ ],
+ "Vídeo de iPhone vem no formato HEVC, que {0}. O som funciona, mas para ver e exportar o vídeo abra o Studio Cover no <b>Google Chrome</b> ou direto no celular.": [
+  "js/app.js"
+ ],
+ "Vídeo grande ({0} MB): pode demorar mais no celular. Se o celular fechar o app, use \"Ou suba só o áudio\" ou o computador.": [
+  "js/app.js"
+ ],
+ "Vídeo maior que {0} minutos": [
+  "js/app.js"
+ ],
+ "Vídeo pesado para o celular": [
+  "js/app.js"
+ ],
+ "Vídeo pronto": [
+  "site/index.html"
+ ],
+ "Vídeo pronto!": [
+  "js/app.js"
+ ],
+ "Vídeos curtos, com narração. Toque num para assistir (ligue o som).": [
+  "js/manual.js"
+ ],
+ "WhatsApp com DDD": [
+  "site/afiliado/index.html"
+ ],
+ "Zerar": [
+  "index.html"
+ ],
+ "abrir o vídeo": [
+  "js/app.js"
+ ],
+ "afina pela melodia do cantor": [
+  "index.html"
+ ],
+ "afinada + mix e master": [
+  "js/app.js"
+ ],
+ "ainda sem afinar": [
+  "js/app.js"
+ ],
+ "ajudante da IA falhou, rodando direto:": [
+  "js/studio.js"
+ ],
+ "ajudante não abriu": [
+  "js/studio.js"
+ ],
+ "ajudante parou de responder": [
+  "js/studio.js"
+ ],
+ "arquivo original ilegível na exportação; usando a cópia guardada": [
+  "js/app.js"
+ ],
+ "arquivo original ilegível; usando a cópia guardada": [
+  "js/app.js"
+ ],
+ "arquivo(s) alterado(s) e restaurado(s)": [
+  "site/api/escudo.php"
+ ],
+ "arquivo(s) estranho(s) em quarentena": [
+  "site/api/escudo.php"
+ ],
+ "assinatura anual · acesso por 12 meses": [
+  "site/index.html"
+ ],
+ "assinatura inválida": [
+  "site/api/webhook.php"
+ ],
+ "até {0} MB": [
+  "js/app.js"
+ ],
+ "até {0} minutos": [
+  "js/app.js"
+ ],
+ "colorista automático": [
+  "site/index.html"
+ ],
+ "com o e-mail da sua conta. Respondemos em até 15 dias.": [
+  "site/privacidade/index.html"
+ ],
+ "com você marcado.": [
+  "site/api/depo_lib.php"
+ ],
+ "confirmar se tratamos seus dados e <b>ter acesso</b> a eles;": [
+  "site/privacidade/index.html"
+ ],
+ "conversão do vídeo:": [
+  "js/app.js"
+ ],
+ "da Eduzz.": [
+  "site/afiliado/index.html"
+ ],
+ "de comissão 🙏": [
+  "site/api/webhook.php"
+ ],
+ "de novo com o app aberto na tela": [
+  "js/app.js"
+ ],
+ "decodeAudioData recusou o AAC:": [
+  "js/demux.js"
+ ],
+ "depois <b>{0}%</b>": [
+  "js/app.js"
+ ],
+ "dos clientes renovando. É uma simulação, não uma promessa: o resultado depende da sua divulgação.": [
+  "site/afiliados/index.html"
+ ],
+ "e a comissão é de": [
+  "site/afiliado/index.html"
+ ],
+ "e escolha o vídeo de novo": [
+  "js/app.js"
+ ],
+ "em vez de 4K (Ajustes › Câmera › Gravar vídeo, no iPhone): o cover sai em 1080p de qualquer jeito": [
+  "js/app.js"
+ ],
+ "entrada do celular": [
+  "site/index.html"
+ ],
+ "escolhida: arraste para cima ou para baixo, ou use Subir e Descer. A mudança já vale sozinha.": [
+  "js/app.js"
+ ],
+ "esds sem configuração": [
+  "js/demux.js"
+ ],
+ "esds sem configuração do AAC": [
+  "js/demux.js"
+ ],
+ "este navegador não abre": [
+  "js/app.js"
+ ],
+ "este vídeo não tem áudio": [
+  "js/demux.js"
+ ],
+ "estúdio carregando · role para entrar": [
+  "site/index.html"
+ ],
+ "estúdio no celular": [
+  "index.html"
+ ],
+ "falha ao preparar o filtro de cor": [
+  "js/filters.js"
+ ],
+ "fora do horário": [
+  "site/api/funil.php"
+ ],
+ "gravação quadro a quadro falhou, usando a reserva:": [
+  "js/export.js"
+ ],
+ "iPhone 13 ou mais novo (iOS atualizado)": [
+  "site/assets/compat.js"
+ ],
+ "iPhone 13+ e Android": [
+  "site/index.html"
+ ],
+ "iPhone de tela pequena (8, SE ou mais antigo) pode fechar o app no meio.": [
+  "site/assets/compat.js"
+ ],
+ "ignorado: sem e-mail": [
+  "site/api/webhook.php"
+ ],
+ "imagem {0} · som {1} · relógio {2} · quadros {3} · estado {4}/{5} · vel {6} · {7}{8} · {9}×{10}": [
+  "js/app.js"
+ ],
+ "leitura antecipada do vídeo falhou:": [
+  "js/export.js"
+ ],
+ "leitura direta do AAC falhou:": [
+  "js/pipeline.js"
+ ],
+ "mesmo e-mail e a mesma senha": [
+  "site/afiliado/index.html"
+ ],
+ "mic do aparelho": [
+  "site/index.html"
+ ],
+ "no Android": [
+  "site/app/conta.js"
+ ],
+ "no app, toque no seu nome ›": [
+  "site/privacidade/index.html"
+ ],
+ "no iPhone": [
+  "site/app/conta.js"
+ ],
+ "nota por nota": [
+  "site/index.html"
+ ],
+ "nunca saem do seu aparelho": [
+  "site/privacidade/index.html"
+ ],
+ "não achei o índice do vídeo (moov)": [
+  "js/demux.js"
+ ],
+ "não converteu o vídeo": [
+  "js/convert.js"
+ ],
+ "não decodifica este vídeo": [
+  "js/export.js"
+ ],
+ "não deu para baixar a IA": [
+  "js/studio.js"
+ ],
+ "não grava vídeo neste navegador": [
+  "js/export.js"
+ ],
+ "o Edge só abre com uma extensão paga da Microsoft": [
+  "js/app.js"
+ ],
+ "o download da IA parou (internet fraca)": [
+  "js/studio.js"
+ ],
+ "o suporte": [
+  "site/api/escudo.php"
+ ],
+ "o vídeo pronto": [
+  "js/app.js",
+  "site/app/conta.js"
+ ],
+ "o áudio deste vídeo não é AAC": [
+  "js/demux.js"
+ ],
+ "o áudio deste vídeo não é AAC ({0})": [
+  "js/demux.js"
+ ],
+ "o áudio pronto": [
+  "js/app.js"
+ ],
+ "ou arraste aqui · MP4 ou MOV do celular · até 3 minutos": [
+  "index.html"
+ ],
+ "ou no Safari/Chrome (não no navegador do Instagram)": [
+  "js/app.js"
+ ],
+ "ou o computador": [
+  "js/app.js"
+ ],
+ "para baixar uma cópia ou apagar a conta na hora. Para o resto, escreva para": [
+  "site/privacidade/index.html"
+ ],
+ "pedir a <b>anonimização, o bloqueio ou a exclusão</b> de dados desnecessários;": [
+  "site/privacidade/index.html"
+ ],
+ "pronto para gravar": [
+  "site/index.html"
+ ],
+ "página do teste": [
+  "site/api/webhook.php"
+ ],
+ "que você entra no app.": [
+  "site/obrigado/index.html"
+ ],
+ "que você usa para entrar no app.": [
+  "site/afiliado/index.html"
+ ],
+ "receber seus dados num arquivo (<b>portabilidade</b>);": [
+  "site/privacidade/index.html"
+ ],
+ "reclamar na Autoridade Nacional de Proteção de Dados (ANPD), em gov.br/anpd.": [
+  "site/privacidade/index.html"
+ ],
+ "saber com quem compartilhamos;": [
+  "site/privacidade/index.html"
+ ],
+ "sem AudioDecoder": [
+  "js/demux.js"
+ ],
+ "sem afinar": [
+  "js/app.js"
+ ],
+ "sem copia": [
+  "js/app.js"
+ ],
+ "sem copia (armazenamento": [
+  "js/app.js"
+ ],
+ "sem cor": [
+  "js/app.js"
+ ],
+ "sem e-mail": [
+  "site/api/webhook.php"
+ ],
+ "sem mix": [
+  "js/app.js"
+ ],
+ "sem permissão de notificação": [
+  "site/afiliado/index.html"
+ ],
+ "separação de novo, sem ajudante:": [
+  "js/pipeline.js"
+ ],
+ "seu vídeo": [
+  "js/app.js"
+ ],
+ "sim · {0}% na faixa": [
+  "js/app.js"
+ ],
+ "som de estúdio": [
+  "site/index.html"
+ ],
+ "som de estúdio.": [
+  "site/index.html"
+ ],
+ "só a música": [
+  "js/app.js"
+ ],
+ "só a voz": [
+  "js/app.js"
+ ],
+ "tempo anda, imagem não desenha": [
+  "js/app.js"
+ ],
+ "teste grátis": [
+  "site/api/origem.php"
+ ],
+ "tipo de AAC não suportado ({0})": [
+  "js/demux.js"
+ ],
+ "token inválido": [
+  "site/api/webhook.php"
+ ],
+ "toque em Mixar": [
+  "js/app.js"
+ ],
+ "voz + base": [
+  "site/index.html"
+ ],
+ "voz 1 faixa · base 1 faixa": [
+  "site/index.html"
+ ],
+ "voz afinada": [
+  "index.html",
+  "js/app.js"
+ ],
+ "voz como foi cantada": [
+  "index.html",
+  "js/app.js"
+ ],
+ "vídeo do celular": [
+  "site/index.html"
+ ],
+ "vídeo seu": [
+  "site/index.html"
+ ],
+ "vídeos seus": [
+  "site/entrar/index.html"
+ ],
+ "x de</small> R$": [
+  "site/index.html"
+ ],
+ "{0} Fechar": [
+  "js/manual.js"
+ ],
+ "{0} Liberar": [
+  "site/app/conta.js"
+ ],
+ "{0} Manual do usuário": [
+  "js/manual.js"
+ ],
+ "{0} de 5 passos": [
+  "site/afiliado/index.html"
+ ],
+ "{0} nos últimos 30 dias · hoje {1}": [
+  "site/afiliado/index.html"
+ ],
+ "{0} não abriu a imagem deste vídeo": [
+  "js/app.js"
+ ],
+ "{0} não abriu a imagem deste vídeo do iPhone. Use o Google Chrome ou o celular.": [
+  "js/app.js"
+ ],
+ "{0} × {1} · {2} · {3} MB, com o som e a cor que você escolheu.": [
+  "js/app.js"
+ ],
+ "{0}, gravado em": [
+  "js/app.js"
+ ],
+ "{0}, o que você achou do seu cover?": [
+  "site/api/depo_lib.php"
+ ],
+ "{0}, posso te pedir um favor?": [
+  "site/api/depo_lib.php"
+ ],
+ "{0}: o app separa {1} vozes (a Voz 1 é a mais aguda) e afina cada uma por conta própria, com mudo e volume de cada voz.": [
+  "js/app.js"
+ ],
+ "{nome}, aquele cover vai ficar na galeria de novo?": [
+  "site/api/funil.php"
+ ],
+ "{nome}, desculpa! Seu teste grátis voltou": [
+  "site/api/lib.php"
+ ],
+ "{nome}, quer ganhar com o Studio Cover?": [
+  "site/api/funil.php"
+ ],
+ "{nome}, seu teste grátis terminou": [
+  "site/api/funil.php"
+ ],
+ "{nome}, uma semana. Quantos covers ficaram parados?": [
+  "site/api/funil.php"
+ ],
+ "· líquido R$": [
+  "site/api/webhook.php"
+ ],
+ "· mais aguda": [
+  "js/app.js"
+ ],
+ "· vendido pelo seu link": [
+  "site/afiliado/index.html"
+ ],
+ "Área do aluno": [
+  "site/index.html"
+ ],
+ "Áudio abafado, mastigado": [
+  "site/index.html"
+ ],
+ "É a plataforma que recebe os pagamentos e paga a sua comissão.": [
+  "site/afiliados/index.html"
+ ],
+ "É falta de": [
+  "site/index.html"
+ ],
+ "É um exemplo: o resultado depende da sua divulgação. Para entrar, use o mesmo e-mail e a mesma senha do app. Leva 1 minuto.": [
+  "site/api/funil.php"
+ ],
+ "Última tentativa: o aparelho fechou o app em \"{0}\" ({1}%) · vídeo de {2} MB{3} · v37": [
+  "js/app.js"
+ ],
+ "Último convite para ser nosso afiliado": [
+  "site/api/funil.php"
+ ],
+ "Último lembrete sobre o seu Studio Cover": [
+  "site/api/funil.php"
+ ],
+ "Último sinal:": [
+  "site/api/escudo.php"
+ ],
+ "é antigo demais.": [
+  "site/assets/compat.js"
+ ],
+ "ícone da tela de início": [
+  "js/app.js"
+ ],
+ "← Já tenho conta": [
+  "site/entrar/index.html"
+ ],
+ "← Todos os vídeos": [
+  "js/manual.js"
+ ],
+ "▶ ASSISTA COM SOM": [
+  "site/index.html"
+ ],
+ "⚖️ PODE E NÃO PODE": [
+  "site/afiliado/index.html"
+ ],
+ "⚠️ No iPhone, só dá para instalar pelo": [
+  "site/obrigado/index.html"
+ ],
+ "⚠️ Testamos o seu aparelho: ele está no limite, pode demorar ou fechar no meio. Se puder, use o computador.": [
+  "site/index.html"
+ ],
+ "⚡ Aprovação automática": [
+  "site/afiliados/index.html"
+ ],
+ "⛔ Testamos o seu aparelho: ele não é compatível. Use pelo computador ou por um celular mais novo.": [
+  "site/index.html"
+ ],
+ "✅ Autorizou usar nas redes.": [
+  "site/api/depoimento.php"
+ ],
+ "✅ PASSO A PASSO PARA COMEÇAR A VENDER": [
+  "site/afiliado/index.html"
+ ],
+ "✍️ CHAMADAS PARA A LEGENDA E OS STORIES": [
+  "site/afiliado/index.html"
+ ],
+ "✓ Aparelho compatível": [
+  "site/app/conta.js"
+ ],
+ "✓ Testamos o seu aparelho: ele é compatível.": [
+  "js/app.js",
+  "site/index.html"
+ ],
+ "🎁 LINK DIRETO DO TESTE GRÁTIS": [
+  "site/afiliado/index.html"
+ ],
+ "🎁 Mandando o seu vídeo, você ganha <b>mais 1 vídeo grátis</b> no app, já liberado para baixar.": [
+  "site/depoimento/index.html"
+ ],
+ "🎁 Teste grátis": [
+  "site/index.html"
+ ],
+ "🎁 Você ganhou <b>mais 1 vídeo grátis</b>, com o download liberado. Já está no app.": [
+  "site/depoimento/index.html"
+ ],
+ "🎙️ O QUE VOCÊ ESTÁ VENDENDO (EM 20 SEGUNDOS)": [
+  "site/afiliado/index.html"
+ ],
+ "🎟️ Você foi convidado": [
+  "site/afiliado/index.html"
+ ],
+ "🎬 <b>Vídeo tutorial</b> mostrando cada passo dentro da sua conta": [
+  "site/afiliados/index.html"
+ ],
+ "🎬 Conteúdo e roteiros": [
+  "site/afiliado/index.html"
+ ],
+ "🎬 ROTEIROS PRONTOS (É SÓ GRAVAR)": [
+  "site/afiliado/index.html"
+ ],
+ "🎬 Vídeo de vendas": [
+  "site/afiliado/index.html"
+ ],
+ "👥 SEUS LEADS": [
+  "site/afiliado/index.html"
+ ],
+ "💡 <b>Use sempre pelo ícone da tela de início.</b> Assim o app abre sozinho, com a memória do celular só para ele, sem o navegador do Instagram, tradutor ou outras abas atrapalhando. É o jeito que <b>menos trava</b>.": [
+  "site/obrigado/index.html"
+ ],
+ "💡 COMO VENDER MAIS": [
+  "site/afiliado/index.html"
+ ],
+ "💰 Aviso de venda": [
+  "site/afiliado/index.html"
+ ],
+ "💰 Parabéns": [
+  "site/api/afiliado.php",
+  "site/api/webhook.php"
+ ],
+ "💳 SEU LINK DE AFILIADO DA EDUZZ": [
+  "site/afiliado/index.html"
+ ],
+ "📈 ÚLTIMOS 30 DIAS": [
+  "site/afiliado/index.html"
+ ],
+ "📊 <b>Seus números em tempo real</b>: cliques, testes e vendas": [
+  "site/afiliados/index.html"
+ ],
+ "📝 <b>Roteiros prontos</b> para gravar e legendas para copiar": [
+  "site/afiliados/index.html"
+ ],
+ "📦 <b>Material para baixar</b>: vídeo, imagens e telas do app": [
+  "site/afiliados/index.html"
+ ],
+ "📦 MATERIAL PARA BAIXAR": [
+  "site/afiliado/index.html"
+ ],
+ "📱 COMO USAR O APP PARA CRIAR O SEU CONTEÚDO": [
+  "site/afiliado/index.html"
+ ],
+ "📲 Importante: instale o app na tela de início": [
+  "site/obrigado/index.html"
+ ],
+ "🔁 50% também na renovação": [
+  "site/afiliados/index.html"
+ ],
+ "🔈 Áudio antes": [
+  "site/afiliado/index.html"
+ ],
+ "🔊 Áudio depois": [
+  "site/afiliado/index.html"
+ ],
+ "🔒 Compra segura pela Eduzz · Pix, cartão ou boleto · Acesso chega no seu e-mail": [
+  "site/index.html"
+ ],
+ "🔒 Exclusivo para assinantes": [
+  "site/afiliados/index.html"
+ ],
+ "🔒 Não autorizou uso público (só para nós).": [
+  "site/api/depoimento.php"
+ ],
+ "🔒 Só para clientes": [
+  "site/afiliado/index.html"
+ ],
+ "🔗 SEU LINK DE DIVULGAÇÃO": [
+  "site/afiliado/index.html"
+ ],
+ "🖼️ Imagem do produto": [
+  "site/afiliado/index.html"
+ ],
+ "🖼️ Tela antes": [
+  "site/afiliado/index.html"
+ ],
+ "🖼️ Tela depois": [
+  "site/afiliado/index.html"
+ ],
+ "🖼️ Tela do painel": [
+  "site/afiliado/index.html"
+ ],
+ "🚀 Comece aqui": [
+  "site/afiliado/index.html"
+ ],
+ "🛡️ Escudo do Studio Cover": [
+  "site/api/escudo.php"
+ ],
+ "🛡️ Studio Cover: a checagem de segurança achou problema": [
+  "site/api/escudo.php"
+ ],
+ "🛡️ Studio Cover: arquivo do site foi alterado e eu restaurei": [
+  "site/api/escudo.php"
+ ],
+ "🛡️ Studio Cover: arquivo estranho no site foi para a quarentena": [
+  "site/api/escudo.php"
+ ],
+ "🛡️ Studio Cover: ataque barrado e IP bloqueado": [
+  "site/api/escudo.php"
+ ],
+ "🛡️ Studio Cover: novo administrador no painel": [
+  "site/api/escudo.php"
+ ],
+ "🤝 Novo afiliado no Studio Cover:": [
+  "site/api/afiliados.php"
+ ],
+ "🧠 FORMATOS DE CRIATIVO QUE MAIS VENDEM": [
+  "site/afiliado/index.html"
+ ]
+}

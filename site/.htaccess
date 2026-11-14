@@ -16,6 +16,9 @@ Options -Indexes
   RewriteCond %{HTTPS} off
   RewriteCond %{HTTP_HOST} !^localhost
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # clientes de fora: /en, /fr, /es, /de, /it, /pt-pt (e /en/vsl etc.) abrem a mesma página na língua escolhida
+  RewriteRule ^(en|fr|es|de|it|pt-pt)/?$ /?lang=$1 [L,R=302,QSA]
+  RewriteRule ^(en|fr|es|de|it|pt-pt)/(.+)$ /$2?lang=$1 [L,R=302,QSA]
   # /VSL ou /vsl sem barra -> /vsl/ (página de venda direta, sem teste grátis)
   RewriteRule ^(VSL|Vsl|vsl)$ /vsl/ [L,R=301]
   RewriteRule ^(VSL|Vsl)/$ /vsl/ [L,R=301]
