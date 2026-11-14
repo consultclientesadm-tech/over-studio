@@ -796,8 +796,12 @@ async function loadDepo() {
 
 // ---------- afiliados ----------
 // ---------- origens: de qual página e canal vêm as vendas ----------
-let orDias = 7;
-$('segOr').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; orDias = +b.dataset.d; $('segOr').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); loadOrigens(); };
+let orDias = 7, orDiaSel = ''; // orDiaSel = um dia escolhido (AAAA-MM-DD); vazio = últimos orDias dias contando hoje
+const orMarca = (b) => { $('segOr').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); document.querySelector('.orDia').classList.toggle('on', !b); };
+$('segOr').onclick = (e) => { const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.dia === 'ontem') { const d = new Date(Date.now() - 864e5 - 3 * 36e5); orDiaSel = d.toISOString().slice(0, 10); } else { orDiaSel = ''; orDias = +b.dataset.d; }
+  $('orDia').value = ''; orMarca(b); loadOrigens(); };
+$('orDia').onchange = () => { if (!$('orDia').value) return; orDiaSel = $('orDia').value; orMarca(null); loadOrigens(); };
 const PAG = { home: '🎁 Página com teste grátis', vsl: '🎬 /vsl (compra direta)', 'link-afiliado': '🤝 Link de afiliado', 'sem-rastreio': '❔ Sem rastreio (antes de 13/11)' };
 // nome amigável do canal (Origens)
 function fonteNome(f, c) {
@@ -808,7 +812,9 @@ function fonteNome(f, c) {
   return esc(f || 'direto');
 }
 async function loadOrigens() {
-  const j = await api('origens', null, '&dias=' + orDias); if (!j.ok) return;
+  const j = await api('origens', null, '&dias=' + orDias + (orDiaSel ? '&dia=' + orDiaSel : '')); if (!j.ok) return;
+  const dd = (s) => s.slice(8, 10) + '/' + s.slice(5, 7);
+  $('orPer').textContent = j.dia ? `Mostrando só o dia ${dd(j.dia)}/${j.dia.slice(0, 4)} (00:00 às 23:59)` : orDias === 1 ? `Mostrando hoje, ${dd(j.de)}, desde 00:00` : `Mostrando de ${dd(j.de)} até hoje, ${dd(j.ate)}`;
   const L = j.linhas, pc = (a, b) => (b ? (Math.round((a / b) * 1000) / 10).toLocaleString('pt-BR') + '%' : '—');
   const soma = (arr, k) => arr.reduce((t, r) => t + (+r[k] || 0), 0);
   const agrupa = (fk) => { const m = {}; L.forEach((r) => { const k = fk(r); m[k] ??= { k, visitas: 0, cadastros: 0, vendas: 0, liquido: 0, direta: 0, teste: 0, afiliado: 0 }; ['visitas', 'cadastros', 'vendas', 'liquido', 'direta', 'teste', 'afiliado'].forEach((x) => (m[k][x] += +r[x] || 0)); }); return Object.values(m).sort((a, b) => b.vendas - a.vendas || b.liquido - a.liquido || b.visitas - a.visitas); };
@@ -839,7 +845,12 @@ async function loadOrigens() {
   $('metaF').onsubmit = async (e) => { e.preventDefault(); toast('Conferindo com o Meta…'); const r = await api('meta-conectar', Object.fromEntries(new FormData(e.target))); if (!r.ok) return toast(r.error || 'Não deu.'); toast('Conectado: ' + r.nome); loadOrigens(); };
   if ($('metaSync')) $('metaSync').onclick = async () => { toast('Puxando do Meta…'); await api('meta-sync', {}); loadOrigens(); };
   $('orMeta').querySelectorAll('[data-meta-del]').forEach((b) => (b.onclick = async () => { if (!confirm('Desconectar essa conta? O gasto dela some do painel.')) return; await api('meta-remover', { id: b.dataset.metaDel }); loadOrigens(); }));
-  $('orUlt').innerHTML = j.ultimas.length ? `<table><tr><th>Quando</th><th>Aluno</th><th>Página</th><th>Canal · campanha</th><th>Caminho</th><th>Líquido</th></tr>${j.ultimas.map((v) => `<tr><td>${dt(v.created_at)}</td><td>${esc(v.name || '—')}</td><td>${PAG[v.or_pagina || 'sem-rastreio'] || esc(v.or_pagina)}</td><td>${v.or_fonte ? `<b>${fonteNome(v.or_fonte, v.or_campanha)}</b>` : '—'}${v.or_campanha ? `<small>${esc(v.or_campanha)}</small>` : ''}</td><td>${esc(v.or_caminho || '—')}</td><td>${brl(v.liquido)}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda ainda.</p>';
+  // vendas do período, uma por linha, com data e hora; em cima, quantas cada página vendeu
+  const U = j.ultimas || [], contaV = (c) => (/^leo(-|$)/.test(c || '') ? 'Leo' : /^reinaldo(-|$)/.test(c || '') ? 'Reinaldo' : '');
+  $('orUltT').textContent = `Vendas do período, uma por uma (${U.length})`;
+  const pv = {}; U.forEach((v) => { const k = PAG[v.or_pagina || 'sem-rastreio'] || esc(v.or_pagina); pv[k] ??= { n: 0, l: 0 }; pv[k].n++; pv[k].l += +v.liquido || 0; });
+  $('orPagV').innerHTML = U.length ? '<span style="border:0;background:none;padding:8px 0;color:var(--mut)">Página que vendeu:</span>' + Object.entries(pv).sort((a, b) => b[1].n - a[1].n).map(([k, x]) => `<span><b>${x.n}</b>${k} · ${brl(x.l)}</span>`).join('') : '';
+  $('orUlt').innerHTML = U.length ? `<table><tr><th>Data e hora</th><th>Página</th><th>Canal · campanha</th><th>Conta</th><th>Caminho</th><th>Aluno</th><th>Líquido</th></tr>${U.map((v) => `<tr><td><b>${v.created_at.slice(11, 16)}</b><small>${dd(v.created_at)}/${v.created_at.slice(2, 4)}</small></td><td>${PAG[v.or_pagina || 'sem-rastreio'] || esc(v.or_pagina)}</td><td>${v.or_fonte ? `<b>${fonteNome(v.or_fonte, v.or_campanha)}</b>` : '—'}${v.or_campanha ? `<small>${esc(v.or_campanha)}</small>` : ''}</td><td>${contaV(v.or_campanha) || '—'}</td><td>${esc(v.or_caminho || '—')}</td><td>${esc(v.name || '—')}</td><td>${brl(v.liquido)}</td></tr>`).join('')}</table>` : '<p class="sub">Nenhuma venda neste período.</p>';
   $('orNota').textContent = `Como ler: "compra direta" é quem clicou em comprar na página; "depois do teste" é quem fez o teste grátis e comprou pelo app ou pelo e-mail do funil (a venda fica com a página e o canal do cadastro). Use links com ?utm_source=canal&utm_campaign=nome (ex.: whatsapp, reinaldo-vsl) para separar cada anúncio.${j.desde_rastreio ? ' Visitas contadas desde ' + dt(j.desde_rastreio) + '.' : ''}`;
 }
 

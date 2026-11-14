@@ -95,8 +95,10 @@
     <!-- Origens -->
     <div class="tab" id="tOrig" hidden>
       <header class="th"><div><h2>Origens das vendas</h2><p class="sub">De qual página (com teste grátis ou /vsl de compra direta) e de qual canal e campanha (utm_source e utm_campaign do link) vieram as visitas, os testes e as vendas.</p></div>
-        <div class="seg" id="segOr"><button data-d="1">Hoje</button><button data-d="7" class="on">7d</button><button data-d="30">30d</button><button data-d="90">90d</button></div></header>
+        <div class="seg" id="segOr"><button data-d="1">Hoje</button><button data-dia="ontem">Ontem</button><button data-d="7" class="on">7d</button><button data-d="30">30d</button><button data-d="90">90d</button><label class="orDia" title="Escolher um dia">📅<input type="date" id="orDia"></label></div></header>
+      <p class="orPer" id="orPer"></p>
       <div id="orNums"></div>
+      <div class="glass" style="margin-bottom:16px"><div class="ch"><b id="orUltT">Vendas do período, uma por uma</b></div><div class="orPagV" id="orPagV"></div><div class="tbl" id="orUlt"></div></div>
       <div class="glass"><div class="ch"><b>Por página</b></div><div class="tbl" id="orPag"></div></div>
       <div class="glass" style="margin-top:16px"><div class="ch"><b>📣 Anúncios por conta (ROI)</b></div><div class="utmBox"><p class="sub" style="margin:0 0 8px">UTM de cada sócio: cole em "Parâmetros de URL" do anúncio (anúncio duplicado já leva a UTM junto; só precisa colar em anúncio criado do zero).</p>
           <div class="utmL"><b>Leo</b><code>utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=leo-ads&amp;utm_content={{ad.name}}</code><button class="btn sm" data-copia="utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=leo-ads&amp;utm_content={{ad.name}}">Copiar UTM</button></div>
@@ -105,7 +107,6 @@
           <p class="sub">Cada sócio conecta a própria conta. O painel puxa sozinho, de hora em hora, quanto cada anúncio gastou e soma na conta da UTM do anúncio (leo-ads ou reinaldo-ads). O token é só de leitura: não mexe em nada no Meta e não aparece de volta na tela.</p>
           <div class="tbl" id="orMeta"></div></details></div>
       <div class="glass" style="margin-top:16px"><div class="ch"><b>Por canal e campanha</b></div><div class="tbl" id="orCan"></div></div>
-      <div class="glass" style="margin-top:16px"><div class="ch"><b>Últimas vendas e o caminho de cada uma</b></div><div class="tbl" id="orUlt"></div></div>
       <p class="sub" id="orNota" style="margin-top:12px"></p>
     </div>
 
