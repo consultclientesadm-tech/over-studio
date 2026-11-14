@@ -36,6 +36,7 @@ const add = (...xs) => { const o = new Float32Array(xs[0].length); for (const x 
   const v1 = sing(len, [...mel(0, 8, 67), ...mel(12, 16, 67)], A, 3);
   const v2 = sing(len, [...mel(6, 8, 62), ...mel(12, 16, 63, [-3, -1, 0, 2, 4, 2, 0, -1])], B, 7);
   const mix = add(v1, v2);
+  { const L = +(process.env.RUIDO || 0); let r = 9, b = 0; for (let i = 0; i < len; i++) { r = (r * 16807) % 2147483647; const w = (r / 2147483647) * 2 - 1; b = 0.97 * b + 0.03 * w; mix[i] += L * (w * 0.5 + b * 4) + L * 0.5 * Math.sin(2 * Math.PI * 60 * i / SR); } }
   const t = Date.now();
   const est = await findVoices([mix, mix], SR);
   console.log('Dupla:', est.count, 'vozes,', est.together, 's juntas de', est.voicedSec, 's, regiões', est.range, (Date.now() - t) + ' ms');
