@@ -517,7 +517,7 @@ async function loadVisao() {
       <div class="vgSg"><div><small>Investiu em anúncio</small><b>${brl(a.gasto)}</b><span>gerenc. ${brl0(a.gasto_auto)} · impuls. ${brl0(a.gasto_manual)}</span></div>
       <div><small>Vendas dos anúncios dele</small><b>${a.vendas}</b><span>${brl(a.liquido)} líquido${a.compras_meta ? ` · ${a.compras_meta} pelo Meta, ${a.vendas_link ?? a.vendas} pelo link` : ''}</span></div>
       <div><small>ROI dos anúncios</small><b class="${r === null ? '' : r >= 0 ? 'g' : 'r'}">${r === null ? '—' : (r >= 0 ? '+' : '') + Math.round(r * 100) + '%'}</b><span>${a.gasto ? brl(a.liquido / a.gasto) + ' por R$ 1' : 'sem gasto no período'}</span></div>
-      <div class="parte"><small>Parte dele (${p}% do lucro)</small><b>${brl(lucro * p / 100)}</b><span>lucro = líquido − anúncios</span></div></div></div>`; };
+      <div class="parte"><small>Ganho dele · igual à Eduzz (${p}%)</small><b>${brl(liq * p / 100)}</b><span>tirando os anúncios dele: ${brl(liq * p / 100 - a.gasto)}</span></div></div></div>`; };
   // gráficos: por hora (1 dia), por dia (até 90) ou por mês (1 ano)
   let rot, kv, kc, corte = -1;
   if (j.dias === 1) { rot = [...Array(24).keys()].map((h) => h + 'h'); kv = (t) => +t.slice(11, 13); if (de === spDia(0)) corte = +j.agora.slice(11, 13); }
@@ -534,7 +534,7 @@ async function loadVisao() {
       <label class="vgData${VG.p === 'dia' ? ' on' : ''}">📅<input type="date" id="vgDia" value="${VG.p === 'dia' ? VG.dia : ''}" max="${spDia(0)}"></label>
       ${ate === spDia(0) ? '<span class="vivo"><i></i>AO VIVO</span>' : ''}</div>
     <div class="vgK">
-      <div class="vk big"><small>Faturamento líquido · ${esc(titulo)}</small><b class="cnt" data-to="${liq}" data-f="brl">${brl(liq)}</b>${cmp(liq, j.anterior.liquido, brl0)}</div>
+      <div class="vk big"><small>Faturamento líquido · ${esc(titulo)}</small><b class="cnt" data-to="${liq}" data-f="brl">${brl(liq)}</b><span>ganho de cada um (igual à Eduzz): Leo ${brl(liq * lp / 100)} · Reinaldo ${brl(liq * sp / 100)}</span>${cmp(liq, j.anterior.liquido, brl0)}</div>
       <div class="vk"><small>Vendas</small><b>${nV}</b>${cmp(nV, j.anterior.vendas, (x) => x)}<span>${ES.length ? `<b class="r">${ES.length} estorno${ES.length === 1 ? '' : 's'} ${brl(est)}</b> · ` : ''}${nV ? 'ticket ' + brl((liq - est) / nV) : ''}${ult && j.dias === 1 ? ' · última ' + ult.slice(11, 16) : ''}</span></div>
       <div class="vk"><small>Investido em anúncios</small><b>${brl(gasto)}</b><span>Leo ${brl0((A.leo || {}).gasto || 0)} · Reinaldo ${brl0((A.reinaldo || {}).gasto || 0)}</span></div>
       <div class="vk ${corR}"><small>ROI geral</small><b>${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</b><span>${roas === null ? 'sem gasto de anúncio' : brl(roas) + ' por R$ 1 investido'}</span></div>
