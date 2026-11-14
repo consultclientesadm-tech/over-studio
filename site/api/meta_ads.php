@@ -13,7 +13,8 @@ function meta_db(): PDO {
   $db->exec('CREATE TABLE IF NOT EXISTS meta_contas (id INTEGER PRIMARY KEY AUTOINCREMENT, dono TEXT NOT NULL, act TEXT NOT NULL UNIQUE, token TEXT NOT NULL, nome TEXT NOT NULL DEFAULT \'\', ultimo TEXT, erro TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS meta_gasto (conta TEXT NOT NULL, act TEXT NOT NULL, ad_id TEXT NOT NULL, dia TEXT NOT NULL, valor REAL NOT NULL, PRIMARY KEY (act, ad_id, dia));
     CREATE INDEX IF NOT EXISTS meta_gasto_dia ON meta_gasto(dia, conta);
-    CREATE TABLE IF NOT EXISTS meta_campanhas (campanha TEXT PRIMARY KEY, conta TEXT NOT NULL, visto TEXT NOT NULL)');
+    CREATE TABLE IF NOT EXISTS meta_campanhas (campanha TEXT PRIMARY KEY, conta TEXT NOT NULL, visto TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS meta_anuncios (ad_id TEXT PRIMARY KEY, act TEXT NOT NULL, conta TEXT NOT NULL DEFAULT \'\', nome TEXT NOT NULL DEFAULT \'\', campanha TEXT NOT NULL DEFAULT \'\', visto TEXT NOT NULL)');
   $c = array_column($db->query('PRAGMA table_info(meta_gasto)')->fetchAll(), 'name');
   if (!in_array('compras', $c, true)) $db->exec('ALTER TABLE meta_gasto ADD COLUMN compras REAL NOT NULL DEFAULT 0'); // compras que o próprio Meta atribui ao anúncio (pixel)
   $ok = true; return $db;
@@ -80,6 +81,7 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
       $pag = 0;
       $posts = []; // anúncio feito de post existente: o link (com a utm_campaign que a venda traz) está no post, não no criativo
       while ($url2 && $pag++ < 40) { $j = meta_get($url2); foreach ($j['data'] ?? [] as $ad) { $cr = (array)($ad['creative'] ?? []); $dono[(string)$ad['id']] = $dc = meta_conta_do_anuncio($cr) ?: meta_conta_pelo_nome($ad, (string)$c['dono']);
+        $db->prepare('INSERT OR REPLACE INTO meta_anuncios (ad_id, act, conta, nome, campanha, visto) VALUES (?, ?, ?, ?, ?, ?)')->execute([(string)$ad['id'], $c['act'], $dc, mb_substr((string)($ad['name'] ?? ''), 0, 120), mb_substr((string)($ad['campaign']['name'] ?? ''), 0, 160), now()]);
         if ($dc !== '') { foreach (meta_campanhas_do_anuncio($cr) as $cp) $db->prepare('INSERT OR REPLACE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute([$cp, $dc, now()]);
           $sid = (string)($cr['effective_object_story_id'] ?? ''); if ($sid !== '' && in_array((string)$ad['id'], $ids, true)) $posts[$sid] = $dc; } } $url2 = (string)($j['paging']['next'] ?? ''); }
       foreach (array_slice($posts, 0, 30, true) as $sid => $dc) {
@@ -111,4 +113,12 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
 function meta_contas_lista(): array {
   return array_map(fn($c) => ['id' => (int)$c['id'], 'dono' => $c['dono'], 'act' => $c['act'], 'nome' => $c['nome'], 'ultimo' => $c['ultimo'], 'erro' => $c['erro']],
     meta_db()->query('SELECT id, dono, act, nome, ultimo, erro FROM meta_contas ORDER BY id')->fetchAll(PDO::FETCH_ASSOC));
+}
+
+// vendas e gasto de CADA anúncio no período, do jeito que o Gerenciador mostra (mesma atribuição): para o ROI anúncio por anúncio
+function meta_por_anuncio(string $de, string $ate): array {
+  $q = meta_db()->prepare("SELECT g.conta, g.ad_id, COALESCE(a.nome, '') nome, COALESCE(a.campanha, '') campanha, SUM(g.valor) gasto, SUM(g.compras) compras
+    FROM meta_gasto g LEFT JOIN meta_anuncios a ON a.ad_id = g.ad_id WHERE g.dia >= ? AND g.dia <= ? GROUP BY g.conta, g.ad_id ORDER BY g.conta, gasto DESC");
+  $q->execute([substr($de, 0, 10), substr($ate, 0, 10)]);
+  return array_map(fn($r) => ['conta' => $r['conta'], 'ad_id' => $r['ad_id'], 'nome' => $r['nome'], 'campanha' => $r['campanha'], 'gasto' => round((float)$r['gasto'], 2), 'compras' => (int)round((float)$r['compras'])], $q->fetchAll(PDO::FETCH_ASSOC));
 }
