@@ -1,0 +1,4 @@
+# partes internas do sistema: nunca abrem direto pela internet (só as portas de entrada da API abrem)
+<FilesMatch "^(config\.php|config\.exemplo\.php|lib\.php|mail\.php|funil\.php|saude\.php|push\.php|vigia_erros\.php|origem\.php|afiliados\.php|depo_lib\.php|escudo\.php)$">
+  Require all denied
+</FilesMatch>

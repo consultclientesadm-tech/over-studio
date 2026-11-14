@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#030308">
+<title>Studio Cover</title>
+<link rel="icon" href="/assets/logo.svg?v=2">
+<link rel="manifest" href="/admin/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/admin/icon-180.png?v=2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Studio Cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css?v=31">
+<link rel="stylesheet" href="/assets/rack-skin.css?v=2">
+<script src="/assets/icons.js?v=1"></script>
+<script src="/assets/sem-emoji.js?v=2" defer></script>
+</head>
+<body>
+<canvas class="estrelas"></canvas>
+<div class="nebula"></div>
+
+<!-- Login -->
+<section id="vLogin" class="login" hidden>
+  <div class="lbox">
+    <div class="marca"></div>
+    <h1>STUDIO <em>COVER</em></h1>
+    <p class="cap">CENTRAL DE COMANDO</p>
+    <form id="fLogin" class="glass" novalidate>
+      <label>E-mail</label><input id="lEmail" type="email" autocomplete="username" required>
+      <label>Senha</label><input id="lSenha" type="password" autocomplete="current-password" required>
+      <button class="btn">ACESSAR</button><p class="msg"></p>
+    </form>
+    <form id="fPrimeiro" class="glass" novalidate hidden>
+      <p class="info">Primeiro acesso: crie o administrador principal. Use a chave de instalação.</p>
+      <label>Chave de instalação</label><input id="pChave" autocomplete="off" required>
+      <label>Seu nome</label><input id="pNome" autocomplete="name" required>
+      <label>E-mail</label><input id="pEmail" type="email" autocomplete="username" required>
+      <label>Senha (8+ caracteres, letras e números)</label><input id="pSenha" type="password" autocomplete="new-password" required>
+      <button class="btn">CRIAR E ENTRAR</button><p class="msg"></p>
+    </form>
+  </div>
+</section>
+
+<!-- Painel -->
+<section id="vPainel" class="painel" hidden>
+  <aside class="nav">
+    <div class="brand"><div class="marca mini"></div><b>STUDIO <em>COVER</em></b></div>
+    <button data-tab="geral" class="on"><i>◈</i><span>Visão geral</span></button>
+    <button data-tab="financas"><i>💰</i><span>Saúde financeira</span></button>
+    <button data-tab="alunos"><i>◉</i><span>Alunos</span></button>
+    <button data-tab="origens"><i>📍</i><span>Origens</span></button>
+    <button data-tab="funil" class="mx"><i>⟴</i><span>Funil</span></button>
+    <button data-tab="depoimentos" class="mx"><i>💬</i><span>Depoimentos</span><em class="nbadge" id="depoBadge" hidden></em></button>
+    <button data-tab="afiliados" class="mx"><i>🤝</i><span>Afiliados</span></button>
+    <button data-tab="vistoria" class="mx"><i>🛰️</i><span>Vistoria</span><em class="nbadge" id="vistBadge" hidden></em></button>
+    <button data-tab="admins" class="mx"><i>⛨</i><span>Administradores</span></button>
+    <button data-tab="config" class="mx"><i>⚙</i><span>Configurações</span></button>
+    <button class="maisBtn" id="maisBtn" type="button"><i>☰</i><span>Mais</span><em class="nbadge" id="maisBadge" hidden></em></button>
+    <div class="eu"><small id="euNome"></small><button id="sair" class="lnk">Sair</button></div>
+  </aside>
+
+  <main class="main">
+    <button class="vistBtn atuBtn" id="atuBtn" title="Atualiza os números sem recarregar a página (o som continua ligado)"><i>↻</i><span>Atualizar</span></button>
+    <button class="vistBtn muteBtn" id="muteBtn" title="Liga ou desliga só o som. As notificações de venda continuam chegando."><i data-ic="spk"></i><span>Som ligado</span></button>
+    <button class="vistBtn somBtn" id="somBtn" title="Som e aviso de venda no celular"><i>💰</i><span>Aviso de venda</span></button>
+    <button class="vistBtn" id="vistBtn" title="Vistoria de erros"><i>🛰️</i><span>Vistoria de erros</span><em id="vistBtnN" hidden></em></button>
+    <div class="regBar"><label for="regSel">País</label><select id="regSel" title="Mostra só clientes e vendas deste lugar">
+      <option value="br">🇧🇷 Brasil (R$)</option><option value="us">🇺🇸 EUA e Canadá (US$)</option><option value="eu">🇪🇺 Europa, todos (€)</option>
+      <option value="eu:PT">🇵🇹 Portugal</option><option value="eu:ES">🇪🇸 Espanha</option><option value="eu:FR">🇫🇷 França</option><option value="eu:GB">🇬🇧 Reino Unido</option><option value="eu:IE">🇮🇪 Irlanda</option><option value="eu:DE">🇩🇪 Alemanha</option><option value="eu:IT">🇮🇹 Itália</option><option value="eu:NL">🇳🇱 Holanda</option><option value="eu:BE">🇧🇪 Bélgica</option><option value="eu:CH">🇨🇭 Suíça</option>
+    </select></div>
+    <!-- Visão geral -->
+    <div class="tab" id="tGeral">
+      <header class="th"><div><h2>Visão geral</h2><p class="sub">Vendas, anúncios, ROI e divisão, ao vivo</p></div>
+        <div class="seg segP" hidden><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
+      <section id="vg"></section>
+      <section id="comBox"></section>
+      <section class="glass chart big fatTopo" id="fatBox" hidden><div class="ch"><div class="fth"><span class="vivo"><i></i>AO VIVO</span><b>Faturamento</b><small id="fatPer"></small></div><span id="fatTot"></span><div class="seg vista" id="vistaSeg"><button data-v="hora" class="on">Hoje por hora</button><button data-v="periodo">Dia a dia</button></div></div><canvas id="cFat"></canvas><p class="legend" id="fatLeg"></p></section>
+      <div id="hoje" hidden></div>
+      <div class="geralRow"><div id="termo"></div><div id="adsBox"></div></div>
+      <div id="cadHoje" hidden></div>
+    </div>
+
+    <!-- Saúde financeira -->
+    <div class="tab" id="tFin" hidden>
+      <header class="th"><div><h2>Saúde financeira</h2><p class="sub">Líquido, sócios, alunos e uso do app</p></div>
+        <div class="seg segP"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
+      <div id="nums"></div>
+      <div class="grid4">
+        <div class="glass chart"><div class="ch"><b>Conversão do teste grátis</b></div><canvas id="cConv"></canvas><p class="legend" id="convLeg"></p></div>
+        <div class="glass chart"><div class="ch"><b>Vendas por dia</b></div><canvas id="cVendas"></canvas></div>
+        <div class="glass chart"><div class="ch"><b>Cadastros</b> <i class="dot y"></i> e <b>vídeos processados</b> <i class="dot g"></i></div><canvas id="cUso"></canvas></div>
+        <div class="glass chart"><div class="ch"><b>Base de alunos</b></div><canvas id="cBase"></canvas><p class="legend" id="baseLeg"></p></div>
+      </div>
+      <div class="glass"><div class="ch"><b>Últimas vendas</b></div><div class="tbl" id="ultVendas"></div></div>
+    </div>
+
+    <!-- Origens -->
+    <div class="tab" id="tOrig" hidden>
+      <header class="th"><div><h2>Origens das vendas</h2><p class="sub">De qual página (com teste grátis ou /vsl de compra direta) e de qual canal e campanha (utm_source e utm_campaign do link) vieram as visitas, os testes e as vendas.</p></div>
+        <div class="seg" id="segOr"><button data-d="1">Hoje</button><button data-dia="ontem">Ontem</button><button data-d="7" class="on">7d</button><button data-d="30">30d</button><button data-d="90">90d</button><label class="orDia" title="Escolher um dia">📅<input type="date" id="orDia"></label></div></header>
+      <p class="orPer" id="orPer"></p>
+      <div id="orNums"></div>
+      <div class="glass" style="margin-bottom:16px"><div class="ch"><b id="orUltT">Vendas do período, uma por uma</b></div><div class="orPagV" id="orPagV"></div><div class="tbl" id="orUlt"></div></div>
+      <div class="glass"><div class="ch"><b>Por página</b></div><div class="tbl" id="orPag"></div></div>
+      <div class="glass" style="margin-top:16px"><div class="ch"><b>📣 Anúncios por conta (ROI)</b></div><div class="utmBox"><p class="sub" style="margin:0 0 8px">UTM de cada sócio: cole em "Parâmetros de URL" do anúncio (anúncio duplicado já leva a UTM junto; só precisa colar em anúncio criado do zero).</p>
+          <div class="utmL"><b>Leo</b><code>utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=leo-ads&amp;utm_content={{ad.name}}</code><button class="btn sm" data-copia="utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=leo-ads&amp;utm_content={{ad.name}}">Copiar UTM</button></div>
+          <div class="utmL"><b>Reinaldo</b><code>utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=reinaldo-ads&amp;utm_content={{ad.name}}</code><button class="btn sm" data-copia="utm_source={{site_source_name}}&amp;utm_medium=paid&amp;utm_campaign=reinaldo-ads&amp;utm_content={{ad.name}}">Copiar UTM</button></div></div><div class="tbl" id="orAds"></div>
+        <details style="margin-top:14px"><summary><b>🔗 Contas de anúncios conectadas (gasto automático do Gerenciador)</b></summary>
+          <p class="sub">Cada sócio conecta a própria conta. O painel puxa sozinho, de hora em hora, quanto cada anúncio gastou e soma na conta da UTM do anúncio (leo-ads ou reinaldo-ads). O token é só de leitura: não mexe em nada no Meta e não aparece de volta na tela.</p>
+          <div class="tbl" id="orMeta"></div></details></div>
+      <div class="glass" style="margin-top:16px"><div class="ch"><b>Por canal e campanha</b></div><div class="tbl" id="orCan"></div></div>
+      <p class="sub" id="orNota" style="margin-top:12px"></p>
+    </div>
+
+    <!-- Vistoria de erros -->
+    <div class="tab" id="tVist" hidden>
+      <header class="th"><div><h2>Vistoria de erros e segurança</h2><p class="sub">O sistema confere o app a cada 10 minutos, vigia ataques o tempo todo e avisa por e-mail quando aparece algo</p></div></header>
+      <div id="vigiaErros"></div>
+      <div id="escudo"></div>
+      <div id="vigiaSite"></div>
+      <div id="appSaude"></div>
+    </div>
+
+    <!-- Alunos -->
+    <div class="tab" id="tAlunos" hidden>
+      <header class="th"><div><h2>Alunos</h2><p class="sub" id="alunosSub"></p></div>
+        <div class="acts"><button class="btn sm" id="novoAluno">+ Liberar acesso</button><button class="btn sm ghost" id="avisoGrupo">🔔 Aviso no app</button></div></header>
+      <div class="filtros glass">
+        <input id="busca" placeholder="Buscar por nome, e-mail, telefone ou aparelho (iPhone, Samsung…)" type="search">
+        <div class="seg" id="fStatus"><button data-s="" class="on">Todos</button><button data-s="pago">Pagos</button><button data-s="cortesia">Cortesia</button><button data-s="trial">Teste</button><button data-s="refunded">Reembolso</button><button data-s="blocked">Bloqueados</button></div>
+      </div>
+      <div class="glass"><div class="tbl" id="tblAlunos"></div><div class="pager" id="pager"></div></div>
+    </div>
+
+    <!-- Funil -->
+    <div class="tab" id="tFunil" hidden>
+      <header class="th"><div><h2>Funil de conversão</h2><p class="sub">Quem fez o teste grátis e não comprou recebe e-mail + aviso no app, um passo por vez (das 8h às 21h).</p></div>
+        <div class="acts"><button class="btn sm ghost" id="rodarFunil">Rodar agora</button></div></header>
+      <div class="glass"><div id="funilFlow" class="flow"></div><p class="sub" id="cronInfo"></p></div>
+      <div id="emStats"></div>
+      <div class="glass"><div class="ch"><b>Últimos e-mails enviados</b><span class="acts"><span id="saudeEmail" class="saude"></span><button class="btn sm ghost" id="reenviarEmails">Reenviar os que falharam</button></span></div><div class="tbl" id="tblEmails"></div></div>
+    </div>
+
+    <!-- Depoimentos -->
+    <div class="tab" id="tDepo" hidden>
+      <header class="th"><div><h2>Depoimentos</h2><p class="sub">Prova social: quem comprou ou baixou o vídeo no teste manda o antes e depois, uma frase e a autorização de uso pela página <a href="/depoimento/" target="_blank" style="color:var(--y)">/depoimento</a> (cada pessoa tem um link próprio).</p></div></header>
+      <div id="depoPedir"></div>
+      <div id="depoLista"></div>
+    </div>
+
+    <!-- Afiliados -->
+    <div class="tab" id="tAfiliados" hidden>
+      <header class="th"><div><h2>Afiliados</h2><p class="sub">Cada afiliado tem link próprio, painel próprio (<a href="/afiliado/" target="_blank" style="color:var(--y)">studiocover.com.br/afiliado</a>) e os leads dele recebem o funil com o link de compra dele. Pelo link aberto (<a href="/afiliados/" target="_blank" style="color:var(--y)">/afiliados</a>) só assinantes conseguem se afiliar; quem não assina entra por convite.</p></div><div class="acts"><button class="btn sm ghost" id="convAf">🎟️ Gerar convite</button><button class="btn sm" id="novoAf">+ Novo afiliado</button></div></header>
+      <div id="afNums"></div>
+      <div class="glass"><div class="tbl" id="tblAf"></div></div>
+    </div>
+
+    <!-- Admins -->
+    <div class="tab" id="tAdmins" hidden>
+      <header class="th"><div><h2>Administradores</h2><p class="sub">Quem pode entrar nesta central.</p></div><div class="acts"><button class="btn sm" id="novoAdmin">+ Novo administrador</button></div></header>
+      <div class="glass"><div class="tbl" id="tblAdmins"></div></div>
+      <form class="glass formgrid" id="fMinhaSenha"><div class="ch"><b>Trocar a minha senha</b></div>
+        <label>Senha atual<input type="password" id="sAtual" autocomplete="current-password"></label>
+        <label>Nova senha<input type="password" id="sNova" autocomplete="new-password"></label>
+        <button class="btn sm">Salvar</button></form>
+    </div>
+
+    <!-- Config -->
+    <div class="tab" id="tConfig" hidden>
+      <header class="th"><div><h2>Configurações</h2><p class="sub">Venda, teste grátis, Eduzz e e-mail.</p></div></header>
+      <form id="fConfig">
+        <div class="glass formgrid"><div class="ch"><b>💰 Venda</b></div>
+          <label class="full">Link do checkout da Eduzz <small>pode usar {email} e {nome} para preencher</small><input name="checkout_url" placeholder="https://sun.eduzz.com/..."></label>
+          <label>Preço (só para mostrar)<input name="price" placeholder="97,00"></label>
+          <label>Dias de acesso depois de pagar <small>0 = vitalício</small><input name="access_days" type="number" min="0"></label>
+          <label>WhatsApp do suporte<input name="support_whatsapp" placeholder="5511999999999"></label>
+          <label>Parcelas mostradas na página <small>0 = só à vista</small><input name="installments" type="number" min="0" max="12"></label>
+          <label>Valor da parcela (com juros da Eduzz)<input name="installment_value" placeholder="35,69"></label>
+          <label>Taxa da Eduzz por venda (R$) <small>o painel mostra o líquido, já sem ela</small><input name="eduzz_taxa" placeholder="17,04"></label>
+          <label>Parte do sócio (Reinaldo) no líquido (%)<input name="socio_pct" placeholder="50"></label>
+          <label>Comissão dos afiliados na Eduzz (%) <small>sobre o valor já sem a taxa</small><input name="af_comissao_pct" placeholder="50"></label>
+          <label>Meta de vendas por dia <small>(usada no medidor de saúde)</small><input name="meta_vendas_dia" placeholder="3"></label>
+          <label>Vídeo do passo a passo dos afiliados <small>(link .mp4)</small><input name="af_tutorial_url" placeholder="https://..."></label>
+          <label class="full">Pixels da Meta (página de vendas) <small>separe por vírgula; vazio = sem pixel</small><input name="meta_pixel" placeholder="1595086872316004, 1631589557846072"></label>
+          <label class="full">Pixel que já está no checkout da Eduzz <small>a página de obrigado manda a Compra só para os outros</small><input name="eduzz_pixel" placeholder="1595086872316004"></label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>🌎 Fora do Brasil (Stripe: dólar e euro)</b> <small>o cliente de fora vê o app e a página na língua dele; vazio = região ainda sem venda</small></div>
+          <label>Preço anual nos EUA e Canadá (US$)<input name="price_us" placeholder="97"></label>
+          <label>Preço anual na Europa (€)<input name="price_eu" placeholder="89"></label>
+          <label class="full">Link de pagamento da Stripe em dólar <small>buy.stripe.com/...</small><input name="checkout_us" placeholder="https://buy.stripe.com/..."></label>
+          <label class="full">Link de pagamento da Stripe em euro<input name="checkout_eu" placeholder="https://buy.stripe.com/..."></label>
+          <label class="full">URL do webhook para colar na Stripe<input readonly value="https://studiocover.com.br/api/stripe.php"></label>
+          <label>Segredo do webhook da Stripe <small>whsec_...</small><input name="stripe_whsec" autocomplete="off"></label>
+          <label>Taxa estimada da Stripe (%) <small>para o líquido do painel</small><input name="stripe_taxa_pct" placeholder="6"></label>
+          <label>Conta Stripe do sócio <small>acct_... (a parte dele cai sozinha)</small><input name="stripe_socio_acct" placeholder="acct_..."></label>
+          <label>Parte do sócio nas vendas da Stripe (%) <small>do que sobra depois da taxa</small><input name="stripe_socio_pct" placeholder="50"></label>
+          <label class="full">Chave restrita da Stripe <small>rk_live_... (só para mandar a parte do sócio)</small><input name="stripe_sk" autocomplete="off"></label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>🔒 LGPD (aparece na Política de privacidade e nos Termos)</b></div>
+          <label>Razão social ou nome de quem vende<input name="empresa_nome" placeholder="Ex.: Studio Cover Ltda"></label>
+          <label>CNPJ ou CPF<input name="empresa_doc" placeholder="00.000.000/0001-00"></label>
+          <label class="full">E-mail do encarregado de dados <small>recebe pedidos de acesso, correção e exclusão</small><input name="dpo_email" placeholder="contato@studiocover.com.br"></label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>🎁 Teste grátis</b></div>
+          <label class="sw"><input type="checkbox" name="trial_enabled"><span></span> Teste grátis ligado</label>
+          <label>Vídeos no teste<input name="trial_videos" type="number" min="0" max="20"></label>
+          <label class="sw"><input type="checkbox" name="funnel_enabled"><span></span> Funil de e-mails ligado</label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>⚡ Eduzz (webhook)</b></div>
+          <label class="full">URL do webhook para colar na Eduzz<div class="copy"><input id="whUrl" readonly><button type="button" class="btn sm ghost" id="copiarWh">Copiar</button><button type="button" class="btn sm ghost" id="novoWh">Gerar outro</button></div></label>
+          <label>Código do produto na Eduzz <small>vazio = aceita todos</small><input name="eduzz_product"></label>
+          <label>Chave de assinatura da Eduzz <small>opcional</small><input name="eduzz_secret" autocomplete="off"></label>
+        </div>
+        <div class="glass formgrid"><div class="ch"><b>✉️ E-mail</b> <small>(sem SMTP, usa o servidor de e-mail do próprio site)</small></div>
+          <label>E-mail de envio <small>vazio = contato@ do domínio</small><input name="mail_from" placeholder="contato@studiocover.com.br"></label>
+          <label>Nome do remetente<input name="mail_name"></label>
+          <label>Servidor SMTP<input name="smtp_host" placeholder="smtp.seudominio.com.br"></label>
+          <label>Porta<input name="smtp_port" type="number"></label>
+          <label>Segurança<select name="smtp_secure"><option value="tls">TLS (587)</option><option value="ssl">SSL (465)</option><option value="">Nenhuma</option></select></label>
+          <label>Usuário SMTP<input name="smtp_user" autocomplete="off"></label>
+          <label>Senha SMTP<input name="smtp_pass" type="password" autocomplete="new-password"></label>
+          <label class="full">Mandar um e-mail de teste para<div class="copy"><input id="testePara" type="email" placeholder="vazio = o seu e-mail de administrador"><button type="button" class="btn sm ghost" id="testeEmail">Enviar teste</button></div></label>
+        </div>
+        <div class="salvar"><button class="btn">Salvar configurações</button><span class="msg" id="cfgMsg"></span></div>
+      </form>
+      <div class="glass"><div class="ch"><b>Webhooks recebidos</b> <small>(para conferir a primeira venda)</small></div><div class="tbl" id="tblWh"></div></div>
+    </div>
+  </main>
+</section>
+
+<div id="modal" class="modal" hidden><div class="mbox glass"><button class="x" data-fechar>✕</button><div id="mbody"></div></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="/assets/marca.js?v=2"></script>
+<script src="graficos.js?v=2"></script>
+<script src="admin.js?v=57"></script>
+</body>
+</html>

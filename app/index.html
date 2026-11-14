@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<script src="/assets/i18n.js?v=1"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#050506">
+<title>Studio Cover</title>
+<link rel="manifest" href="/app/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/assets/icon-180.png?v=2">
+<link rel="icon" href="/assets/logo.svg?v=2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Studio Cover">
+<script src="/assets/compat.js?v=4" defer></script>
+<script src="/app/conta.js?v=17"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=46">
+<link rel="stylesheet" href="css/rack.css?v=8">
+<script src="js/icons.js?v=1"></script>
+<script>
+// Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
+// e a página recarregava no meio do processamento, voltando para o início.
+(function () {
+  var ua = navigator.userAgent || '';
+  var mobile = /iPhone|iPad|iPod|Android|Mobile/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua));
+  if (!('serviceWorker' in navigator)) return;
+  if (mobile) { navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { if (/studio-cover|localhost/.test(r.scope) && r.active && /coi-sw/.test(r.active.scriptURL)) r.unregister(); }); }).catch(function () {}); return; }
+  if (self.crossOriginIsolated) return;
+  navigator.serviceWorker.register('coi-sw.js', { scope: './' }).then(function () {
+    var go = function () {
+      var home = document.getElementById('app') && document.getElementById('app').dataset.screen === 'home';
+      try { if (home && !sessionStorage.getItem('coi')) { sessionStorage.setItem('coi', '1'); location.reload(); } } catch (e) {}
+    };
+    if (navigator.serviceWorker.controller) go(); else navigator.serviceWorker.addEventListener('controllerchange', go);
+  }).catch(function () {});
+})();
+</script>
+</head>
+<body>
+<div class="app" id="app" data-screen="home">
+  <header class="top">
+    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span></div>
+    <div class="topinfo" id="topinfo"></div>
+    <button class="ghost sm manbtn" id="manBtn" title="Manual do usuário: vídeos curtos de cada função"><i data-ic="book"></i><span>Manual</span></button>
+    <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda" aria-label="Ajuda"><i data-ic="help"></i></button>
+    <button class="ghost sm" id="newBtn" hidden title="Novo vídeo"><i data-ic="plus"></i><span>Novo vídeo</span></button>
+  </header>
+
+  <!-- Etapa 1: subir o vídeo -->
+  <section class="screen home" id="home">
+    <div class="hero">
+      <h1>Seu cover com <em>som de estúdio</em><br>e cara de cinema.</h1>
+      <p>Responda as duas perguntas e escolha o seu vídeo. Depois são 5 passos: vídeo, afinação, mix e master, cor e exportar. Em cada passo dá para comparar e desfazer.</p>
+      <div class="passo-h"><span>1</span><b>A sua música tem instrumental ou playback?</b></div>
+      <div class="simnao" id="sepPick" role="radiogroup" aria-label="A sua música tem instrumental ou playback?" data-help="Sim: no vídeo tem violão, banda ou playback junto com a voz. A IA separa a sua voz para afinar só ela. Não: você cantou só com a voz (à capela).">
+        <button type="button" class="sn on" data-sep="1" role="radio" aria-checked="true"><i class="snled"></i><b>Sim</b><small>Tem violão, banda ou playback junto</small></button>
+        <button type="button" class="sn" data-sep="0" role="radio" aria-checked="false"><i class="snled"></i><b>Não</b><small>Só a minha voz, sem música</small></button>
+        <input type="checkbox" id="optSeparate" checked hidden>
+      </div>
+      <div class="passo-h"><span>2</span><b>Música do cantor original</b><em>opcional</em></div>
+      <label class="refcard" id="refPick" data-help="Opcional. Suba o MP3 ou vídeo da música original (do cantor que você está cantando). O app lê a melodia dela, passa para o seu tom e afina cada nota sua por ela. Sem a original, o app afina pela escala do tom da música.">
+        <input type="file" id="refFile" accept="audio/*,video/*" hidden>
+        <span class="upic"><i data-ic="note"></i></span>
+        <span><b>Subir a música do cantor original</b><small id="refName">A gente pega a melodia do cantor no seu tom e afina você por ela.</small></span>
+      </label>
+      <div class="passo-h"><span>3</span><b>Escolha o seu vídeo</b></div>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="video/*" hidden>
+        <span class="droprow"><span class="dropvu" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="dropicon"><i data-ic="upload"></i></span><span class="dropvu r" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+        <strong>Escolher o vídeo</strong>
+        <small>ou arraste aqui · MP4 ou MOV do celular · até 3 minutos</small>
+      </label>
+      <label class="audioonly" id="audioPick" data-help="Vídeo muito pesado? Tire o áudio do vídeo no celular ou no editor e suba só ele. O app afina, mixa e masteriza, e você baixa o áudio pronto para juntar de volta no seu vídeo no editor (CapCut, InShot etc.).">
+        <input type="file" id="audioFile" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden>
+        <span class="rico"><i data-ic="wave1"></i></span><span class="rtx"><b>Ou suba só o áudio</b><small>MP3, M4A ou WAV · você baixa o áudio pronto e junta no seu vídeo</small></span>
+      </label>
+      <button type="button" class="mancard" id="manHome"><i data-ic="book"></i><span><b>Manual em vídeo</b><small>Vídeos curtos mostrando cada função do app</small></span></button>
+      <details class="reqcard" id="reqCard">
+        <summary><i data-ic="phone"></i> Veja se o seu aparelho é compatível</summary>
+        <ul>
+          <li><b>Vídeo de até 3 minutos</b> (maior usa só os 3 primeiros)</li>
+          <li><b>iPhone 13 ou mais novo</b>, <b>Android com 6 GB de memória ou mais</b> ou <b>computador</b></li>
+          <li>Abra no <b>Safari</b> ou no <b>Chrome</b>, não no navegador do Instagram</li>
+          <li>Feche os outros apps e deixe esta tela aberta</li>
+        </ul>
+        <p class="reqmeu" id="reqMeuApp"></p>
+      </details>
+    </div>
+  </section>
+
+  <!-- Preparando (separação da voz) -->
+  <section class="screen work" id="work">
+    <div class="ring logoring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="ringBar" cx="60" cy="60" r="52"/></svg><div class="ll-key" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="ll-d" d="M12 1.5l10.5 10.5L12 22.5 1.5 12z"/><path class="ll-w0" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/><path class="ll-w" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/></svg></div><span id="ringPct">0%</span></div>
+    <h2 id="workStep">Preparando…</h2>
+    <p class="eta" id="eta"></p>
+    <ol class="steps" id="steps">
+      <li data-s="audio">Lendo o áudio do vídeo</li>
+      <li data-s="download">Baixando a IA (só na primeira vez)</li>
+      <li data-s="separate">Separando a voz do instrumental</li>
+      <li data-s="voices">Vendo se é dupla ou trio</li>
+      <li data-s="notes">Achando as notas e o tom</li>
+      <li data-s="refsep" class="refstep">Lendo a melodia da música original</li>
+    </ol>
+    <p class="hint">A IA roda no seu aparelho, sem mandar seu vídeo para ninguém. Leva mais ou menos 1 minuto para cada minuto de vídeo no computador, um pouco mais no celular. Deixe esta tela aberta.</p>
+    <button class="ghost sm workback" id="workBack" type="button"><i data-ic="back"></i><span>Cancelar e voltar ao início</span></button>
+    <p class="hint req" id="req">Funciona em iPhone 13 ou mais novo, Android intermediário ou top de linha (6 GB de memória ou mais) e no computador. No celular, feche os outros apps antes de começar.</p>
+  </section>
+
+  <!-- Estúdio em etapas -->
+  <section class="screen studio" id="studio">
+    <nav class="stepper" id="stepper">
+      <button data-step="1" class="done"><b>1</b><i data-ic="video"></i><span>Vídeo</span></button>
+      <button data-step="2"><b>2</b><i data-ic="tune"></i><span>Afinação</span></button>
+      <button data-step="3"><b>3</b><i data-ic="mix"></i><span>Mix<em> e master</em></span></button>
+      <button data-step="4" id="stepCor"><b>4</b><i data-ic="color"></i><span>Cor</span></button>
+      <button data-step="5"><b>5</b><i data-ic="export"></i><span>Exportar</span></button>
+    </nav>
+
+    <div class="stage">
+      <div class="viewer live" id="viewer"><video id="video" playsinline muted preload="auto"></video><canvas id="screen"></canvas><span class="tag" id="tag">DEPOIS</span><button class="fsbtn" id="fsBtn" data-help="Abre a prévia grande, na tela toda, para ver bem as cores e o resultado antes de baixar."><i data-ic="full"></i><span id="fsTxt">Tela cheia</span></button></div>
+      <div class="player">
+        <button class="icon" id="back5" title="Voltar 5 s" aria-label="Voltar 5 segundos"><i data-ic="back"></i><small>5</small></button>
+        <button class="icon play" id="play" title="Tocar" aria-label="Tocar"><i data-ic="play"></i></button>
+        <button class="icon" id="fwd5" title="Avançar 5 s" aria-label="Avançar 5 segundos"><i data-ic="fwd"></i><small>5</small></button>
+        <span class="time" id="tNow">0:00</span>
+        <input type="range" id="seek" min="0" max="1" step="0.01" value="0">
+        <span class="time" id="tEnd">0:00</span>
+      </div>
+      <div class="ab" id="ab" role="group" aria-label="Comparar" data-help="Compare no mesmo ponto do vídeo. ANTES = como estava antes desta etapa. DEPOIS = com esta etapa aplicada. Na mix dá para alternar entre a voz original, só afinada e afinada e mixada.">
+        <button data-v="A" id="abA"><b id="abAn">ANTES</b><small id="abAtxt">voz como foi cantada</small></button>
+        <button data-v="B" id="abB" class="on"><b id="abBn">DEPOIS</b><small id="abBtxt">voz afinada</small></button>
+        <button data-v="C" id="abC" hidden><b id="abCn">MIXADA</b><small id="abCtxt">pronta</small></button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <!-- 2) Afinação -->
+      <div class="step" data-step="2">
+        <div class="popbar" id="popBar"><button class="icon play" id="popPlay" title="Tocar" aria-label="Tocar"><i data-ic="play"></i></button><span class="time" id="popTime">0:00</span><b>Painel de afinação</b><button class="pill" id="popClose"><i data-ic="close"></i> Fechar painel</button></div>
+        <div class="head">
+          <div><h3>Afinação</h3><p class="sub hidesm">Toque em "Afinar automático". Depois compare no ANTES | DEPOIS. Se quiser, mexa nota por nota no painel.</p><div class="chips" id="chips"></div></div>
+          <div class="actions">
+            <button class="prime" id="tuneAuto" data-help="Afina a voz inteira sozinho, no tom da música, mantendo o vibrato e o jeito de cantar. No fim, cada nota fica dentro da faixa verde.">Afinar automático</button>
+            <button class="pill" id="tuneUndo" hidden data-help="Tira toda a afinação e volta para a sua voz exatamente como foi gravada.">Desfazer afinação</button>
+            <button class="pill" id="tuneAgain" hidden data-help="Afina tudo outra vez do zero, usando os ajustes atuais (tom, quantizar, endireitar e música original).">Afinar de novo</button>
+            <label class="refcard mini" data-help="Suba o MP3 ou vídeo da música original. O app pega a melodia dela no seu tom e afina cada nota sua por ela."><input type="file" id="mRefFile" accept="audio/*,video/*" hidden><span class="upic"><i data-ic="note"></i></span><span><b id="mRefTxt">Subir música original</b><small>afina pela melodia do cantor</small></span></label>
+          </div>
+        </div>
+        <div class="voicebar" id="voiceBar"></div>
+        <button type="button" class="panelbtn" id="panelBtn" data-help="Abre o painel de afinação na tela toda: as notas de cada voz, subir e descer nota, zoom e ajustes. Toque em Fechar painel para voltar."><i data-ic="roll"></i><span><b>Painel de afinação</b><small>mexer nota por nota</small></span><em><i data-ic="next"></i></em></button>
+        <div class="editor"><canvas id="editor"></canvas></div>
+        <div class="selinfo" id="selInfo">Toque numa nota e arraste para qualquer nota. Zoom: pinça com dois dedos ou rodinha do mouse. Fundo amarelo = tônica, verde = escala do tom, escuro = fora da escala.</div>
+        <div class="toolbar">
+          <button class="tb" id="nUp" data-help="Sobe a nota escolhida meio tom. Primeiro toque numa nota no painel."><i data-ic="up"></i><span>Subir</span></button>
+          <button class="tb" id="nDown" data-help="Desce a nota escolhida meio tom. Primeiro toque numa nota no painel."><i data-ic="down"></i><span>Descer</span></button>
+          <button class="tb" id="nOrig" data-help="Deixa a nota escolhida sem afinação, do jeito que você cantou."><i data-ic="orig"></i><span>Original</span></button>
+          <button class="tb" id="nAuto" data-help="Desfaz o que você mexeu nesta nota e devolve para o automático."><i data-ic="auto"></i><span>Auto</span></button>
+          <button class="tb" id="undo" data-help="Volta a última mudança que você fez no painel."><i data-ic="undo"></i><span>Desfazer</span></button>
+          <button class="tb go" id="apply" data-help="As mudanças nas notas já valem sozinhas. Toque aqui quando terminar para fechar o painel."><i data-ic="check"></i><span>Pronto</span></button>
+        </div>
+        <div class="toolrow">
+          <button class="tb sm" id="zOut" title="Menos zoom"><i data-ic="zout"></i></button>
+          <button class="tb sm" id="zIn" title="Mais zoom"><i data-ic="zin"></i></button>
+          <button class="tb sm wide on" id="showOrig" data-help="Mostra no painel a linha cinza da sua voz original, para comparar com a afinada."><span>Voz original</span></button>
+          <button class="tb sm wide" id="expandBtn" data-help="Abre o painel de notas na tela toda para mexer com calma. Toque em Pronto ou Fechar para voltar."><span id="expandTxt">Painel grande</span></button>
+          <button class="tb sm wide" id="moreBtn" data-help="Ajustes finos: quanto puxar as notas, prender no tom e afinar pela música original."><i data-ic="sliders"></i><span>Ajustes</span></button>
+        </div>
+        <div class="more" id="more" hidden>
+          <label class="knob" data-help="Quanto puxar cada nota para o centro do tom certo. 100% = nota cravada. Menos = mais natural, sobra um pouco da sua variação."><span id="qLabel">Quantizar tudo</span><input type="range" id="q" min="0" max="1" step="0.05" value="1"><output id="qOut">100%</output></label>
+          <label class="knob" data-help="Quanto tirar das oscilações dentro da nota (quando a voz treme ou escorrega). O vibrato é mantido."><span id="sLabel">Endireitar tudo</span><input type="range" id="s" min="0" max="1" step="0.05" value="1"><output id="sOut">100%</output></label>
+          <label class="switch mini" data-help="Ligado: cada nota vai para a nota mais próxima da escala do tom da música. Desligado: vai para a nota mais próxima de qualquer escala."><input type="checkbox" id="mSnap" checked><span></span> Prender no tom</label>
+          <label class="switch mini" data-help="Ligado: afina pela melodia da música original que você subiu. Só funciona depois de subir a original."><input type="checkbox" id="mUseRef" checked disabled><span></span> Pela música original</label>
+        </div>
+      </div>
+
+      <!-- 3) Mix e master -->
+      <div class="step" data-step="3">
+        <div class="mixbar" id="mixBar"><button class="icon play" id="mixPlay" title="Tocar" aria-label="Tocar"><i data-ic="play"></i></button><span class="time" id="mixTime">0:00</span><b>Ajustar a mix</b><button class="prime" id="mixDone"><i data-ic="check"></i>Pronto</button></div>
+        <div class="head">
+          <div><h3>Mix e master</h3><p class="sub">Junta a voz com o instrumental, equaliza, comprime e deixa no volume das redes.</p></div>
+          <div class="actions">
+            <button class="prime" id="mixApply" data-help="Junta sua voz afinada com o instrumental, equaliza, comprime e deixa no volume certo para Instagram, TikTok e YouTube.">Mixar e masterizar</button>
+            <button class="pill" id="mixUndo" hidden data-help="Tira a mix e o master e volta para o som só afinado.">Desfazer mix e master</button>
+            <button class="pill mixbigbtn" id="mixBig" data-help="Abre os botões da mix grandes, na tela toda, para mexer com o dedo. Depois toque em Pronto para voltar."><i data-ic="full"></i><span>Ampliar os botões</span></button>
+          </div>
+        </div>
+        <div class="potgrid">
+          <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="mVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+          <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="mBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        </div>
+        <div class="voicevols" id="mVoices"></div>
+        <div class="mixsec"><b>Equalizador</b><button class="pill" id="eqReset" data-help="Volta grave, médio e agudo para o zero.">Zerar</button></div>
+        <div class="potgrid">
+          <label class="row eq" data-help="Grave (abaixo de 100 Hz): corpo, peso do violão e do bumbo. Muito grave embola no celular."><span>Grave</span><input type="range" id="mLow" min="-6" max="6" step="0.5" value="0"><output></output></label>
+          <label class="row eq" data-help="Médio (perto de 1 kHz): presença e o 'meio' da voz. Muito médio deixa o som anasalado."><span>Médio</span><input type="range" id="mMid" min="-6" max="6" step="0.5" value="0"><output></output></label>
+          <label class="row eq" data-help="Agudo (acima de 8 kHz): brilho e ar da voz. Muito agudo deixa o S chiado."><span>Agudo</span><input type="range" id="mHigh" min="-6" max="6" step="0.5" value="0"><output></output></label>
+        </div>
+        <div class="mixsec"><b>Compressor da voz</b>
+          <div class="seg" id="compMode" role="group" aria-label="Compressor"><button data-m="auto" class="on" data-help="O app mede o quanto sua voz varia entre as partes fracas e fortes e escolhe a compressão certa.">Automático</button><button data-m="manual" data-help="Você escolhe quanto comprimir.">Manual</button></div>
+        </div>
+        <label class="row" id="compRow" hidden data-help="Quanto deixar a voz por igual. Pouco = natural, com as partes fortes e fracas. Muito = voz sempre na frente, estilo rádio."><span>Compressão</span><input type="range" id="mComp" min="0" max="1" step="0.05" value="0.4"><output></output></label>
+        <p class="mixinfo" id="compInfo">Volume final no padrão do Spotify: −14 LUFS, pico em −1 dB.</p>
+        <div class="potgrid">
+          <label class="row" data-help="Ambiência na voz, como cantar numa sala ou palco. 0% = seco."><span>Reverb</span><input type="range" id="mReverb" min="0" max="1" step="0.05" value="0.2"><output></output></label>
+          <label class="row" data-help="Quanto tempo o som leva para subir no começo do vídeo."><span>Fade-in</span><input type="range" id="mFadeIn" min="0" max="3" step="0.1" value="0.4"><output></output></label>
+          <label class="row" data-help="Quanto tempo o som leva para sumir no final do vídeo."><span>Fade-out</span><input type="range" id="mFadeOut" min="0" max="5" step="0.1" value="1.5"><output></output></label>
+        </div>
+        <label class="switch" data-help="Corta o pedaço parado antes de você começar a cantar e depois que termina."><input type="checkbox" id="mTrim" checked><span></span> Cortar o silêncio do começo e do fim</label>
+      </div>
+
+      <!-- 4) Cor -->
+      <div class="step" data-step="4">
+        <div class="head"><div><h3>Cor</h3><p class="sub">O Colorista automático corrige luz, contraste e cor da pele. Os outros filtros vão por cima dele.</p></div></div>
+        <div class="filters" id="filters"></div>
+        <label class="row" data-help="Quanto do filtro aparece. 0% = vídeo como foi gravado."><span>Intensidade</span><input type="range" id="fAmount" min="0" max="1" step="0.05" value="1"><output></output></label>
+      </div>
+
+      <!-- 5) Exportar -->
+      <div class="step" data-step="5">
+        <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai em 1080p (o padrão do Instagram, TikTok e Reels), com os mesmos quadros por segundo e a qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
+        <div class="vols5"><b class="vols5t">Ajuste o volume</b><p class="vols5s">Toque no <b>−</b> ou no <b>+</b> (ou arraste a bolinha). Toque no play lá em cima para ouvir.</p>
+          <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Voz</span><input type="range" id="eVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+          <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Base</span><input type="range" id="eBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
+          <div class="voicevols" id="eVoices"></div>
+        </div>
+        <div class="exportdock" id="exportDock">
+          <button class="prime" id="exportBtn" data-help="Grava o vídeo final na qualidade do original, com o som e a cor escolhidos.">Gerar vídeo final</button>
+          <div class="bar" id="exportBar" hidden><i></i></div>
+        </div>
+        <button class="pill big" id="watchBtn" hidden><i data-ic="full"></i> Assistir a prévia em tela cheia</button>
+        <div class="ready" id="ready" hidden>
+          <span class="readyok"><i data-ic="check"></i></span>
+          <h4>Seu vídeo está pronto!</h4>
+          <p id="readyInfo">1080p, com o som e a cor que você escolheu.</p>
+          <a class="prime big" id="download"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zM5 18h14v3H5z"/></svg><span>Baixar meu vídeo pronto</span></a>
+        </div>
+        <details class="maisdl" id="maisDl"><summary><span>Outros downloads<small>só o áudio, só a voz ou só a base</small></span></summary>
+        <button class="pill" id="dlWav" data-help="Baixa só o áudio final em WAV, sem o vídeo, para usar no Spotify ou num editor.">Baixar só o áudio (WAV)</button>
+        <div class="stems"><button class="pill" id="dlVoice" data-help="Baixa só a voz (afinada, se você afinou), sem a música de fundo. Bom para editar ou usar em outra base.">Baixar só a voz</button><button class="pill" id="dlBed" data-help="Baixa só a música de fundo (violão, banda ou playback), sem a voz.">Baixar só a música</button></div>
+        </details>
+        <div class="summary" id="summary"></div>
+      </div>
+
+      <footer class="nav">
+        <button class="ghost" id="prev"><i data-ic="prev"></i><span>Voltar</span></button>
+        <span class="navhint" id="navhint"></span>
+        <button class="cta sm" id="next"><span>Próximo</span><i data-ic="next"></i></button>
+      </footer>
+    </div>
+  </section>
+
+  <div class="quick" id="quick" hidden>
+    <div class="qcard">
+      <span class="readyok"><i data-ic="check"></i></span>
+      <h4>Voz separada! Como você quer seguir?</h4>
+      <button class="prime" id="quickAll"><b><i data-ic="bolt"></i> Deixar tudo pronto</b><small>afina, mixa, masteriza e coloca cor de cinema sozinho</small></button>
+      <button class="pill big" id="quickStep">Fazer passo a passo</button>
+      <p>Nos dois jeitos você pode comparar o ANTES e o DEPOIS e mudar qualquer etapa.</p>
+    </div>
+  </div>
+  <div class="busy" id="busy" hidden><div class="ring sm"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="busyBar" cx="60" cy="60" r="52"/></svg></div><span id="busyTxt">Aplicando…</span></div>
+  <div class="toast" id="toast" hidden></div>
+  <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
+</div>
+<script type="module" src="js/app.js?v=80"></script>
+<script>
+// Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
+addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
+document.getElementById('file').addEventListener('change', function () { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app ainda não carregou. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } });
+</script>
+</body>
+</html>
