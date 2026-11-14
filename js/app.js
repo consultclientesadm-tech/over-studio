@@ -98,8 +98,24 @@ const drop = $('drop');
 // Copia o vídeo para o aparelho NA HORA em que a pessoa escolhe (antes dos avisos e da conferência do teste):
 // no Android o acesso ao arquivo escolhido pode cair em segundos (vídeo do Google Fotos/nuvem, galeria que troca a cópia),
 // e aí só a cópia guardada ainda abre.
-let copiaCedo = null;
-const escolheu = (f) => { if (!f) return; copiaCedo = { f, p: keep(f, refFile).then(() => true, () => false) }; start(f); };
+let copiaCedo = null, copiaMem = null, copiaIdb = '';
+// Cópia na memória do navegador, lida em pedaços (o navegador manda para o disco dele o que não cabe na memória).
+// Só usada quando o armazenamento do app recusa a cópia (celular com pouco espaço livre).
+const copiaMemoria = async (f) => {
+  const r = f.stream().getReader(), partes = []; let blob = new Blob([], { type: f.type }), n = 0;
+  for (;;) { const { done, value } = await r.read(); if (done) break; partes.push(value); n += value.byteLength; if (n >= 16 << 20) { blob = new Blob([blob, ...partes], { type: f.type }); partes.length = 0; n = 0; } }
+  return new File([blob, ...partes], f.name || 'video', { type: f.type, lastModified: f.lastModified });
+};
+const escolheu = (f) => {
+  if (!f) return; copiaMem = null; copiaIdb = '';
+  const p = idb('readwrite', (st) => { st.put(f, 'video'); if (refFile) st.put(refFile, 'ref'); else st.delete('ref'); }).then(() => { copiaIdb = 'ok'; return true; }, async () => {
+    copiaIdb = 'falhou'; // não deixa o vídeo de antes guardado ser aberto no lugar deste
+    idb('readwrite', (st) => st.delete('video')).catch(() => {});
+    if (f.size <= 400 * 1048576) try { const b = await copiaMemoria(f); if (b.size === f.size) copiaMem = { f, b }; } catch {}
+    return false;
+  });
+  copiaCedo = { f, p }; start(f);
+};
 $('file').onchange = () => escolheu($('file').files[0]);
 // Pergunta 1 da entrada: tem instrumental ou playback? (Sim = separa a voz, Não = só voz)
 document.querySelectorAll('#sepPick .sn').forEach((b) => { b.onclick = () => {
@@ -300,7 +316,7 @@ try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.cre
 async function start(f, tries = 1) {
   // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar
   const cedo = copiaCedo && copiaCedo.f === f ? copiaCedo.p : null; copiaCedo = null;
-  const desistiu = () => { $('file').value = ''; $('audioFile').value = ''; if (cedo) cedo.then(() => idb('readwrite', (st) => { st.delete('video'); st.delete('ref'); })).catch(() => {}); };
+  const desistiu = () => { $('file').value = ''; $('audioFile').value = ''; copiaMem = null; if (cedo) cedo.then(() => idb('readwrite', (st) => { st.delete('video'); st.delete('ref'); })).catch(() => {}); };
   if (tries === 1 && !(await conferirVideo(f))) return desistiu();
   if (tries === 1 && window.scGate && !(await window.scGate(f))) return desistiu();
   runInfo = { stage: 'Abrindo o vídeo', pct: 0, mb: Math.round(f.size / 1048576), dur: '', ua: navigator.userAgent.slice(0, 80), tries }; note({});
@@ -339,9 +355,11 @@ async function start(f, tries = 1) {
     let copiaOk = '';
     if (tries === 1 && LEITURA.test(String(e.message) + ' ' + (e.name || ''))) {
       let copia = null;
-      try { copia = await idb('readonly', (st) => st.get('video')); if (copia) await copia.slice(0, 65536).arrayBuffer(); } catch { copia = null; }
+      try { copia = await idb('readonly', (st) => st.get('video')); if (copia && copia.size !== f.size) copia = null; if (copia) await copia.slice(0, 65536).arrayBuffer(); } catch { copia = null; }
+      // cópia guardada não existe (armazenamento recusou): usa a cópia feita na memória na hora da escolha
+      if (!copia && copiaMem && copiaMem.f === f) { copia = copiaMem.b; copiaMem = null; }
       if (copia) { console.warn('arquivo original ilegível; usando a cópia guardada'); endRun(); return start(copia, 2); }
-      copiaOk = 'sem copia';
+      copiaOk = 'sem copia (armazenamento ' + (copiaIdb || '?') + ')';
     }
     console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '', causa: e.causa || copiaOk || (tries > 1 ? 'copia tambem falhou' : '') });
     app.dataset.screen = 'home';
