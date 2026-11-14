@@ -109,7 +109,8 @@ ol.dicas { margin: 0; padding-left: 18px; color: #d8d9e2; line-height: 1.6; font
 
   <div class="box" id="vCadastro" hidden style="max-width:460px"><div class="card">
     <h1>Seja afiliado</h1><p class="sub">Indique o Studio Cover para cantores e ganhe <b style="color:var(--y)">50% de comissão</b> em cada venda, também nas renovações. Leva 1 minuto para criar a conta, e lá dentro tem o passo a passo para começar.</p>
-    <div class="aviso" id="cExcl"><b>🔒 Exclusivo para assinantes</b>O programa de afiliados é para quem usa o Studio Cover. Use o <b>mesmo e-mail e a mesma senha</b> que você usa para entrar no app.<a class="btn sm ghost" id="cAssinar" href="/#oferta" style="display:flex;width:fit-content;margin-top:10px">Ainda não assino: quero assinar</a></div>
+    <div class="aviso ok" id="cApp" hidden><b>Você já é cliente</b>Ative a sua conta de afiliado num toque, com o mesmo e-mail e a mesma senha do app: <b id="cAppMail"></b><button type="button" class="btn full" id="cAppBtn" style="margin-top:12px">ATIVAR MINHA CONTA DE AFILIADO</button><p class="msg" id="cAppMsg"></p></div>
+    <div class="aviso" id="cExcl"><b>🔒 Só para clientes</b>Para se afiliar, você precisa ser cliente do Studio Cover. Depois de comprar, você recupera o valor indicando. Use o <b>mesmo e-mail e a mesma senha</b> que você usa para entrar no app.<a class="btn sm ghost" id="cAssinar" href="/#oferta" style="display:flex;width:fit-content;margin-top:10px">Ainda não assino: quero assinar</a></div>
     <div class="aviso ok" id="cConv" hidden><b>🎟️ Você foi convidado</b><span id="cConvTx">Com este convite você cria a sua conta de afiliado direto, sem precisar assinar.</span></div>
     <form id="fCad"><input class="hp" name="site" id="cSite" tabindex="-1" autocomplete="off" aria-hidden="true">
       <label>Seu nome<input id="cNome" autocomplete="name" required></label>
@@ -345,6 +346,13 @@ document.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = async () =>
 $('salvarEduzz').onclick = async () => { const v = $('lkEduzz').value.trim(); const j = await api('salvar-link', { link_eduzz: v }); $('eMsg').className = 'msg ' + (j.ok ? 'ok' : 'erro'); $('eMsg').textContent = j.ok ? 'Salvo! As compras dos seus leads vão por este link.' : j.error; if (j.ok && AF) { AF.link_eduzz = v; passos(); } };
 const prev = () => { const c = $('cCodigo').value.toLowerCase().replace(/[^a-z0-9_-]/g, ''); const n = $('cNome').value.normalize('NFD').replace(/[^a-zA-Z0-9]/g, ' ').trim().split(' ')[0].toLowerCase(); $('cPrev').textContent = 'studiocover.com.br/?af=' + (c || n || '…'); };
 $('cCodigo').oninput = prev; $('cNome').oninput = prev;
+// cliente do app (já logado neste navegador): vira afiliado num toque
+api('app').then((j) => { if (j && j.logado && j.paid) { $('cApp').hidden = false; $('cAppMail').textContent = j.email; $('cExcl').hidden = true; } }).catch(() => {});
+$('cAppBtn').onclick = async () => {
+  const b = $('cAppBtn'); b.disabled = true; $('cAppMsg').textContent = '';
+  const j = await api('virar', {}); b.disabled = false;
+  if (j.ok) { history.replaceState(null, '', '/afiliado/#comece'); painel(); } else { $('cAppMsg').className = 'msg erro'; $('cAppMsg').innerHTML = esc(j.error || 'Não deu certo. Tente de novo.') + (j.comprar ? `<a class="btn full" href="${esc(j.comprar)}" style="margin-top:12px">ASSINAR O STUDIO COVER</a>` : ''); }
+};
 $('fCad').onsubmit = async (e) => {
   e.preventDefault(); const b = $('fCad').querySelector('.btn'); b.disabled = true; $('cMsg').textContent = '';
   const j = await api('cadastro', { nome: $('cNome').value, email: $('cEmail').value, whats: $('cWhats').value, senha: $('cSenha').value, codigo: $('cCodigo').value, aceito: $('cAceito').checked ? 1 : 0, site: $('cSite').value, convite: CONVITE });

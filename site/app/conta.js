@@ -22,6 +22,19 @@
 .sc-chip{height:30px;min-width:30px;border-radius:20px;border:1px solid #33333c;background:#111116;color:#fff;font:700 12px 'Space Grotesk',sans-serif;display:inline-flex;align-items:center;gap:6px;padding:0 9px;cursor:pointer;position:relative}
 .sc-chip.y{border-color:#ffd400;color:#ffd400}
 @media(max-width:430px){.sc-it{display:none}.sc-conta{gap:4px}}
+.sc-ind{position:relative;height:32px;border-radius:999px;padding:0 13px 0 10px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;font:700 12.5px 'Space Grotesk',sans-serif;letter-spacing:0;color:#062417;background:linear-gradient(180deg,#5ff0b6,#22c985);border:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 0 #0f7a4f,0 0 14px rgba(46,229,157,.45);animation:scInd 1.8s ease-in-out infinite;cursor:pointer}
+.sc-ind svg{width:16px;height:16px;stroke-width:2.2}
+.sc-ind::after{content:'';position:absolute;inset:-4px;border-radius:999px;border:2px solid rgba(46,229,157,.7);animation:scIndR 1.8s ease-out infinite;pointer-events:none}
+@keyframes scInd{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 0 #0f7a4f,0 0 8px rgba(46,229,157,.3)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 2px 0 #0f7a4f,0 0 22px rgba(46,229,157,.8)}}
+@keyframes scIndR{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.25);opacity:0}}
+@media(max-width:430px){.sc-ind{width:32px;padding:0;justify-content:center}.sc-ind .sc-it{display:none}header.top .manbtn span,header.top .brand .ver{display:none}}
+.sc-indb{display:flex;align-items:center;gap:12px;width:100%;margin:12px 0 0;padding:12px 14px;border-radius:18px;text-decoration:none;color:#eafff5;background:linear-gradient(180deg,#0f2a1f,#0b1c15);border:1.5px solid rgba(46,229,157,.7);box-shadow:0 0 0 1px rgba(46,229,157,.15),0 0 22px rgba(46,229,157,.22);animation:scInd2 2s ease-in-out infinite;text-align:left}
+.sc-indb i{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#5ff0b6,#22c985);color:#062417;box-shadow:0 0 14px rgba(46,229,157,.6)}
+.sc-indb i svg{width:22px;height:22px;stroke-width:2.2}
+.sc-indb b{display:block;font:800 15px 'Space Grotesk',sans-serif;color:#5ff0b6}.sc-indb small{display:block;font-size:12.5px;color:#b9d9cb;margin-top:2px;line-height:1.35}
+.sc-indb em{margin-left:auto;font-style:normal;font:700 22px 'Space Grotesk',sans-serif;color:#5ff0b6}
+@keyframes scInd2{0%,100%{box-shadow:0 0 0 1px rgba(46,229,157,.15),0 0 10px rgba(46,229,157,.15)}50%{box-shadow:0 0 0 1px rgba(46,229,157,.35),0 0 28px rgba(46,229,157,.4)}}
+@media(prefers-reduced-motion:reduce){.sc-ind,.sc-ind::after,.sc-indb{animation:none}}
 .sc-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 8px #ff4d5e}
 .sc-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:end center;padding:12px;animation:scf .2s}
 @media(min-width:700px){.sc-ov{place-items:center}}
@@ -314,7 +327,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     const n = Math.max(0, me.trial_left);
     sheet(`<h3>${esc(me.name || 'Minha conta')}</h3><p style="margin-top:0">${esc(me.email)}</p>
       ${trial ? `<div class="sc-n nova"><b>Teste grátis: ${n} vídeo${n === 1 ? '' : 's'} restante${n === 1 ? '' : 's'}</b>No teste você vê e ouve o antes e depois. Libere o acesso completo para baixar os seus vídeos e fazer quantos covers quiser.<a class="sc-b" href="${esc(me.checkout_url || '/#comprar')}" target="_blank" rel="noopener">LIBERAR ACESSO COMPLETO</a></div>` : me.paid ? `<div class="sc-n"><b style="color:#2ee59d">✓ Acesso completo</b>${me.expires_at ? 'Válido até ' + esc(me.expires_at.slice(0, 10).split('-').reverse().join('/')) : 'Vitalício'}</div>` : ''}
-      ${me.paid ? (me.afiliado ? `<a class="sc-li" href="/afiliado/" target="_blank" rel="noopener"><i>${I('money')}</i>Meu painel de afiliado</a>` : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">Ganhe como afiliado</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`) : ''}
+      ${(me.afiliado ? `<a class="sc-li" href="/afiliado/" target="_blank" rel="noopener"><i>${I('money')}</i>Meu painel de afiliado</a>` : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">Indique e ganhe</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`)}
       <a class="sc-li" data-m="avisos"><i>${I('bell')}</i>Avisos ${unread ? `<b style="color:#ffd400">(${unread})</b>` : ''}</a>
       ${standalone ? '' : `<a class="sc-li" data-m="instalar"><i>${I('install')}</i>Instalar na tela de início</a>`}
       ${podePush && !pushLigado() ? `<a class="sc-li" data-m="push"><i>${I('bell')}</i>Ligar avisos no celular</a>` : ''}
@@ -371,12 +384,20 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     if (!box) { box = document.createElement('div'); box.className = 'sc-conta'; top.appendChild(box); }
     const trial = me.trial && !me.paid;
     box.innerHTML = `${!standalone && (deferred || ios || android) ? `<button class="sc-chip y" data-i aria-label="Instalar">${I('install')}<span class="sc-it"> Instalar</span></button>` : ''}
-      ${trial ? (me.can_use ? `<button class="sc-chip y" data-t title="Teste grátis">${I('gift')} ${Math.max(0, me.trial_left)}</button>` : `<button class="sc-chip y" data-t title="Liberar acesso">${I('lock')} Liberar</button>`) : ''}
-      ${me.paid && !me.afiliado ? '<a class="sc-chip" href="/afiliados/?utm_source=app&utm_medium=topo" target="_blank" rel="noopener" style="text-decoration:none;border-color:rgba(46,229,157,.5);color:#2ee59d" title="Ganhe como afiliado">' + I('money') + '<span class="sc-it"> Indique e ganhe</span></a>' : ''}
+      ${trial ? (me.can_use ? `<button class="sc-chip y" data-t title="Testes grátis que faltam">${I('ticket')} ${Math.max(0, me.trial_left)}</button>` : `<button class="sc-chip y" data-t title="Liberar acesso">${I('lock')} Liberar</button>`) : ''}
+      <a class="sc-ind" href="${me.afiliado ? '/afiliado/' : '/afiliados/?utm_source=app&utm_medium=topo'}" target="_blank" rel="noopener" title="Indique e ganhe" aria-label="Indique e ganhe">${I('gift')}<span class="sc-it">Indique e ganhe</span></a>
       <button class="sc-chip" data-c aria-label="Minha conta">${esc((me.name || me.email || '?').trim()[0].toUpperCase())}${unread ? '<span class="sc-dot"></span>' : ''}</button>`;
     box.querySelector('[data-i]')?.addEventListener('click', install);
     box.querySelector('[data-t]')?.addEventListener('click', () => (me.can_use ? menu() : paywall()));
     box.querySelector('[data-c]').addEventListener('click', menu);
+    // Indique e ganhe também em destaque na tela de entrada (para todo mundo; a trava de "só cliente" fica na hora de se afiliar)
+    const man = document.getElementById('manHome');
+    if (man && !document.getElementById('scIndHome')) {
+      const a = document.createElement('a'); a.id = 'scIndHome'; a.className = 'sc-indb'; a.target = '_blank'; a.rel = 'noopener';
+      a.innerHTML = `<i>${I('gift')}</i><span><b>Indique e ganhe</b><small>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura.</small></span><em>›</em>`;
+      man.after(a);
+    }
+    const ih = document.getElementById('scIndHome'); if (ih) ih.href = me.afiliado ? '/afiliado/' : '/afiliados/?utm_source=app&utm_medium=entrada';
     bar();
   }
 

@@ -38,7 +38,7 @@ switch ($a) {
       throttle('afcadu:' . $email, 6, 3600);
       $q = db()->prepare('SELECT status, pass_hash FROM users WHERE email = ?'); $q->execute([$email]); $u = $q->fetch();
       $comprar = ['ok' => false, 'comprar' => checkout_url() ?: site_url() . '/#oferta'];
-      if (!$u || $u['status'] !== 'active') json_out($comprar + ['error' => 'O programa de afiliados é exclusivo para quem assina o Studio Cover. Use o mesmo e-mail da sua assinatura, ou assine primeiro.'], 403);
+      if (!$u || $u['status'] !== 'active') json_out($comprar + ['error' => 'Para ser afiliado, primeiro você precisa ser cliente do Studio Cover. Se já é, use o mesmo e-mail da sua assinatura. Se ainda não é, assine, use o app e recupere o valor indicando: cada assinatura que você indica rende perto de R$ 140.'], 403);
       if (!$u['pass_hash'] || !password_verify((string)arg('senha'), $u['pass_hash'])) fail('Use a mesma senha que você usa para entrar no app Studio Cover.');
     }
     $base = af_codigo_limpo((string)arg('codigo')) ?: af_codigo_limpo(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', explode(' ', $nome)[0]) ?: explode('@', $email)[0]);
@@ -55,6 +55,31 @@ switch ($a) {
       'Abrir meu painel', site_url() . '/afiliado/');
     af_avisa_admins($af);
     json_out(['ok' => true]);
+  }
+  case 'app': { $u = current_user(); json_out(['ok' => true, 'logado' => (bool)$u, 'paid' => $u ? access($u)['paid'] : false, 'email' => $u['email'] ?? '']); }
+  case 'virar': { // cliente do app vira afiliado num toque, com o mesmo e-mail e a mesma senha do app
+    require_post(); throttle('afvirar:' . client_ip(), 10, 3600);
+    $u = current_user(); if (!$u) fail('Entre no app Studio Cover primeiro.');
+    if (!access($u)['paid']) json_out(['ok' => false, 'comprar' => checkout_url($u) ?: site_url() . '/#oferta',
+      'error' => 'Para ser afiliado, primeiro você precisa ser cliente do Studio Cover. Assine, use o app e recupere o valor indicando: cada assinatura que você indica rende perto de R$ 140.'], 403);
+    $q = af_db()->prepare('SELECT * FROM afiliados WHERE email = ?'); $q->execute([$u['email']]); $af = $q->fetch();
+    if ($af && !$af['ativo']) fail('A sua conta de afiliado está pausada. Fale com o suporte: ' . (setting('suporte_email') ?: 'contato@studiocover.com.br'));
+    if (!$af) {
+      $nome = trim((string)($u['name'] ?? '')) ?: explode('@', $u['email'])[0];
+      $base = substr(af_codigo_limpo(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', explode(' ', $nome)[0]) ?: explode('@', $u['email'])[0]), 0, 20); if (strlen($base) < 3) $base = 'parceiro';
+      $codigo = $base; $chk = af_db()->prepare('SELECT 1 FROM afiliados WHERE codigo = ?');
+      for ($i = 2; $chk->execute([$codigo]) && $chk->fetch(); $i++) $codigo = $base . $i;
+      $af = af_create($nome, $u['email'], $codigo, '');
+      af_db()->prepare('UPDATE afiliados SET pass_hash = ?, origem = ?, last_login = ? WHERE id = ?')->execute([$u['pass_hash'], 'assinante-app', now(), $af['id']]);
+      $af = af_by_id((int)$af['id']);
+      send_mail(null, $af['email'], 'afiliado', 'Sua conta de afiliado do Studio Cover está pronta', 'Bem-vindo, parceiro!',
+        '<p>Sua conta de afiliado está criada. Entre com o mesmo e-mail e a mesma senha do app. No painel tem o passo a passo para começar: criar a conta na Eduzz, se afiliar ao Studio Cover, colar o seu link e pegar as suas páginas prontas.</p><p>Seu código: <b>' . htmlspecialchars($af['codigo']) . '</b></p>',
+        'Abrir meu painel', site_url() . '/afiliado/');
+      af_avisa_admins($af);
+    } elseif (!$af['pass_hash']) {
+      af_db()->prepare('UPDATE afiliados SET pass_hash = ? WHERE id = ?')->execute([$u['pass_hash'], $af['id']]); $af = af_by_id((int)$af['id']);
+    }
+    af_entra($af); json_out(['ok' => true]);
   }
   case 'convite': { $c = af_convite_valido((string)arg('t')); json_out(['ok' => (bool)$c, 'nome' => $c['nome'] ?? '']); }
   case 'sair': { require_post(); session(); unset($_SESSION['afid'], $_SESSION['afver']); json_out(['ok' => true]); }
