@@ -79,12 +79,16 @@ function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'
   // contas que tiveram gasto no Gerenciador em cada dia: anúncio feito de post existente esconde o link do post da API,
   // então, se só uma conta anunciou naquele dia, a venda de anúncio com campanha desconhecida é dela
   $doDia = []; try { foreach (meta_db()->query('SELECT dia, conta FROM meta_gasto WHERE valor > 0 GROUP BY dia, conta')->fetchAll(PDO::FETCH_NUM) as [$d, $ct]) $doDia[$d][$ct] = 1; } catch (Throwable $e) {}
+  $GLOBALS['or_soltas'] = [];
   $contaDa = function (string $cp, string $dia) use ($mapa, $doDia): string {
     if (preg_match('/^(leo|reinaldo)(-|$)/', $cp, $m)) return $m[1];
     if (isset($mapa[$cp])) return $mapa[$cp];
     if (strlen($cp) >= 10) foreach ($mapa as $k => $v) if (str_starts_with((string)$k, $cp)) return $v;
-    if (count($doDia[$dia] ?? []) === 1) return (string)array_key_first($doDia[$dia]);
+    if (count($doDia[$dia] ?? []) === 1) { $ct = (string)array_key_first($doDia[$dia]); // aprende: da próxima vez essa campanha já é dessa conta
+      if ($cp !== '') try { meta_db()->prepare('INSERT OR IGNORE INTO meta_campanhas (campanha, conta, visto) VALUES (?, ?, ?)')->execute([$cp, $ct, now()]); } catch (Throwable $e) {}
+      return $ct; }
     if ($cp === '') return '?';
+    $GLOBALS['or_soltas'][$cp] = 1; // campanha sem dono: o painel pergunta de quem é
     return (string)(explode('-', $cp)[0] ?? '?');
   };
   $r = [];
@@ -124,5 +128,6 @@ function or_relatorio(int $dias): array {
   }
   $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' ORDER BY s.id DESC LIMIT 15");
   $ult->execute();
-  return ['ok' => true, 'anuncios' => or_anuncios($db, $since), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
+  $anun = or_anuncios($db, $since);
+  return ['ok' => true, 'anuncios' => $anun, 'campanhas_soltas' => array_keys($GLOBALS['or_soltas'] ?? []), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
 }
