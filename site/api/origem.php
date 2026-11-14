@@ -69,14 +69,14 @@ function ad_gastos_conta(PDO $db): void {
 }
 
 // ROI por conta de anúncio no período: gasto lançado x vendas que vieram de anúncio do Meta com a campanha daquela conta
-function or_anuncios(PDO $db, string $since): array {
+function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'): array {
   ad_gastos_conta($db);
-  $g = $db->prepare('SELECT conta, SUM(valor) v FROM ad_gastos WHERE dia >= ? GROUP BY conta'); $g->execute([substr($since, 0, 10)]);
-  $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido FROM sales WHERE status = 'pago' AND created_at >= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm')"); $s->execute([$since]);
+  $g = $db->prepare('SELECT conta, SUM(valor) v FROM ad_gastos WHERE dia >= ? AND dia <= ? GROUP BY conta'); $g->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
+  $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm')"); $s->execute([$since, $ate]);
   $r = [];
   $add = function (string $c) use (&$r) { $r[$c] ??= ['conta' => $c, 'gasto' => 0.0, 'gasto_auto' => 0.0, 'gasto_manual' => 0.0, 'vendas' => 0, 'liquido' => 0.0, 'vsl' => 0, 'home' => 0]; };
   foreach ($g->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_manual'] += (float)$x['v']; } // impulsionamento lançado à mão
-  try { $m = meta_db()->prepare('SELECT conta, SUM(valor) v FROM meta_gasto WHERE dia >= ? GROUP BY conta'); $m->execute([substr($since, 0, 10)]);
+  try { $m = meta_db()->prepare('SELECT conta, SUM(valor) v FROM meta_gasto WHERE dia >= ? AND dia <= ? GROUP BY conta'); $m->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
     foreach ($m->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_auto'] += (float)$x['v']; } } catch (Throwable $e) {} // Gerenciador, automático pela UTM
   foreach ($s->fetchAll() as $x) {
     $c = $x['or_fonte'] === 'meta-sem-utm' ? '?' : (string)(explode('-', (string)$x['or_campanha'])[0] ?? '');

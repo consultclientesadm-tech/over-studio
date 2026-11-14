@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Studio Cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=21">
+<link rel="stylesheet" href="admin.css?v=22">
 </head>
 <body>
 <canvas class="estrelas"></canvas>
@@ -64,13 +64,14 @@
     <button class="vistBtn" id="vistBtn" title="Vistoria de erros"><i>🛰️</i><span>Vistoria de erros</span><em id="vistBtnN" hidden></em></button>
     <!-- Visão geral -->
     <div class="tab" id="tGeral">
-      <header class="th"><div><h2>Visão geral</h2><p class="sub">Comissões, vendas e cadastros ao vivo</p></div>
-        <div class="seg segP"><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
+      <header class="th"><div><h2>Visão geral</h2><p class="sub">Vendas, anúncios, ROI e divisão, ao vivo</p></div>
+        <div class="seg segP" hidden><button data-d="7">7d</button><button data-d="30" class="on">30d</button><button data-d="90">90d</button><button data-d="365">1a</button></div></header>
+      <section id="vg"></section>
       <section id="comBox"></section>
       <section class="glass chart big fatTopo" id="fatBox" hidden><div class="ch"><div class="fth"><span class="vivo"><i></i>AO VIVO</span><b>Faturamento</b><small id="fatPer"></small></div><span id="fatTot"></span><div class="seg vista" id="vistaSeg"><button data-v="hora" class="on">Hoje por hora</button><button data-v="periodo">Dia a dia</button></div></div><canvas id="cFat"></canvas><p class="legend" id="fatLeg"></p></section>
-      <div id="hoje"></div>
+      <div id="hoje" hidden></div>
       <div class="geralRow"><div id="termo"></div><div id="adsBox"></div></div>
-      <div id="cadHoje"></div>
+      <div id="cadHoje" hidden></div>
     </div>
 
     <!-- Saúde financeira -->
@@ -211,6 +212,6 @@
 
 <script src="/assets/marca.js"></script>
 <script src="graficos.js?v=2"></script>
-<script src="admin.js?v=32"></script>
+<script src="admin.js?v=33"></script>
 </body>
 </html>
