@@ -61,6 +61,17 @@ export async function findVoices(channels, sr, onProgress = () => {}) {
     }
     return s;
   };
+  // v42: piso de ruído de cada faixa do espectro (chiado, zumbido, sobra do instrumental). Fica com o 20% mais
+  // baixo de cada faixa nos quadros com som e é tirado antes de procurar as vozes, para o ruído não esconder a 2ª voz.
+  const noise = new Float32Array(KMAX);
+  {
+    const smp = []; for (let fi = 0; fi < nf; fi += 3) if (rms[fi] >= gate) smp.push(fi);
+    if (smp.length >= 20) {
+      const M = smp.map((fi) => { frameFFT(x, fi, win, buf, re, im); const a = new Float32Array(KMAX); for (let k = 0; k < KMAX; k++) a[k] = Math.hypot(re[k], im[k]); return a; });
+      const col = new Float32Array(M.length), q = Math.floor(M.length * 0.2);
+      for (let k = 0; k < KMAX; k++) { for (let i = 0; i < M.length; i++) col[i] = M[i][k]; col.sort(); noise[k] = col[q]; }
+    }
+  }
   const frames = new Array(nf);
   for (let fi = 0; fi < nf; fi++) {
     frames[fi] = [];
@@ -68,7 +79,7 @@ export async function findVoices(channels, sr, onProgress = () => {}) {
     if (rms[fi] < gate) continue;
     frameFFT(x, fi, win, buf, re, im);
     let tot = 0;
-    for (let k = 0; k < KMAX; k++) { mag[k] = Math.hypot(re[k], im[k]); if (k * bin > 80) tot += mag[k] * mag[k]; }
+    for (let k = 0; k < KMAX; k++) { const m0 = Math.hypot(re[k], im[k]); mag[k] = Math.max(m0 - 1.5 * noise[k], m0 * 0.05); if (k * bin > 80) tot += mag[k] * mag[k]; }
     if (tot <= 0) continue;
     // branqueamento parcial: harmônicos fracos (voz de trás) também aparecem, sem virar ruído
     const Wn = 12; let acc = 0;
@@ -296,11 +307,13 @@ export async function splitVoices(channels, sr, est, onProgress = () => {}) {
   });
   const out = Array.from({ length: K }, () => new Float32Array(len));
   const W = Array.from({ length: K }, () => new Float32Array(B));
+  const P = Array.from({ length: K }, () => new Float32Array(B).fill(1 / K)), mag = new Float32Array(B + 1);
   const ok = (fi) => fi >= 0 && fi < nf;
   // começa 2 quadros antes e termina 2 depois: as pontas também somam as 4 janelas
   for (let fi = -2; fi < nf + 2; fi++) {
     if (fi % 40 === 0) { onProgress(Math.max(0, fi / nf)); await tick(); }
     frameFFT(x, fi, win, buf, re, im);
+    for (let k = 0; k < HK + 2 && k < B; k++) mag[k] = Math.hypot(re[k], im[k]);
     let any = false;
     for (let v = 0; v < K; v++) {
       const w = W[v]; w.fill(0);
@@ -309,7 +322,20 @@ export async function splitVoices(channels, sr, est, onProgress = () => {}) {
       any = true;
       const f = toHz(m);
       for (let h = 1; h * f < 8000; h++) {
-        const c = (h * f) / bin, s = 1.1 + c * 0.004;
+        let c = (h * f) / bin;
+        // v42: centra no pico de verdade do espectro (vibrato e harmônico um pouco fora do lugar), se ele estiver
+        // perto da posição prevista e não for de outra voz mais perto
+        const r = Math.max(1.5, c * 0.012);
+        let pk = -1, mx = 0;
+        for (let q = Math.max(1, Math.round(c - r)); q <= Math.min(HK, Math.round(c + r)); q++) if (mag[q] > mx && mag[q] >= mag[q - 1] && mag[q] >= mag[q + 1]) { mx = mag[q]; pk = q; }
+        if (pk > 0) {
+          const a = Math.log(mag[pk - 1] + 1e-12), b = Math.log(mag[pk] + 1e-12), cc = Math.log(mag[pk + 1] + 1e-12), d = a - 2 * b + cc;
+          const pc = pk + (d < 0 ? (0.5 * (a - cc)) / d : 0);
+          let mine = true;
+          for (let u = 0; u < K && mine; u++) if (u !== v && ok(fi) && !isNaN(est.f0[u][fi])) { const fu = toHz(est.f0[u][fi]), hu = Math.max(1, Math.round((pc * bin) / fu)); if (Math.abs(pc - (hu * fu) / bin) < Math.abs(pc - c) - 0.3) mine = false; }
+          if (mine) c = pc;
+        }
+        const s = 1.0 + c * 0.0035;
         for (let k = Math.max(0, Math.floor(c - 3 * s)); k <= Math.min(HK - 1, Math.ceil(c + 3 * s)); k++) { const g = Math.exp(-0.5 * ((k - c) / s) ** 2); if (g > w[k]) w[k] = g; }
       }
     }
@@ -321,7 +347,9 @@ export async function splitVoices(channels, sr, est, onProgress = () => {}) {
       for (let k = 0; k < B; k++) {
         let tot = 0;
         if (any) for (let u = 0; u < K; u++) tot += W[u][k] * W[u][k];
-        const mask = (any ? (W[v][k] * W[v][k] + eps) / (tot + 0.005) : 1 / K);
+        let mask = (any ? (W[v][k] * W[v][k] + eps) / (tot + 0.005) : 1 / K);
+        // v42: suaviza a máscara no tempo (menos "chiado metálico"); continua somando 1 entre as vozes
+        const pm = P[v][k]; mask = 0.75 * mask + 0.25 * pm; P[v][k] = mask;
         mr[k] = re[k] * mask; mi[k] = im[k] * mask;
       }
       for (let k = 1; k < N / 2; k++) { mr[N - k] = mr[k]; mi[N - k] = -mi[k]; }

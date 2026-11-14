@@ -2,7 +2,7 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=44';
+import * as cover from './pipeline.js?v=45';
 import { prefetchModel } from './studio.js?v=41';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
@@ -205,7 +205,7 @@ function progress(st, p) {
   }
   if (st === 'separate' && progress.sepStart == null) progress.sepStart = el;
   if (st !== 'separate' && st !== 'download') $('eta').textContent = '';
-  $('ringBar').style.strokeDashoffset = 327 * (1 - v / 100); $('ringBar').closest('.ll-key')?.style.setProperty('--p', v);
+  $('ringBar').style.strokeDashoffset = 327 * (1 - v / 100);
   $('ringPct').textContent = v + '%';
   $('workStep').textContent = st === 'download' && p >= 1 ? 'Ligando a IA' : LABEL[st] || '';
   const order = Object.keys(W), alias = { ref: 'refsep', refnotes: 'refsep' };
@@ -331,7 +331,7 @@ async function convertVideo() {
   note({ stage: 'Convertendo o vídeo para este navegador', pct: 99 });
   $('workStep').textContent = 'Preparando a imagem do vídeo para este navegador (só neste caso)';
   $('eta').textContent = '';
-  const ring = (p) => { $('ringBar').style.strokeDashoffset = 327 * (1 - p); $('ringBar').closest('.ll-key')?.style.setProperty('--p', Math.round(p * 100)); $('ringPct').textContent = Math.round(p * 100) + '%'; };
+  const ring = (p) => { $('ringBar').style.strokeDashoffset = 327 * (1 - p); $('ringPct').textContent = Math.round(p * 100) + '%'; };
   ring(0);
   try {
     const tc = performance.now();
@@ -807,7 +807,7 @@ async function setVoices(K) {
 $('panelBtn').onclick = () => openPop();
 // Volume de cada voz (Mix e Exportar andam juntos). No mínimo (−15 dB) a voz fica muda no vídeo final.
 function voiceVols() {
-  for (const pre of ['m', 'e']) $(pre + 'Voice').previousElementSibling.textContent = state.parts ? 'Volume de todas as vozes' : 'Volume da voz';
+  for (const pre of ['m', 'e']) $(pre + 'Voice').closest('.row').querySelector('span').textContent = state.parts ? 'Volume de todas as vozes' : 'Volume da voz';
   for (const pre of ['m', 'e']) {
     const box = $(pre + 'Voices'); box.innerHTML = '';
     if (!state.parts) continue;
@@ -1022,3 +1022,45 @@ window.scRefazerGuardado = async () => {
   await start(f);
   if (app.dataset.screen === 'studio') $('quickAll').click();
 };
+
+// ===== Potenciômetros (v41): as réguas da Mix e do Exportar viram botões giratórios. A régua continua lá por baixo,
+// então todo o resto do app (sincronizar, mixar de novo, zerar) segue igual. Arraste para cima/direita = mais.
+function potUI(r) {
+  const NS = 'http://www.w3.org/2000/svg', A0 = 135, SW = 270, R = 26;
+  const pt = (a) => [32 + R * Math.cos((a * Math.PI) / 180), 32 + R * Math.sin((a * Math.PI) / 180)];
+  const arc = (a, b) => { if (b - a < 0.5) return ''; const [x1, y1] = pt(a), [x2, y2] = pt(b); return `M${x1.toFixed(2)} ${y1.toFixed(2)}A${R} ${R} 0 ${b - a > 180 ? 1 : 0} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`; };
+  const min = +r.min, max = +r.max, step = +r.step || 0.01, bip = min < 0 && max > 0;
+  const pot = document.createElement('span'); pot.className = 'pot'; pot.setAttribute('aria-hidden', 'true');
+  pot.innerHTML = `<svg viewBox="0 0 64 64"><path class="pt" d="${arc(A0, A0 + SW)}"/><path class="pv"/></svg><i class="pk"><b></b></i>`;
+  r.before(pot); r.closest('.row').classList.add('pot-on');
+  const pv = pot.querySelector('.pv'), pk = pot.querySelector('.pk');
+  const draw = () => {
+    const f = (+r.value - min) / (max - min), a = A0 + f * SW, z = bip ? A0 + ((0 - min) / (max - min)) * SW : A0;
+    pv.setAttribute('d', arc(Math.min(a, z), Math.max(a, z))); pk.style.transform = `rotate(${a - 270}deg)`;
+  };
+  r.addEventListener('input', draw); draw();
+  let sx = 0, sy = 0, sv = 0, id = null, moved = false;
+  pot.addEventListener('pointerdown', (e) => { id = e.pointerId; pot.setPointerCapture(id); sx = e.clientX; sy = e.clientY; sv = +r.value; moved = false; pot.classList.add('on'); e.preventDefault(); });
+  pot.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== id) return;
+    const d = (sy - e.clientY) + (e.clientX - sx) * 0.6; if (Math.abs(d) > 3) moved = true;
+    let v = sv + (d / 160) * (max - min); v = Math.round(v / step) * step; v = Math.min(max, Math.max(min, v));
+    if (+r.value !== v) { r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); }
+  });
+  const fim = (e) => { if (e.pointerId !== id) return; id = null; pot.classList.remove('on'); if (moved && +r.value !== sv) r.dispatchEvent(new Event('change', { bubbles: true })); };
+  pot.addEventListener('pointerup', fim); pot.addEventListener('pointercancel', fim);
+  // toque duplo volta para o valor de fábrica
+  pot.addEventListener('dblclick', () => { if (+r.value === +r.defaultValue) return; r.value = r.defaultValue; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); });
+}
+document.querySelectorAll('.potgrid .row input[type=range]').forEach(potUI);
+
+// ===== "Tem mais para baixo": em cada etapa, se der para rolar, aparece uma seta piscando e uma sombra embaixo
+document.querySelectorAll('#studio .step').forEach((st) => {
+  const h = document.createElement('button'); h.type = 'button'; h.className = 'maisbaixo'; h.innerHTML = `<span>Role para ver mais</span>${icn('down')}`;
+  h.onclick = () => st.scrollBy({ top: st.clientHeight * 0.7, behavior: 'smooth' });
+  st.appendChild(h);
+  const chk = () => st.classList.toggle('temmais', st.scrollHeight - st.scrollTop - st.clientHeight > 16);
+  st.addEventListener('scroll', chk, { passive: true });
+  new ResizeObserver(chk).observe(st); new MutationObserver(() => requestAnimationFrame(chk)).observe(st, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'class'] });
+  chk();
+});

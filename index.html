@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css?v=44">
-<link rel="stylesheet" href="css/rack.css?v=2">
+<link rel="stylesheet" href="css/rack.css?v=3">
 <script src="js/icons.js?v=1"></script>
 <script>
 // Vários núcleos para a IA: só no computador. No celular (principalmente iPhone) isso pesa na memória
@@ -34,7 +34,7 @@
 <body>
 <div class="app" id="app" data-screen="home">
   <header class="top">
-    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v40</small></div>
+    <div class="brand"><span class="logo"><i data-ic="logo"></i></span><span class="bname"><span><b>STUDIO</b> <i>COVER</i></span><small class="bsub">estúdio no celular</small></span><small class="ver">v41</small></div>
     <div class="topinfo" id="topinfo"></div>
     <button class="ghost sm manbtn" id="manBtn" title="Manual do usuário: vídeos curtos de cada função"><i data-ic="book"></i><span>Manual</span></button>
     <button class="ghost sm helpbtn" id="helpBtn" title="Ajuda" aria-label="Ajuda"><i data-ic="help"></i></button>
@@ -85,7 +85,7 @@
 
   <!-- Preparando (separação da voz) -->
   <section class="screen work" id="work">
-    <div class="logoload" aria-hidden="true"><div class="ll-key"><svg viewBox="0 0 24 24"><path class="ll-d" d="M12 1.5l10.5 10.5L12 22.5 1.5 12z"/><path class="ll-w0" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/><path id="ringBar" class="ll-w" pathLength="327" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/></svg></div><span id="ringPct">0%</span></div>
+    <div class="ring logoring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52"/><circle id="ringBar" cx="60" cy="60" r="52"/></svg><div class="ll-key" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="ll-d" d="M12 1.5l10.5 10.5L12 22.5 1.5 12z"/><path class="ll-w0" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/><path class="ll-w" d="M6.5 12c1.4-3 2.8-3 4.2 0s2.8 3 4.2 0c.6-1.4 1.6-2 2.6-1.6"/></svg></div><span id="ringPct">0%</span></div>
     <h2 id="workStep">Preparando…</h2>
     <p class="eta" id="eta"></p>
     <ol class="steps" id="steps">
@@ -176,21 +176,27 @@
             <button class="pill" id="mixUndo" hidden data-help="Tira a mix e o master e volta para o som só afinado.">Desfazer mix e master</button>
           </div>
         </div>
-        <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="mVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        <div class="potgrid">
+          <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="mVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+          <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="mBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        </div>
         <div class="voicevols" id="mVoices"></div>
-        <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="mBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <div class="mixsec"><b>Equalizador</b><button class="pill" id="eqReset" data-help="Volta grave, médio e agudo para o zero.">Zerar</button></div>
-        <label class="row eq" data-help="Grave (abaixo de 100 Hz): corpo, peso do violão e do bumbo. Muito grave embola no celular."><span>Grave</span><input type="range" id="mLow" min="-6" max="6" step="0.5" value="0"><output></output></label>
-        <label class="row eq" data-help="Médio (perto de 1 kHz): presença e o 'meio' da voz. Muito médio deixa o som anasalado."><span>Médio</span><input type="range" id="mMid" min="-6" max="6" step="0.5" value="0"><output></output></label>
-        <label class="row eq" data-help="Agudo (acima de 8 kHz): brilho e ar da voz. Muito agudo deixa o S chiado."><span>Agudo</span><input type="range" id="mHigh" min="-6" max="6" step="0.5" value="0"><output></output></label>
+        <div class="potgrid">
+          <label class="row eq" data-help="Grave (abaixo de 100 Hz): corpo, peso do violão e do bumbo. Muito grave embola no celular."><span>Grave</span><input type="range" id="mLow" min="-6" max="6" step="0.5" value="0"><output></output></label>
+          <label class="row eq" data-help="Médio (perto de 1 kHz): presença e o 'meio' da voz. Muito médio deixa o som anasalado."><span>Médio</span><input type="range" id="mMid" min="-6" max="6" step="0.5" value="0"><output></output></label>
+          <label class="row eq" data-help="Agudo (acima de 8 kHz): brilho e ar da voz. Muito agudo deixa o S chiado."><span>Agudo</span><input type="range" id="mHigh" min="-6" max="6" step="0.5" value="0"><output></output></label>
+        </div>
         <div class="mixsec"><b>Compressor da voz</b>
           <div class="seg" id="compMode" role="group" aria-label="Compressor"><button data-m="auto" class="on" data-help="O app mede o quanto sua voz varia entre as partes fracas e fortes e escolhe a compressão certa.">Automático</button><button data-m="manual" data-help="Você escolhe quanto comprimir.">Manual</button></div>
         </div>
         <label class="row" id="compRow" hidden data-help="Quanto deixar a voz por igual. Pouco = natural, com as partes fortes e fracas. Muito = voz sempre na frente, estilo rádio."><span>Compressão</span><input type="range" id="mComp" min="0" max="1" step="0.05" value="0.4"><output></output></label>
         <p class="mixinfo" id="compInfo">Volume final no padrão do Spotify: −14 LUFS, pico em −1 dB.</p>
-        <label class="row" data-help="Ambiência na voz, como cantar numa sala ou palco. 0% = seco."><span>Reverb</span><input type="range" id="mReverb" min="0" max="1" step="0.05" value="0.2"><output></output></label>
-        <label class="row" data-help="Quanto tempo o som leva para subir no começo do vídeo."><span>Fade-in</span><input type="range" id="mFadeIn" min="0" max="3" step="0.1" value="0.4"><output></output></label>
-        <label class="row" data-help="Quanto tempo o som leva para sumir no final do vídeo."><span>Fade-out</span><input type="range" id="mFadeOut" min="0" max="5" step="0.1" value="1.5"><output></output></label>
+        <div class="potgrid">
+          <label class="row" data-help="Ambiência na voz, como cantar numa sala ou palco. 0% = seco."><span>Reverb</span><input type="range" id="mReverb" min="0" max="1" step="0.05" value="0.2"><output></output></label>
+          <label class="row" data-help="Quanto tempo o som leva para subir no começo do vídeo."><span>Fade-in</span><input type="range" id="mFadeIn" min="0" max="3" step="0.1" value="0.4"><output></output></label>
+          <label class="row" data-help="Quanto tempo o som leva para sumir no final do vídeo."><span>Fade-out</span><input type="range" id="mFadeOut" min="0" max="5" step="0.1" value="1.5"><output></output></label>
+        </div>
         <label class="switch" data-help="Corta o pedaço parado antes de você começar a cantar e depois que termina."><input type="checkbox" id="mTrim" checked><span></span> Cortar o silêncio do começo e do fim</label>
       </div>
 
@@ -205,9 +211,11 @@
       <div class="step" data-step="5">
         <div class="head"><div><h3>Exportar</h3><p class="sub" id="exportSub">O vídeo sai em 1080p (o padrão do Instagram, TikTok e Reels), com os mesmos quadros por segundo e a qualidade do original. Deixe a tela aberta até terminar.</p></div></div>
         <div class="summary" id="summary"></div>
-        <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="eVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        <div class="potgrid">
+          <label class="row vol" data-help="Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes."><span>Volume da voz</span><input type="range" id="eVoice" min="-9" max="9" step="0.5" value="0"><output></output></label>
+          <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="eBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
+        </div>
         <div class="voicevols" id="eVoices"></div>
-        <label class="row vol bedrow" data-help="Aumenta ou diminui a base (violão, banda ou playback) em relação à voz."><span>Volume da base</span><input type="range" id="eBed" min="-9" max="9" step="0.5" value="0"><output></output></label>
         <button class="pill big" id="watchBtn"><i data-ic="full"></i> Assistir a prévia em tela cheia</button>
         <button class="prime" id="exportBtn" data-help="Grava o vídeo final na qualidade do original, com o som e a cor escolhidos.">Gerar vídeo final</button>
         <div class="bar" id="exportBar" hidden><i></i></div>
@@ -242,7 +250,7 @@
   <div class="toast" id="toast" hidden></div>
   <div class="tip" id="tip" hidden><p id="tipTxt"></p><button class="pill" id="tipOk">Entendi</button></div>
 </div>
-<script type="module" src="js/app.js?v=63"></script>
+<script type="module" src="js/app.js?v=65"></script>
 <script>
 // Se o app não carregar (arquivo antigo guardado no navegador, ou erro), avisa em vez de não fazer nada.
 addEventListener('error', function (e) { if (!window.studio) { var t = document.getElementById('toast'); t.textContent = 'O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.'; t.hidden = false; } }, true);
