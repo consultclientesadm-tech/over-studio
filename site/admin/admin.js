@@ -923,3 +923,11 @@ $('novoWh').onclick = async () => { if (!confirm('Gerar outra URL? A antiga para
 $('testeEmail').onclick = async () => { toast('Enviando…'); const j = await api('email-teste', { para: $('testePara').value.trim() || undefined }); toast(j.ok ? 'E-mail enviado! Confira a sua caixa (e o spam).' : 'Não saiu: ' + j.error); };
 
 boot();
+
+// botão "Copiar UTM" (aba Origens)
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-copia]'); if (!b) return;
+  const t = b.dataset.copia;
+  try { await navigator.clipboard.writeText(t); } catch (_) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); }
+  const o = b.textContent; b.textContent = 'Copiado ✓'; setTimeout(() => (b.textContent = o), 1600);
+});
