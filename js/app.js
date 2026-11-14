@@ -148,12 +148,12 @@ const CEL = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 const MB_OK = 300; // vídeo de até 3 min em 1080p fica bem abaixo disso; acima, no celular, costuma ser 4K ou longo demais
 const escH = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 // janela com título, texto, lista de passos e botões [{ t, v, b (principal) }]; devolve o v do botão tocado (ou null)
-function aviso(titulo, texto, passos = [], botoes = [{ t: 'Entendi', v: true, b: 1 }]) {
+function aviso(titulo, texto, passos = [], botoes = [{ t: 'Entendi', v: true, b: 1 }], rodape = '') {
   return new Promise((res) => {
     const ov = document.createElement('div'); ov.className = 'av-ov';
     ov.innerHTML = `<div class="av-sh" role="dialog" aria-modal="true"><h3>${titulo}</h3>${texto ? `<p>${texto}</p>` : ''}
-      ${passos.length ? `<ul>${passos.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}
-      ${botoes.map((b, i) => `<button type="button" class="${b.b ? 'av-b' : 'av-b2'}" data-i="${i}">${b.t}</button>`).join('')}</div>`;
+      ${passos.length ? `<ul>${passos.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}${rodape}
+      ${botoes.map((b, i) => `<button type="button" class="${b.b ? 'av-b' : 'av-b2'}${b.big ? ' av-big' : ''}" data-i="${i}">${b.t}</button>`).join('')}</div>`;
     const fim = (v) => { ov.remove(); res(v); };
     ov.addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (b) fim(botoes[+b.dataset.i].v); else if (e.target === ov) fim(null); });
     document.body.appendChild(ov);
@@ -197,16 +197,63 @@ async function conferirVideo(f) {
   return !!(await aviso(longo ? `Vídeo maior que ${MIN} minutos` : 'Vídeo pesado para o celular', txt, passos,
     [{ t: 'Escolher outro vídeo', v: false, b: 1 }, { t: longo ? `Continuar com os ${MAX_SEC / 60} primeiros minutos` : 'Tentar mesmo assim', v: true }]));
 }
-// erro: em vez de um aviso seco, explica o que fazer
-function ajudaErro(titulo, texto, mb) {
-  const passos = [
-    'Feche os outros apps e abas e tente de novo',
-    `Use vídeo de <b>até ${MIN} minutos</b> e <b>até ${MB_OK} MB</b>${mb ? ` (o seu tinha ${mb} MB)` : ''}, gravado em <b>1080p</b>`,
-    'Abra pelo <b>ícone da tela de início</b> (ou no Safari/Chrome), nunca pelo navegador do Instagram',
-    'Se continuar, use <b>"Ou suba só o áudio"</b> ou o computador',
-  ];
-  return aviso(titulo, texto, passos);
+// ---------- Aviso acolhedor quando dá erro (pedido do Leo, 14/11) ----------
+// A pessoa precisa entender o que aconteceu e o que fazer, sem achar que o app "está bugado":
+//  'velho'     aparelho antigo demais: não é compatível, use no computador ou num celular compatível
+//  'atualizar' sistema ou navegador desatualizado: atualize e tente de novo
+//  'navegador' navegador do Instagram/Facebook ou navegador comum do celular: instale o app (botão grande)
+//  'vendo'     aparelho e navegador em dia: a equipe já recebeu o aviso e está resolvendo
+function causaAparelho() {
+  const c = (window.scCompat && window.scCompat.info) || {}, ua = navigator.userAgent || '';
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const iosV = c.ios || (() => { const m = ua.match(/OS (\d+)[_.](\d+)/); return ios && m ? +m[1] + +m[2] / 100 : 0; })();
+  const chromeV = +((ua.match(/Chrome\/(\d+)/) || [])[1] || 0);
+  const instalado = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (c.nivel === 'incompativel' || (ios && iosV && iosV < 15) || (navigator.deviceMemory && navigator.deviceMemory < 3 && CEL)) return 'velho';
+  if (c.inApp || /Instagram|FBAN|FBAV|FB_IAB|musical_ly|BytedanceWebview/i.test(ua)) return 'navegador';
+  if ((ios && iosV && iosV < 17) || (!ios && chromeV && chromeV < 115)) return 'atualizar';
+  if (CEL && !instalado) return 'navegador';
+  return 'vendo';
 }
+// tecnico: a mensagem técnica do erro (vai pequena no fim, para print do suporte); extra: frase a mais (ex.: modo leve)
+function consolo({ titulo = '', tecnico = '', mb = 0, extra = '' } = {}) {
+  const causa = causaAparelho(), ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const rodape = (tecnico ? `<small class="av-tec">${escH(String(tecnico).slice(0, 140))}</small>` : '');
+  if (causa === 'velho') {
+    return aviso('Infelizmente o seu celular não é compatível com o app',
+      'Fique tranquilo: o erro não é no Studio Cover nem no seu vídeo. A inteligência artificial trabalha dentro do aparelho, e este celular é antigo demais para ela: falta memória e força para terminar o trabalho.',
+      ['Use no <b>computador</b>: entre em <b>studiocover.com.br</b> pelo Chrome, Edge ou Safari, com o mesmo e-mail e senha. Funciona igualzinho',
+        'Ou use num <b>celular compatível</b>: iPhone 13 ou mais novo, ou Android com 3 GB de memória ou mais',
+        'A sua conta e o seu acesso continuam valendo em qualquer aparelho'],
+      [{ t: 'ENTENDI', v: true, b: 1 }], rodape);
+  }
+  if (causa === 'atualizar') {
+    return aviso('O seu celular precisa de uma atualização',
+      'Fique tranquilo: não é defeito do Studio Cover. O sistema ou o navegador do seu celular está desatualizado e falhou nessa parte. Atualizando, o app roda normal.',
+      ios ? ['No iPhone, abra <b>Ajustes › Geral › Atualização de Software</b> e instale a atualização',
+        'Depois, abra de novo pelo ícone do Studio Cover e tente outra vez',
+        'Se o seu iPhone não recebe mais atualização, ele é antigo para o app: use no computador ou num celular compatível (iPhone 13 ou mais novo)']
+        : ['Abra a <b>Play Store</b>, procure <b>Chrome</b> e toque em <b>Atualizar</b>',
+          'Veja também se há atualização do celular em <b>Configurações › Atualização de software</b>',
+          'Depois, abra de novo pelo ícone do Studio Cover e tente outra vez'],
+      [{ t: 'ENTENDI', v: true, b: 1 }], rodape);
+  }
+  if (causa === 'navegador') {
+    return aviso('O navegador do seu celular falhou',
+      'Fique tranquilo: não é defeito do Studio Cover. O navegador (principalmente o do Instagram) divide a memória com outras abas e fecha o app no meio. Instalando o Studio Cover na tela de início, ele abre sozinho, com a memória do celular só para ele, e não trava.',
+      [], [{ t: 'INSTALAR O APP', v: 'instalar', b: 1, big: 1 }, { t: 'Tentar de novo por aqui', v: true }], rodape)
+      .then((v) => { if (v === 'instalar') { if (window.scInstalar) window.scInstalar(); else toast('Toque em Compartilhar › Adicionar à Tela de Início', 9000); } return v; });
+  }
+  return aviso(titulo && !/^Não deu certo/.test(titulo) ? titulo : 'Calma, já estamos vendo isso',
+    'Não foi nada que você fez. A nossa equipe recebeu o aviso desse erro agora mesmo e já está resolvendo.' + (extra ? ' ' + extra : '') + ' Enquanto isso, quase sempre dá certo assim:',
+    ['Feche os outros apps e abas e tente de novo',
+      `Use vídeo de <b>até ${MIN} minutos</b> e <b>até ${MB_OK} MB</b>${mb ? ` (o seu tinha ${mb} MB)` : ''}, gravado em <b>1080p</b>`,
+      'Se continuar, use <b>"Ou suba só o áudio"</b> ou o computador'],
+    [{ t: 'ENTENDI', v: true, b: 1 }], rodape);
+}
+// erro solto (fora do fluxo principal): acolhe uma vez só por visita, sem mensagem técnica no meio da tela
+let consolou = false;
+function consoloUmaVez(tecnico) { if (consolou || document.querySelector('.av-ov')) return; consolou = true; consolo({ tecnico }); }
 $('newBtn').onclick = () => location.reload();
 // Cancelar de verdade: apaga o diário da tentativa antes de recarregar. Antes o app achava, na volta, que o celular
 // tinha fechado no meio: contava "fechou" no painel e voltava a preparar sozinho o vídeo que a pessoa cancelou.
@@ -268,7 +315,8 @@ addEventListener('pagehide', () => { try {
 // Diário da última tentativa: se o celular fechar a página no meio, na volta o app conta em que ponto foi
 const RUN = 'sc-run';
 // diário enviado ao painel (só no domínio com conta): começou, abriu, exportou, erro, fechou no meio
-const ev = (k, d = {}) => { try { window.scLog && window.scLog(k, d); } catch {} };
+// erro e queda levam a causa provável pelo aparelho (velho / atualizar / navegador / vendo), a mesma do aviso que a pessoa vê
+const ev = (k, d = {}) => { try { if ((k === 'erro' || k === 'fechou') && !d.causa_ap) d.causa_ap = causaAparelho(); window.scLog && window.scLog(k, d); } catch {} };
 let runInfo = null;
 function note(patch) { if (!runInfo) return; Object.assign(runInfo, patch); try { localStorage.setItem(RUN, JSON.stringify(runInfo)); } catch {} }
 // manterCopia: o vídeo abriu. A cópia guardada no aparelho fica até a página fechar: se o celular tirar o acesso ao
@@ -290,7 +338,7 @@ try {
     if (celular) localStorage.setItem('sc-leve', '1'); // a próxima tentativa já vai no modo leve
     const msg = `Última tentativa: o aparelho fechou o app em "${last.stage}" (${last.pct}%) · vídeo de ${last.mb} MB${last.dur ? ', ' + last.dur : ''} · v37`;
     try { localStorage.setItem('sc-last', msg); } catch {}
-    setTimeout(() => ajudaErro('O celular fechou o app no meio', `Na última tentativa o celular ficou sem memória e fechou o app em "${escH(last.stage)}". Isso acontece com vídeo longo ou pesado, ou com muitos apps abertos. Para dar certo:`, last.mb), 600);
+    setTimeout(() => consolo({ titulo: 'O celular fechou o app no meio', tecnico: `fechou em "${last.stage}" (${last.pct}%)`, mb: last.mb, extra: celular ? 'Já deixamos o seu celular no modo leve para a próxima tentativa.' : '' }), 600);
   }
 } catch {}
 // ---- Guarda o vídeo no aparelho enquanto processa: se o celular recarregar a página no meio, o app continua sozinho ----
@@ -374,7 +422,7 @@ async function start(f, tries = 1) {
     if (e.message === 'LIMITE') aviso(`Vídeo maior que ${MIN} minutos`, `Esse vídeo tem ${fmt(e.duration || video.duration)}. O limite é de ${MAX_SEC / 60} minutos.`, ['Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar e suba de novo']);
     else if (/decod|Unable|EncodingError|não é AAC|não tem áudio/i.test(e.message)) aviso('Não consegui ler o áudio desse vídeo', escH(e.message), ['Grave com a câmera do próprio celular (MP4 ou MOV)', 'Se o vídeo veio de outro app ou do WhatsApp, salve o original e suba de novo', 'Ou use <b>"Ou suba só o áudio"</b>']);
     else if (LEITURA.test(String(e.message) + ' ' + (e.name || ''))) perdeuArquivo();
-    else ajudaErro('Não deu certo desta vez', escH(e.message), mbE);
+    else consolo({ tecnico: e.message, mb: mbE });
   }
 }
 // "could not be read" (Chrome) / "The I/O read operation failed." (Safari/iPhone): o aparelho tirou o acesso ao arquivo.
@@ -590,9 +638,10 @@ function watchdog(now) {
     console.warn(info); try { localStorage.setItem('sc-diag', info); } catch {}
   }
 }
-// toque no número da versão (ao lado do logo): mostra os números da prévia ao vivo, para um print
-let diagLive = false;
-document.querySelector('.brand .ver')?.addEventListener('click', () => { diagLive = !diagLive; diag.hidden = !diagLive; });
+// 5 toques rápidos no logo: mostra os números da prévia ao vivo, para um print do suporte
+// (antes era o número da versão ao lado do logo; saiu a pedido do Leo, porque parecia app em teste)
+let diagLive = false, logoT = [];
+document.querySelector('.brand .logo')?.addEventListener('click', () => { const n = Date.now(); logoT = logoT.filter((t) => n - t < 2500).concat(n); if (logoT.length >= 5) { logoT = []; diagLive = !diagLive; diag.hidden = !diagLive; } });
 function diagTick(now) {
   if (!diagLive || now - (diagTick.t || 0) < 250) return; diagTick.t = now;
   diag.hidden = false;
@@ -686,7 +735,7 @@ async function doTune() {
     if (mastered) await doMaster(false);
     editor.load(S()); refreshChips(); side = 'B'; refreshAB();
     toast(`Afinado${state.parts ? ` (${state.parts.length} vozes, cada uma separada)` : ''}: ${state.after.band}% da voz na faixa verde. Compare no ANTES | DEPOIS.`);
-  } catch (e) { console.error(e); ev('erro', { etapa: 'afinar', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 6000); }
+  } catch (e) { console.error(e); ev('erro', { etapa: 'afinar', msg: String(e.message).slice(0, 160) }); consolo({ tecnico: e.message }); }
   busy(false);
 }
 $('tuneAuto').onclick = doTune;
@@ -738,7 +787,7 @@ async function runAuto() {
       tracks.raw = rawTrack(); fresh('raw');
       if (mastered) masterStale = true;
       editor.draw(); refreshChips();
-    } catch (e) { console.error(e); ev('erro', { etapa: 'automático', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 6000); }
+    } catch (e) { console.error(e); ev('erro', { etapa: 'automático', msg: String(e.message).slice(0, 160) }); consolo({ tecnico: e.message }); }
     $('popBar')?.classList.remove('working');
     seek(t); if (was) play();
   })();
@@ -892,7 +941,7 @@ async function setVoices(K) {
     if (was) await doTune(); else if (mastered) { busy(true, 'Refazendo a mix…'); await doMaster(false); busy(false); }
     refreshAB(); toast(K === 1 ? 'Pronto: agora é uma voz só.' : `Pronto: ${K} vozes separadas. A Voz 1 é a mais aguda.`, 5000);
     ev('vozes', { k: K, auto: state.voices?.count || 1 });
-  } catch (err) { console.error(err); busy(false); toast('Deu erro: ' + err.message, 6000); }
+  } catch (err) { console.error(err); busy(false); consolo({ tecnico: err.message }); }
 }
 $('panelBtn').onclick = () => openPop();
 // Volume de cada voz (Mix e Exportar andam juntos). No mínimo (−15 dB) a voz fica muda no vídeo final.
@@ -946,7 +995,7 @@ async function doMaster(show = true) {
     // sem mix: volta para a voz afinada e deixa o botão de mixar de novo (nunca deixa a tela travada)
     if (side === 'C') side = 'B'; $('mixApply').hidden = false; $('mixUndo').hidden = true; fresh('master');
     ev('erro', { etapa: 'mix', msg: String(e && e.message).slice(0, 160) });
-    if (show) { busy(false); refreshAB(); toast('Não deu para mixar agora: ' + (e && e.message), 6000); }
+    if (show) { busy(false); refreshAB(); consolo({ titulo: 'Não deu para mixar agora', tecnico: e && e.message }); }
     throw e;
   }
   tracks.master = mastered.full; fresh('master');
@@ -1080,7 +1129,7 @@ $('exportBtn').onclick = async () => {
     $('readyInfo').textContent = `${out.width} × ${out.height} · ${out.ext.toUpperCase()} · ${Math.max(1, Math.round(out.blob.size / 1048576))} MB, com o som e a cor que você escolheu.`;
     $('ready').hidden = false; $('ready').scrollIntoView({ behavior: 'smooth', block: 'center' });
     toast('Vídeo pronto!'); ev('exportou', { mb: Math.round(out.blob.size / 1048576), w: out.width, h: out.height, ext: out.ext });
-  } catch (e) { console.error(e); ev('erro', { etapa: 'exportar', msg: String(e.message).slice(0, 160) }); toast('Deu erro: ' + e.message, 7000); }
+  } catch (e) { console.error(e); ev('erro', { etapa: 'exportar', msg: String(e.message).slice(0, 160) }); consolo({ tecnico: e.message }); }
   pesado('');
   $('exportBtn').disabled = false;
   seek(0);
@@ -1115,7 +1164,7 @@ addEventListener('error', (e) => {
   const fora = /^Script error\.?$/i.test(String(e.message)) && !e.filename;
   ev('erro', { etapa: fora ? 'externo' : 'app', msg: String(e.message).slice(0, 160), em: String(e.filename || '').split('/').pop() + ':' + e.lineno, tela: app.dataset.screen || '' });
   if (fora) return;
-  note({ erro: String(e.message).slice(0, 120) }); toast('Erro: ' + e.message, 9000);
+  note({ erro: String(e.message).slice(0, 120) }); consoloUmaVez(e.message);
 });
 addEventListener('unhandledrejection', (e) => {
   const m = String(e.reason?.message || e.reason).slice(0, 120);
@@ -1125,7 +1174,7 @@ addEventListener('unhandledrejection', (e) => {
   note({ erro: m }); ev('erro', { etapa: 'app', msg: m, tela: app.dataset.screen || '' });
   // leitura do arquivo falhou fora do fluxo principal: explica o que fazer em vez de mostrar a mensagem técnica
   if (LEITURA.test(m + ' ' + (e.reason?.name || ''))) { e.preventDefault(); if (app.dataset.screen !== 'studio') perdeuArquivo(); return; }
-  toast('Erro: ' + m, 9000);
+  consoloUmaVez(m);
 });
 
 // Só a voz / só a música (WAV), no mesmo trecho do vídeo final

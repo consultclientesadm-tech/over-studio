@@ -4890,5 +4890,101 @@
  "VER ROTEIROS": [],
  "mostrar": [],
  "ocultar": [],
- "opcional": []
+ "opcional": [],
+ "Infelizmente o seu celular não é compatível com o app": [
+  "js/app.js"
+ ],
+ "Fique tranquilo: o erro não é no Studio Cover nem no seu vídeo. A inteligência artificial trabalha dentro do aparelho, e este celular é antigo demais para ela: falta memória e força para terminar o trabalho.": [
+  "js/app.js"
+ ],
+ "Use no <b>computador</b>: entre em <b>studiocover.com.br</b> pelo Chrome, Edge ou Safari, com o mesmo e-mail e senha. Funciona igualzinho": [
+  "js/app.js"
+ ],
+ "Ou use num <b>celular compatível</b>: iPhone 13 ou mais novo, ou Android com 3 GB de memória ou mais": [
+  "js/app.js"
+ ],
+ "A sua conta e o seu acesso continuam valendo em qualquer aparelho": [
+  "js/app.js"
+ ],
+ "ENTENDI": [
+  "js/app.js"
+ ],
+ "O seu celular precisa de uma atualização": [
+  "js/app.js"
+ ],
+ "Fique tranquilo: não é defeito do Studio Cover. O sistema ou o navegador do seu celular está desatualizado e falhou nessa parte. Atualizando, o app roda normal.": [
+  "js/app.js"
+ ],
+ "No iPhone, abra <b>Ajustes › Geral › Atualização de Software</b> e instale a atualização": [
+  "js/app.js"
+ ],
+ "Depois, abra de novo pelo ícone do Studio Cover e tente outra vez": [
+  "js/app.js"
+ ],
+ "Se o seu iPhone não recebe mais atualização, ele é antigo para o app: use no computador ou num celular compatível (iPhone 13 ou mais novo)": [
+  "js/app.js"
+ ],
+ "Abra a <b>Play Store</b>, procure <b>Chrome</b> e toque em <b>Atualizar</b>": [
+  "js/app.js"
+ ],
+ "Veja também se há atualização do celular em <b>Configurações › Atualização de software</b>": [
+  "js/app.js"
+ ],
+ "O navegador do seu celular falhou": [
+  "js/app.js"
+ ],
+ "Fique tranquilo: não é defeito do Studio Cover. O navegador (principalmente o do Instagram) divide a memória com outras abas e fecha o app no meio. Instalando o Studio Cover na tela de início, ele abre sozinho, com a memória do celular só para ele, e não trava.": [
+  "js/app.js"
+ ],
+ "INSTALAR O APP": [
+  "js/app.js"
+ ],
+ "Tentar de novo por aqui": [
+  "js/app.js"
+ ],
+ "Toque em Compartilhar › Adicionar à Tela de Início": [
+  "js/app.js"
+ ],
+ "Calma, já estamos vendo isso": [
+  "js/app.js"
+ ],
+ "Não deu para mixar agora": [
+  "js/app.js"
+ ],
+ "Não foi nada que você fez. A nossa equipe recebeu o aviso desse erro agora mesmo e já está resolvendo. Enquanto isso, quase sempre dá certo assim:": [
+  "js/app.js"
+ ],
+ "Não foi nada que você fez. A nossa equipe recebeu o aviso desse erro agora mesmo e já está resolvendo. Já deixamos o seu celular no modo leve para a próxima tentativa. Enquanto isso, quase sempre dá certo assim:": [
+  "js/app.js"
+ ],
+ "Use vídeo de <b>até 3 minutos</b> e <b>até 300 MB</b>, gravado em <b>1080p</b>": [
+  "js/app.js"
+ ],
+ "Use vídeo de <b>até 3 minutos</b> e <b>até 300 MB</b> (o seu tinha {0} MB), gravado em <b>1080p</b>": [
+  "js/app.js"
+ ],
+ "Se continuar, use <b>\"Ou suba só o áudio\"</b> ou o computador": [
+  "js/app.js"
+ ],
+ "Seu celular não é compatível com o Studio Cover": [
+  "js/app.js"
+ ],
+ "Não é defeito do app: este celular é antigo demais para a inteligência artificial. Use no computador (studiocover.com.br) ou num celular compatível, com a mesma conta.": [
+  "js/app.js"
+ ],
+ "Atualize o seu celular para usar o Studio Cover": [
+  "js/app.js"
+ ],
+ "O erro veio do sistema ou do navegador desatualizado do seu celular, não do app. Atualize e tente de novo pelo ícone do Studio Cover.": [
+  "js/app.js"
+ ],
+ "Instale o Studio Cover na tela de início": [
+  "js/app.js"
+ ],
+ "O navegador do seu celular falhou (não é defeito do app). Pelo ícone da tela de início o Studio Cover abre sozinho e não trava. Toque aqui para instalar.": [
+  "js/app.js"
+ ],
+ "Não é defeito do app": [
+  "js/app.js"
+ ]
 }

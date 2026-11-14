@@ -96,6 +96,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   // abas disputando a memória), que é de onde vem a maioria dos travamentos que a vistoria pega
   const porque = '<div class="sc-dor" style="margin:10px 0">Pelo ícone da tela de início o Studio Cover <b>trava bem menos</b>: abre sozinho, com a memória do celular só para ele, sem o navegador do Instagram, tradutor ou outras abas atrapalhando.</div>';
   const mobile = ios || android;
+  window.scInstalar = () => install(true); // o aviso de erro do app (navegador falhou) abre o passo a passo de instalar
   async function install(forte) {
     forte = forte === true;
     // o Chrome só abre a janela de instalar com um toque da pessoa; sem toque (oferta automática) cai nas instruções abaixo

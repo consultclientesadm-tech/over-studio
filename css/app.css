@@ -474,6 +474,8 @@ body, .app, .app * { -webkit-user-select: none; user-select: none; -webkit-touch
 .av-sh li { margin: 6px 0; }
 .av-b, .av-b2 { display: block; width: 100%; padding: 13px; border-radius: 12px; font: inherit; font-weight: 700; margin-top: 8px; cursor: pointer; }
 .av-b { background: #ffd400; color: #000; border: 0; }
+.av-b.av-big { min-height: 64px; font-size: 18px; font-weight: 900; letter-spacing: .04em; border-radius: 16px; box-shadow: 0 0 28px rgba(255,212,0,.35); }
+.av-tec { display: block; margin-top: 8px; font-size: 11px; opacity: .45; word-break: break-word; }
 .av-b2 { background: transparent; color: var(--ink, #fff); border: 1px solid rgba(255,255,255,.25); font-weight: 600; }
 @media (min-width: 700px) { .av-ov { align-items: center; } }
 .voicepick { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--mut); }
