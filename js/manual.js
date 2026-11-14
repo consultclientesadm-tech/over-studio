@@ -1,16 +1,16 @@
-// Manual do usuário: lista de vídeos curtos (sem som, com legenda) de cada função. Só carrega quando a pessoa abre o
+// Manual do usuário: lista de vídeos curtos (com narração e legenda) de cada função. Só carrega quando a pessoa abre o
 // manual: as capas vêm ao abrir e cada vídeo só baixa quando a pessoa toca nele. Nada disso pesa para abrir o app.
-const V = 1; // trocar quando regravar os vídeos
+const V = 2; // trocar quando regravar os vídeos
 const BASE = new URL('../assets/manual/', import.meta.url).href;
 export const VIDEOS = [
-  { id: 'comecar', t: 'Começar: subir o vídeo', d: 'Escolher o vídeo, esperar a IA separar a voz e deixar tudo pronto num toque.', s: 18 },
-  { id: 'afinar', t: 'Afinar automático', d: 'Afinar a voz inteira e comparar o ANTES e o DEPOIS.', s: 17 },
+  { id: 'comecar', t: 'Começar: subir o vídeo', d: 'Responder as 2 perguntas, escolher o vídeo e deixar tudo pronto num toque.', s: 29 },
+  { id: 'afinar', t: 'Afinar automático', d: 'Afinar a voz inteira e comparar o ANTES e o DEPOIS.', s: 18 },
   { id: 'painel', t: 'Painel de afinação', d: 'Mexer nota por nota: subir, descer, desfazer e ouvir.', s: 19 },
-  { id: 'dupla', t: 'Dupla e trio', d: 'Quem canta, ouvir só a Voz 1 ou só a Voz 2 e o volume de cada voz.', s: 23 },
-  { id: 'mix', t: 'Mix e master', d: 'Juntar voz e base, comparar e acertar o volume da voz.', s: 14 },
-  { id: 'cor', t: 'Cor do vídeo', d: 'Escolher o filtro e a intensidade.', s: 14 },
-  { id: 'exportar', t: 'Exportar e baixar', d: 'Gerar o vídeo final e baixar para postar.', s: 11 },
-  { id: 'ajuda', t: 'Botão ? (ajuda)', d: 'Saber o que cada botão faz, sem mexer em nada.', s: 12 },
+  { id: 'dupla', t: 'Dupla e trio', d: 'Quem canta, ouvir só a Voz 1 ou só a Voz 2 e o volume de cada voz.', s: 24 },
+  { id: 'mix', t: 'Mix e master', d: 'Juntar voz e base, comparar e girar os botões de volume.', s: 21 },
+  { id: 'cor', t: 'Cor do vídeo', d: 'Escolher o filtro e a intensidade.', s: 13 },
+  { id: 'exportar', t: 'Exportar e baixar', d: 'Gerar o vídeo final e baixar para postar.', s: 12 },
+  { id: 'ajuda', t: 'Botão ? (ajuda)', d: 'Saber o que cada botão faz, sem mexer em nada.', s: 13 },
 ];
 const dur = (s) => (s ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : '');
 let ov = null, cur = -1, onPlay = null;
@@ -21,7 +21,7 @@ function build() {
   ov.innerHTML = `<div class="man" role="dialog" aria-modal="true" aria-label="Manual do usuário">
     <header class="man-h"><b>${window.ic ? window.ic('book') : ''} Manual do usuário</b><button type="button" class="pill man-x" data-x aria-label="Fechar o manual">${window.ic ? window.ic('close') : ''} Fechar</button></header>
     <div class="man-list">
-      <p class="man-sub">Vídeos curtos, sem som. Toque num para assistir.</p>
+      <p class="man-sub">Vídeos curtos, com narração. Toque num para assistir (ligue o som).</p>
       ${VIDEOS.map((v, i) => `<button type="button" class="man-item" data-i="${i}"><span class="man-img"><img alt="" data-src="${BASE}${v.id}.jpg?v=${V}"><i>${window.ic ? window.ic('play') : ''}</i></span>
         <span class="man-txt"><b>${i + 1}. ${v.t}</b><small>${v.d}</small>${v.s ? `<em>${dur(v.s)}</em>` : ''}</span></button>`).join('')}
       <button type="button" class="pill man-sair" data-x>Fechar o manual e voltar ao app</button>

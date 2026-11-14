@@ -340,3 +340,7 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 /* título e botão principal da etapa ficam presos no topo enquanto o resto rola */
 #studio:not(.pop) .step[data-step="3"] > .head, #studio:not(.pop) .step[data-step="4"] > .head, #studio:not(.pop) .step[data-step="5"] > .head { position: sticky; top: -12px; z-index: 3; margin: -12px -12px 6px; padding: 12px 12px 8px; background: linear-gradient(#141418 85%, rgba(20, 20, 24, 0)); }
 .potgrid:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Entrada e carregando: rolam quando a tela é baixa (nada some embaixo) e continuam centralizadas quando sobra espaço */
+.app[data-screen=home] .home, .app[data-screen=work] .work { overflow-y: auto; -webkit-overflow-scrolling: touch; place-items: start center; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+.app[data-screen=home] .home, .app[data-screen=work] .work { align-content: safe center; }
