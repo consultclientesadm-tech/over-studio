@@ -45,7 +45,7 @@ const aTime = () => (pendingT != null || player.readyState < 1 ? offset : (offse
 let aWarned = false;
 function aPlay() {
   const p = player.play();
-  if (p) p.catch((e) => { if (e.name === 'NotAllowedError' && !aWarned) { aWarned = true; toast('Toque no ▶ para ouvir o som.'); } });
+  if (p) p.catch((e) => { if (e.name === 'NotAllowedError' && !aWarned) { aWarned = true; toast('Toque no botão de tocar para ouvir o som.'); } });
 }
 function aStart(t) { loadKey(curKey); setT(t); aPlay(); }
 // Relógio da prévia: o tempo corre pelo relógio do aparelho, a partir do play. Som e imagem tocam soltos na
@@ -140,7 +140,7 @@ const DICAS = [
 drop.addEventListener('click', async (e) => {
   if (e.target.closest('input') || drop.dataset.liberado) return;
   e.preventDefault();
-  const ok = await aviso('🎬 Antes de escolher o vídeo', 'Para o seu cover sair rápido e sem travar:', DICAS,
+  const ok = await aviso('Antes de escolher o vídeo', 'Para o seu cover sair rápido e sem travar:', DICAS,
     [{ t: 'ESCOLHER O VÍDEO', v: true, b: 1 }, { t: 'Cancelar', v: false }]);
   if (!ok) return;
   drop.dataset.liberado = '1'; $('file').click(); setTimeout(() => delete drop.dataset.liberado, 500);
@@ -165,7 +165,7 @@ async function conferirVideo(f) {
   const passos = [longo ? 'Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar' : '',
     pesado ? 'Grave em <b>1080p</b> em vez de 4K (Ajustes › Câmera › Gravar vídeo, no iPhone): o cover sai em 1080p de qualquer jeito' : '',
     pesado ? 'Ou use <b>"Ou suba só o áudio"</b> ou o computador' : ''].filter(Boolean);
-  return !!(await aviso(longo ? `⏱️ Vídeo maior que ${MIN} minutos` : '⚠️ Vídeo pesado para o celular', txt, passos,
+  return !!(await aviso(longo ? `Vídeo maior que ${MIN} minutos` : 'Vídeo pesado para o celular', txt, passos,
     [{ t: 'Escolher outro vídeo', v: false, b: 1 }, { t: longo ? `Continuar com os ${MAX_SEC / 60} primeiros minutos` : 'Tentar mesmo assim', v: true }]));
 }
 // erro: em vez de um aviso seco, explica o que fazer
@@ -257,7 +257,7 @@ try {
   if (old && !window.scCompat) { const r = $('req'); r.classList.add('warn'); r.textContent = 'Este aparelho parece abaixo do mínimo (iPhone 13 ou Android com 4 GB). Pode fechar no meio. Se puder, use um celular mais novo ou o computador.'; }
 } catch {}
 // resultado do teste deste aparelho no cartão de requisitos da tela inicial
-try { const c = window.scCompat, el = $('reqMeuApp'); if (c && el) c.ready.then((i) => { el.className = 'reqmeu ' + i.nivel; el.textContent = i.nivel === 'ok' ? '✓ Testamos o seu aparelho: ele é compatível.' : i.nivel === 'fraco' ? '⚠️ Seu aparelho está no limite: use vídeos curtos (até 1 minuto) ou o computador.' : '⛔ Seu aparelho não é compatível: use o computador ou um celular mais novo.'; }); } catch {}
+try { const c = window.scCompat, el = $('reqMeuApp'); if (c && el) c.ready.then((i) => { el.className = 'reqmeu ' + i.nivel; el.textContent = i.nivel === 'ok' ? '✓ Testamos o seu aparelho: ele é compatível.' : i.nivel === 'fraco' ? 'Seu aparelho está no limite: use vídeos curtos (até 1 minuto) ou o computador.' : 'Seu aparelho não é compatível: use o computador ou um celular mais novo.'; }); } catch {}
 try { const m = localStorage.getItem('sc-last'); if (m) { const d = document.createElement('p'); d.className = 'lastrun'; d.textContent = m; $('home').appendChild(d); } } catch {}
 async function start(f, tries = 1) {
   // versão com conta (domínio próprio): confere o teste grátis / acesso antes de processar
@@ -303,7 +303,7 @@ async function start(f, tries = 1) {
     console.error(e); endRun(); ev('erro', { etapa: 'abrir o vídeo', msg: String(e.message).slice(0, 160), mb: Math.round(f.size / 1048576), dur: Math.round(e.duration || 0), nome: String(f.name || '').slice(-12), tipo: f.type || '', causa: e.causa || '' });
     app.dataset.screen = 'home';
     const mbE = Math.round(f.size / 1048576);
-    if (e.message === 'LIMITE') aviso(`⏱️ Vídeo maior que ${MIN} minutos`, `Esse vídeo tem ${fmt(e.duration || video.duration)}. O limite é de ${MAX_SEC / 60} minutos.`, ['Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar e suba de novo']);
+    if (e.message === 'LIMITE') aviso(`Vídeo maior que ${MIN} minutos`, `Esse vídeo tem ${fmt(e.duration || video.duration)}. O limite é de ${MAX_SEC / 60} minutos.`, ['Corte o vídeo no celular (Fotos › Editar) só com o trecho que quer postar e suba de novo']);
     else if (/decod|Unable|EncodingError|não é AAC|não tem áudio/i.test(e.message)) aviso('Não consegui ler o áudio desse vídeo', escH(e.message), ['Grave com a câmera do próprio celular (MP4 ou MOV)', 'Se o vídeo veio de outro app ou do WhatsApp, salve o original e suba de novo', 'Ou use <b>"Ou suba só o áudio"</b>']);
     else if (LEITURA.test(String(e.message) + ' ' + (e.name || ''))) perdeuArquivo();
     else ajudaErro('Não deu certo desta vez', escH(e.message), mbE);
@@ -519,7 +519,9 @@ function diagTick(now) {
   diag.textContent = `imagem ${video.currentTime.toFixed(2)} · som ${player.currentTime.toFixed(2)} · relógio ${ct().toFixed(2)} · quadros ${wd.frames} · estado ${video.readyState}/${player.readyState} · vel ${video.playbackRate} · ${video.paused ? 'img pausada' : 'img tocando'}${vErr ? ' · ' + vErr : ''} · ${video.videoWidth}×${video.videoHeight}`;
 }
 diag.onclick = () => { vplay(); diag.hidden = true; wd.shown = false; };
-function pause() { clk.t0 = ct(); clk.run = false; want = false; aStop(); video.pause(); video.playbackRate = 1; $('play').textContent = '▶'; grab(); loop.dirty = true; }
+const icn = (n) => (window.ic ? window.ic(n) : '');
+function setPlayIcon(on) { const h = icn(on ? 'pause' : 'play'); $('play').innerHTML = h; $('play').dataset.on = on ? '1' : ''; $('play').setAttribute('aria-label', on ? 'Pausar' : 'Tocar'); }
+function pause() { clk.t0 = ct(); clk.run = false; want = false; aStop(); video.pause(); video.playbackRate = 1; setPlayIcon(false); grab(); loop.dirty = true; }
 let want = false; // a pessoa apertou play
 function play() {
   if (playing()) return pause();
@@ -530,7 +532,7 @@ function play() {
   want = true; clkSet(t); clk.run = true;
   if (Math.abs(video.currentTime - t) > 0.05) video.currentTime = t;
   vplay(); aStart(t); wd.ct = -1;
-  $('play').textContent = '❚❚';
+  setPlayIcon(true);
 }
 
 $('play').onclick = play;
@@ -541,7 +543,7 @@ addEventListener('pagehide', () => { if (want) pause(); });
 $('screen').addEventListener('webglcontextlost', (e) => e.preventDefault());
 $('screen').addEventListener('webglcontextrestored', () => { try { grader = new Grader($('screen')); refreshAB(); loop.dirty = true; } catch (e) { console.warn(e); } });
 // Prévia em tela cheia (a mesma prévia, só que grande; o arquivo final sai em 1080p)
-function theater(on) { app.classList.toggle('theater', on); $('fsTxt').textContent = on ? '✕ Fechar' : '⛶ Tela cheia'; loop.dirty = true; }
+function theater(on) { app.classList.toggle('theater', on); $('fsTxt').textContent = on ? 'Fechar' : 'Tela cheia'; const fi = $('fsBtn').querySelector('i[data-ic]'); if (fi) fi.innerHTML = icn(on ? 'close' : 'full'); loop.dirty = true; }
 $('fsBtn').onclick = () => theater(!app.classList.contains('theater'));
 $('watchBtn').onclick = () => { theater(true); seek(mastered ? mastered.start : 0); if (!playing()) play(); };
 addEventListener('keydown', (e) => { if (e.key === 'Escape') theater(false); });
@@ -696,7 +698,7 @@ addEventListener('keyup', (e) => { if ((e.code === 'Space' || e.key === ' ') && 
 $('expandBtn').onclick = () => (isPop() ? closePop() : openPop());
 $('popClose').onclick = () => closePop();
 $('popPlay').onclick = () => $('play').click();
-function syncPop() { $('popPlay').textContent = $('play').textContent; $('popTime').textContent = $('tNow').textContent; }
+function syncPop() { if ($('popPlay').dataset.on !== $('play').dataset.on) { $('popPlay').innerHTML = $('play').innerHTML; $('popPlay').dataset.on = $('play').dataset.on; } $('popTime').textContent = $('tNow').textContent; }
 new MutationObserver(() => isPop() && syncPop()).observe($('play'), { childList: true, characterData: true, subtree: true });
 new MutationObserver(() => isPop() && syncPop()).observe($('tNow'), { childList: true, characterData: true, subtree: true });
 // no celular, tocar no painel pequeno abre o grande (lá a pessoa escolhe a nota com o dedo com folga)
@@ -744,11 +746,11 @@ const volTxt = (v) => (v <= -15 ? 'mudo' : (v > 0 ? '+' : '') + (+v).toFixed(v %
 function voiceBar() {
   const box = $('voiceBar'), K = state.parts ? state.parts.length : 1;
   $('studio').classList.toggle('multi', K > 1);
-  const pick = [[1, '👤', '1 voz'], [2, '👥', 'Dupla'], [3, '👥', 'Trio']].map(([k, ic, t]) => `<button type="button" data-k="${k}" class="${K === k ? 'on' : ''}" data-help="${k === 1 ? 'Uma pessoa cantando: a voz é afinada inteira.' : `${t}: o app separa ${k} vozes (a Voz 1 é a mais aguda) e afina cada uma por conta própria, com mudo e volume de cada voz.`}"><i>${ic}${k === 3 ? '👤' : ''}</i>${t}</button>`).join('');
+  const pick = [[1, 'wave1', '1 voz'], [2, 'wave2', 'Dupla'], [3, 'wave3', 'Trio']].map(([k, ic, t]) => `<button type="button" data-k="${k}" class="${K === k ? 'on' : ''}" data-help="${k === 1 ? 'Uma pessoa cantando: a voz é afinada inteira.' : `${t}: o app separa ${k} vozes (a Voz 1 é a mais aguda) e afina cada uma por conta própria, com mudo e volume de cada voz.`}"><i>${icn(ic)}</i>${t}</button>`).join('');
   let html = `<div class="vqrow"><span class="vqlbl">Quem canta?</span><div class="vpick" role="group" aria-label="Quantas pessoas cantam">${pick}</div></div>`;
   if (K > 1) {
-    html += `<div class="vbinfo">Toque numa voz para ouvir e afinar só ela. <b>🔊/🔇</b> liga ou deixa muda cada voz.</div>
-    <div class="vbtabs"${muted.size && K === 2 ? ' style="grid-template-columns:repeat(2,minmax(0,1fr)) auto"' : ''}>${state.parts.map((p, i) => `<div class="vtab${i === cur ? ' on' : ''}${muted.has(i) ? ' muted' : ''}"><button type="button" class="vsel" data-i="${i}" data-help="Escolhe a ${p.name}: a prévia toca só ela e o painel de afinação mostra e mexe só nas notas dela. Para ouvir todas juntas, toque em Ouvir todas.">${p.name}<small>${ORD[i] || ''} voz${i === 0 ? ' · mais aguda' : ''}</small></button><button type="button" class="vmute${muted.has(i) ? ' on' : ''}" data-m="${i}" aria-label="${muted.has(i) ? 'Ligar' : 'Deixar muda'} a ${p.name}" data-help="Liga ou deixa muda a ${p.name} na prévia, para ouvir só uma voz e saber quem é quem. Não muda o vídeo final: lá vale o volume de cada voz (na Mix).">${muted.has(i) ? '🔇<small>muda</small>' : '🔊<small>ouvindo</small>'}</button></div>`).join('')}${muted.size ? '<button type="button" class="vall" data-help="Volta a tocar todas as vozes juntas na prévia.">🔊<small>ouvir todas</small></button>' : ''}</div>`;
+    html += `<div class="vbinfo">Toque numa voz para ouvir e afinar só ela. O botão de som liga ou deixa muda cada voz.</div>
+    <div class="vbtabs"${muted.size && K === 2 ? ' style="grid-template-columns:repeat(2,minmax(0,1fr)) auto"' : ''}>${state.parts.map((p, i) => `<div class="vtab${i === cur ? ' on' : ''}${muted.has(i) ? ' muted' : ''}"><button type="button" class="vsel" data-i="${i}" data-help="Escolhe a ${p.name}: a prévia toca só ela e o painel de afinação mostra e mexe só nas notas dela. Para ouvir todas juntas, toque em Ouvir todas.">${p.name}<small>${ORD[i] || ''} voz${i === 0 ? ' · mais aguda' : ''}</small></button><button type="button" class="vmute${muted.has(i) ? ' on' : ''}" data-m="${i}" aria-label="${muted.has(i) ? 'Ligar' : 'Deixar muda'} a ${p.name}" data-help="Liga ou deixa muda a ${p.name} na prévia, para ouvir só uma voz e saber quem é quem. Não muda o vídeo final: lá vale o volume de cada voz (na Mix).">${muted.has(i) ? icn('mute') + '<small>muda</small>' : icn('spk') + '<small>ouvindo</small>'}</button></div>`).join('')}${muted.size ? '<button type="button" class="vall" data-help="Volta a tocar todas as vozes juntas na prévia.">' + icn('spk') + '<small>ouvir todas</small></button>' : ''}</div>`;
   }
   box.innerHTML = html;
 }

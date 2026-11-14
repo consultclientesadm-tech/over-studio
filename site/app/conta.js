@@ -31,7 +31,7 @@
 .sc-sh .sc-b2{display:flex;width:100%;height:46px;align-items:center;justify-content:center;border:1px solid #33333c;border-radius:40px;background:none;color:#ddd;font:600 14px 'Space Grotesk',sans-serif;margin-top:10px;cursor:pointer;text-decoration:none}
 .sc-x{float:right;border:0;background:#1b1b22;color:#aaa;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer}
 .sc-li{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid #1d1d24;font-size:14px;cursor:pointer;color:#e8e8ee;text-decoration:none}
-.sc-li:last-child{border:0}.sc-li i{font-style:normal;width:28px;text-align:center;font-size:18px}
+.sc-li:last-child{border:0}.sc-li i{font-style:normal;width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:9px;background:#000;border:1px solid #26262d;color:#ffd400}.sc-li i .ic{width:18px;height:18px}
 .sc-n{padding:12px;border-radius:14px;background:#14141a;margin:8px 0;border:1px solid #22222a}.sc-n b{display:block;margin-bottom:4px}.sc-n.nova{border-color:rgba(255,212,0,.5)}.sc-n small{color:#777}
 .sc-ios{display:grid;gap:12px;margin:14px 0}.sc-ios div{display:flex;gap:12px;align-items:center;background:#14141a;border-radius:14px;padding:12px;font-size:14px}
 .sc-ios span{flex:none;width:30px;height:30px;border-radius:50%;background:#ffd400;color:#000;font:900 14px Orbitron;display:grid;place-items:center}
@@ -50,6 +50,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 .sc-ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:7px;font-size:14px;color:#dcdce4}.sc-ul li:before{content:'✓ ';color:#2ee59d;font-weight:900}
 @keyframes scf{from{opacity:0}}@keyframes scu{from{transform:translateY(40px);opacity:0}}@keyframes scd{from{transform:translate(-50%,-30px);opacity:0}}
 `;
+  const I = (n) => (window.ic ? window.ic(n) : '');
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   function sheet(html, onClose) {
@@ -70,7 +71,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   const addIcon = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>';
   // por que instalar: instalado, o app abre sozinho (sem o navegador do Instagram, tradutor, extensões ou outras
   // abas disputando a memória), que é de onde vem a maioria dos travamentos que a vistoria pega
-  const porque = '<div class="sc-dor" style="margin:10px 0">💡 Pelo ícone da tela de início o Studio Cover <b>trava bem menos</b>: abre sozinho, com a memória do celular só para ele, sem o navegador do Instagram, tradutor ou outras abas atrapalhando.</div>';
+  const porque = '<div class="sc-dor" style="margin:10px 0">Pelo ícone da tela de início o Studio Cover <b>trava bem menos</b>: abre sozinho, com a memória do celular só para ele, sem o navegador do Instagram, tradutor ou outras abas atrapalhando.</div>';
   const mobile = ios || android;
   async function install(forte) {
     forte = forte === true;
@@ -79,7 +80,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     if (deferred && toque) {
       try { await deferred.prompt(); const r = await deferred.userChoice; deferred = null; render(); if (r.outcome === 'accepted') toast('Pronto!', 'O Studio Cover está na sua tela de início. Use sempre pelo ícone.'); return; } catch (e) {}
     }
-    const titulo = (onde) => forte ? `<h3>📲 Importante: instale o app ${onde}</h3>` : `<h3>Instalar ${onde}</h3>`;
+    const titulo = (onde) => forte ? `<h3>Importante: instale o app ${onde}</h3>` : `<h3>Instalar ${onde}</h3>`;
     if (ios) {
       const safari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|Instagram|FBAN|FBAV/.test(navigator.userAgent);
       sheet(`${titulo('no iPhone')}<p>Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.</p>${porque}
@@ -115,7 +116,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   };
   function paywall() {
     const url = me.checkout_url || '/#comprar';
-    sheet(`<h3>Seu próximo cover está travado 🔒</h3>
+    sheet(`<h3>Seu próximo cover está travado</h3>
       <p>Você ouviu como a sua voz fica afinada e mixada. Sem o Studio Cover, o próximo vídeo volta a ser o áudio cru do celular: aquela nota que escapa, a voz embolada na base, o som baixinho.</p>
       <div class="sc-dor">Amanhã você vai postar mais um cover desafinado... ou vai postar com som de estúdio?</div>
       <ul class="sc-ul"><li>Covers ilimitados, direto do celular</li><li>Afinação natural, sem voz de robô</li><li>Mix e master na hora, sem pagar estúdio</li><li>Cor de cinema e exportação na qualidade original</li></ul>
@@ -124,7 +125,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       <button class="sc-b2" data-fechar>Agora não</button>`).el.querySelector('.sc-b').addEventListener('click', vigiaCompra);
   }
   // barra fixa que acompanha quem já usou o teste grátis
-  const DORES = ['🔒 Seu próximo cover está travado.', 'Amanhã você vai postar mais um cover desafinado?', 'Aquela nota que escapou não precisa ir para o ar.', 'Estúdio cobra R$ 150 por música. Aqui é ilimitado.', 'Quantos covers vão ficar parados na galeria?'];
+  const DORES = ['Seu próximo cover está travado.', 'Amanhã você vai postar mais um cover desafinado?', 'Aquela nota que escapou não precisa ir para o ar.', 'Estúdio cobra R$ 150 por música. Aqui é ilimitado.', 'Quantos covers vão ficar parados na galeria?'];
   let barTimer = null;
   function bar() {
     const preso = me && me.trial && !me.paid && !me.can_use;
@@ -180,7 +181,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     setTimeout(() => {
       if (document.querySelector('.sc-ov')) return;
       const url = me.checkout_url || '/#comprar';
-      const s = sheet(`<h3>Ficou com som de estúdio 🎧</h3>
+      const s = sheet(`<h3>Ficou com som de estúdio</h3>
         <p>Essa é a sua voz afinada e mixada, do jeito que vai para o ar. Toque no play e compare o antes e o depois.</p>
         <p>Para <b>baixar este vídeo</b> e fazer todos os próximos assim, libere o acesso completo: sem limite de vídeos, sem pagar estúdio.</p>
         <ul class="sc-ul"><li>Baixe este cover na hora, sem refazer</li><li>Covers ilimitados, direto do celular</li><li>Afinação natural, mix, master e cor de cinema</li></ul>
@@ -205,25 +206,25 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     render(); marca();
     window.scLog && window.scLog('liberou', {});
     if (ofertaAberta()) return; // a própria oferta troca para o botão de baixar
-    if (document.getElementById('viewer') && document.querySelector('[data-screen="studio"]')) toast('Acesso liberado! 🎉', 'Agora é só tocar em Baixar: o seu vídeo sai na hora.');
+    if (document.getElementById('viewer') && document.querySelector('[data-screen="studio"]')) toast('Acesso liberado!', 'Agora é só tocar em Baixar: o seu vídeo sai na hora.');
     else if (window.scVideoGuardado) guardadoDepoisDaCompra();
     setTimeout(() => lembraInstalar(true), 2500); // acabou de comprar: ensina a instalar (se nada estiver aberto na tela)
   }
   function ofertaBaixar(oQue) {
     return new Promise((res) => {
       const url = me.checkout_url || '/#comprar';
-      const s = sheet(`<div data-baixar-oferta><h3>Seu cover está pronto para baixar 🔒</h3>
+      const s = sheet(`<div data-baixar-oferta><h3>Seu cover está pronto para baixar</h3>
         <p>No teste grátis você vê e ouve o antes e depois aqui no app. Para baixar ${oQue} e postar, libere o acesso completo.</p>
         <ul class="sc-ul"><li>Baixa <b>este mesmo vídeo</b> na hora, sem refazer</li><li>Covers ilimitados por 1 ano, direto do celular</li><li>Afinação natural, mix, master e cor de cinema</li></ul>
         ${precoHtml()}<a class="sc-b" href="${esc(url)}" target="_blank" rel="noopener" data-compra>LIBERAR E BAIXAR AGORA</a>
         <p style="font-size:12.5px;text-align:center" data-espera>Depois de pagar, volte para esta tela: o download libera aqui mesmo, sozinho.</p>
         <button class="sc-b2" data-fechar>Agora não</button></div>`, () => { clearInterval(tick); res(false); });
-      s.el.querySelector('[data-compra]').addEventListener('click', () => { vigiaCompra(); s.el.querySelector('[data-espera]').innerHTML = '⏳ Esperando o pagamento… Pix e cartão liberam em segundos. <b>Não feche esta tela.</b>'; });
+      s.el.querySelector('[data-compra]').addEventListener('click', () => { vigiaCompra(); s.el.querySelector('[data-espera]').innerHTML = 'Esperando o pagamento… Pix e cartão liberam em segundos. <b>Não feche esta tela.</b>'; });
       // pagou com a oferta aberta: troca o conteúdo por um botão de baixar (o toque da pessoa garante o download no iPhone)
       const tick = setInterval(() => {
         if (!me || !me.paid) return; clearInterval(tick);
         const box = s.el.querySelector('[data-baixar-oferta]');
-        box.innerHTML = `<h3>Pagamento confirmado! 🎉</h3><p>Seu acesso completo está liberado nesta conta. Toque para baixar o seu cover.</p><button class="sc-b" data-ja>BAIXAR AGORA</button>`;
+        box.innerHTML = `<h3>Pagamento confirmado!</h3><p>Seu acesso completo está liberado nesta conta. Toque para baixar o seu cover.</p><button class="sc-b" data-ja>BAIXAR AGORA</button>`;
         box.querySelector('[data-ja]').onclick = () => { s.el.remove(); res(true); };
       }, 700);
     });
@@ -246,7 +247,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     try {
       const j = await api('baixar', {});
       if (j.user) { me = j.user; render(); }
-      if (j.ok) { liberado = true; marca(); if (j.presente) toast('Download de presente 🎁', 'Obrigado pelo seu depoimento! Este vídeo está liberado para baixar.'); return avisoInApp(); }
+      if (j.ok) { liberado = true; marca(); if (j.presente) toast('Download de presente', 'Obrigado pelo seu depoimento! Este vídeo está liberado para baixar.'); return avisoInApp(); }
     } catch (e) { if (e.message === 'login') return false; }
     window.scLog && window.scLog('quisbaixar', { oque: oQue.slice(0, 30) });
     const ok = await ofertaBaixar(oQue);
@@ -257,7 +258,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   async function guardadoDepoisDaCompra() {
     if (!me.paid || !window.scVideoGuardado || document.querySelector('.sc-ov')) return;
     const nome = await window.scVideoGuardado(); if (!nome) return;
-    const s = sheet(`<h3>Acesso liberado! 🎉</h3><p>O vídeo que você testou (<b>${esc(nome)}</b>) ficou guardado neste aparelho. Toque abaixo e ele sai pronto de novo, afinado, mixado e com cor de cinema, para você baixar.</p>
+    const s = sheet(`<h3>Acesso liberado!</h3><p>O vídeo que você testou (<b>${esc(nome)}</b>) ficou guardado neste aparelho. Toque abaixo e ele sai pronto de novo, afinado, mixado e com cor de cinema, para você baixar.</p>
       <button class="sc-b" data-refaz>FAZER E BAIXAR MEU VÍDEO</button><button class="sc-b2" data-fechar>Agora não</button>`);
     s.el.querySelector('[data-refaz]').onclick = () => { s.el.remove(); window.scRefazerGuardado(); };
   }
@@ -290,7 +291,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
       await api('push-salvar', { sub: sub.toJSON() });
       try { localStorage.setItem('sc-push', '1'); } catch {}
-      toast('Avisos ligados 🔔', 'Você vai receber as novidades do Studio Cover aqui no celular.'); render(); return true;
+      toast('Avisos ligados', 'Você vai receber as novidades do Studio Cover aqui no celular.'); render(); return true;
     } catch (e) { toast('Não deu para ligar os avisos', 'Tente de novo pelo menu da conta.'); return false; }
   }
   const pushLigado = () => podePush && Notification.permission === 'granted' && (() => { try { return localStorage.getItem('sc-push') === '1'; } catch { return false; } })();
@@ -302,7 +303,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   function convitePush() {
     if (!podePush || Notification.permission !== 'default') return;
     try { const t = +localStorage.getItem('sc-push-perg') || 0; if (Date.now() - t < 3 * 86400000) return; localStorage.setItem('sc-push-perg', String(Date.now())); } catch {}
-    const s = sheet(`<h3>Ligar os avisos? 🔔</h3><p>Receba no celular as dicas, novidades e avisos da sua conta do Studio Cover.</p>
+    const s = sheet(`<h3>Ligar os avisos?</h3><p>Receba no celular as dicas, novidades e avisos da sua conta do Studio Cover.</p>
       <button class="sc-b" data-sim>LIGAR AVISOS</button><button class="sc-b2" data-fechar>Agora não</button>`);
     s.el.querySelector('[data-sim]').onclick = () => { s.close(); ativarPush(); };
   }
@@ -313,14 +314,14 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     const n = Math.max(0, me.trial_left);
     sheet(`<h3>${esc(me.name || 'Minha conta')}</h3><p style="margin-top:0">${esc(me.email)}</p>
       ${trial ? `<div class="sc-n nova"><b>Teste grátis: ${n} vídeo${n === 1 ? '' : 's'} restante${n === 1 ? '' : 's'}</b>No teste você vê e ouve o antes e depois. Libere o acesso completo para baixar os seus vídeos e fazer quantos covers quiser.<a class="sc-b" href="${esc(me.checkout_url || '/#comprar')}" target="_blank" rel="noopener">LIBERAR ACESSO COMPLETO</a></div>` : me.paid ? `<div class="sc-n"><b style="color:#2ee59d">✓ Acesso completo</b>${me.expires_at ? 'Válido até ' + esc(me.expires_at.slice(0, 10).split('-').reverse().join('/')) : 'Vitalício'}</div>` : ''}
-      ${me.paid ? (me.afiliado ? '<a class="sc-li" href="/afiliado/" target="_blank" rel="noopener"><i>💰</i>Meu painel de afiliado</a>' : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">💰 Ganhe como afiliado</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`) : ''}
-      <a class="sc-li" data-m="avisos"><i>🔔</i>Avisos ${unread ? `<b style="color:#ffd400">(${unread})</b>` : ''}</a>
-      ${standalone ? '' : '<a class="sc-li" data-m="instalar"><i>📲</i>Instalar na tela de início</a>'}
-      ${podePush && !pushLigado() ? '<a class="sc-li" data-m="push"><i>🔕</i>Ligar avisos no celular</a>' : ''}
-      ${whats ? `<a class="sc-li" href="https://wa.me/${esc(whats.replace(/\D/g, ''))}" target="_blank" rel="noopener"><i>💬</i>Suporte no WhatsApp</a>` : ''}
-      <a class="sc-li" data-m="aparelho"><i>📱</i>Meu aparelho é compatível?</a>
-      <a class="sc-li" data-m="dados"><i>🔒</i>Privacidade e meus dados</a>
-      <a class="sc-li" data-m="sair"><i>↩</i>Sair da conta</a>`);
+      ${me.paid ? (me.afiliado ? `<a class="sc-li" href="/afiliado/" target="_blank" rel="noopener"><i>${I('money')}</i>Meu painel de afiliado</a>` : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">Ganhe como afiliado</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`) : ''}
+      <a class="sc-li" data-m="avisos"><i>${I('bell')}</i>Avisos ${unread ? `<b style="color:#ffd400">(${unread})</b>` : ''}</a>
+      ${standalone ? '' : `<a class="sc-li" data-m="instalar"><i>${I('install')}</i>Instalar na tela de início</a>`}
+      ${podePush && !pushLigado() ? `<a class="sc-li" data-m="push"><i>${I('bell')}</i>Ligar avisos no celular</a>` : ''}
+      ${whats ? `<a class="sc-li" href="https://wa.me/${esc(whats.replace(/\D/g, ''))}" target="_blank" rel="noopener"><i>${I('chat')}</i>Suporte no WhatsApp</a>` : ''}
+      <a class="sc-li" data-m="aparelho"><i>${I('phone')}</i>Meu aparelho é compatível?</a>
+      <a class="sc-li" data-m="dados"><i>${I('lock')}</i>Privacidade e meus dados</a>
+      <a class="sc-li" data-m="sair"><i>${I('logout')}</i>Sair da conta</a>`);
     document.querySelectorAll('.sc-li[data-m]').forEach((a) => (a.onclick = async () => {
       document.querySelector('.sc-ov')?.remove();
       if (a.dataset.m === 'avisos') avisos();
@@ -342,10 +343,10 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   function meusDados() {
     const s = sheet(`<h3>Privacidade e meus dados</h3>
       <p>Seus vídeos nunca saem do seu aparelho: todo o processamento acontece aqui. Guardamos só o necessário para a sua conta funcionar (nome, e-mail, compras e o uso do app).</p>
-      <a class="sc-li" href="/privacidade/" target="_blank"><i>📄</i>Política de privacidade</a>
-      <a class="sc-li" href="/termos/" target="_blank"><i>📜</i>Termos de uso</a>
-      <a class="sc-li" href="/api/conta.php?a=meus-dados" download="meus-dados-studio-cover.json"><i>⬇️</i>Baixar uma cópia dos meus dados</a>
-      <a class="sc-li" data-apagar><i>🗑️</i><span style="color:#ff8a95">Apagar minha conta</span></a>`);
+      <a class="sc-li" href="/privacidade/" target="_blank"><i>${I('doc')}</i>Política de privacidade</a>
+      <a class="sc-li" href="/termos/" target="_blank"><i>${I('doc')}</i>Termos de uso</a>
+      <a class="sc-li" href="/api/conta.php?a=meus-dados" download="meus-dados-studio-cover.json"><i>${I('download')}</i>Baixar uma cópia dos meus dados</a>
+      <a class="sc-li" data-apagar><i>${I('trash')}</i><span style="color:#ff8a95">Apagar minha conta</span></a>`);
     s.el.querySelector('[data-apagar]').onclick = () => { s.close(); apagar(); };
   }
   function apagar() {
@@ -369,9 +370,9 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     let box = document.querySelector('.sc-conta');
     if (!box) { box = document.createElement('div'); box.className = 'sc-conta'; top.appendChild(box); }
     const trial = me.trial && !me.paid;
-    box.innerHTML = `${!standalone && (deferred || ios || android) ? '<button class="sc-chip y" data-i aria-label="Instalar">📲<span class="sc-it"> Instalar</span></button>' : ''}
-      ${trial ? (me.can_use ? `<button class="sc-chip y" data-t title="Teste grátis">🎁 ${Math.max(0, me.trial_left)}</button>` : '<button class="sc-chip y" data-t title="Liberar acesso">🔒 Liberar</button>') : ''}
-      ${me.paid && !me.afiliado ? '<a class="sc-chip" href="/afiliados/?utm_source=app&utm_medium=topo" target="_blank" rel="noopener" style="text-decoration:none;border-color:rgba(46,229,157,.5);color:#2ee59d" title="Ganhe como afiliado">💰<span class="sc-it"> Indique e ganhe</span></a>' : ''}
+    box.innerHTML = `${!standalone && (deferred || ios || android) ? `<button class="sc-chip y" data-i aria-label="Instalar">${I('install')}<span class="sc-it"> Instalar</span></button>` : ''}
+      ${trial ? (me.can_use ? `<button class="sc-chip y" data-t title="Teste grátis">${I('gift')} ${Math.max(0, me.trial_left)}</button>` : `<button class="sc-chip y" data-t title="Liberar acesso">${I('lock')} Liberar</button>`) : ''}
+      ${me.paid && !me.afiliado ? '<a class="sc-chip" href="/afiliados/?utm_source=app&utm_medium=topo" target="_blank" rel="noopener" style="text-decoration:none;border-color:rgba(46,229,157,.5);color:#2ee59d" title="Ganhe como afiliado">' + I('money') + '<span class="sc-it"> Indique e ganhe</span></a>' : ''}
       <button class="sc-chip" data-c aria-label="Minha conta">${esc((me.name || me.email || '?').trim()[0].toUpperCase())}${unread ? '<span class="sc-dot"></span>' : ''}</button>`;
     box.querySelector('[data-i]')?.addEventListener('click', install);
     box.querySelector('[data-t]')?.addEventListener('click', () => (me.can_use ? menu() : paywall()));
