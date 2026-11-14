@@ -101,6 +101,15 @@ function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'
     $add($c); $r[$c]['vendas']++; $r[$c]['liquido'] += (float)$x['liquido'];
     if ($x['or_pagina'] === 'vsl') $r[$c]['vsl']++; elseif ($x['or_pagina'] === 'home') $r[$c]['home']++;
   }
+  // ROI pelas compras que o Meta conta no anúncio (pixel): quando o Meta conta mais do que o link rastreou, as que faltam
+  // entram com o líquido médio de uma venda (pedido do Leo, 13/11). vendas_link guarda o que veio pelo link.
+  $tk = (float)$db->query("SELECT AVG(liquido) FROM sales WHERE status = 'pago' AND liquido > 0 AND (afiliado_id IS NULL OR afiliado_id = 0)")->fetchColumn();
+  if ($tk <= 0) $tk = (float)$db->query("SELECT AVG(liquido) FROM sales WHERE status = 'pago' AND liquido > 0")->fetchColumn();
+  foreach ($r as $c => $a) {
+    $r[$c]['vendas_link'] = $a['vendas']; $r[$c]['liquido_link'] = $a['liquido'];
+    $cm = (int)($a['compras_meta'] ?? 0);
+    if ($cm > $a['vendas']) { $r[$c]['liquido'] += ($cm - $a['vendas']) * $tk; $r[$c]['vendas'] = $cm; }
+  }
   return array_values($r);
 }
 
