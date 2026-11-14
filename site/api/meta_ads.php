@@ -60,7 +60,7 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
     if (!$forcar && $c['erro'] === '' && $c['ultimo'] && strtotime((string)$c['ultimo']) > time() - 900) { $out[$c['act']] = 'recente'; continue; }
     try {
       $ini = date('Y-m-d', time() - $dias * 86400); $fim = date('Y-m-d');
-      $url = meta_url($c['act'] . '/insights', ['level' => 'ad', 'fields' => 'ad_id,spend,actions', 'time_increment' => 1, 'limit' => 500,
+      $url = meta_url($c['act'] . '/insights', ['level' => 'ad', 'fields' => 'ad_id,spend,actions', 'time_increment' => 1, 'limit' => 500, 'use_unified_attribution_setting' => 'true', // mesma contagem do Gerenciador
         'time_range' => json_encode(['since' => $ini, 'until' => $fim])], (string)$c['token']);
       $linhas = []; $pag = 0;
       while ($url && $pag++ < 40) { $j = meta_get($url); foreach ($j['data'] ?? [] as $l) $linhas[] = $l; $url = (string)($j['paging']['next'] ?? ''); }
