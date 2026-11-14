@@ -35,7 +35,16 @@
 .sc-indb em{margin-left:auto;font-style:normal;font:700 22px 'Space Grotesk',sans-serif;color:#5ff0b6}
 @keyframes scInd2{0%,100%{box-shadow:0 0 0 1px rgba(46,229,157,.15),0 0 10px rgba(46,229,157,.15)}50%{box-shadow:0 0 0 1px rgba(46,229,157,.35),0 0 28px rgba(46,229,157,.4)}}
 .app[data-screen="home"] .sc-conta{flex:1;margin-left:8px}.app[data-screen="home"] .sc-conta .sc-chip.y{display:none}.app[data-screen="home"] .sc-ind{margin:0 auto;width:auto;padding:0 14px 0 11px}.app[data-screen="home"] .sc-ind .sc-it{display:inline}
-@media(prefers-reduced-motion:reduce){.sc-ind,.sc-ind::after,.sc-indb{animation:none}}
+.sc-instb{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 14px;padding:14px;border-radius:18px;cursor:pointer;color:#fff7cc;background:linear-gradient(180deg,#2a2306,#171303);border:2px solid #ffd400;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 22px rgba(255,212,0,.25);animation:scInst 2s ease-in-out infinite;text-align:left;font-family:'Space Grotesk',sans-serif}
+.sc-instb i{flex:none;width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(180deg,#ffe34d,#ffc400);color:#000;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 2px 0 #8a6d00}
+.sc-instb i svg{width:26px;height:26px;stroke-width:2.2}
+.sc-instb b{display:block;font:800 17px 'Space Grotesk',sans-serif;color:#ffd400;line-height:1.25}.sc-instb small{display:block;font-size:14px;color:#efe3b0;margin-top:3px;line-height:1.35}
+.sc-instb em{flex:none;margin-left:auto;font-style:normal;font:900 13px Orbitron,sans-serif;letter-spacing:.04em;color:#000;background:linear-gradient(180deg,#ffe34d,#ffc400);border-radius:30px;padding:12px 14px}
+@media(max-width:380px){.sc-instb em{display:none}}
+@keyframes scInst{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 8px rgba(255,212,0,.15)}50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 28px rgba(255,212,0,.45)}}
+.sc-sh.sc-g p{font-size:16px}.sc-sh.sc-g .sc-ios div{font-size:16px;padding:14px}.sc-sh.sc-g .sc-b2{height:52px;font-size:16px}
+.sc-av{background:#2a1a06;border:1px solid #ffb020;border-radius:14px;padding:12px 14px;margin:10px 0;color:#ffe2a8;font-size:16px;line-height:1.5}
+@media(prefers-reduced-motion:reduce){.sc-ind,.sc-ind::after,.sc-indb,.sc-instb{animation:none}}
 .sc-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 8px #ff4d5e}
 .sc-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:end center;padding:12px;animation:scf .2s}
 @media(min-width:700px){.sc-ov{place-items:center}}
@@ -67,9 +76,9 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   const I = (n) => (window.ic ? window.ic(n) : '');
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
-  function sheet(html, onClose) {
+  function sheet(html, onClose, cls) {
     const ov = document.createElement('div'); ov.className = 'sc-ov';
-    ov.innerHTML = `<div class="sc-sh" role="dialog" aria-modal="true"><button class="sc-x" aria-label="Fechar">✕</button>${html}</div>`;
+    ov.innerHTML = `<div class="sc-sh${cls ? ' ' + cls : ''}" role="dialog" aria-modal="true"><button class="sc-x" aria-label="Fechar">✕</button>${html}</div>`;
     const close = () => { ov.remove(); onClose && onClose(); };
     ov.addEventListener('click', (e) => { if (e.target === ov || e.target.closest('.sc-x,[data-fechar]')) close(); });
     document.body.appendChild(ov); return { el: ov, close };
@@ -94,29 +103,40 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     if (deferred && toque) {
       try { await deferred.prompt(); const r = await deferred.userChoice; deferred = null; render(); if (r.outcome === 'accepted') toast('Pronto!', 'O Studio Cover está na sua tela de início. Use sempre pelo ícone.'); return; } catch (e) {}
     }
-    const titulo = (onde) => forte ? `<h3>Importante: instale o app ${onde}</h3>` : `<h3>Instalar ${onde}</h3>`;
+    const titulo = (onde) => forte ? `<h3>Importante: instale o app ${onde}</h3>` : `<h3>Instale o app ${onde}</h3>`;
+    const inApp = /Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|; wv\)/.test(navigator.userAgent);
+    const nomeApp = esc((window.scCompat && window.scCompat.inApp) || 'Instagram');
+    const fechar = '<button class="sc-b2" data-fechar>Entendi, fechar</button>';
+    const copiar = (s) => { const b = s.el.querySelector('[data-copiar]'); if (!b) return; b.onclick = async () => {
+      const u = 'https://' + location.host + '/app/?instalar=1';
+      try { await navigator.clipboard.writeText(u); b.textContent = 'LINK COPIADO'; } catch { prompt('Copie o link:', u); } }; };
     if (ios) {
-      const safari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|Instagram|FBAN|FBAV/.test(navigator.userAgent);
-      sheet(`${titulo('no iPhone')}<p>Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.</p>${porque}
-        ${safari ? '' : '<p style="color:#ffd400">Abra este link no <b>Safari</b> para instalar (copie o endereço <b>studiocover.com.br/app</b> e cole no Safari).</p>'}
-        <div class="sc-ios"><div><span>1</span>${shareIcon}<p style="margin:0">Toque em <b>Compartilhar</b> na barra do Safari</p></div>
-        <div><span>2</span>${addIcon}<p style="margin:0">Role e toque em <b>Adicionar à Tela de Início</b></p></div>
-        <div><span>3</span><img src="/assets/icon-180.png?v=2" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Toque em <b>Adicionar</b> e abra pelo ícone novo. Pronto!</p></div></div>
-        <button class="sc-b2" data-fechar>Entendi</button>`);
+      const safari = /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent) && !inApp;
+      const fora = inApp
+        ? `<div class="sc-av"><b>Você está dentro do ${nomeApp}.</b> Por aqui não dá para instalar. Toque nos <b>três pontinhos</b> (em cima, à direita) e em <b>Abrir no navegador externo</b>. Se não aparecer, toque em <b>Copiar o link</b> aqui embaixo, abra o <b>Safari</b> e cole o link.</div><button class="sc-b" data-copiar>COPIAR O LINK</button>`
+        : safari ? '' : `<div class="sc-av">No iPhone, o jeito mais fácil é pelo <b>Safari</b>. Toque em <b>Copiar o link</b>, abra o Safari e cole o link.</div><button class="sc-b" data-copiar>COPIAR O LINK</button>`;
+      copiar(sheet(`${titulo('no iPhone')}<p>Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.</p>${fora}
+        <div class="sc-ios"><div><span>1</span>${shareIcon}<p style="margin:0">No Safari, toque em <b>Compartilhar</b> (o quadrado com a seta para cima). Se não aparecer, toque antes nos <b>três pontinhos</b> da barra.</p></div>
+        <div><span>2</span>${addIcon}<p style="margin:0">Role a lista e toque em <b>Adicionar à Tela de Início</b></p></div>
+        <div><span>3</span><img src="/assets/icon-180.png?v=2" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Toque em <b>Adicionar</b>. Depois, abra sempre pelo ícone amarelo do Studio Cover.</p></div></div>
+        ${porque}${fechar}`, null, 'sc-g'));
       return;
     }
-    const chrome = /Chrome\//.test(navigator.userAgent) && !/SamsungBrowser|Instagram|FBAN|FBAV|; wv\)|EdgA|OPR|MiuiBrowser/.test(navigator.userAgent);
+    const chrome = /Chrome\//.test(navigator.userAgent) && !/SamsungBrowser|EdgA|OPR|MiuiBrowser|YaBrowser/.test(navigator.userAgent) && !inApp;
     const abrirChrome = 'intent://' + location.host + '/app/?instalar=1#Intent;scheme=https;package=com.android.chrome;end';
-    sheet(`${titulo('no Android')}<p>Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.</p>${porque}
-      ${chrome ? '' : `<p style="color:#ffd400">Para instalar, abra no <b>Chrome</b>:</p><a class="sc-b" href="${abrirChrome}">ABRIR NO CHROME</a>`}
-      <div class="sc-ios"><div><span>1</span><p style="margin:0">No Chrome, toque nos <b>⋮ três pontinhos</b> (em cima, à direita)</p></div>
+    const fora = inApp
+      ? `<div class="sc-av"><b>Você está dentro do ${nomeApp}.</b> Por aqui não dá para instalar. Toque no botão abaixo para abrir no <b>Chrome</b> (ou nos <b>três pontinhos</b> e em <b>Abrir no Chrome</b>).</div><a class="sc-b" href="${abrirChrome}">ABRIR NO CHROME</a>`
+      : chrome || !android ? '' : `<div class="sc-av">Para instalar, abra no <b>Chrome</b>:</div><a class="sc-b" href="${abrirChrome}">ABRIR NO CHROME</a>`;
+    sheet(`${titulo(android ? 'no Android' : 'no computador')}<p>Deixe o Studio Cover na tela de início, igual a um aplicativo, e abra sempre por ele.</p>${fora}
+      <div class="sc-ios"><div><span>1</span><p style="margin:0">No Chrome, toque nos <b>três pontinhos</b> (em cima, à direita)</p></div>
       <div><span>2</span>${addIcon}<p style="margin:0">Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b></p></div>
-      <div><span>3</span><img src="/assets/icon-180.png?v=2" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Confirme e abra pelo ícone novo. Pronto!</p></div></div>
-      <button class="sc-b2" data-fechar>Entendi</button>`);
+      <div><span>3</span><img src="/assets/icon-180.png?v=2" width="26" height="26" style="border-radius:6px" alt=""><p style="margin:0">Confirme em <b>Instalar</b>. Depois, abra sempre pelo ícone amarelo do Studio Cover.</p></div></div>
+      ${porque}${fechar}`, null, 'sc-g');
   }
   // cliente pago usando pelo navegador do celular: lembra de instalar (bem visível), no máximo 1 vez a cada 12 h
   function lembraInstalar(ja) {
     if (standalone || !mobile || !me || !me.paid) return;
+    try { if (!ja && sessionStorage.getItem('sc-inst-s')) return; } catch {}
     try { const t = +localStorage.getItem('sc-inst-pago') || 0; if (!ja && Date.now() - t < 12 * 3600e3) return; localStorage.setItem('sc-inst-pago', String(Date.now())); } catch {}
     if (document.querySelector('.sc-ov') || document.querySelector('[data-screen="work"]')) return;
     install(true);
@@ -398,6 +418,14 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
       a.innerHTML = `<i>${I('gift')}</i><span><b>Indique e ganhe</b><small>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura.</small></span><em>›</em>`;
       man.after(a);
     }
+    // Instalar na tela de início: cartão grande no topo da tela inicial, sempre que não estiver instalado
+    const hero = document.querySelector('#home .hero');
+    if (hero && !standalone && (mobile || deferred) && !document.getElementById('scInstHome')) {
+      const b = document.createElement('button'); b.type = 'button'; b.id = 'scInstHome'; b.className = 'sc-instb';
+      b.innerHTML = `<i>${I('install')}</i><span><b>Instale o app na sua tela de início</b><small>${ios ? 'Veja como fazer no iPhone: são 3 toques.' : android ? 'Veja como fazer no Android: são 3 toques.' : 'Abra pelo ícone, igual a um aplicativo.'} Pelo ícone o app trava bem menos.</small></span><em>INSTALAR</em>`;
+      b.addEventListener('click', () => install());
+      hero.prepend(b);
+    }
     const ih = document.getElementById('scIndHome'); if (ih) ih.href = me.afiliado ? '/afiliado/?de=app' : '/afiliados/?utm_source=app&utm_medium=entrada';
     bar();
   }
@@ -414,7 +442,13 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     // primeira vez no app: oferece instalar
     try {
       const pede = new URLSearchParams(location.search).has('instalar');
-      if (!standalone && (pede || ((ios || android) && !localStorage.getItem('sc-inst')))) { localStorage.setItem('sc-inst', '1'); try { localStorage.setItem('sc-inst-pago', String(Date.now())); } catch {} setTimeout(() => install(!!(me && me.paid)), pede ? 700 : 1500); }
+      // abriu pelo navegador do celular (não pelo ícone): ensina a instalar logo ao abrir, 1 vez por visita
+      const preso0 = me.trial && !me.paid && !me.can_use;
+      let ja = false; try { ja = !!sessionStorage.getItem('sc-inst-s'); } catch {}
+      if (!standalone && !me.blocked && (pede || (mobile && !ja && !preso0))) {
+        try { sessionStorage.setItem('sc-inst-s', '1'); localStorage.setItem('sc-inst', '1'); localStorage.setItem('sc-inst-pago', String(Date.now())); } catch {}
+        setTimeout(() => { if (!document.querySelector('.sc-ov')) install(!!(me && me.paid)); }, pede ? 700 : 1200);
+      }
     } catch {}
     const preso = me.trial && !me.paid && !me.can_use;
     if (preso && !me.blocked) setTimeout(paywall, 1200); // terminou o teste: toda vez que abre o app
