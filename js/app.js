@@ -2,7 +2,7 @@
 // 1 Vídeo → 2 Afinação → 3 Mix e master → 4 Cor → 5 Exportar.
 // Em toda etapa há um player só e o botão ANTES | DEPOIS: ANTES = como estava antes desta etapa,
 // DEPOIS = com esta etapa aplicada, no mesmo ponto do vídeo. Cada etapa tem aplicar e desfazer.
-import * as cover from './pipeline.js?v=49';
+import * as cover from './pipeline.js?v=50';
 import { prefetchModel } from './studio.js?v=47';
 import { TuneEditor } from './editor.js?v=37';
 import { Grader, FILTERS, ORIGINAL, autoGrade, compose } from './filters.js?v=40';
@@ -489,7 +489,7 @@ function numerar() {
 }
 function go(n) {
   if (n !== 2) closePop();
-  if (n >= 3 && masterStale && mastered) { masterStale = false; busy(true, 'Atualizando a mix…'); doMaster(false).then(() => { busy(false); refreshAB(); if (step === 5) refreshSummary(); }); }
+  if (n >= 3 && masterStale && mastered) { masterStale = false; busy(true, 'Atualizando a mix…'); doMaster(false).catch((e) => console.error(e)).then(() => { busy(false); refreshAB(); if (step === 5) refreshSummary(); }); }
   if (audioOnly && n === 4) n = step > 4 ? 3 : 5; // só áudio: não tem etapa de cor
   const wasPlaying = playing();
   pause();
@@ -694,7 +694,7 @@ $('tuneAgain').onclick = () => { pushUndo(); doTune(); };
 $('tuneUndo').onclick = async () => {
   pause(); cover.untune(state, tuneOpts()); tuned = false;
   tracks.raw = rawTrack(); fresh('raw');
-  if (mastered) { busy(true, 'Refazendo a mix…'); await doMaster(false); busy(false); }
+  if (mastered) { busy(true, 'Refazendo a mix…'); try { await doMaster(false); } catch (e) { console.error(e); } busy(false); }
   editor.load(S()); refreshChips(); refreshAB(); toast('Afinação desfeita: a voz voltou a ser a original.');
 };
 function onSelect(i) {
@@ -939,7 +939,16 @@ passos5();
 // ---------- 3) Mix e master ----------
 async function doMaster(show = true) {
   if (show) { pause(); busy(true, 'Mixando e masterizando…'); }
-  mastered = await cover.render(state, mixOpts());
+  // a mix anterior sai da memória antes de fazer a nova: as duas juntas (mais o som do player) fechavam o app
+  // no celular em "Ajustando os volumes…" e "Refazendo a mix…". O player continua com o som que já carregou.
+  mastered = null; tracks.master = null;
+  try { mastered = await cover.render(state, mixOpts()); } catch (e) {
+    // sem mix: volta para a voz afinada e deixa o botão de mixar de novo (nunca deixa a tela travada)
+    if (side === 'C') side = 'B'; $('mixApply').hidden = false; $('mixUndo').hidden = true; fresh('master');
+    ev('erro', { etapa: 'mix', msg: String(e && e.message).slice(0, 160) });
+    if (show) { busy(false); refreshAB(); toast('Não deu para mixar agora: ' + (e && e.message), 6000); }
+    throw e;
+  }
   tracks.master = mastered.full; fresh('master');
   $('mixApply').hidden = true; $('mixUndo').hidden = false; compInfo();
   if (show) { busy(false); side = 'C'; refreshAB(); toast('Mix e master prontos. Alterne entre ORIGINAL, AFINADA e MIXADA.'); }

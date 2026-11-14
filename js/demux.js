@@ -78,9 +78,7 @@ export async function extractAac(file, maxSec = 0) {
   const moov = { start: 8, end: v.byteLength };
   const mvhd = child(v, moov, 'mvhd');
   const movieScale = v.getUint8(mvhd.start) === 1 ? u32(v, mvhd.start + 20) : u32(v, mvhd.start + 12);
-  for (const trak of boxes(v, moov.start, moov.end).filter((b) => b.type === 'trak')) {
-    const hdlr = path(v, trak, 'mdia', 'hdlr');
-    if (!hdlr || fourcc(v, hdlr.start + 8) !== 'soun') continue;
+  const lerTrilha = async (trak) => {
     const mdhd = path(v, trak, 'mdia', 'mdhd');
     const scale = v.getUint8(mdhd.start) === 1 ? u32(v, mdhd.start + 20) : u32(v, mdhd.start + 12);
     const stbl = path(v, trak, 'mdia', 'minf', 'stbl');
@@ -160,8 +158,23 @@ export async function extractAac(file, maxSec = 0) {
     if (!(delay >= 0 && delay < 2)) delay = 0;
     if (!(skip >= 0 && skip < 2)) skip = 0;
     return { adts: p === out.length ? out : out.subarray(0, p), sizes: sizes.subarray(0, fi), cfg, delay, skip, fullDur };
+  };
+  const soun = boxes(v, moov.start, moov.end).filter((b) => {
+    if (b.type !== 'trak') return false;
+    const hdlr = path(v, b, 'mdia', 'hdlr');
+    return !!hdlr && fourcc(v, hdlr.start + 8) === 'soun';
+  });
+  if (!soun.length) throw new Error('este vídeo não tem áudio');
+  // Vídeo com mais de uma trilha de som (iPhone com "Áudio espacial" grava APAC + AAC; vídeo editado com faixa extra):
+  // usa a primeira trilha AAC que der para ler, as ligadas (tkhd) primeiro. Antes a 1ª trilha não-AAC já dava erro e
+  // o app caía na leitura do arquivo inteiro, que o Safari recusa ("Decoding failed").
+  const ligada = (t) => { const k = child(v, t, 'tkhd'); return !k || (v.getUint8(k.start + 3) & 1) ? 1 : 0; };
+  soun.sort((a, b) => ligada(b) - ligada(a));
+  let err1 = null;
+  for (const trak of soun) {
+    try { return await lerTrilha(trak); } catch (e) { err1 = err1 || e; if (soun.length > 1) console.warn('trilha de som pulada:', e && e.message); }
   }
-  throw new Error('este vídeo não tem áudio');
+  throw err1;
 }
 
 // Leitor alternativo (WebCodecs): em alguns Android (vivo, Xiaomi/Redmi, outros com chip MediaTek) o

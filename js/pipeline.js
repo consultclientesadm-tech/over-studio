@@ -11,7 +11,7 @@
 import { separate, tuneVoice, STUDIO_SR } from './studio.js?v=47';
 import { pitchTrack, detectKey, chromaFrames, chordTrack } from './analysis.js?v=38';
 import { referenceNotes, applyReference } from './reference.js?v=39';
-import { decodeVideoAudio } from './demux.js?v=41';
+import { decodeVideoAudio } from './demux.js?v=42';
 import { voiceDynamics, compSettings, loudnessMaster } from './master.js?v=37';
 import { findVoices, splitVoices, forceVoices } from './voices.js?v=4';
 
