@@ -310,7 +310,9 @@ function sale_net(float $value, bool $afiliado = false): array {
   $taxa = min($b, brnum(setting('eduzz_taxa')));
   $sg = $value < 0 ? -1 : 1;
   $com = $afiliado ? round(($b - $taxa) * max(0, min(100, brnum(setting('af_comissao_pct')))) / 100, 2) : 0;
-  return ['bruto' => $sg * $b, 'taxa' => $sg * $taxa, 'comissao' => $sg * $com, 'liquido' => $sg * round($b - $taxa - $com, 2)];
+  // estorno: a Eduzz devolve o valor cheio ao comprador e NÃO devolve a taxa dela, então a venda estornada fica em −taxa (igual ao relatório da Eduzz)
+  if ($sg < 0) return ['bruto' => -$b, 'taxa' => 0.0, 'comissao' => -$com, 'liquido' => -round($b - $com, 2)];
+  return ['bruto' => $b, 'taxa' => $taxa, 'comissao' => $com, 'liquido' => round($b - $taxa - $com, 2)];
 }
 // colunas novas em vendas antigas + calcula o líquido das que ainda não têm
 function sales_fill_net(): void {
@@ -318,6 +320,7 @@ function sales_fill_net(): void {
   foreach (['bruto', 'taxa', 'liquido', 'comissao'] as $c) if (!in_array($c, $cols, true)) $db->exec("ALTER TABLE sales ADD COLUMN $c REAL");
   af_db();
   $up = $db->prepare('UPDATE sales SET bruto = ?, taxa = ?, comissao = ?, liquido = ? WHERE id = ?');
+  $db->exec('UPDATE sales SET taxa = 0, liquido = -ROUND(ABS(bruto) - ABS(COALESCE(comissao, 0)), 2) WHERE value < 0 AND bruto IS NOT NULL AND taxa <> 0'); // estornos antigos: taxa não volta
   foreach ($db->query('SELECT id, value, afiliado_id FROM sales WHERE liquido IS NULL OR (afiliado_id IS NOT NULL AND comissao IS NULL)')->fetchAll() as $r) { $n = sale_net((float)$r['value'], !empty($r['afiliado_id'])); $up->execute([$n['bruto'], $n['taxa'], $n['comissao'], $n['liquido'], $r['id']]); }
 }
 

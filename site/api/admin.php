@@ -382,11 +382,14 @@ switch ($a) {
     $pIni = date('Y-m-d', strtotime($de) - $n * 86400) . ' 00:00:00'; $pFim = date('Y-m-d', strtotime($de) - 86400) . ' 23:59:59';
     $q = $db->prepare("SELECT created_at, liquido, bruto, afiliado_id, or_fonte, or_campanha FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? ORDER BY created_at"); $q->execute([$ini, $fim]);
     $vendas = array_map(fn($v) => ['t' => $v['created_at'], 'l' => round((float)$v['liquido'], 2), 'af' => (bool)$v['afiliado_id'], 'ad' => in_array($v['or_fonte'], ['anuncio-meta', 'meta-sem-utm', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads'], true)], $q->fetchAll(PDO::FETCH_ASSOC));
+    // estorno/reembolso/chargeback entra como venda negativa (igual à Eduzz): desconta do faturamento do período em que aconteceu
+    $q = $db->prepare("SELECT created_at, liquido FROM sales WHERE value < 0 AND created_at >= ? AND created_at <= ? ORDER BY created_at"); $q->execute([$ini, $fim]);
+    $estornos = array_map(fn($v) => ['t' => $v['created_at'], 'l' => round((float)$v['liquido'], 2)], $q->fetchAll(PDO::FETCH_ASSOC));
     $q = $db->prepare("SELECT created_at FROM users WHERE source = 'trial' AND created_at >= ? AND created_at <= ? ORDER BY created_at"); $q->execute([$ini, $fim]);
     $cads = array_column($q->fetchAll(PDO::FETCH_ASSOC), 'created_at');
-    $q = $db->prepare("SELECT COUNT(*), COALESCE(SUM(liquido), 0) FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ?"); $q->execute([$pIni, $pFim]); [$pv, $pl] = $q->fetch(PDO::FETCH_NUM);
+    $q = $db->prepare("SELECT COALESCE(SUM(status = 'pago'), 0), COALESCE(SUM(liquido), 0) FROM sales WHERE (status = 'pago' OR value < 0) AND created_at >= ? AND created_at <= ?"); $q->execute([$pIni, $pFim]); [$pv, $pl] = $q->fetch(PDO::FETCH_NUM);
     $q = $db->prepare("SELECT COUNT(*) FROM users WHERE source = 'trial' AND created_at >= ? AND created_at <= ?"); $q->execute([$pIni, $pFim]); $pc = (int)$q->fetchColumn();
-    json_out(['ok' => true, 'de' => $de, 'ate' => $ate, 'dias' => $n, 'agora' => date('Y-m-d H:i:s'), 'vendas' => $vendas, 'cadastros' => $cads,
+    json_out(['ok' => true, 'de' => $de, 'ate' => $ate, 'dias' => $n, 'agora' => date('Y-m-d H:i:s'), 'vendas' => $vendas, 'estornos' => $estornos, 'cadastros' => $cads,
       'anterior' => ['vendas' => (int)$pv, 'liquido' => round((float)$pl, 2), 'cadastros' => $pc],
       'anuncios' => or_anuncios($db, $ini, $fim), 'socio_pct' => max(0, min(100, brnum(setting('socio_pct'))))]);
   }
