@@ -1523,5 +1523,20 @@
  "e": "and",
  "e a": "and the",
  "{0}x de": "{0} payments of",
- "<small>{0}x de</small> R$ {1}": "<small>{0} payments of</small> R$ {1}"
+ "<small>{0}x de</small> R$ {1}": "<small>{0} payments of</small> R$ {1}",
+ "<b>Instale o app na sua tela de início</b><small>{0} Pelo ícone o app trava bem menos.</small>": "<b>Add the app to your home screen</b><small>{0} From the icon, the app freezes much less.</small>",
+ "<b>Você está dentro do {0}.</b> Por aqui não dá para instalar. Toque no botão abaixo para abrir no <b>Chrome</b> (ou nos <b>três pontinhos</b> e em <b>Abrir no Chrome</b>).": "<b>You're inside {0}.</b> You can't install from here. Tap the button below to open it in <b>Chrome</b> (or tap the <b>three dots</b> and <b>Open in Chrome</b>).",
+ "<b>Você está dentro do {0}.</b> Por aqui não dá para instalar. Toque nos <b>três pontinhos</b> (em cima, à direita) e em <b>Abrir no navegador externo</b>. Se não aparecer, toque em <b>Copiar o link</b> aqui embaixo, abra o <b>Safari</b> e cole o link.": "<b>You're inside {0}.</b> You can't install from here. Tap the <b>three dots</b> (top right) and <b>Open in external browser</b>. If it doesn't show up, tap <b>Copy link</b> below, open <b>Safari</b> and paste the link.",
+ "Abra pelo ícone, igual a um aplicativo.": "Open it from the icon, just like an app.",
+ "COPIAR O LINK": "COPY LINK",
+ "Confirme em <b>Instalar</b>. Depois, abra sempre pelo ícone amarelo do Studio Cover.": "Confirm with <b>Install</b>. After that, always open it from the yellow Studio Cover icon.",
+ "Instale o app {0}": "Install the app {0}",
+ "No Chrome, toque nos <b>três pontinhos</b> (em cima, à direita)": "In Chrome, tap the <b>three dots</b> (top right)",
+ "No Safari, toque em <b>Compartilhar</b> (o quadrado com a seta para cima). Se não aparecer, toque antes nos <b>três pontinhos</b> da barra.": "In Safari, tap <b>Share</b> (the square with the up arrow). If you don't see it, first tap the <b>three dots</b> in the bar.",
+ "No iPhone, o jeito mais fácil é pelo <b>Safari</b>. Toque em <b>Copiar o link</b>, abra o Safari e cole o link.": "On iPhone, the easiest way is through <b>Safari</b>. Tap <b>Copy link</b>, open Safari and paste the link.",
+ "Role a lista e toque em <b>Adicionar à Tela de Início</b>": "Scroll the list and tap <b>Add to Home Screen</b>",
+ "Toque em <b>Adicionar</b>. Depois, abra sempre pelo ícone amarelo do Studio Cover.": "Tap <b>Add</b>. After that, always open it from the yellow Studio Cover icon.",
+ "Veja como fazer no Android: são 3 toques.": "Here's how on Android: just 3 taps.",
+ "Veja como fazer no iPhone: são 3 toques.": "Here's how on iPhone: just 3 taps.",
+ "no computador": "on your computer"
 }

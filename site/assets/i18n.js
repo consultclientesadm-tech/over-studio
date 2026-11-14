@@ -4,7 +4,7 @@
    brasileira nunca muda. Textos que faltam no dicionário são avisados ao servidor (/api/i18n.php) para traduzir. */
 (function () {
   'use strict';
-  var V = 109537682; // sobe quando os dicionários mudam (tools/i18n-montar.mjs atualiza sozinho)
+  var V = 203174487; // sobe quando os dicionários mudam (tools/i18n-montar.mjs atualiza sozinho)
   var LANGS = { pt: 'Português (Brasil)', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano', 'pt-pt': 'Português (Portugal)' };
   var HTMLLANG = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr', de: 'de', it: 'it', 'pt-pt': 'pt-PT' };
   var BR_TZ = /^America\/(Sao_Paulo|Fortaleza|Recife|Bahia|Manaus|Belem|Cuiaba|Campo_Grande|Porto_Velho|Boa_Vista|Rio_Branco|Araguaina|Maceio|Santarem|Noronha|Eirunepe)$/;

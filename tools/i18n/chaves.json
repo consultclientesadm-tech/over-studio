@@ -270,6 +270,9 @@
  "<b>Indique e ganhe</b><small>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura.</small>": [
   "site/app/conta.js"
  ],
+ "<b>Instale o app na sua tela de início</b><small>{0} Pelo ícone o app trava bem menos.</small>": [
+  "site/app/conta.js"
+ ],
  "<b>Manual em vídeo</b><small>Vídeos curtos mostrando cada função do app</small>": [
   "index.html"
  ],
@@ -306,6 +309,12 @@
  "<b>Seus vídeos, áudios e a sua voz.</b> Todo o processamento (separar a voz, afinar, mixar, aplicar a cor e exportar) acontece no seu celular ou computador. Os arquivos não são enviados para o nosso servidor nem para ninguém.": [
   "site/privacidade/index.html"
  ],
+ "<b>Você está dentro do {0}.</b> Por aqui não dá para instalar. Toque no botão abaixo para abrir no <b>Chrome</b> (ou nos <b>três pontinhos</b> e em <b>Abrir no Chrome</b>).": [
+  "site/app/conta.js"
+ ],
+ "<b>Você está dentro do {0}.</b> Por aqui não dá para instalar. Toque nos <b>três pontinhos</b> (em cima, à direita) e em <b>Abrir no navegador externo</b>. Se não aparecer, toque em <b>Copiar o link</b> aqui embaixo, abra o <b>Safari</b> e cole o link.": [
+  "site/app/conta.js"
+ ],
  "<b>Você tem a assinatura ativa.</b> Apagar a conta não cancela a cobrança: cancele a renovação na Eduzz (no e-mail da compra, ou em \"Minhas compras\" da Eduzz) antes de apagar.": [
   "site/app/conta.js"
  ],
@@ -326,6 +335,9 @@
  ],
  "<b>retirar o consentimento</b> e sair das listas de e-mail;": [
   "site/privacidade/index.html"
+ ],
+ "<b>{0}</b><small>1 ano de acesso</small>": [
+  "site/app/conta.js"
  ],
  "<b>⚠️ Pode funcionar com vídeos curtos:</b> iPhone 11, 12 e SE; Android com 4 GB de memória.": [
   "site/index.html"
@@ -525,9 +537,6 @@
  "Ab": [
   "js/analysis.js"
  ],
- "Abra este link no <b>Safari</b> para instalar (copie o endereço <b>studiocover.com.br/app</b> e cole no Safari).": [
-  "site/app/conta.js"
- ],
  "Abra no <b>Safari</b> ou no <b>Chrome</b>, não no navegador do Instagram": [
   "index.html"
  ],
@@ -542,6 +551,21 @@
  ],
  "Abra pelo": [
   "js/app.js"
+ ],
+ "Abra pelo ícone, igual a um aplicativo.": [
+  "site/app/conta.js"
+ ],
+ "Abre a prévia grande, na tela toda, para ver bem as cores e o resultado antes de baixar.": [
+  "index.html"
+ ],
+ "Abre o painel de afinação na tela toda: as notas de cada voz, subir e descer nota, zoom e ajustes. Toque em Fechar painel para voltar.": [
+  "index.html"
+ ],
+ "Abre o painel de notas na tela toda para mexer com calma. Toque em Pronto ou Fechar para voltar.": [
+  "index.html"
+ ],
+ "Abre os botões da mix grandes, na tela toda, para mexer com o dedo. Depois toque em Pronto para voltar.": [
+  "index.html"
  ],
  "Abrindo a imagem do vídeo": [
   "js/app.js"
@@ -613,6 +637,12 @@
   "site/afiliado/index.html",
   "site/afiliados/index.html"
  ],
+ "Afina a voz inteira sozinho, no tom da música, mantendo o vibrato e o jeito de cantar. No fim, cada nota fica dentro da faixa verde.": [
+  "index.html"
+ ],
+ "Afina tudo outra vez do zero, usando os ajustes atuais (tom, quantizar, endireitar e música original).": [
+  "index.html"
+ ],
  "Afina, mixa e exporta, tudo no celular.": [
   "site/afiliados/index.html"
  ],
@@ -681,6 +711,9 @@
  "Agudo": [
   "index.html"
  ],
+ "Agudo (acima de 8 kHz): brilho e ar da voz. Muito agudo deixa o S chiado.": [
+  "index.html"
+ ],
  "Ainda falta terminar o envio de \"": [
   "site/api/depoimento.php"
  ],
@@ -717,6 +750,9 @@
  "Ajustes": [
   "index.html"
  ],
+ "Ajustes finos: quanto puxar as notas, prender no tom e afinar pela música original.": [
+  "index.html"
+ ],
  "Alguma coisa não ficou boa? Responda este e-mail e me conte. É assim que a gente melhora.": [
   "site/api/depo_lib.php"
  ],
@@ -734,6 +770,9 @@
  ],
  "Amanhã você vai postar mais um cover desafinado?": [
   "site/app/conta.js"
+ ],
+ "Ambiência na voz, como cantar numa sala ou palco. 0% = seco.": [
+  "index.html"
  ],
  "Amigo que canta na igreja, colega da banda, quem posta cover toda semana: todos sofrem com o áudio do celular. Você já tem a solução no bolso.": [
   "site/api/funil.php"
@@ -827,6 +866,9 @@
   "site/entrar/index.html",
   "site/obrigado/index.html"
  ],
+ "As mudanças nas notas já valem sozinhas. Toque aqui quando terminar para fechar o painel.": [
+  "index.html"
+ ],
  "As suas páginas de venda ficam prontas na hora.": [
   "site/afiliados/index.html"
  ],
@@ -857,6 +899,12 @@
  ],
  "AudioDecoder não lê este AAC": [
   "js/demux.js"
+ ],
+ "Aumenta ou diminui a base (violão, banda ou playback) em relação à voz.": [
+  "index.html"
+ ],
+ "Aumenta ou diminui a sua voz em relação à música. O volume final continua no padrão das redes.": [
+  "index.html"
  ],
  "Aumentar": [
   "js/app.js"
@@ -901,6 +949,15 @@
  ],
  "Baixa <b>este mesmo vídeo</b> na hora, sem refazer": [
   "site/app/conta.js"
+ ],
+ "Baixa só a música de fundo (violão, banda ou playback), sem a voz.": [
+  "index.html"
+ ],
+ "Baixa só a voz (afinada, se você afinou), sem a música de fundo. Bom para editar ou usar em outra base.": [
+  "index.html"
+ ],
+ "Baixa só o áudio final em WAV, sem o vídeo, para usar no Spotify ou num editor.": [
+  "index.html"
  ],
  "Baixando a IA": [
   "js/app.js"
@@ -962,6 +1019,9 @@
  ],
  "COPIAR LINK P/ O COMPUTADOR": [
   "site/assets/compat.js"
+ ],
+ "COPIAR O LINK": [
+  "site/app/conta.js"
  ],
  "CRIAR E ENTRAR": [
   "site/entrar/index.html"
@@ -1086,6 +1146,9 @@
  "Comparar": [
   "index.html"
  ],
+ "Compare no mesmo ponto do vídeo. ANTES = como estava antes desta etapa. DEPOIS = com esta etapa aplicada. Na mix dá para alternar entre a voz original, só afinada e afinada e mixada.": [
+  "index.html"
+ ],
  "Compra feita! Em 2 passos você já está usando.": [
   "site/obrigado/index.html"
  ],
@@ -1129,11 +1192,11 @@
  "Confirmando o seu pagamento…": [
   "site/obrigado/index.html"
  ],
- "Confirme e abra pelo ícone novo. Pronto!": [
-  "site/app/conta.js"
- ],
  "Confirme e abra sempre pelo ícone do Studio Cover na sua tela!": [
   "site/obrigado/index.html"
+ ],
+ "Confirme em <b>Instalar</b>. Depois, abra sempre pelo ícone amarelo do Studio Cover.": [
+  "site/app/conta.js"
  ],
  "Conhece outros cantores? Indique e ganhe com cada assinatura.": [
   "site/api/funil.php"
@@ -1178,6 +1241,7 @@
   "js/app.js"
  ],
  "Copie o link:": [
+  "site/app/conta.js",
   "site/assets/compat.js",
   "site/obrigado/index.html"
  ],
@@ -1199,6 +1263,9 @@
  ],
  "Cor<b>{0}</b>": [
   "js/app.js"
+ ],
+ "Corta o pedaço parado antes de você começar a cantar e depois que termina.": [
+  "index.html"
  ],
  "Cortar o silêncio do começo e do fim": [
   "index.html"
@@ -1301,6 +1368,9 @@
  "De onde vem (aproximado): <b></b>": [
   "site/api/escudo.php"
  ],
+ "Deixa a nota escolhida sem afinação, do jeito que você cantou.": [
+  "index.html"
+ ],
  "Deixar muda": [
   "js/app.js"
  ],
@@ -1337,6 +1407,9 @@
  "Desafio nos comentários": [
   "site/afiliado/index.html"
  ],
+ "Desce a nota escolhida meio tom. Primeiro toque numa nota no painel.": [
+  "index.html"
+ ],
  "Descer": [
   "index.html"
  ],
@@ -1345,6 +1418,9 @@
  ],
  "Desculpa pelo erro. Seu teste voltou!": [
   "site/api/lib.php"
+ ],
+ "Desfaz o que você mexeu nesta nota e devolve para o automático.": [
+  "index.html"
  ],
  "Desfazer": [
   "index.html"
@@ -1523,8 +1599,7 @@
  ],
  "Entendi": [
   "index.html",
-  "js/app.js",
-  "site/app/conta.js"
+  "js/app.js"
  ],
  "Entrada": [
   "site/index.html"
@@ -1925,6 +2000,9 @@
  "Grava a sua reação real com o fone, ouvindo o resultado. Depois mostra um trecho do vídeo final.": [
   "site/afiliado/index.html"
  ],
+ "Grava o vídeo final na qualidade do original, com o som e a cor escolhidos.": [
+  "index.html"
+ ],
  "Grava, afina, mixa e posta no mesmo dia.": [
   "site/api/funil.php"
  ],
@@ -1935,6 +2013,9 @@
   "site/afiliado/index.html"
  ],
  "Grave": [
+  "index.html"
+ ],
+ "Grave (abaixo de 100 Hz): corpo, peso do violão e do bumbo. Muito grave embola no celular.": [
   "index.html"
  ],
  "Grave a tela do celular enquanto usa o app (gravação de tela do iPhone ou do Android). Mostrar o app funcionando passa confiança.": [
@@ -1999,6 +2080,7 @@
  ],
  "Instagram": [
   "site/api/lib.php",
+  "site/app/conta.js",
   "site/assets/compat.js",
   "site/index.html"
  ],
@@ -2008,7 +2090,7 @@
  "Instalar": [
   "site/app/conta.js"
  ],
- "Instalar {0}": [
+ "Instale o app {0}": [
   "site/app/conta.js"
  ],
  "Intensidade": [
@@ -2030,6 +2112,9 @@
   "site/app/conta.js"
  ],
  "Junta a voz com o instrumental, equaliza, comprime e deixa no volume das redes.": [
+  "index.html"
+ ],
+ "Junta sua voz afinada com o instrumental, equaliza, comprime e deixa no volume certo para Instagram, TikTok e YouTube.": [
   "index.html"
  ],
  "Juntando as vozes…": [
@@ -2146,6 +2231,12 @@
  ],
  "Libere o seu acesso": [
   "site/obrigado/index.html"
+ ],
+ "Ligado: afina pela melodia da música original que você subiu. Só funciona depois de subir a original.": [
+  "index.html"
+ ],
+ "Ligado: cada nota vai para a nota mais próxima da escala do tom da música. Desligado: vai para a nota mais próxima de qualquer escala.": [
+  "index.html"
  ],
  "Ligando a IA": [
   "js/app.js"
@@ -2327,6 +2418,9 @@
  "Mostra na tela: estúdio, R$ 100 a R$ 300 por música. Studio Cover, R$ 297 por ano, quantas músicas quiser. Mostra o app trabalhando.": [
   "site/afiliado/index.html"
  ],
+ "Mostra no painel a linha cinza da sua voz original, para comparar com a afinada.": [
+  "index.html"
+ ],
  "Mostra um trecho com a nota desafinada. Depois mostra a mesma nota corrigida no painel do app, nota por nota, sem voz de robô.": [
   "site/afiliado/index.html"
  ],
@@ -2349,6 +2443,9 @@
   "site/api/lib.php"
  ],
  "Médio": [
+  "index.html"
+ ],
+ "Médio (perto de 1 kHz): presença e o 'meio' da voz. Muito médio deixa o som anasalado.": [
   "index.html"
  ],
  "Mínimo de 8 caracteres, com letras e números.": [
@@ -2388,7 +2485,10 @@
  "Nenhum aviso por enquanto.": [
   "site/app/conta.js"
  ],
- "No Chrome, toque nos <b>⋮ três pontinhos</b> (em cima, à direita)": [
+ "No Chrome, toque nos <b>três pontinhos</b> (em cima, à direita)": [
+  "site/app/conta.js"
+ ],
+ "No Safari, toque em <b>Compartilhar</b> (o quadrado com a seta para cima). Se não aparecer, toque antes nos <b>três pontinhos</b> da barra.": [
   "site/app/conta.js"
  ],
  "No Studio Cover você faz quantos covers quiser, na hora, sem sair de casa. Dois covers já pagam o ano inteiro.": [
@@ -2396,6 +2496,9 @@
  ],
  "No iPhone o aviso só funciona com o painel na tela de início: 1. Abra studiocover.com.br/afiliado no Safari. 2. Toque em Compartilhar e em \"Adicionar à Tela de Início\". 3. Abra pelo ícone novo e toque de novo em 💰 Aviso de venda.": [
   "site/afiliado/index.html"
+ ],
+ "No iPhone, o jeito mais fácil é pelo <b>Safari</b>. Toque em <b>Copiar o link</b>, abra o Safari e cole o link.": [
+  "site/app/conta.js"
  ],
  "No teste grátis você vê e ouve o antes e depois aqui no app. Para baixar {0} e postar, libere o acesso completo.": [
   "site/app/conta.js"
@@ -2605,6 +2708,9 @@
  "O app ainda não carregou. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.": [
   "index.html"
  ],
+ "O app mede o quanto sua voz varia entre as partes fracas e fortes e escolhe a compressão certa.": [
+  "index.html"
+ ],
  "O app não carregou direito. Aperte Ctrl+Shift+R (ou feche e abra a página) e tente de novo.": [
   "index.html"
  ],
@@ -2773,6 +2879,9 @@
  ],
  "Olá{0}! Crie a senha do painel ({1}).": [
   "site/afiliado/index.html"
+ ],
+ "Opcional. Suba o MP3 ou vídeo da música original (do cantor que você está cantando). O app lê a melodia dela, passa para o seu tom e afina cada nota sua por ela. Sem a original, o app afina pela escala do tom da música.": [
+  "index.html"
  ],
  "Opcional: a gente pega a melodia do cantor original no seu tom e afina você por ela.": [
   "js/app.js"
@@ -3117,6 +3226,24 @@
  "Quanto custa uma mixagem no estúdio comparado a um ano inteiro de Studio Cover.": [
   "site/afiliado/index.html"
  ],
+ "Quanto deixar a voz por igual. Pouco = natural, com as partes fortes e fracas. Muito = voz sempre na frente, estilo rádio.": [
+  "index.html"
+ ],
+ "Quanto do filtro aparece. 0% = vídeo como foi gravado.": [
+  "index.html"
+ ],
+ "Quanto puxar cada nota para o centro do tom certo. 100% = nota cravada. Menos = mais natural, sobra um pouco da sua variação.": [
+  "index.html"
+ ],
+ "Quanto tempo o som leva para subir no começo do vídeo.": [
+  "index.html"
+ ],
+ "Quanto tempo o som leva para sumir no final do vídeo.": [
+  "index.html"
+ ],
+ "Quanto tirar das oscilações dentro da nota (quando a voz treme ou escorrega). O vibrato é mantido.": [
+  "index.html"
+ ],
  "Quanto você pode ganhar": [
   "site/afiliados/index.html"
  ],
@@ -3245,11 +3372,13 @@
  "Reverb": [
   "index.html"
  ],
+ "Role a lista e toque em <b>Adicionar à Tela de Início</b>": [
+  "site/app/conta.js"
+ ],
  "Role a tela e entre no estúdio: veja o seu cover sair afinado, mixado e com cara de clipe.": [
   "site/index.html"
  ],
  "Role e toque em <b>Adicionar à Tela de Início</b>": [
-  "site/app/conta.js",
   "site/obrigado/index.html"
  ],
  "Role para ver mais": [
@@ -3526,11 +3655,17 @@
  "Sim. A comissão é de 50% também nas renovações anuais de quem comprou pelo seu link.": [
   "site/afiliados/index.html"
  ],
+ "Sim: no vídeo tem violão, banda ou playback junto com a voz. A IA separa a sua voz para afinar só ela. Não: você cantou só com a voz (à capela).": [
+  "index.html"
+ ],
  "Simples de usar. <em>Poderoso</em> por dentro.": [
   "site/index.html"
  ],
  "Sinal": [
   "site/index.html"
+ ],
+ "Sobe a nota escolhida meio tom. Primeiro toque numa nota no painel.": [
+  "index.html"
  ],
  "Sol": [
   "js/analysis.js",
@@ -3578,6 +3713,9 @@
  ],
  "Suba a versão do cantor original e o app segue a melodia dela, no seu tom.": [
   "site/index.html"
+ ],
+ "Suba o MP3 ou vídeo da música original. O app pega a melodia dela no seu tom e afina cada nota sua por ela.": [
+  "index.html"
  ],
  "Suba o primeiro!": [
   "site/api/funil.php"
@@ -3685,6 +3823,12 @@
  "Testou o app": [
   "site/afiliado/index.html"
  ],
+ "Tira a mix e o master e volta para o som só afinado.": [
+  "index.html"
+ ],
+ "Tira toda a afinação e volta para a sua voz exatamente como foi gravada.": [
+  "index.html"
+ ],
  "To: <{0}>": [
   "site/api/mail.php"
  ],
@@ -3740,14 +3884,13 @@
  "Toque em \"Afinar automático\". Depois compare no ANTES | DEPOIS. Se quiser, mexa nota por nota no painel.": [
   "index.html"
  ],
- "Toque em <b>Adicionar</b> e abra pelo ícone novo. Pronto!": [
+ "Toque em <b>Adicionar</b>. Depois, abra sempre pelo ícone amarelo do Studio Cover.": [
   "site/app/conta.js"
  ],
  "Toque em <b>Adicionar</b>. O ícone aparece na sua tela!": [
   "site/obrigado/index.html"
  ],
  "Toque em <b>Compartilhar</b> na barra do Safari": [
-  "site/app/conta.js",
   "site/obrigado/index.html"
  ],
  "Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>": [
@@ -3865,6 +4008,12 @@
  "Vamos criar uma nova senha": [
   "site/api/conta.php"
  ],
+ "Veja como fazer no Android: são 3 toques.": [
+  "site/app/conta.js"
+ ],
+ "Veja como fazer no iPhone: são 3 toques.": [
+  "site/app/conta.js"
+ ],
  "Veja e ouça o antes e depois com": [
   "site/index.html"
  ],
@@ -3922,6 +4071,9 @@
  ],
  "Você conhece outros cantores?": [
   "site/api/funil.php"
+ ],
+ "Você escolhe quanto comprimir.": [
+  "index.html"
  ],
  "Você está no navegador do {0}, que tem pouca memória e não deixa baixar o vídeo pronto.": [
   "site/assets/compat.js"
@@ -4028,6 +4180,12 @@
  "Voices": [
   "js/app.js"
  ],
+ "Volta a última mudança que você fez no painel.": [
+  "index.html"
+ ],
+ "Volta grave, médio e agudo para o zero.": [
+  "index.html"
+ ],
  "Voltar": [
   "index.html",
   "site/assets/compat.js"
@@ -4099,6 +4257,9 @@
  ],
  "Vídeo maior que {0} minutos": [
   "js/app.js"
+ ],
+ "Vídeo muito pesado? Tire o áudio do vídeo no celular ou no editor e suba só ele. O app afina, mixa e masteriza, e você baixa o áudio pronto para juntar de volta no seu vídeo no editor (CapCut, InShot etc.).": [
+  "index.html"
  ],
  "Vídeo pesado para o celular": [
   "js/app.js"
@@ -4270,6 +4431,9 @@
  ],
  "no app, toque no seu nome ›": [
   "site/privacidade/index.html"
+ ],
+ "no computador": [
+  "site/app/conta.js"
  ],
  "no iPhone": [
   "site/app/conta.js"
