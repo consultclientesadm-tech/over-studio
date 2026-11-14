@@ -505,7 +505,7 @@ function vgBarras(rot, vals, sub, cor, fmt, corte = -1) {
 async function loadVisao() {
   const [de, ate] = vgFaixa();
   const j = await api('visao', null, `&de=${de}&ate=${ate}`); if (!j.ok) return;
-  const liq = j.vendas.reduce((a, v) => a + v.l, 0), nV = j.vendas.length, nC = j.cadastros.length;
+  const ES = j.estornos || [], est = ES.reduce((a, v) => a + v.l, 0), liq = j.vendas.reduce((a, v) => a + v.l, 0) + est, nV = j.vendas.length, nC = j.cadastros.length;
   const A = {}; (j.anuncios || []).forEach((a) => (A[a.conta] = a));
   const gasto = (j.anuncios || []).reduce((a, x) => a + x.gasto, 0), lucro = liq - gasto;
   const roas = gasto ? liq / gasto : null, roi = gasto ? (liq - gasto) / gasto : null;
@@ -525,6 +525,7 @@ async function loadVisao() {
   else { rot = []; const ini = new Date(de + 'T12:00:00Z'); for (let i = 0; i < 13; i++) { const d = new Date(Date.UTC(ini.getUTCFullYear(), ini.getUTCMonth() + i, 1)).toISOString().slice(0, 7); if (d > ate.slice(0, 7)) break; rot.push(d); } const ix = Object.fromEntries(rot.map((d, i) => [d, i])); kv = (t) => ix[t.slice(0, 7)]; rot = rot.map((d) => ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'][+d.slice(5, 7) - 1]); }
   const vV = rot.map(() => 0), vN = rot.map(() => 0), vC = rot.map(() => 0);
   j.vendas.forEach((v) => { const i = kv(v.t); if (i !== undefined) { vV[i] += v.l; vN[i]++; } });
+  ES.forEach((v) => { const i = kv(v.t); if (i !== undefined) vV[i] += v.l; }); // estorno desconta no dia/hora em que aconteceu
   j.cadastros.forEach((t) => { const i = kv(t); if (i !== undefined) vC[i]++; });
   const ult = j.vendas.length ? j.vendas[j.vendas.length - 1].t : null;
   const P = [['hoje', 'Hoje'], ['ontem', 'Ontem'], ['7d', '7 dias'], ['30d', '30 dias'], ['90d', '90 dias'], ['1a', '1 ano']];
@@ -534,7 +535,7 @@ async function loadVisao() {
       ${ate === spDia(0) ? '<span class="vivo"><i></i>AO VIVO</span>' : ''}</div>
     <div class="vgK">
       <div class="vk big"><small>Faturamento líquido · ${esc(titulo)}</small><b class="cnt" data-to="${liq}" data-f="brl">${brl(liq)}</b>${cmp(liq, j.anterior.liquido, brl0)}</div>
-      <div class="vk"><small>Vendas</small><b>${nV}</b>${cmp(nV, j.anterior.vendas, (x) => x)}<span>${nV ? 'ticket ' + brl(liq / nV) : ''}${ult && j.dias === 1 ? ' · última ' + ult.slice(11, 16) : ''}</span></div>
+      <div class="vk"><small>Vendas</small><b>${nV}</b>${cmp(nV, j.anterior.vendas, (x) => x)}<span>${ES.length ? `<b class="r">${ES.length} estorno${ES.length === 1 ? '' : 's'} ${brl(est)}</b> · ` : ''}${nV ? 'ticket ' + brl((liq - est) / nV) : ''}${ult && j.dias === 1 ? ' · última ' + ult.slice(11, 16) : ''}</span></div>
       <div class="vk"><small>Investido em anúncios</small><b>${brl(gasto)}</b><span>Leo ${brl0((A.leo || {}).gasto || 0)} · Reinaldo ${brl0((A.reinaldo || {}).gasto || 0)}</span></div>
       <div class="vk ${corR}"><small>ROI geral</small><b>${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</b><span>${roas === null ? 'sem gasto de anúncio' : brl(roas) + ' por R$ 1 investido'}</span></div>
       <div class="vk ${lucro >= 0 ? 'g' : 'r'}"><small>Lucro após anúncios</small><b>${brl(lucro)}</b><span>Leo ${brl0(lucro * lp / 100)} · Reinaldo ${brl0(lucro * sp / 100)}</span></div>
