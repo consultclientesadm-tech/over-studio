@@ -515,7 +515,7 @@ async function loadVisao() {
   const socio = (k, nome, p, cor) => { const a = A[k] || { gasto: 0, gasto_auto: 0, gasto_manual: 0, vendas: 0, liquido: 0 }; const r = a.gasto ? (a.liquido - a.gasto) / a.gasto : null;
     return `<div class="vgSoc ${cor}"><div class="vgSh"><b>${nome}</b><small>${p}% da divisão</small></div>
       <div class="vgSg"><div><small>Investiu em anúncio</small><b>${brl(a.gasto)}</b><span>gerenc. ${brl0(a.gasto_auto)} · impuls. ${brl0(a.gasto_manual)}</span></div>
-      <div><small>Vendas dos anúncios dele</small><b>${a.vendas}</b><span>${brl(a.liquido)} líquido</span></div>
+      <div><small>Vendas dos anúncios dele</small><b>${a.vendas}</b><span>${brl(a.liquido)} líquido${a.compras_meta ? ` · o Meta conta ${a.compras_meta}` : ''}</span></div>
       <div><small>ROI dos anúncios</small><b class="${r === null ? '' : r >= 0 ? 'g' : 'r'}">${r === null ? '—' : (r >= 0 ? '+' : '') + Math.round(r * 100) + '%'}</b><span>${a.gasto ? brl(a.liquido / a.gasto) + ' por R$ 1' : 'sem gasto no período'}</span></div>
       <div class="parte"><small>Parte dele (${p}% do lucro)</small><b>${brl(lucro * p / 100)}</b><span>lucro = líquido − anúncios</span></div></div></div>`; };
   // gráficos: por hora (1 dia), por dia (até 90) ou por mês (1 ano)
@@ -795,7 +795,7 @@ $('segOr').onclick = (e) => { const b = e.target.closest('button'); if (!b) retu
 const PAG = { home: '🎁 Página com teste grátis', vsl: '🎬 /vsl (compra direta)', 'link-afiliado': '🤝 Link de afiliado', 'sem-rastreio': '❔ Sem rastreio (antes de 13/11)' };
 // nome amigável do canal (Origens)
 function fonteNome(f, c) {
-  const N = { 'anuncio-meta': '📣 Anúncio Meta', 'meta-sem-utm': '📣 Anúncio Meta (provável, link sem UTM)', 'comentarios-ig': '💬 Comentários do Instagram (direct)', whatsapp: '🟢 WhatsApp', afiliado: '🤝 Afiliado', direto: 'Direto (digitou o site)' };
+  const N = { meta: '📣 Anúncio Meta', 'anuncio-meta': '📣 Anúncio Meta', 'meta-sem-utm': '📣 Anúncio Meta (provável, link sem UTM)', 'comentarios-ig': '💬 Comentários do Instagram (direct)', whatsapp: '🟢 WhatsApp', afiliado: '🤝 Afiliado', direto: 'Direto (digitou o site)' };
   if (N[f]) return N[f];
   if (f === 'instagram' && /reinaldo|criativo|teste-gratis|vsl/.test(c || '')) return N['comentarios-ig']; // links do direct anteriores à separação
   if (f === 'instagram') return '📷 Instagram (orgânico, sem UTM)';

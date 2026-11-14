@@ -72,14 +72,24 @@ function ad_gastos_conta(PDO $db): void {
 function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'): array {
   ad_gastos_conta($db);
   $g = $db->prepare('SELECT conta, SUM(valor) v FROM ad_gastos WHERE dia >= ? AND dia <= ? GROUP BY conta'); $g->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
-  $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm')"); $s->execute([$since, $ate]);
+  $s = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, liquido FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? AND or_fonte IN ('anuncio-meta', 'meta-sem-utm', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads')"); $s->execute([$since, $ate]);
+  $mapa = []; try { foreach (meta_db()->query('SELECT campanha, conta FROM meta_campanhas')->fetchAll(PDO::FETCH_NUM) as [$cp, $ct]) $mapa[$cp] = $ct; } catch (Throwable $e) {}
+  // de quem é a venda de anúncio: campanha começando com leo-/reinaldo- ou uma campanha que está no link de um anúncio daquela conta
+  // (a Eduzz corta o rastreio em 40 letras, então vale o começo do nome)
+  $contaDa = function (string $cp) use ($mapa): string {
+    if (preg_match('/^(leo|reinaldo)(-|$)/', $cp, $m)) return $m[1];
+    if ($cp === '') return '?';
+    if (isset($mapa[$cp])) return $mapa[$cp];
+    if (strlen($cp) >= 10) foreach ($mapa as $k => $v) if (str_starts_with((string)$k, $cp)) return $v;
+    return (string)(explode('-', $cp)[0] ?? '?');
+  };
   $r = [];
   $add = function (string $c) use (&$r) { $r[$c] ??= ['conta' => $c, 'gasto' => 0.0, 'gasto_auto' => 0.0, 'gasto_manual' => 0.0, 'vendas' => 0, 'liquido' => 0.0, 'vsl' => 0, 'home' => 0]; };
   foreach ($g->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_manual'] += (float)$x['v']; } // impulsionamento lançado à mão
-  try { $m = meta_db()->prepare('SELECT conta, SUM(valor) v FROM meta_gasto WHERE dia >= ? AND dia <= ? GROUP BY conta'); $m->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
-    foreach ($m->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_auto'] += (float)$x['v']; } } catch (Throwable $e) {} // Gerenciador, automático pela UTM
+  try { $m = meta_db()->prepare('SELECT conta, SUM(valor) v, SUM(compras) cp FROM meta_gasto WHERE dia >= ? AND dia <= ? GROUP BY conta'); $m->execute([substr($since, 0, 10), substr($ate, 0, 10)]);
+    foreach ($m->fetchAll() as $x) { $c = (string)$x['conta']; $add($c); $r[$c]['gasto'] += (float)$x['v']; $r[$c]['gasto_auto'] += (float)$x['v']; $r[$c]['compras_meta'] = (int)round((float)$x['cp']); } } catch (Throwable $e) {} // Gerenciador, automático pela UTM
   foreach ($s->fetchAll() as $x) {
-    $c = $x['or_fonte'] === 'meta-sem-utm' ? '?' : (string)(explode('-', (string)$x['or_campanha'])[0] ?? '');
+    $c = $x['or_fonte'] === 'meta-sem-utm' ? '?' : $contaDa((string)$x['or_campanha']);
     $add($c); $r[$c]['vendas']++; $r[$c]['liquido'] += (float)$x['liquido'];
     if ($x['or_pagina'] === 'vsl') $r[$c]['vsl']++; elseif ($x['or_pagina'] === 'home') $r[$c]['home']++;
   }
