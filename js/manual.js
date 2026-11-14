@@ -19,10 +19,10 @@ function build() {
   ov = document.createElement('div');
   ov.className = 'man-ov'; ov.hidden = true;
   ov.innerHTML = `<div class="man" role="dialog" aria-modal="true" aria-label="Manual do usuário">
-    <header class="man-h"><b>📖 Manual do usuário</b><button type="button" class="pill" data-x>✕ Fechar</button></header>
+    <header class="man-h"><b>${window.ic ? window.ic('book') : ''} Manual do usuário</b><button type="button" class="pill" data-x>${window.ic ? window.ic('close') : ''} Fechar</button></header>
     <div class="man-list">
       <p class="man-sub">Vídeos curtos, sem som. Toque num para assistir.</p>
-      ${VIDEOS.map((v, i) => `<button type="button" class="man-item" data-i="${i}"><span class="man-img"><img alt="" data-src="${BASE}${v.id}.jpg?v=${V}"><i>▶</i></span>
+      ${VIDEOS.map((v, i) => `<button type="button" class="man-item" data-i="${i}"><span class="man-img"><img alt="" data-src="${BASE}${v.id}.jpg?v=${V}"><i>${window.ic ? window.ic('play') : ''}</i></span>
         <span class="man-txt"><b>${i + 1}. ${v.t}</b><small>${v.d}</small>${v.s ? `<em>${dur(v.s)}</em>` : ''}</span></button>`).join('')}
     </div>
     <div class="man-play" hidden>
