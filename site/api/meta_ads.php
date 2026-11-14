@@ -14,6 +14,8 @@ function meta_db(): PDO {
     CREATE TABLE IF NOT EXISTS meta_gasto (conta TEXT NOT NULL, act TEXT NOT NULL, ad_id TEXT NOT NULL, dia TEXT NOT NULL, valor REAL NOT NULL, PRIMARY KEY (act, ad_id, dia));
     CREATE INDEX IF NOT EXISTS meta_gasto_dia ON meta_gasto(dia, conta);
     CREATE TABLE IF NOT EXISTS meta_campanhas (campanha TEXT PRIMARY KEY, conta TEXT NOT NULL, visto TEXT NOT NULL)');
+  $c = array_column($db->query('PRAGMA table_info(meta_gasto)')->fetchAll(), 'name');
+  if (!in_array('compras', $c, true)) $db->exec('ALTER TABLE meta_gasto ADD COLUMN compras REAL NOT NULL DEFAULT 0'); // compras que o próprio Meta atribui ao anúncio (pixel)
   $ok = true; return $db;
 }
 
@@ -58,7 +60,7 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
     if (!$forcar && $c['erro'] === '' && $c['ultimo'] && strtotime((string)$c['ultimo']) > time() - 900) { $out[$c['act']] = 'recente'; continue; }
     try {
       $ini = date('Y-m-d', time() - $dias * 86400); $fim = date('Y-m-d');
-      $url = meta_url($c['act'] . '/insights', ['level' => 'ad', 'fields' => 'ad_id,spend', 'time_increment' => 1, 'limit' => 500,
+      $url = meta_url($c['act'] . '/insights', ['level' => 'ad', 'fields' => 'ad_id,spend,actions', 'time_increment' => 1, 'limit' => 500,
         'time_range' => json_encode(['since' => $ini, 'until' => $fim])], (string)$c['token']);
       $linhas = []; $pag = 0;
       while ($url && $pag++ < 40) { $j = meta_get($url); foreach ($j['data'] ?? [] as $l) $linhas[] = $l; $url = (string)($j['paging']['next'] ?? ''); }
@@ -76,9 +78,10 @@ function meta_sync(bool $forcar = false, int $dias = 40): array {
       }
       $db->beginTransaction();
       $db->prepare('DELETE FROM meta_gasto WHERE act = ? AND dia >= ?')->execute([$c['act'], $ini]);
-      $ins = $db->prepare('INSERT OR REPLACE INTO meta_gasto (conta, act, ad_id, dia, valor) VALUES (?, ?, ?, ?, ?)');
+      $ins = $db->prepare('INSERT OR REPLACE INTO meta_gasto (conta, act, ad_id, dia, valor, compras) VALUES (?, ?, ?, ?, ?, ?)');
       $n = 0;
-      foreach ($linhas as $l) { $dc = $dono[(string)$l['ad_id']] ?? ''; if ($dc === '' || (float)$l['spend'] <= 0) continue; $ins->execute([$dc, $c['act'], (string)$l['ad_id'], (string)$l['date_start'], (float)$l['spend']]); $n++; }
+      foreach ($linhas as $l) { $dc = $dono[(string)$l['ad_id']] ?? ''; if ($dc === '' || (float)$l['spend'] <= 0) continue; $cp = 0.0; foreach ((array)($l['actions'] ?? []) as $ac) if (in_array($ac['action_type'] ?? '', ['offsite_conversion.fb_pixel_purchase', 'purchase', 'omni_purchase'], true)) $cp = max($cp, (float)$ac['value']);
+        $ins->execute([$dc, $c['act'], (string)$l['ad_id'], (string)$l['date_start'], (float)$l['spend'], $cp]); $n++; }
       $db->commit();
       $db->prepare("UPDATE meta_contas SET ultimo = ?, erro = '' WHERE id = ?")->execute([now(), $c['id']]);
       $out[$c['act']] = "ok ($n linhas)";

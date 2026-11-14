@@ -515,7 +515,7 @@ async function loadVisao() {
   const socio = (k, nome, p, cor) => { const a = A[k] || { gasto: 0, gasto_auto: 0, gasto_manual: 0, vendas: 0, liquido: 0 }; const r = a.gasto ? (a.liquido - a.gasto) / a.gasto : null;
     return `<div class="vgSoc ${cor}"><div class="vgSh"><b>${nome}</b><small>${p}% da divisão</small></div>
       <div class="vgSg"><div><small>Investiu em anúncio</small><b>${brl(a.gasto)}</b><span>gerenc. ${brl0(a.gasto_auto)} · impuls. ${brl0(a.gasto_manual)}</span></div>
-      <div><small>Vendas dos anúncios dele</small><b>${a.vendas}</b><span>${brl(a.liquido)} líquido</span></div>
+      <div><small>Vendas dos anúncios dele</small><b>${a.vendas}</b><span>${brl(a.liquido)} líquido${a.compras_meta ? ` · o Meta conta ${a.compras_meta}` : ''}</span></div>
       <div><small>ROI dos anúncios</small><b class="${r === null ? '' : r >= 0 ? 'g' : 'r'}">${r === null ? '—' : (r >= 0 ? '+' : '') + Math.round(r * 100) + '%'}</b><span>${a.gasto ? brl(a.liquido / a.gasto) + ' por R$ 1' : 'sem gasto no período'}</span></div>
       <div class="parte"><small>Parte dele (${p}% do lucro)</small><b>${brl(lucro * p / 100)}</b><span>lucro = líquido − anúncios</span></div></div></div>`; };
   // gráficos: por hora (1 dia), por dia (até 90) ou por mês (1 ano)
