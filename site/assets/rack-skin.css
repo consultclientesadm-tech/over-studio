@@ -1,0 +1,120 @@
+/* Studio Cover · visual "Rack de estúdio" nas áreas de membros (painel, afiliado, entrar, obrigado, depoimento).
+   Mesmo visual do app (css/rack.css): teclas com relevo, LEDs, visor preto, ícones próprios.
+   Os gráficos (canvas do painel e barras do afiliado) continuam do mesmo jeito. */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+:root { --key: linear-gradient(#24242b, #17171c); --keyy: linear-gradient(#ffe14d, #f2c400);
+  --keysh: inset 0 1px 0 rgba(255, 255, 255, .08), 0 2px 0 #000, 0 3px 6px rgba(0, 0, 0, .5);
+  --keyysh: inset 0 1px 0 rgba(255, 255, 255, .5), 0 2px 0 #8a6f00, 0 4px 14px rgba(255, 212, 0, .22);
+  --strip: linear-gradient(#141418, #101013); --edge: #1f1f25; --mono: 'JetBrains Mono', ui-monospace, monospace; --line: #1f1f25; }
+
+html, body { background: #0a0a0c; font-family: 'Space Grotesk', system-ui, sans-serif; }
+body { background: radial-gradient(900px 500px at 85% -10%, rgba(255, 212, 0, .06), transparent 60%), #0a0a0c; background-attachment: fixed; }
+.nebula, canvas.estrelas, .grade { display: none !important; }
+
+/* ícones */
+svg.ic { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; display: inline-block; vertical-align: -.2em; }
+svg.ic .f { fill: currentColor; stroke: none; }
+.ic-e { font-style: normal; display: inline-flex; align-items: center; line-height: 1; margin-right: .3em; color: var(--y); }
+button .ic-e, .btn .ic-e, a.btn .ic-e { color: inherit; }
+.led-e { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 .35em 0 .1em; vertical-align: .05em; font-style: normal; }
+.led-e.r { background: #ff4d5e; box-shadow: 0 0 6px #ff4d5e; } .led-e.y { background: #ffd400; box-shadow: 0 0 6px #ffd400; } .led-e.g { background: #2ee59d; box-shadow: 0 0 6px #2ee59d; }
+
+/* títulos */
+h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+h2 { letter-spacing: 0; }
+
+/* teclas */
+.btn, a.btn { border: 0 !important; border-radius: 12px !important; background: var(--keyy) !important; color: #000 !important; box-shadow: var(--keyysh) !important;
+  font-family: 'Space Grotesk', sans-serif !important; font-weight: 800 !important; letter-spacing: .02em !important; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn:active { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 0 0 #8a6f00 !important; }
+.btn.ghost, a.btn.ghost, .btn2, .sair, .so button, .lnk.btnlike { border: 0 !important; border-radius: 10px !important; background: var(--key) !important; color: #e8e8ec !important; box-shadow: var(--keysh) !important; font-family: 'Space Grotesk', sans-serif !important; font-weight: 600 !important; letter-spacing: 0 !important; }
+.btn.red { background: var(--key) !important; color: #ff6b78 !important; box-shadow: var(--keysh), inset 0 0 0 1px rgba(255, 77, 94, .5) !important; }
+.sair.aviso { color: var(--y) !important; }
+.so button.on { color: var(--y) !important; box-shadow: var(--keysh), inset 0 0 0 1px rgba(255, 212, 0, .6) !important; }
+button:disabled, .btn:disabled, .btn[disabled] { opacity: .5; }
+
+/* campos = visor preto */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select, textarea { background: #000 !important; border: 1px solid #23232a !important; border-radius: 10px !important; box-shadow: inset 0 0 0 3px #0e0e12; color: var(--ink, #f4f4f7); }
+input:focus, select:focus, textarea:focus { border-color: var(--y) !important; box-shadow: inset 0 0 0 3px #0e0e12, 0 0 0 3px rgba(255, 212, 0, .14) !important; }
+label { color: #a7a7b3; }
+
+/* cartões = painel do rack */
+.card, .glass, .fmt, .rot, .n, .kpi { background: var(--strip) !important; border: 1px solid var(--edge) !important; border-radius: 14px !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 10px 30px rgba(0, 0, 0, .35) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.glass::before { display: none !important; }
+.aviso { border-radius: 12px; }
+
+/* números (kpi, resultados) em fonte de visor */
+.kpi b, .n b { font-family: var(--mono) !important; letter-spacing: 0 !important; text-shadow: none !important; }
+.kpi small, .n small, th { font-family: var(--mono) !important; letter-spacing: .14em !important; }
+.kpi .orb { display: none; }
+.n::before { height: 2px !important; box-shadow: 0 0 8px var(--k, var(--y)); }
+
+/* abas */
+.tabs button, .seg button { font-family: 'Space Grotesk', sans-serif !important; }
+.tabs button { border: 0 !important; border-radius: 10px !important; background: var(--key) !important; box-shadow: var(--keysh) !important; color: #c9c9d2 !important; }
+.tabs button.on { background: var(--keyy) !important; box-shadow: var(--keyysh) !important; color: #000 !important; }
+.tabs { padding: 2px 2px 6px; }
+.seg { border: 1px solid var(--edge) !important; border-radius: 10px !important; background: #000 !important; padding: 3px; gap: 3px; }
+.seg button { border-radius: 7px !important; }
+.seg button.on { background: var(--key) !important; color: var(--y) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08) !important; }
+.seg button.on::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--y); box-shadow: 0 0 6px var(--y); vertical-align: .1em; }
+
+/* tabelas */
+th { font-size: 10px !important; color: #8a8a96 !important; }
+td { border-color: #18181d !important; }
+
+/* ===== Painel administrador ===== */
+.painel .nav { background: linear-gradient(#141418, #0d0d10) !important; border-right: 1px solid #000 !important; box-shadow: 1px 0 0 #1d1d22; backdrop-filter: none !important; gap: 6px !important; }
+.painel .brand { font-family: Orbitron, sans-serif; }
+.painel .nav > button { height: 42px; border-radius: 10px; background: var(--key); box-shadow: var(--keysh); color: #c9c9d2; font-family: 'Space Grotesk', sans-serif; font-weight: 600; }
+.painel .nav > button i { color: var(--y); display: inline-flex; justify-content: center; }
+.painel .nav > button i .ic-e { margin: 0; }
+.painel .nav > button:hover { background: var(--key); color: #fff; }
+.painel .nav > button.on { background: var(--keyy); box-shadow: var(--keyysh); color: #000; }
+.painel .nav > button.on i { color: #000; }
+.th h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 0; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+.th h2::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--y); box-shadow: 0 0 8px var(--y); flex: none; }
+.ch b { font-family: 'Space Grotesk', sans-serif; }
+.vistBtn { border: 0 !important; border-radius: 10px !important; background: var(--key) !important; box-shadow: var(--keysh) !important; color: #e8e8ec !important; }
+.vistBtn i { color: var(--y); }
+.somLib { border: 0 !important; border-radius: 12px !important; background: var(--keyy) !important; color: #000 !important; box-shadow: var(--keyysh), 0 0 30px rgba(255, 212, 0, .35) !important; font-family: 'Space Grotesk', sans-serif !important; font-weight: 800 !important; }
+.nbadge { font-family: var(--mono); }
+.modal .mbox { background: #111115 !important; }
+.modal .x { border-radius: 9px; background: var(--key); box-shadow: var(--keysh); border: 0; color: #ddd; }
+.lbox h1 { font-family: Orbitron, sans-serif; }
+.cap { color: #8a8a96 !important; text-shadow: none !important; font-family: var(--mono) !important; letter-spacing: .3em !important; }
+
+/* ===== Afiliado ===== */
+.marca { font-family: Orbitron, sans-serif; }
+.marca small { font-family: var(--mono) !important; }
+.card h2 { font: 700 10.5px var(--mono) !important; letter-spacing: .18em !important; color: #8a8a96 !important; display: flex; align-items: center; gap: 8px; }
+.card h2 .ic-e { color: var(--y); margin: 0; }
+.fmt i { color: var(--y); font-size: 22px !important; }
+.fmt i .ic-e { margin: 0; }
+.passo .num { font-family: var(--mono) !important; background: #000; }
+.passo.feito .num { background: #000 !important; color: var(--g, #2ee59d) !important; border-color: var(--g, #2ee59d) !important; box-shadow: 0 0 10px rgba(46, 229, 157, .35); }
+.passo.atual .num { background: #000; }
+.copy input { color: var(--y) !important; font-family: var(--mono) !important; font-size: 12.5px !important; }
+.et { border-radius: 6px !important; font-family: var(--mono); font-size: 11px !important; }
+.caminho { background: #000 !important; font-family: var(--mono); font-size: 12px !important; }
+
+/* ===== Entrar, obrigado, depoimento ===== */
+.box h1 em { text-shadow: none; }
+main .card h2 { font: 700 19px 'Space Grotesk', sans-serif !important; letter-spacing: 0 !important; color: var(--ink, #f4f4f7) !important; }
+div.ok:not(.msg):not(.aviso):not(.arq) { border-radius: 16px !important; color: #000; }
+div.ok:not(.msg):not(.aviso):not(.arq) .ic-e { margin: 0; color: #000; } div.ok:not(.msg):not(.aviso):not(.arq) svg.ic { width: 30px; height: 30px; stroke-width: 2.4; }
+.passos span { font-family: var(--mono); font-size: 10.5px !important; letter-spacing: .06em; }
+ol.st li::before { font-family: var(--mono) !important; border-radius: 8px !important; }
+.arq { border-style: solid !important; border-color: var(--edge) !important; background: var(--strip); }
+.arq.ok { border-color: var(--g, #2ee59d) !important; }
+.arq > .ic { border-radius: 10px !important; background: #000 !important; border: 1px solid #26262d; color: var(--y); }
+.arq > .ic .ic-e { margin: 0; }
+.estrelas button { border-radius: 10px !important; background: var(--key) !important; box-shadow: var(--keysh); border: 0 !important; }
+.estrelas button.on { color: var(--y) !important; box-shadow: var(--keysh), inset 0 0 0 1px rgba(255, 212, 0, .55); }
+.teste { border-style: solid !important; border-color: var(--edge) !important; background: var(--strip); border-radius: 14px !important; }
+.presente { border-radius: 12px !important; }
+
+/* números grandes do painel em fonte de visor (sem mexer nos gráficos) */
+.kpi b, .hmain > .cnt, .socios .cnt, .ncard:not(.gauge) .cnt, .vk b, .ak b, .ctot .cnt, .cpes .cnt, .hcmp b { font-family: var(--mono) !important; font-weight: 700 !important; letter-spacing: -.01em !important; }
+.tag { font-family: var(--mono) !important; letter-spacing: .12em !important; }
+.mbox h3 { font-family: 'Space Grotesk', sans-serif !important; letter-spacing: 0 !important; }
