@@ -185,17 +185,19 @@ switch ($a) {
     throttle('ev:' . $u['id'], 120, 3600);
     $k = preg_replace('/[^a-z]/', '', (string)arg('k'));
     if (!in_array($k, ['inicio', 'abriu', 'pronto', 'exportou', 'erro', 'fechou', 'saiu', 'quisbaixar', 'liberou'], true)) json_out(['ok' => true]);
-    $d = arg('d', []); $d = is_array($d) ? array_slice($d, 0, 12, true) : [];
+    $d = arg('d', []); $d = is_array($d) ? array_slice($d, 0, 16, true) : [];
     foreach ($d as $i => $v) $d[$i] = is_scalar($v) ? mb_substr((string)$v, 0, 200) : '';
     app_events_db()->prepare('INSERT INTO app_events (user_id, kind, data, ua, created_at) VALUES (?, ?, ?, ?, ?)')
       ->execute([$u['id'], $k, json_encode($d, JSON_UNESCAPED_UNICODE), mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 250), now()]);
     if ($k === 'inicio' || $k === 'abriu') marca_aparelho($u, (string)($d['modelo'] ?? ''));
     if ($k === 'erro' || $k === 'fechou') { // erro chegou: se a vistoria não rodou nos últimos minutos, roda agora (depois de responder ao app)
       require_once __DIR__ . '/vigia_erros.php';
-      // cliente pago com erro: pedido de desculpas na hora (aviso no app/celular + e-mail), no máximo 1 a cada 24h
-      if (cliente_pago($u) && ($d['etapa'] ?? '') !== 'externo') { $uu = $u; register_shutdown_function(function () use ($uu) {
+      // qualquer cliente com erro recebe na hora um aviso acolhedor no app/celular, pela causa provável do aparelho
+      // (velho / atualizar / navegador / vendo); cliente pago recebe também o e-mail. No máximo 1 a cada 24h.
+      $et = (string)($d['etapa'] ?? '');
+      if ($et !== 'externo' && $et !== 'rede' && empty($d['retomou'])) { $uu = $u; $causa = (string)($d['causa_ap'] ?? ''); register_shutdown_function(function () use ($uu, $causa) {
         if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
-        try { desculpa_cliente_pago($uu); } catch (Throwable $e) {}
+        try { desculpa_cliente($uu, $causa); } catch (Throwable $e) {}
       }); }
       $vl = setting('vigia_erros_last');
       if (!$vl || strtotime($vl) < time() - VIGIA_ERROS_INTERVALO) register_shutdown_function(function () {

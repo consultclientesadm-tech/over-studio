@@ -206,16 +206,38 @@ function pagos_ids(): array {
   if ($ids === null) $ids = array_flip(array_map('intval', db()->query("SELECT id FROM users WHERE status = 'active' AND paid_value > 0")->fetchAll(PDO::FETCH_COLUMN)));
   return $ids;
 }
-function desculpa_cliente_pago(array $u): void {
+// Aviso acolhedor depois de um erro (pedido do Leo, 14/11): a pessoa entende que o problema é do aparelho ou do
+// navegador (não um bug do sistema) e recebe a solução. $causa vem do app: velho / atualizar / navegador / vendo.
+function desculpa_textos(string $causa): array {
+  if ($causa === 'velho') return ['Seu celular não é compatível com o Studio Cover',
+    'Não é defeito do app: este celular é antigo demais para a inteligência artificial. Use no computador (studiocover.com.br) ou num celular compatível, com a mesma conta.',
+    '<p>O nosso sistema percebeu que o Studio Cover deu erro no seu celular agora há pouco. Fique tranquilo: <b>não é defeito do app nem do seu vídeo</b>. A inteligência artificial trabalha dentro do aparelho, e infelizmente este celular é antigo demais para ela.</p>'
+    . '<p><b>Como resolver:</b> use no <b>computador</b> (entre em studiocover.com.br pelo Chrome, Edge ou Safari, com o mesmo e-mail e senha) ou num <b>celular compatível</b>: iPhone 13 ou mais novo, ou Android com 3 GB de memória ou mais. A sua conta continua valendo em qualquer aparelho.</p>', '/app/'];
+  if ($causa === 'atualizar') return ['Atualize o seu celular para usar o Studio Cover',
+    'O erro veio do sistema ou do navegador desatualizado do seu celular, não do app. Atualize e tente de novo pelo ícone do Studio Cover.',
+    '<p>O nosso sistema percebeu que o Studio Cover deu erro no seu celular agora há pouco. Fique tranquilo: <b>não é defeito do app</b>. O sistema ou o navegador do seu celular está desatualizado.</p>'
+    . '<p><b>Como resolver:</b> no iPhone, abra Ajustes › Geral › Atualização de Software. No Android, atualize o Chrome na Play Store e o celular em Configurações › Atualização de software. Depois, abra o Studio Cover de novo e tente outra vez. Se o celular não recebe mais atualização, ele é antigo para o app: use no computador ou num celular compatível.</p>', '/app/'];
+  if ($causa === 'navegador') return ['Instale o Studio Cover na tela de início',
+    'O navegador do seu celular falhou (não é defeito do app). Pelo ícone da tela de início o Studio Cover abre sozinho e não trava. Toque aqui para instalar.',
+    '<p>O nosso sistema percebeu que o Studio Cover deu erro no seu celular agora há pouco. Fique tranquilo: <b>não é defeito do app</b>. O navegador do celular (principalmente o do Instagram) divide a memória com outras abas e fecha o app no meio.</p>'
+    . '<p><b>Como resolver:</b> instale o Studio Cover na tela de início, igual a um aplicativo, e abra sempre pelo ícone amarelo. Assim ele abre sozinho, com a memória do celular só para ele. Toque no botão abaixo e siga os 3 passos.</p>', '/app/?instalar=1'];
+  return ['Desculpe pelo problema 🙏', 'Vimos que deu um erro no seu Studio Cover e já estamos corrigindo. Tente de novo daqui a pouco.',
+    '<p>O nosso sistema percebeu que deu um erro no seu Studio Cover agora há pouco. Pedimos desculpas! A nossa equipe já foi avisada e está corrigindo.</p>', '/app/'];
+}
+function desculpa_cliente(array $u, string $causa = ''): void {
+  $pago = cliente_pago($u);
   $k = 'desculpa_' . (int)$u['id']; $q = db()->prepare('SELECT v FROM settings WHERE k = ?'); $q->execute([$k]); $last = (string)$q->fetchColumn();
   if ($last && strtotime($last) > time() - 86400) return;
   set_setting($k, now());
+  [$titulo, $curto, $html, $url] = desculpa_textos($causa);
   $nome = trim(explode(' ', (string)($u['name'] ?? ''))[0]);
-  notify((int)$u['id'], 'Desculpe pelo problema 🙏', 'Vimos que deu um erro no seu Studio Cover e já estamos corrigindo. Tente de novo daqui a pouco.', site_url() . '/app/');
-  send_mail($u, (string)$u['email'], 'desculpa-erro', 'Desculpe pelo problema no Studio Cover', 'Já estamos resolvendo',
-    '<p>Oi' . ($nome ? ' ' . h($nome) : '') . ',</p><p>O nosso sistema percebeu que deu um erro no seu Studio Cover agora há pouco. Pedimos desculpas! A nossa equipe já foi avisada e está corrigindo.</p>'
-    . '<p>Tente de novo daqui a pouco. Se continuar, é só responder este e-mail que a gente te ajuda pessoalmente.</p>', 'Abrir o Studio Cover', site_url() . '/app/');
-  // avisa os administradores também
+  notify((int)$u['id'], $titulo, $curto, site_url() . $url);
+  if (!$pago) return; // e-mail e alerta aos administradores: só cliente pago
+  send_mail($u, (string)$u['email'], 'desculpa-erro', $titulo, $causa === 'vendo' || $causa === '' ? 'Já estamos resolvendo' : 'Não é defeito do app',
+    '<p>Oi' . ($nome ? ' ' . h($nome) : '') . ',</p>' . $html
+    . '<p>Se continuar, é só responder este e-mail que a gente te ajuda pessoalmente.</p>', 'Abrir o Studio Cover', site_url() . $url);
+  $porque = ['velho' => 'celular antigo demais', 'atualizar' => 'sistema/navegador desatualizado', 'navegador' => 'navegador do celular (não instalado)', 'vendo' => 'aparelho em dia: erro para corrigir'][$causa] ?? 'sem causa';
   foreach (db()->query('SELECT email FROM admins')->fetchAll(PDO::FETCH_COLUMN) as $to)
-    try { send_mail(null, $to, 'alerta', '💛 Cliente PAGO teve erro: ' . (string)$u['email'], 'Cliente pago com erro', '<p>' . h((string)$u['name']) . ' (' . h((string)$u['email']) . ') teve erro no app. Ele já recebeu um pedido de desculpas por e-mail e no app. O Claude corrige esse erro primeiro na próxima rodada.</p>', 'Abrir o painel', site_url() . '/admin/'); } catch (Throwable $e) {}
+    try { send_mail(null, $to, 'alerta', '💛 Cliente PAGO teve erro: ' . (string)$u['email'], 'Cliente pago com erro', '<p>' . h((string)$u['name']) . ' (' . h((string)$u['email']) . ') teve erro no app. Causa provável: <b>' . h($porque) . '</b>. Ele já recebeu o aviso com a solução no app e por e-mail. O Claude corrige esse erro primeiro na próxima rodada.</p>', 'Abrir o painel', site_url() . '/admin/'); } catch (Throwable $e) {}
 }
+function desculpa_cliente_pago(array $u): void { desculpa_cliente($u, 'vendo'); }
