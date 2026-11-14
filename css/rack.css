@@ -344,3 +344,31 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 /* Entrada e carregando: rolam quando a tela é baixa (nada some embaixo) e continuam centralizadas quando sobra espaço */
 .app[data-screen=home] .home, .app[data-screen=work] .work { overflow-y: auto; -webkit-overflow-scrolling: touch; place-items: start center; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
 .app[data-screen=home] .home, .app[data-screen=work] .work { align-content: safe center; }
+
+/* v43: números das etapas (1 Afinação ... 4 Exportar) e topo da tela inicial só com Indique e ganhe + perfil */
+.stepper span[data-n]:not([data-n=""])::before { content: attr(data-n); display: inline-grid; place-items: center; width: 15px; height: 15px; margin-right: 4px; border-radius: 50%; background: #2a2a33; color: #d4d4dc; font: 700 9.5px Orbitron, sans-serif; vertical-align: 1px; }
+.stepper button.done span::before { background: rgba(46,229,157,.18); color: var(--green); }
+.stepper button.on span::before { background: #000; color: var(--y); }
+@media (max-width: 760px) { .stepper button.on span::before { background: var(--y); color: #000; } }
+.step h3[data-n]:not([data-n=""])::before { content: attr(data-n); display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 7px; background: linear-gradient(180deg, #ffe14d, #f2c200); color: #000; font: 800 13px Orbitron, sans-serif; vertical-align: 2px; box-shadow: 0 2px 0 #9a7a00; }
+.app[data-screen="home"] .manbtn, .app[data-screen="home"] .helpbtn, .app[data-screen="home"] .topinfo { display: none; }
+.workback { margin: 14px auto 0; display: inline-flex; align-items: center; gap: 6px; }
+/* Mix ampliada (v43): potenciômetros grandes na tela toda */
+.mixbar { display: none; }
+.mixbigbtn { display: inline-flex; align-items: center; gap: 6px; }
+#studio .step[data-step="3"].big { position: fixed; inset: 0; z-index: 80; display: block; overflow-y: auto; -webkit-overflow-scrolling: touch; margin: 0; border-radius: 0; background: #0b0b0e; padding: calc(70px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom)); }
+#studio .step[data-step="3"].big > .mixbar { display: flex; align-items: center; gap: 10px; position: fixed; left: 0; right: 0; top: 0; z-index: 81; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; background: linear-gradient(#141418, #0d0d10); border-bottom: 1px solid #1d1d22; }
+.mixbar b { flex: 1; font: 700 15px 'Space Grotesk', sans-serif; color: #e8e8ec; }
+.mixbar .time { font: 700 12px var(--mono, monospace); color: var(--y); }
+.mixbar .prime { display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 18px; }
+.mixbar .icon.play { width: 46px; height: 42px; }
+#studio .step[data-step="3"].big > .head p.sub, #studio .step[data-step="3"].big .mixbigbtn, #studio .step[data-step="3"].big > .maisbaixo { display: none !important; }
+#studio .step[data-step="3"].big .potgrid { gap: 12px; margin: 12px 0 8px; }
+#studio .step[data-step="3"].big .potgrid .row.pot-on { padding: 16px 6px 14px; gap: 8px; }
+#studio .step[data-step="3"].big .pot { width: 96px; height: 96px; }
+#studio .step[data-step="3"].big .pot .pk { inset: 18px; }
+#studio .step[data-step="3"].big .pot .pk b { height: 15px; width: 4px; margin-left: -2px; top: 6px; }
+#studio .step[data-step="3"].big .potgrid .row.pot-on output { font-size: 15px; }
+#studio .step[data-step="3"].big .potgrid .row.pot-on > span:first-child { font-size: 14px; }
+@media (max-width: 380px) { #studio .step[data-step="3"].big .pot { width: 84px; height: 84px; } #studio .step[data-step="3"].big .pot .pk { inset: 16px; } }
+body.mixbig .stepper { visibility: hidden; }

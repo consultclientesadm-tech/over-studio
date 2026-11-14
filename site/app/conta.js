@@ -34,6 +34,7 @@
 .sc-indb b{display:block;font:800 15px 'Space Grotesk',sans-serif;color:#5ff0b6}.sc-indb small{display:block;font-size:12.5px;color:#b9d9cb;margin-top:2px;line-height:1.35}
 .sc-indb em{margin-left:auto;font-style:normal;font:700 22px 'Space Grotesk',sans-serif;color:#5ff0b6}
 @keyframes scInd2{0%,100%{box-shadow:0 0 0 1px rgba(46,229,157,.15),0 0 10px rgba(46,229,157,.15)}50%{box-shadow:0 0 0 1px rgba(46,229,157,.35),0 0 28px rgba(46,229,157,.4)}}
+.app[data-screen="home"] .sc-conta{flex:1;margin-left:8px}.app[data-screen="home"] .sc-conta .sc-chip.y{display:none}.app[data-screen="home"] .sc-ind{margin:0 auto;width:auto;padding:0 14px 0 11px}.app[data-screen="home"] .sc-ind .sc-it{display:inline}
 @media(prefers-reduced-motion:reduce){.sc-ind,.sc-ind::after,.sc-indb{animation:none}}
 .sc-dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 8px #ff4d5e}
 .sc-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:end center;padding:12px;animation:scf .2s}
@@ -327,7 +328,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     const n = Math.max(0, me.trial_left);
     sheet(`<h3>${esc(me.name || 'Minha conta')}</h3><p style="margin-top:0">${esc(me.email)}</p>
       ${trial ? `<div class="sc-n nova"><b>Teste grátis: ${n} vídeo${n === 1 ? '' : 's'} restante${n === 1 ? '' : 's'}</b>No teste você vê e ouve o antes e depois. Libere o acesso completo para baixar os seus vídeos e fazer quantos covers quiser.<a class="sc-b" href="${esc(me.checkout_url || '/#comprar')}" target="_blank" rel="noopener">LIBERAR ACESSO COMPLETO</a></div>` : me.paid ? `<div class="sc-n"><b style="color:#2ee59d">✓ Acesso completo</b>${me.expires_at ? 'Válido até ' + esc(me.expires_at.slice(0, 10).split('-').reverse().join('/')) : 'Vitalício'}</div>` : ''}
-      ${(me.afiliado ? `<a class="sc-li" href="/afiliado/" target="_blank" rel="noopener"><i>${I('money')}</i>Meu painel de afiliado</a>` : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">Indique e ganhe</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`)}
+      ${(me.afiliado ? `<a class="sc-li" href="/afiliado/?de=app"><i>${I('money')}</i>Meu painel de afiliado</a>` : `<a class="sc-n" href="/afiliados/?utm_source=app&utm_medium=menu" style="display:block;text-decoration:none;color:inherit;border-color:rgba(46,229,157,.45)"><b style="color:#2ee59d">Indique e ganhe</b>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura, também nas renovações. <u style="color:#ffd400">Ver como funciona →</u></a>`)}
       <a class="sc-li" data-m="avisos"><i>${I('bell')}</i>Avisos ${unread ? `<b style="color:#ffd400">(${unread})</b>` : ''}</a>
       ${standalone ? '' : `<a class="sc-li" data-m="instalar"><i>${I('install')}</i>Instalar na tela de início</a>`}
       ${podePush && !pushLigado() ? `<a class="sc-li" data-m="push"><i>${I('bell')}</i>Ligar avisos no celular</a>` : ''}
@@ -356,8 +357,8 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
   function meusDados() {
     const s = sheet(`<h3>Privacidade e meus dados</h3>
       <p>Seus vídeos nunca saem do seu aparelho: todo o processamento acontece aqui. Guardamos só o necessário para a sua conta funcionar (nome, e-mail, compras e o uso do app).</p>
-      <a class="sc-li" href="/privacidade/" target="_blank"><i>${I('doc')}</i>Política de privacidade</a>
-      <a class="sc-li" href="/termos/" target="_blank"><i>${I('doc')}</i>Termos de uso</a>
+      <a class="sc-li" href="/privacidade/?de=app"><i>${I('doc')}</i>Política de privacidade</a>
+      <a class="sc-li" href="/termos/?de=app"><i>${I('doc')}</i>Termos de uso</a>
       <a class="sc-li" href="/api/conta.php?a=meus-dados" download="meus-dados-studio-cover.json"><i>${I('download')}</i>Baixar uma cópia dos meus dados</a>
       <a class="sc-li" data-apagar><i>${I('trash')}</i><span style="color:#ff8a95">Apagar minha conta</span></a>`);
     s.el.querySelector('[data-apagar]').onclick = () => { s.close(); apagar(); };
@@ -385,7 +386,7 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     const trial = me.trial && !me.paid;
     box.innerHTML = `${!standalone && (deferred || ios || android) ? `<button class="sc-chip y" data-i aria-label="Instalar">${I('install')}<span class="sc-it"> Instalar</span></button>` : ''}
       ${trial ? (me.can_use ? `<button class="sc-chip y" data-t title="Testes grátis que faltam">${I('ticket')} ${Math.max(0, me.trial_left)}</button>` : `<button class="sc-chip y" data-t title="Liberar acesso">${I('lock')} Liberar</button>`) : ''}
-      <a class="sc-ind" href="${me.afiliado ? '/afiliado/' : '/afiliados/?utm_source=app&utm_medium=topo'}" target="_blank" rel="noopener" title="Indique e ganhe" aria-label="Indique e ganhe">${I('gift')}<span class="sc-it">Indique e ganhe</span></a>
+      <a class="sc-ind" href="${me.afiliado ? '/afiliado/?de=app' : '/afiliados/?utm_source=app&utm_medium=topo'}" title="Indique e ganhe" aria-label="Indique e ganhe">${I('gift')}<span class="sc-it">Indique e ganhe</span></a>
       <button class="sc-chip" data-c aria-label="Minha conta">${esc((me.name || me.email || '?').trim()[0].toUpperCase())}${unread ? '<span class="sc-dot"></span>' : ''}</button>`;
     box.querySelector('[data-i]')?.addEventListener('click', install);
     box.querySelector('[data-t]')?.addEventListener('click', () => (me.can_use ? menu() : paywall()));
@@ -393,11 +394,11 @@ body.sc-tem-bar{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
     // Indique e ganhe também em destaque na tela de entrada (para todo mundo; a trava de "só cliente" fica na hora de se afiliar)
     const man = document.getElementById('manHome');
     if (man && !document.getElementById('scIndHome')) {
-      const a = document.createElement('a'); a.id = 'scIndHome'; a.className = 'sc-indb'; a.target = '_blank'; a.rel = 'noopener';
+      const a = document.createElement('a'); a.id = 'scIndHome'; a.className = 'sc-indb';
       a.innerHTML = `<i>${I('gift')}</i><span><b>Indique e ganhe</b><small>Indique o Studio Cover para outros cantores e ganhe perto de R$ 140 por assinatura.</small></span><em>›</em>`;
       man.after(a);
     }
-    const ih = document.getElementById('scIndHome'); if (ih) ih.href = me.afiliado ? '/afiliado/' : '/afiliados/?utm_source=app&utm_medium=entrada';
+    const ih = document.getElementById('scIndHome'); if (ih) ih.href = me.afiliado ? '/afiliado/?de=app' : '/afiliados/?utm_source=app&utm_medium=entrada';
     bar();
   }
 

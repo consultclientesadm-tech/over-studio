@@ -56,9 +56,11 @@ switch ($a) {
     af_avisa_admins($af);
     json_out(['ok' => true]);
   }
-  case 'app': { $u = current_user(); json_out(['ok' => true, 'logado' => (bool)$u, 'paid' => $u ? access($u)['paid'] : false, 'email' => $u['email'] ?? '']); }
+  case 'app': { $u = current_user(); $ja = false;
+    if ($u) { $q = af_db()->prepare('SELECT ativo FROM afiliados WHERE email = ?'); $q->execute([$u['email']]); $ja = (bool)$q->fetchColumn(); }
+    json_out(['ok' => true, 'logado' => (bool)$u, 'paid' => $u ? access($u)['paid'] : false, 'afiliado' => $ja, 'email' => $u['email'] ?? '']); }
   case 'virar': { // cliente do app vira afiliado num toque, com o mesmo e-mail e a mesma senha do app
-    require_post(); throttle('afvirar:' . client_ip(), 10, 3600);
+    require_post(); throttle('afvirar:' . client_ip(), 40, 3600);
     $u = current_user(); if (!$u) fail('Entre no app Studio Cover primeiro.');
     if (!access($u)['paid']) json_out(['ok' => false, 'comprar' => checkout_url($u) ?: site_url() . '/#oferta',
       'error' => 'Para ser afiliado, primeiro você precisa ser cliente do Studio Cover. Assine, use o app e recupere o valor indicando: cada assinatura que você indica rende perto de R$ 140.'], 403);
