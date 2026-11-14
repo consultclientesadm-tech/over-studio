@@ -400,7 +400,7 @@ switch ($a) {
       'anterior' => ['vendas' => (int)$pv, 'liquido' => round((float)$pl, 2), 'cadastros' => $pc],
       'anuncios' => or_anuncios($db, $ini, $fim), 'socio_pct' => max(0, min(100, brnum(setting('socio_pct'))))]);
   }
-  case 'origens': try { meta_sync(false); } catch (Throwable $e) {} json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))))); // de qual página e canal vêm visitas, testes e vendas
+  case 'origens': try { meta_sync(false); } catch (Throwable $e) {} json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))), (string)($_GET['dia'] ?? ''))); // de qual página e canal vêm visitas, testes e vendas
   case 'vigia-erros': { // vistoria de 10 em 10 min: tipos de erro do app, alertas e quando rodou
     json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista()]);
   }

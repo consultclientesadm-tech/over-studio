@@ -114,12 +114,14 @@ function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'
 }
 
 // relatório do painel
-function or_relatorio(int $dias): array {
+// período por dia do calendário (São Paulo): "Hoje" = desde 00:00 de hoje; $dia = um dia escolhido (AAAA-MM-DD)
+function or_relatorio(int $dias, string $dia = ''): array {
   $db = origem_db(); sales_fill_net();
-  $since = date('Y-m-d H:i:s', time() - $dias * 86400);
-  $vis = $db->prepare('SELECT pagina, fonte, campanha, COUNT(*) n FROM visitas WHERE created_at >= ? GROUP BY pagina, fonte, campanha'); $vis->execute([$since]);
-  $cad = $db->prepare("SELECT origem, COUNT(*) n FROM users WHERE source = 'trial' AND created_at >= ? GROUP BY origem"); $cad->execute([$since]);
-  $ven = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, or_caminho, COUNT(*) n, COALESCE(SUM(liquido), 0) l FROM sales WHERE status = 'pago' AND created_at >= ? GROUP BY or_pagina, or_fonte, or_campanha, or_caminho"); $ven->execute([$since]);
+  if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dia) && strtotime($dia)) { $since = "$dia 00:00:00"; $ate = "$dia 23:59:59"; }
+  else { $dia = ''; $since = date('Y-m-d 00:00:00', strtotime('-' . ($dias - 1) . ' days')); $ate = '9999-12-31 23:59:59'; }
+  $vis = $db->prepare('SELECT pagina, fonte, campanha, COUNT(*) n FROM visitas WHERE created_at >= ? AND created_at <= ? GROUP BY pagina, fonte, campanha'); $vis->execute([$since, $ate]);
+  $cad = $db->prepare("SELECT origem, COUNT(*) n FROM users WHERE source = 'trial' AND created_at >= ? AND created_at <= ? GROUP BY origem"); $cad->execute([$since, $ate]);
+  $ven = $db->prepare("SELECT or_pagina, or_fonte, or_campanha, or_caminho, COUNT(*) n, COALESCE(SUM(liquido), 0) l FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? GROUP BY or_pagina, or_fonte, or_campanha, or_caminho"); $ven->execute([$since, $ate]);
   $rows = [];
   $add = function (string $p, string $f, string $c, string $k, $v) use (&$rows) {
     $p = $p === '' ? 'sem-rastreio' : $p;
@@ -135,8 +137,9 @@ function or_relatorio(int $dias): array {
     $cam = ['compra direta' => 'direta', 'teste grátis' => 'teste', 'afiliado' => 'afiliado'][(string)$r['or_caminho']] ?? '';
     if ($cam) $add($p, $f, $c, $cam, $r['n']);
   }
-  $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' ORDER BY s.id DESC LIMIT 15");
-  $ult->execute();
-  $anun = or_anuncios($db, $since);
-  return ['ok' => true, 'anuncios' => $anun, 'campanhas_soltas' => array_keys($GLOBALS['or_soltas'] ?? []), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
+  // todas as vendas do período, uma por linha, com data e hora (antes eram só as 15 últimas, sem respeitar o período)
+  $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' AND s.created_at >= ? AND s.created_at <= ? ORDER BY s.created_at DESC, s.id DESC LIMIT 500");
+  $ult->execute([$since, $ate]);
+  $anun = or_anuncios($db, $since, $ate);
+  return ['ok' => true, 'anuncios' => $anun, 'campanhas_soltas' => array_keys($GLOBALS['or_soltas'] ?? []), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'dia' => $dia, 'de' => $since, 'ate' => min($ate, now()), 'linhas' => array_values($rows), 'ultimas' => $ult->fetchAll(), 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
 }
