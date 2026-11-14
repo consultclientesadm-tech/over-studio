@@ -17,6 +17,11 @@ Options -Indexes
   RewriteCond %{HTTP_HOST} !^localhost
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
   # clientes de fora: /en, /fr, /es, /de, /it, /pt-pt (e /en/vsl etc.) abrem a mesma página na língua escolhida
+  # anúncios de fora (2026-11-14): /us = Estados Unidos e Canadá (só inglês, dólar); /eu = Europa (bandeirinhas en/es/fr/pt-pt, euro)
+  RewriteRule ^(us|US)/?$ /?lang=en&reg=us [L,R=302,QSA]
+  RewriteRule ^(us|US)/(.+)$ /$2?lang=en&reg=us [L,R=302,QSA]
+  RewriteRule ^(eu|EU)/?$ /?reg=eu [L,R=302,QSA]
+  RewriteRule ^(eu|EU)/(.+)$ /$2?reg=eu [L,R=302,QSA]
   RewriteRule ^(en|fr|es|de|it|pt-pt)/?$ /?lang=$1 [L,R=302,QSA]
   RewriteRule ^(en|fr|es|de|it|pt-pt)/(.+)$ /$2?lang=$1 [L,R=302,QSA]
   # /VSL ou /vsl sem barra -> /vsl/ (página de venda direta, sem teste grátis)

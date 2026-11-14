@@ -25,7 +25,10 @@ function regiao_de(string $pais, string $lang): string {
   return in_array($lang, SC_LANGS_EU, true) ? 'eu' : 'us';
 }
 // região de quem está acessando: o navegador manda o cookie sc_reg (pelo fuso horário); se não tiver, vai pela língua
+// página de anúncio de fora (/us ou /eu) fixa a região no navegador (cookie sc_reg_fix); vale acima do fuso horário
+function req_reg_fix(): string { $f = (string)($_COOKIE['sc_reg_fix'] ?? ''); return in_array($f, ['us', 'eu'], true) ? $f : ''; }
 function req_regiao(): string {
+  if ($f = req_reg_fix()) return $f;
   $r = (string)($_COOKIE['sc_reg'] ?? '');
   if (in_array($r, ['br', 'us', 'eu'], true)) { if (req_lang() === 'pt' && $r !== 'br' && empty($_COOKIE['sc_lang_escolhida'])) return 'br'; return $r; }
   return regiao_de('', req_lang());
@@ -50,7 +53,8 @@ function marca_regiao(int $uid, string $lang = '', string $pais = '', bool $forc
   $pais = strtoupper($pais ?: (string)($r['pais'] ?? ''));
   if ($pais === '' && $lang !== 'pt') $pais = pais_do_ip(client_ip());
   if (!$forcar && !empty($r['regiao']) && ($r['lang'] ?? '') !== '') { if ($pais !== '' && empty($r['pais'])) $db->prepare('UPDATE users SET pais = ? WHERE id = ?')->execute([$pais, $uid]); return; }
-  $db->prepare('UPDATE users SET lang = ?, pais = ?, regiao = ? WHERE id = ?')->execute([$lang, $pais, regiao_de($pais, $lang), $uid]);
+  $reg = regiao_de($pais, $lang); $fx = req_reg_fix(); if ($fx !== '' && $reg !== 'br') $reg = $fx; // veio pela página /us ou /eu
+  $db->prepare('UPDATE users SET lang = ?, pais = ?, regiao = ? WHERE id = ?')->execute([$lang, $pais, $reg, $uid]);
 }
 function i18n_migra(PDO $db): void {
   $cols = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');

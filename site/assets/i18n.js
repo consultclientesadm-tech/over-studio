@@ -4,7 +4,7 @@
    brasileira nunca muda. Textos que faltam no dicionário são avisados ao servidor (/api/i18n.php) para traduzir. */
 (function () {
   'use strict';
-  var V = 203174487; // sobe quando os dicionários mudam (tools/i18n-montar.mjs atualiza sozinho)
+  var V = 93265940; // sobe quando os dicionários mudam (tools/i18n-montar.mjs atualiza sozinho)
   var LANGS = { pt: 'Português (Brasil)', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch', it: 'Italiano', 'pt-pt': 'Português (Portugal)' };
   var HTMLLANG = { pt: 'pt-BR', en: 'en', es: 'es', fr: 'fr', de: 'de', it: 'it', 'pt-pt': 'pt-PT' };
   var BR_TZ = /^America\/(Sao_Paulo|Fortaleza|Recife|Bahia|Manaus|Belem|Cuiaba|Campo_Grande|Porto_Velho|Boa_Vista|Rio_Branco|Araguaina|Maceio|Santarem|Noronha|Eirunepe)$/;
@@ -12,8 +12,25 @@
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
   function cookie(k) { var m = document.cookie.match(new RegExp('(?:^|; )' + k + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : ''; }
   function norm(l) { l = String(l || '').toLowerCase().replace('_', '-'); if (l === 'pt-br') return 'pt'; if (LANGS[l]) return l; var b = l.split('-')[0]; return LANGS[b] ? b : ''; }
+  // página de anúncio de fora: /us (só inglês) ou /eu (bandeirinhas en/es/fr/pt-pt). Fica gravado no navegador (sc_reg_fix).
+  var EU_LANGS = ['en', 'es', 'fr', 'pt-pt'];
+  var FIX = (function () {
+    var r = ''; try { r = (new URLSearchParams(location.search).get('reg') || '').toLowerCase(); } catch (e) {}
+    if (r === 'br') { document.cookie = 'sc_reg_fix=; path=/; max-age=0'; ls('sc-reg-fix', null); return ''; }
+    if (r === 'us' || r === 'eu') return r;
+    r = cookie('sc_reg_fix') || ls('sc-reg-fix') || '';
+    return r === 'us' || r === 'eu' ? r : '';
+  })();
   function detect() {
     var q = ''; try { q = new URLSearchParams(location.search).get('lang') || ''; } catch (e) {}
+    if (FIX === 'us') return 'en';
+    if (FIX === 'eu') {
+      var e = [norm(q), norm(cookie('sc_lang')), norm(ls('sc-lang'))].filter(function (x) { return EU_LANGS.indexOf(x) >= 0; })[0];
+      if (e) return e;
+      var nv = String((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase();
+      if (nv.indexOf('es') === 0) return 'es'; if (nv.indexOf('fr') === 0) return 'fr'; if (nv.indexOf('pt') === 0) return 'pt-pt';
+      return 'en';
+    }
     var l = norm(q) || norm(cookie('sc_lang')) || norm(ls('sc-lang'));
     if (l) return l;
     var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
@@ -28,6 +45,7 @@
   var lang = detect();
   // região (preço e checkout): Brasil, Estados Unidos/Canadá ou Europa, pelo fuso horário do aparelho
   function regiao(l) {
+    if (FIX) return FIX;
     var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
     if (BR_TZ.test(tz)) return 'br';
     if (/^(Europe|Atlantic\/(Azores|Madeira|Canary|Reykjavik|Faroe))\//.test(tz)) return 'eu';
@@ -35,9 +53,9 @@
     return l === 'pt' ? 'br' : (l === 'en' ? 'us' : 'eu');
   }
   function ck(k, v) { var exp = new Date(Date.now() + 365 * 864e5).toUTCString(); document.cookie = k + '=' + v + '; path=/; expires=' + exp + '; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : ''); }
-  function save(l, escolheu) { ck('sc_lang', l); ck('sc_reg', regiao(l)); if (escolheu) ck('sc_lang_escolhida', '1'); ls('sc-lang', l); }
+  function save(l, escolheu) { ck('sc_lang', l); ck('sc_reg', regiao(l)); if (FIX) { ck('sc_reg_fix', FIX); ls('sc-reg-fix', FIX); } if (escolheu) ck('sc_lang_escolhida', '1'); ls('sc-lang', l); }
   save(lang);
-  var api = window.scI18n = { lang: lang, regiao: regiao(lang), langs: LANGS, ready: null, t: function (s) { return s; }, set: function (l) { l = norm(l) || 'pt'; save(l, true); try { var u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.toString()); } catch (e) { location.reload(); } } };
+  var api = window.scI18n = { lang: lang, regiao: regiao(lang), fix: FIX, langs: LANGS, ready: null, t: function (s) { return s; }, set: function (l) { l = norm(l) || 'pt'; if (FIX === 'us') l = 'en'; if (FIX === 'eu' && EU_LANGS.indexOf(l) < 0) l = 'en'; save(l, true); try { var u = new URL(location.href); u.searchParams.delete('lang'); location.replace(u.toString()); } catch (e) { location.reload(); } } };
   document.documentElement.setAttribute('data-lang', lang);
   if (lang === 'pt') { api.ready = Promise.resolve(); switcherLater(); return; }
   document.documentElement.lang = HTMLLANG[lang];
@@ -178,7 +196,37 @@
   // seletor de língua: no rodapé das páginas (qualquer elemento com data-lang-switch, ou o <footer>)
   function switcherLater() { onDom2(function () { setTimeout(switcher, 0); }); }
   function onDom2(f) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', f); else f(); }
+  // bandeirinhas (só Europa): desenhadas aqui mesmo, sem emoji, para aparecer igual em qualquer celular
+  var FLAGS = {
+    en: '<svg viewBox="0 0 60 30" width="30" height="20" preserveAspectRatio="none"><clipPath id="scuk"><path d="M0 0v30h60V0z"/></clipPath><g clip-path="url(#scuk)"><path d="M0 0v30h60V0z" fill="#012169"/><path d="M0 0l60 30m0-30L0 30" stroke="#fff" stroke-width="6"/><path d="M0 0l60 30m0-30L0 30" stroke="#C8102E" stroke-width="2"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"/></g></svg>',
+    es: '<svg viewBox="0 0 3 2" width="30" height="20"><rect width="3" height="2" fill="#AA151B"/><rect y=".5" width="3" height="1" fill="#F1BF00"/></svg>',
+    fr: '<svg viewBox="0 0 3 2" width="30" height="20"><rect width="1" height="2" fill="#002654"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#CE1126"/></svg>',
+    'pt-pt': '<svg viewBox="0 0 5 3" width="30" height="20"><rect width="5" height="3" fill="#FF0000"/><rect width="2" height="3" fill="#006600"/><circle cx="2" cy="1.5" r=".6" fill="#FFCC00"/></svg>'
+  };
+  var FLAG_NAME = { en: 'English', es: 'Español', fr: 'Français', 'pt-pt': 'Português' };
+  function flags() {
+    if (/^\/admin/.test(location.pathname) || document.querySelector('.sc-flags')) return;
+    var host = document.querySelector('[data-lang-flags]');
+    var bar = document.createElement('div'); bar.className = 'sc-flags'; bar.setAttribute('data-noi18n', ''); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Language');
+    // faixa fina no topo da página (não fica por cima de nenhum botão)
+    bar.style.cssText = host ? 'display:flex;gap:6px;justify-content:center;margin:10px auto' : 'position:relative;z-index:50;display:flex;gap:10px;justify-content:center;align-items:center;padding:calc(6px + env(safe-area-inset-top,0px)) 8px 6px;background:#000;border-bottom:1px solid rgba(255,214,0,.25)';
+    EU_LANGS.forEach(function (l) {
+      var b = document.createElement('button'); b.type = 'button'; b.innerHTML = FLAGS[l]; b.title = FLAG_NAME[l]; b.setAttribute('aria-label', FLAG_NAME[l]);
+      b.style.cssText = 'all:unset;cursor:pointer;display:block;line-height:0;border-radius:3px;overflow:hidden;width:30px;height:20px;outline:2px solid ' + (l === lang ? '#FFD600' : 'transparent') + ';outline-offset:1px;opacity:' + (l === lang ? '1' : '.8');
+      b.onclick = function () { if (l !== lang) api.set(l); };
+      bar.appendChild(b);
+    });
+    if (host) { host.appendChild(bar); return; }
+    document.body.insertBefore(bar, document.body.firstChild);
+    // se a página tem cabeçalho grudado no topo, ele desce a altura da faixa para nada ficar escondido
+    var h = bar.offsetHeight;
+    [].forEach.call(document.querySelectorAll('body > header, body > .top, body > .topo, body > nav, header.top'), function (el) {
+      var cs = getComputedStyle(el); if ((cs.position === 'fixed' || cs.position === 'sticky' || cs.position === 'absolute') && parseFloat(cs.top || '0') < 4) el.style.top = h + 'px';
+    });
+  }
   function switcher() {
+    if (FIX === 'us') return;
+    if (FIX === 'eu') return flags();
     if (/^\/(admin|app)/.test(location.pathname)) return;
     var host = document.querySelector('[data-lang-switch]') || document.querySelector('footer');
     if (!host || host.querySelector('.sc-lang')) return;

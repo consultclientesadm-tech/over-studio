@@ -45,6 +45,22 @@ $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
 if (!in_array($a, ['resumo', 'visao', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'origens', 'push-chave', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa', 'escudo'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
+// país do painel (2026-11-14): Brasil, EUA/Canadá ou Europa (e um país da Europa). Só nas telas de leitura.
+// As tabelas users, sales, usage e app_events viram "janelas" filtradas só neste pedido (TEMP VIEW: no SQLite ela passa
+// na frente da tabela de verdade), então todas as contas do painel saem só da região escolhida, sem mudar nada no banco.
+$REG = in_array($_GET['reg'] ?? '', ['br', 'us', 'eu'], true) ? (string)$_GET['reg'] : '';
+$PAIS = preg_match('/^[A-Z]{2}$/', (string)($_GET['pais'] ?? '')) ? (string)$_GET['pais'] : '';
+if ($REG !== '' && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' && in_array($a, ['resumo', 'visao', 'hoje', 'serie', 'alunos', 'funil', 'origens', 'app-saude'], true)) {
+  i18n_migra($db); origem_db(); af_db(); app_events_db(); sales_fill_net(); ad_gastos_conta($db); // o que cria/acerta coluna roda antes das janelas
+  if ($a === 'visao' || $a === 'origens') { try { meta_sync(false); } catch (Throwable $e) {} }
+  $rq = $db->quote($REG); $pq = $db->quote($PAIS);
+  $uw = "COALESCE(NULLIF(regiao, ''), 'br') = $rq" . ($PAIS !== '' ? " AND pais = $pq" : '');
+  $db->exec("CREATE TEMP VIEW users AS SELECT * FROM main.users WHERE $uw");
+  $db->exec("CREATE TEMP VIEW sales AS SELECT * FROM main.sales WHERE COALESCE(NULLIF(regiao, ''), 'br') = $rq" . ($PAIS !== '' ? " AND (pais = $pq OR user_id IN (SELECT id FROM main.users WHERE $uw))" : ''));
+  $db->exec("CREATE TEMP VIEW usage AS SELECT * FROM main.usage WHERE user_id IN (SELECT id FROM main.users WHERE $uw)");
+  $db->exec("CREATE TEMP VIEW app_events AS SELECT * FROM main.app_events WHERE " . ($REG === 'br' && $PAIS === '' ? 'user_id IS NULL OR ' : '') . "user_id IN (SELECT id FROM main.users WHERE $uw)");
+}
+
 switch ($a) {
   case 'resumo': {
     sales_fill_net();

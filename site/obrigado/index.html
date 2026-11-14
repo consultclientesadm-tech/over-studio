@@ -236,10 +236,12 @@ ol.st li svg, ol.st li img { flex: 0 0 26px; }
     // veio por afiliado: o checkout é o link dele (pode disparar o pixel dele, não o nosso), então a Compra vai para TODOS os nossos pixels
     var af = /(^|;\s*)sc_af=/.test(document.cookie); try { var g = JSON.parse(memo('sc-af') || 'null'); if (g && Date.now() - g.t < 60 * 864e5) af = true; } catch (e) {}
     if (af) ja = [];
+    var stripe = !!q.get('stripe'); if (stripe) ja = []; // compra pela Stripe (fora do Brasil): o checkout dela não tem pixel, então a Compra vai para todos
     var ids = String(o.pixel || '').split(/[^0-9]+/).filter(function (i) { return i && ja.indexOf(i) < 0; });
     if (!ids.length) return;
     var trans = pega(['trans_cod', 'edz_fat_cod', 'fatura', 'invoice', 'order_id']);
     var valor = parseFloat(String(pega(['trans_paid', 'edz_valorpago', 'trans_value', 'valor', 'value']) || '').replace(',', '.')) || parseFloat(String(o.price || '297').replace(/\./g, '').replace(',', '.')) || 297;
+    var moeda = stripe && o.moeda ? o.moeda : 'BRL'; if (stripe) { valor = parseFloat(o.price) || valor; trans = trans || q.get('stripe'); }
     !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s); }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
     ids.forEach(function (i) { fbq('init', i); });
     fbq('track', 'PageView');
@@ -247,7 +249,7 @@ ol.st li svg, ol.st li img { flex: 0 0 26px; }
     var antes = parseInt(memo(chave) || '0', 10);
     if (antes && (trans || Date.now() - antes < 6 * 3600 * 1000)) return; // já contou esta compra neste aparelho
     var opc = trans ? { eventID: 'sc-' + trans } : {};
-    ids.forEach(function (i) { fbq('trackSingle', i, 'Purchase', { content_name: 'Studio Cover', value: valor, currency: 'BRL' }, opc); });
+    ids.forEach(function (i) { fbq('trackSingle', i, 'Purchase', { content_name: 'Studio Cover', value: valor, currency: moeda }, opc); });
     memo(chave, String(Date.now()));
   }).catch(function () {});
 })();

@@ -444,3 +444,10 @@ pre { white-space: pre-wrap; word-break: break-all; font-size: 11.5px; color: #9
 .orPagV { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
 .orPagV span { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 13px; background: rgba(3,3,10,.4); }
 .orPagV span b { color: #2ee59d; font-size: 16px; margin-right: 4px; }
+
+/* país do painel (2026-11-14) */
+.regBar { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; }
+.regBar label { font: 700 12px Sora; letter-spacing: .08em; text-transform: uppercase; color: #9a9aa6; }
+.regBar select { background: #111116; color: #ffd400; border: 1px solid rgba(255,212,0,.5); border-radius: 999px; padding: 8px 14px; font: 700 14px Sora; max-width: 230px; }
+body:not([data-reg="br"]) .regBar select { box-shadow: 0 0 18px rgba(255,212,0,.35); }
+@media (max-width: 760px) { .regBar { margin-right: 150px; } .regBar label { display: none; } .regBar select { max-width: 100%; font-size: 13px; padding: 7px 10px; } }

@@ -142,7 +142,7 @@ const SETTINGS_DEFAULT = [
   'dpo_email' => 'contato@studiocover.com.br', // e-mail do encarregado de dados (LGPD): pedidos de acesso, correção e exclusão
   // fora do Brasil (2026-11-14): preço e checkout da Stripe por região. Vazio = região sem venda ainda (cai no teste grátis)
   'price_us' => '97', 'price_eu' => '89',          // preço anual em dólar (EUA e Canadá) e em euro (Europa)
-  'checkout_us' => '', 'checkout_eu' => '',          // link de pagamento da Stripe de cada região
+  'checkout_us' => 'https://buy.stripe.com/28EeVe3CZ8y24sGdjLafS00', 'checkout_eu' => 'https://buy.stripe.com/aFa3cw6Pb6pU7ES0wZafS01', // link de pagamento da Stripe de cada região (US$ 97 e 89 €)
   'stripe_whsec' => '',                             // segredo do webhook da Stripe (whsec_...)
   'stripe_sk' => '',                                // chave restrita da Stripe (rk_live_...), só para fazer o repasse do sócio
   'stripe_socio_acct' => '', 'stripe_socio_pct' => '50', // conta Stripe do sócio (acct_...) e a parte dele em cada venda
@@ -152,6 +152,7 @@ function setting(string $k): string {
   static $cache = null;
   if ($cache === null) { $cache = []; foreach (db()->query('SELECT k, v FROM settings') as $r) $cache[$r['k']] = $r['v']; }
   if ($k === 'webhook_token' && empty($cache[$k])) { $cache[$k] = bin2hex(random_bytes(16)); set_setting($k, $cache[$k]); }
+  if (($k === 'checkout_us' || $k === 'checkout_eu') && ($cache[$k] ?? '') === '') return SETTINGS_DEFAULT[$k];
   return $cache[$k] ?? (SETTINGS_DEFAULT[$k] ?? '');
 }
 function set_setting(string $k, string $v): void {
@@ -349,6 +350,7 @@ function sale_net(float $value, bool $afiliado = false): array {
 }
 // colunas novas em vendas antigas + calcula o líquido das que ainda não têm
 function sales_fill_net(): void {
+  static $feito = false; if ($feito) return; $feito = true; // uma vez por pedido (o filtro de região do painel depende disso)
   $db = db(); $cols = array_column($db->query('PRAGMA table_info(sales)')->fetchAll(), 'name');
   foreach (['bruto', 'taxa', 'liquido', 'comissao'] as $c) if (!in_array($c, $cols, true)) $db->exec("ALTER TABLE sales ADD COLUMN $c REAL");
   af_db();

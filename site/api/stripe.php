@@ -6,6 +6,7 @@ declare(strict_types=1);
 define('ESCUDO_LIVRE', true); // a Stripe nunca é barrada pelo bloqueio de IP (a assinatura protege)
 require __DIR__ . '/lib.php';
 require __DIR__ . '/funil.php';
+require_once __DIR__ . '/origem.php';
 
 $raw = file_get_contents('php://input') ?: '';
 $log = function (string $r) use ($raw) { db()->prepare('INSERT INTO webhooks (created_at, ip, body, result) VALUES (?, ?, ?, ?)')->execute([now(), client_ip(), mb_substr($raw, 0, 20000), 'stripe: ' . $r]); };
@@ -89,7 +90,8 @@ if ($type === 'checkout.session.completed' || $type === 'checkout.session.async_
   $name = trim((string)($cd['name'] ?? ''));
   $pais = strtoupper((string)($cd['address']['country'] ?? ''));
   $ref = (string)($o['client_reference_id'] ?? ''); // sc_<id>_<lingua>
-  $lang = ''; if (preg_match('/^sc_(\d+)_([a-z]+)$/', $ref, $m)) $lang = $m[2] === 'ptpt' ? 'pt-pt' : $m[2];
+  // sc_<conta>_<lingua>[_o<origem em base64>]: a origem (pagina.fonte.campanha da UTM) volta aqui para o quadro Origens
+  $lang = ''; $trk = ''; if (preg_match('/^sc_(\d+)_([a-z]+)(?:_o([A-Za-z0-9_-]+))?$/', $ref, $m)) { $lang = $m[2] === 'ptpt' ? 'pt-pt' : $m[2]; if (!empty($m[3])) $trk = (string)base64_decode(strtr($m[3], '-_', '+/')); }
   $valor = round(((int)($o['amount_total'] ?? 0)) / 100, 2); $moeda = strtoupper((string)($o['currency'] ?? 'usd'));
   $trans = (string)($o['subscription'] ?? $o['id'] ?? '');
   $q = $db->prepare("SELECT 1 FROM sales WHERE trans = ? AND status = 'pago'"); $q->execute([$trans]); if ($trans !== '' && $q->fetch()) { $log("repetido: $trans"); json_out(['ok' => true]); }
@@ -104,6 +106,7 @@ if ($type === 'checkout.session.completed' || $type === 'checkout.session.async_
   marca_regiao((int)$u['id'], $lang ?: ($moeda === 'EUR' ? 'en' : 'en'), $pais, ($u['lang'] ?? '') === '' || ($u['lang'] ?? '') === 'pt');
   $db->prepare("UPDATE users SET regiao = ? WHERE id = ?")->execute([$moeda === 'EUR' ? 'eu' : 'us', $u['id']]); // a moeda paga manda na região
   $sid = stripe_venda($db, $u, $valor, $moeda, $trans, $pais);
+  try { $o2 = or_da_venda(['trk' => $trk], $u, null); if ($o2[0] === 'sem-rastreio' || $o2[0] === '') $o2[0] = 'stripe-' . ($moeda === 'EUR' ? 'eu' : 'us'); or_marca_venda($sid, $o2); } catch (Throwable $e) {}
   if (!empty($o['customer'])) set_setting('stripe_cus_' . $u['id'], (string)$o['customer']);
   $q = $db->prepare('SELECT * FROM users WHERE id = ?'); $q->execute([$u['id']]); $u = $q->fetch();
   funnel_paid($u, $isNew);

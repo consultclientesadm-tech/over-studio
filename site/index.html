@@ -737,7 +737,11 @@ footer a { color: #888; }
     try {
       const u = new URL(url, location.href);
       Object.entries(ORIGEM.utm || {}).forEach(([k, v]) => { if (!u.searchParams.has(k)) u.searchParams.set(k, v); });
-      if (!u.searchParams.has('trk')) u.searchParams.set('trk', ['o', ORIGEM.pagina, ORIGEM.fonte, ORIGEM.campanha].join('.').slice(0, 90));
+      const trk = ['o', ORIGEM.pagina, ORIGEM.fonte, ORIGEM.campanha].join('.').slice(0, 90);
+      if (/(^|\.)stripe\.com$/.test(u.hostname)) { // Stripe: a origem vai junto do código da compra (client_reference_id) e volta no aviso da venda
+        const b = btoa(trk).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        u.searchParams.set('client_reference_id', ((u.searchParams.get('client_reference_id') || 'sc_0_en').replace(/_o.*$/, '') + '_o' + b).slice(0, 200));
+      } else if (!u.searchParams.has('trk')) u.searchParams.set('trk', trk);
       return u.toString();
     } catch (e) { return url; }
   };

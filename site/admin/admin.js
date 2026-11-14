@@ -2,13 +2,17 @@
 Marca.montar();
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const brl = (v) => 'R$ ' + (+v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const brl0 = (v) => 'R$ ' + Math.round(+v || 0).toLocaleString('pt-BR');
+// país do painel: Brasil (R$), EUA e Canadá (US$) ou Europa (€), com um país da Europa se quiser. Fica lembrado neste aparelho.
+const REG = (() => { let v = ''; try { v = localStorage.getItem('sc-adm-reg') || ''; } catch {} const [reg, pais] = (v || 'br').split(':'); return { reg: ['br', 'us', 'eu'].includes(reg) ? reg : 'br', pais: /^[A-Z]{2}$/.test(pais || '') ? pais : '' }; })();
+const MO = () => ({ br: 'R$ ', us: 'US$ ', eu: '€ ' })[REG.reg];
+const brl = (v) => MO() + (+v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const brl0 = (v) => MO() + Math.round(+v || 0).toLocaleString('pt-BR');
 const dt = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(2, 4) + ' ' + s.slice(11, 16) : '—');
 const STATUS = { active: 'Pago', trial: 'Teste', refunded: 'Reembolso', blocked: 'Bloqueado' };
 // acesso liberado sem pagamento (convite / cortesia) aparece separado dos pagos
 const stDe = (u) => (u.status === 'active' && !(+u.paid_value > 0) ? ['cortesia', 'Cortesia'] : [u.status, STATUS[u.status]]);
 async function api(a, body, q = '') {
+  if (!body && !/[?&]reg=/.test(q)) q += '&reg=' + REG.reg + (REG.pais ? '&pais=' + REG.pais : '');
   const r = await fetch('/api/admin.php?a=' + a + q, body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-SC': '1' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin', cache: 'no-store' });
   const j = await r.json().catch(() => ({ ok: false, error: 'Erro no servidor (' + r.status + ')' }));
   if (r.status === 401 && a !== 'login') { boot(); throw new Error('login'); }
@@ -48,6 +52,10 @@ function tab(t) {
   $('vistBtn').hidden = t === 'vistoria';
   ({ geral: loadGeral, origens: loadOrigens, financas: loadFin, vistoria: loadVist, alunos: loadAlunos, funil: loadFunil, afiliados: loadAfiliados, depoimentos: loadDepo, admins: loadAdmins, config: loadConfig })[t]();
 }
+// seletor de país no topo: troca e recarrega a aba aberta só com os clientes e vendas daquele lugar
+(() => { const sel = $('regSel'); if (!sel) return; sel.value = REG.reg + (REG.pais ? ':' + REG.pais : ''); if (sel.selectedIndex < 0) sel.value = 'br';
+  const marca = () => document.body.setAttribute('data-reg', REG.reg); marca();
+  sel.onchange = () => { try { localStorage.setItem('sc-adm-reg', sel.value); } catch {} const [r, p] = sel.value.split(':'); REG.reg = r; REG.pais = p || ''; marca(); tab(location.hash.slice(1) || 'geral'); }; })();
 document.querySelectorAll('.nav > button[data-tab]').forEach((b) => (b.onclick = () => { document.querySelector('.nav').classList.remove('aberto'); tab(b.dataset.tab); }));
 // celular: barra de baixo com 4 abas e o botão Mais, que abre as outras numa gaveta
 $('maisBtn').onclick = (e) => { e.stopPropagation(); document.querySelector('.nav').classList.toggle('aberto'); };
@@ -93,7 +101,7 @@ const instaladoAdm = matchMedia('(display-mode: standalone)').matches || navigat
 const vendasVistas = { ids: null };
 async function vigiaVendas() {
   if (!$('vPainel') || $('vPainel').hidden) return;
-  const j = await api('hoje').catch(() => null); if (!j || !j.ok) return;
+  const j = await api('hoje', null, '&reg=todas').catch(() => null); if (!j || !j.ok) return; // toca a caixa com venda de qualquer país (Brasil e Stripe)
   const ids = new Set(j.hoje.map((v) => v.id));
   if (vendasVistas.ids) {
     const novas = j.hoje.filter((v) => !vendasVistas.ids.has(v.id) && v.liquido > 0);
@@ -183,7 +191,7 @@ async function loadHoje() {
       <div class="hv">${N2(total)}<small>líquido · ${nV} venda${nV === 1 ? '' : 's'}${nV ? ` · última às ${vendas.filter((v) => v.liquido > 0).slice(-1)[0].h}` : ''}</small></div></div>
       <div class="hcmp">${dif === null ? (ontemTot ? '' : '<span>Ontem: sem vendas</span>') : `<b class="${dif >= 0 ? 'up' : 'dn'}">${dif >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(dif) * 100)}%</b><span>vs ontem até esta hora (${brl0(ontemAte)})</span>`}
         <span>ontem fechou em ${brl0(ontemTot)} · média dos últimos 7 dias ${brl0(j.media_7d)}/dia</span></div></div>
-    <div class="hg"><div class="hy"><span>${brl0(ymax)}</span><span>${brl0(ymax / 2)}</span><span>R$ 0</span></div>
+    <div class="hg"><div class="hy"><span>${brl0(ymax)}</span><span>${brl0(ymax / 2)}</span><span>${MO()}0</span></div>
       <div class="hc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
         <defs><linearGradient id="gHoje" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd400" stop-opacity=".45"/><stop offset="1" stop-color="#ffd400" stop-opacity="0"/></linearGradient></defs>
         ${[0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" class="gr"/>`).join('')}
@@ -224,7 +232,7 @@ function periodoHtml(sr, hojeTot, nova, abas) {
       <div class="hv">${N2(tot)}<small>líquido · ${nv} venda${nv === 1 ? '' : 's'} · hoje ${brl0(hojeTot)} até ${sr.agora}</small></div></div>
       <div class="hcmp">${dif === null ? '<span>Período anterior: sem vendas</span>' : `<b class="${dif >= 0 ? 'up' : 'dn'}">${dif >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(dif) * 100)}%</b><span>vs os ${sr.dias} dias anteriores (${brl0(sr.anterior)})</span>`}
         <span>média de ${brl0(media)} por ${sr.semana ? 'semana' : 'dia'}</span></div></div>
-    <div class="hg"><div class="hy"><span>${brl0(ymax)}</span><span>${brl0(ymax / 2)}</span><span>R$ 0</span></div>
+    <div class="hg"><div class="hy"><span>${brl0(ymax)}</span><span>${brl0(ymax / 2)}</span><span>${MO()}0</span></div>
       <div class="hc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
         <defs><linearGradient id="gVb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd400" stop-opacity=".95"/><stop offset="1" stop-color="#ffd400" stop-opacity=".25"/></linearGradient></defs>
         ${[0.25, 0.5, 0.75].map((f) => `<line x1="0" x2="${W}" y1="${H * f}" y2="${H * f}" class="gr"/>`).join('')}
@@ -453,7 +461,7 @@ function renderAds(t, per) {
   $('adsBox').innerHTML = `<div class="glass adsBox">
     <div class="nh"><i>📣</i><small>ANÚNCIOS · ${per.toUpperCase()}</small></div>
     <div class="adsG">
-      <div class="ak big ${cor}"><small>Retorno por real gasto</small><b>${roas === null ? '—' : brl(roas)}</b><span>${roas === null ? 'lance o gasto abaixo' : `para cada R$ 1 em anúncio`}</span></div>
+      <div class="ak big ${cor}"><small>Retorno por real gasto</small><b>${roas === null ? '—' : brl(roas)}</b><span>${roas === null ? 'lance o gasto abaixo' : `para cada ${MO()}1 em anúncio`}</span></div>
       <div class="ak ${cor}"><small>ROI</small><b>${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</b><span>${roi === null ? '' : roi >= 0 ? 'lucro sobre o gasto' : 'gastou mais do que voltou'}</span></div>
       <div class="ak"><small>Investido</small><b>${brl0(ads)}</b><span>no período</span></div>
       <div class="ak"><small>Custo por venda</small><b>${ads && v ? brl0(ads / v) : '—'}</b><span>${v} venda${v === 1 ? '' : 's'}</span></div>
@@ -520,7 +528,7 @@ async function loadVisao() {
     return `<div class="vgSoc ${cor}"><div class="vgSh"><b>${nome}</b><small>${p}% da divisão</small><button class="btn sm ghost" style="margin-left:auto" title="Parâmetros de URL para anúncio novo" data-copia="utm_source={{site_source_name}}&utm_medium=paid&utm_campaign=${k}-ads&utm_content={{ad.name}}">Copiar UTM</button></div>
       <div class="vgSg"><div><small>Investiu em anúncio</small><b>${brl(a.gasto)}</b><span>gerenc. ${brl0(a.gasto_auto)} · impuls. ${brl0(a.gasto_manual)}</span></div>
       <div><small>Vendas dos anúncios dele</small><b>${a.vendas}</b><span>${brl(a.liquido)} líquido${a.compras_meta ? ` · ${a.compras_meta} pelo Meta, ${a.vendas_link ?? a.vendas} pelo link` : ''}</span></div>
-      <div><small>ROI dos anúncios</small><b class="${r === null ? '' : r >= 0 ? 'g' : 'r'}">${r === null ? '—' : (r >= 0 ? '+' : '') + Math.round(r * 100) + '%'}</b><span>${a.gasto ? brl(a.liquido / a.gasto) + ' por R$ 1' : 'sem gasto no período'}</span></div>
+      <div><small>ROI dos anúncios</small><b class="${r === null ? '' : r >= 0 ? 'g' : 'r'}">${r === null ? '—' : (r >= 0 ? '+' : '') + Math.round(r * 100) + '%'}</b><span>${a.gasto ? brl(a.liquido / a.gasto) + ' por ' + MO() + '1' : 'sem gasto no período'}</span></div>
       <div class="parte"><small>Ganho dele · igual à Eduzz (${p}%)</small><b>${brl(liq * p / 100)}</b><span>tirando os anúncios dele: ${brl(liq * p / 100 - a.gasto)}</span></div></div></div>`; };
   // gráficos: por hora (1 dia), por dia (até 90) ou por mês (1 ano)
   let rot, kv, kc, corte = -1;
@@ -542,7 +550,7 @@ async function loadVisao() {
       <div class="vk big"><small>Faturamento líquido · ${esc(titulo)}</small><b class="cnt" data-to="${liq}" data-f="brl">${brl(liq)}</b><span>ganho de cada um (igual à Eduzz): Leo ${brl(liq * lp / 100)} · Reinaldo ${brl(liq * sp / 100)}</span>${cmp(liq, j.anterior.liquido, brl0)}</div>
       <div class="vk"><small>Vendas</small><b>${nV}</b>${cmp(nV, j.anterior.vendas, (x) => x)}<span>${ES.length ? `<b class="r">${ES.length} estorno${ES.length === 1 ? '' : 's'} ${brl(est)}</b> · ` : ''}${nV ? 'ticket ' + brl((liq - est) / nV) : ''}${ult && j.dias === 1 ? ' · última ' + ult.slice(11, 16) : ''}</span></div>
       <div class="vk"><small>Investido em anúncios</small><b>${brl(gasto)}</b><span>Leo ${brl0((A.leo || {}).gasto || 0)} · Reinaldo ${brl0((A.reinaldo || {}).gasto || 0)}</span></div>
-      <div class="vk ${corR}"><small>ROI geral</small><b>${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</b><span>${roas === null ? 'sem gasto de anúncio' : brl(roas) + ' por R$ 1 investido'}</span></div>
+      <div class="vk ${corR}"><small>ROI geral</small><b>${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</b><span>${roas === null ? 'sem gasto de anúncio' : brl(roas) + ' por ' + MO() + '1 investido'}</span></div>
       <div class="vk ${lucro >= 0 ? 'g' : 'r'}"><small>Lucro após anúncios</small><b>${brl(lucro)}</b><span>Leo ${brl0(lucro * lp / 100)} · Reinaldo ${brl0(lucro * sp / 100)}</span></div>
     </div>
     <div class="vgMeio">${socio('leo', 'Leo', lp, 'y')}${socio('reinaldo', 'Reinaldo', sp, 'c')}</div>
@@ -833,7 +841,7 @@ async function loadOrigens() {
   $('orPag').innerHTML = tabela(agrupa((r) => PAG[r.pagina] || esc(r.pagina)), 'Página');
   $('orCan').innerHTML = tabela(agrupa((r) => r.pagina === 'sem-rastreio' && !r.fonte ? PAG['sem-rastreio'] : `<b>${fonteNome(r.fonte, r.campanha)}</b>${r.campanha ? `<small>${esc(r.campanha)}</small>` : '<small>sem campanha</small>'}`), 'Canal · campanha');
   const AN = j.anuncios || [], nomeConta = (c) => (c === '?' ? 'Anúncio sem UTM (conta não identificada)' : c ? c[0].toUpperCase() + c.slice(1) : 'Geral (sem conta)');
-  $('orAds').innerHTML = AN.length ? `<table><tr><th>Conta</th><th>Investido</th><th>Vendas</th><th>Líquido</th><th>Retorno por R$ 1</th><th>ROI</th><th>Custo por venda</th></tr>${AN.map((a) => { const roas = a.gasto ? a.liquido / a.gasto : null, roi = a.gasto ? (a.liquido - a.gasto) / a.gasto : null, cor = roi === null ? '' : roi >= 0 ? 'color:#2ee59d' : 'color:#ff6b78';
+  $('orAds').innerHTML = AN.length ? `<table><tr><th>Conta</th><th>Investido</th><th>Vendas</th><th>Líquido</th><th>Retorno por ${MO()}1</th><th>ROI</th><th>Custo por venda</th></tr>${AN.map((a) => { const roas = a.gasto ? a.liquido / a.gasto : null, roi = a.gasto ? (a.liquido - a.gasto) / a.gasto : null, cor = roi === null ? '' : roi >= 0 ? 'color:#2ee59d' : 'color:#ff6b78';
     return `<tr><td><b>${esc(nomeConta(a.conta))}</b></td><td>${a.gasto ? `<b>${brl(a.gasto)}</b><small>gerenciador ${brl(a.gasto_auto || 0)} · impulsion. ${brl(a.gasto_manual || 0)}</small>` : '—'}</td><td><b>${a.vendas}</b><small>${a.compras_meta ? `${a.compras_meta} pelo Meta · ${a.vendas_link ?? a.vendas} pelo link` : `${a.vsl} /vsl · ${a.home} página com teste`}</small></td><td>${brl(a.liquido)}</td><td style="${cor}"><b>${roas === null ? '—' : brl(roas)}</b></td><td style="${cor}">${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</td><td>${a.gasto && a.vendas ? brl(a.gasto / a.vendas) : '—'}</td></tr>`; }).join('')}</table>`
     : '<p class="sub">Ainda sem gasto lançado nem venda de anúncio no período. Lance o gasto de cada conta na Visão geral (📣 Anúncios) e use os parâmetros de URL no anúncio.</p>';
   const SO = j.campanhas_soltas || [];
