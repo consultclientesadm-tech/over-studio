@@ -83,7 +83,8 @@ const pushLigado = () => { try { return 'Notification' in window && Notification
 // a página recarregou: tenta tocar sem clique (o Chrome deixa quando o site é muito usado); se deixar, nem pede o clique
 try { const t = new Audio('/admin/caixa.mp3?v=1'); t.volume = 0; t.play().then(() => { t.pause(); somLiberado = true; const sb = $('somLib'); if (sb) sb.remove(); }).catch(() => {}); } catch {}
 // Som ligado/desligado (fica salvo neste aparelho). Desligado: a notificação de venda continua chegando, só sem som.
-let somMudo = (() => { try { return localStorage.getItem('sc-adm-mudo') === '1'; } catch { return false; } })();
+// pedido do Leo (14/11): o som SEMPRE começa ligado, inclusive depois de atualizar a página; desligar vale só até recarregar
+let somMudo = false; try { localStorage.removeItem('sc-adm-mudo'); } catch {}
 function somAviso() { // conta ao aviso do sistema (service worker) se a notificação vem com som ou sem
   try { if (window.caches) caches.open('sc-adm').then((c) => c.put('/admin/__som', new Response(somMudo ? '0' : '1'))); } catch {}
 }
@@ -118,6 +119,7 @@ setInterval(vigiaVendas, 20000); setTimeout(vigiaVendas, 3000);
 // Computador: com o aviso de venda ligado (notificação do sistema, que apita mesmo com a página recarregada ou fechada), não pede mais nada.
 // Sem ele, o navegador só deixa tocar som depois de um clique: o botão liga o aviso uma vez só e fica valendo nas próximas vezes.
 setTimeout(() => {
+  return; // sem faixa pedindo clique (pedido do Leo, 14/11): qualquer clique no painel, inclusive no botão Atualizar, já libera o som
   if (somLiberado || pushLigado() || !$('vPainel') || $('vPainel').hidden) return;
   const d = document.createElement('button'); d.id = 'somLib'; d.className = 'somLib';
   const podeAviso = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window && Notification.permission !== 'denied';
@@ -125,6 +127,8 @@ setTimeout(() => {
   d.onclick = async () => { d.remove(); chime.t = 0; chime(); if (podeAviso) await ligarAvisoVenda(); };
   document.body.appendChild(d);
 }, 2500);
+// botão Atualizar: recarrega os números da aba aberta sem recarregar a página, então o som continua liberado e ligado
+if ($('atuBtn')) $('atuBtn').onclick = () => { const b = $('atuBtn'); b.classList.add('gira'); setTimeout(() => b.classList.remove('gira'), 900); vigiaVendas(); tab(location.hash.slice(1) || 'geral'); toast('Atualizado'); };
 if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'venda') { chime(); if (!$('tGeral').hidden) loadHoje(); } });
 async function ligarAvisoVenda() {
   if (iosAdm && !instaladoAdm) return modal(`<h3>💰 Aviso de venda no iPhone</h3><p>No iPhone o aviso só funciona com o painel instalado na tela de início:</p><p>1. Abra <b>studiocover.com.br/admin</b> no <b>Safari</b>.<br>2. Toque em <b>Compartilhar</b> (o quadrado com a seta) e em <b>Adicionar à Tela de Início</b>.<br>3. Abra o painel pelo ícone novo, toque em <b>💰 Aviso de venda</b> e em <b>Ligar aviso neste aparelho</b>.</p><button class="btn" data-fechar>Entendi</button>`);
