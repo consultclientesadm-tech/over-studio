@@ -118,8 +118,8 @@ function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'
   if ($tk <= 0) $tk = (float)$db->query("SELECT AVG(liquido) FROM sales WHERE status = 'pago' AND liquido > 0")->fetchColumn();
   foreach ($r as $c => $a) {
     $r[$c]['vendas_link'] = $a['vendas']; $r[$c]['liquido_link'] = $a['liquido'];
-    $cm = (int)($a['compras_meta'] ?? 0);
-    if ($cm > $a['vendas']) { $r[$c]['liquido'] += ($cm - $a['vendas']) * $tk; $r[$c]['vendas'] = $cm; }
+    // cada venda conta UMA vez só, para a conta do link pelo qual a pessoa comprou (Leo, 14/11: não pode duplicar).
+    // O número do Meta fica só como informação (o Meta de cada sócio conta a mesma venda de quem viu os dois anúncios).
   }
   return array_values($r);
 }
