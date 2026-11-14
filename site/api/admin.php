@@ -43,7 +43,7 @@ if ($a === 'sair') { require_post(); session(); unset($_SESSION['aid'], $_SESSIO
 // ---------- daqui para baixo, só administrador ----------
 $me = require_admin();
 // tudo que muda alguma coisa só por POST com o cabeçalho X-SC: um link ou página de fora não consegue apagar/alterar nada
-if (!in_array($a, ['resumo', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'origens', 'push-chave', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa', 'escudo'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
+if (!in_array($a, ['resumo', 'visao', 'hoje', 'serie', 'testes-perdidos', 'app-saude', 'origens', 'push-chave', 'vigia-erros', 'afiliados', 'alunos', 'admins', 'config', 'webhooks', 'emails', 'funil', 'depo', 'depo-arquivo', 'depo-previa', 'escudo'], true) || ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') require_post();
 
 switch ($a) {
   case 'resumo': {
@@ -372,6 +372,24 @@ switch ($a) {
     json_out(['ok' => true]);
   }
   case 'push-teste': { $nm = trim(explode(' ', trim((string)($me['name'] ?? '')))[0] ?? ''); $n = push_user(-(int)$me['id'], '💰 Parabéns' . ($nm !== '' ? " $nm" : '') . ', mais uma venda do Studio Cover!', "Venda de R$ 297,00 · líquido R$ 279,96\nTeste do aviso: é assim que cada venda vai chegar. 🙏", '/admin/'); json_out(['ok' => true, 'enviados' => $n]); }
+  // Visão geral (tudo numa tela): período de/até (AAAA-MM-DD), vendas e cadastros com horário, anúncios por sócio e o período anterior para comparar
+  case 'visao': {
+    sales_fill_net(); try { meta_sync(false); } catch (Throwable $e) {}
+    $ok = fn($d) => preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$d) ? (string)$d : date('Y-m-d');
+    $de = $ok($_GET['de'] ?? ''); $ate = $ok($_GET['ate'] ?? ''); if ($ate < $de) [$de, $ate] = [$ate, $de];
+    $ini = "$de 00:00:00"; $fim = "$ate 23:59:59";
+    $n = (int)round((strtotime($ate) - strtotime($de)) / 86400) + 1;
+    $pIni = date('Y-m-d', strtotime($de) - $n * 86400) . ' 00:00:00'; $pFim = date('Y-m-d', strtotime($de) - 86400) . ' 23:59:59';
+    $q = $db->prepare("SELECT created_at, liquido, bruto, afiliado_id, or_fonte, or_campanha FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ? ORDER BY created_at"); $q->execute([$ini, $fim]);
+    $vendas = array_map(fn($v) => ['t' => $v['created_at'], 'l' => round((float)$v['liquido'], 2), 'af' => (bool)$v['afiliado_id'], 'ad' => in_array($v['or_fonte'], ['anuncio-meta', 'meta-sem-utm'], true)], $q->fetchAll(PDO::FETCH_ASSOC));
+    $q = $db->prepare("SELECT created_at FROM users WHERE source = 'trial' AND created_at >= ? AND created_at <= ? ORDER BY created_at"); $q->execute([$ini, $fim]);
+    $cads = array_column($q->fetchAll(PDO::FETCH_ASSOC), 'created_at');
+    $q = $db->prepare("SELECT COUNT(*), COALESCE(SUM(liquido), 0) FROM sales WHERE status = 'pago' AND created_at >= ? AND created_at <= ?"); $q->execute([$pIni, $pFim]); [$pv, $pl] = $q->fetch(PDO::FETCH_NUM);
+    $q = $db->prepare("SELECT COUNT(*) FROM users WHERE source = 'trial' AND created_at >= ? AND created_at <= ?"); $q->execute([$pIni, $pFim]); $pc = (int)$q->fetchColumn();
+    json_out(['ok' => true, 'de' => $de, 'ate' => $ate, 'dias' => $n, 'agora' => date('Y-m-d H:i:s'), 'vendas' => $vendas, 'cadastros' => $cads,
+      'anterior' => ['vendas' => (int)$pv, 'liquido' => round((float)$pl, 2), 'cadastros' => $pc],
+      'anuncios' => or_anuncios($db, $ini, $fim), 'socio_pct' => max(0, min(100, brnum(setting('socio_pct'))))]);
+  }
   case 'origens': try { meta_sync(false); } catch (Throwable $e) {} json_out(or_relatorio(max(1, min(365, (int)($_GET['dias'] ?? 30))))); // de qual página e canal vêm visitas, testes e vendas
   case 'vigia-erros': { // vistoria de 10 em 10 min: tipos de erro do app, alertas e quando rodou
     json_out(['ok' => true, 'vigia' => json_decode(setting('vigia_erros') ?: 'null', true), 'grupos' => erros_lista()]);

@@ -451,7 +451,69 @@ setInterval(() => { if (!document.hidden && $('vPainel') && !$('vPainel').hidden
 
 let resumoJ = null;
 async function getResumo() { const j = await api('resumo', null, '&dias=' + dias); if (j.ok) resumoJ = j; return j; }
+// ---------- Visão geral numa tela só: período, faturamento, anúncios, ROI, divisão por sócio, vendas e cadastros ao vivo ----------
+const VG = { p: 'hoje', dia: '' };
+const spDia = (atras = 0) => new Date(Date.now() - 3 * 3600e3 - atras * 864e5).toISOString().slice(0, 10);
+function vgFaixa() {
+  if (VG.p === 'dia' && VG.dia) return [VG.dia, VG.dia];
+  if (VG.p === 'ontem') return [spDia(1), spDia(1)];
+  const n = { '7d': 7, '30d': 30, '90d': 90, '1a': 365 }[VG.p]; return n ? [spDia(n - 1), spDia(0)] : [spDia(0), spDia(0)];
+}
+const pct = (a, b) => (b ? Math.round(((a - b) / b) * 100) : null);
+function vgBarras(rot, vals, sub, cor, fmt, corte = -1) {
+  const mx = Math.max(...vals, 0.0001), passo = Math.ceil(rot.length / 12);
+  return `<div class="vgBars">${vals.map((v, i) => `<div class="vb${corte >= 0 && i > corte ? ' fut' : ''}" title="${esc(rot[i])}: ${fmt(v)}${sub ? ' · ' + sub[i] : ''}"><i style="height:${v ? Math.max(4, (v / mx) * 100) : 0}%;background:${cor}"></i>${v ? `<em>${fmt(v)}</em>` : ''}</div>`).join('')}</div>
+    <div class="vgX">${rot.map((r, i) => `<span>${i % passo === 0 ? esc(r) : ''}</span>`).join('')}</div>`;
+}
+async function loadVisao() {
+  const [de, ate] = vgFaixa();
+  const j = await api('visao', null, `&de=${de}&ate=${ate}`); if (!j.ok) return;
+  const liq = j.vendas.reduce((a, v) => a + v.l, 0), nV = j.vendas.length, nC = j.cadastros.length;
+  const A = {}; (j.anuncios || []).forEach((a) => (A[a.conta] = a));
+  const gasto = (j.anuncios || []).reduce((a, x) => a + x.gasto, 0), lucro = liq - gasto;
+  const roas = gasto ? liq / gasto : null, roi = gasto ? (liq - gasto) / gasto : null;
+  const sp = j.socio_pct, lp = 100 - sp;
+  const cmp = (a, b, fmt) => { const p = pct(a, b); return p === null ? `<small class="cmp">período anterior: ${fmt(b)}</small>` : `<small class="cmp ${p >= 0 ? 'up' : 'dn'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}% vs período anterior (${fmt(b)})</small>`; };
+  const corR = roi === null ? '' : roi >= 0 ? 'g' : 'r';
+  const socio = (k, nome, p, cor) => { const a = A[k] || { gasto: 0, gasto_auto: 0, gasto_manual: 0, vendas: 0, liquido: 0 }; const r = a.gasto ? (a.liquido - a.gasto) / a.gasto : null;
+    return `<div class="vgSoc ${cor}"><div class="vgSh"><b>${nome}</b><small>${p}% da divisão</small></div>
+      <div class="vgSg"><div><small>Investiu em anúncio</small><b>${brl(a.gasto)}</b><span>gerenc. ${brl0(a.gasto_auto)} · impuls. ${brl0(a.gasto_manual)}</span></div>
+      <div><small>Vendas dos anúncios dele</small><b>${a.vendas}</b><span>${brl(a.liquido)} líquido</span></div>
+      <div><small>ROI dos anúncios</small><b class="${r === null ? '' : r >= 0 ? 'g' : 'r'}">${r === null ? '—' : (r >= 0 ? '+' : '') + Math.round(r * 100) + '%'}</b><span>${a.gasto ? brl(a.liquido / a.gasto) + ' por R$ 1' : 'sem gasto no período'}</span></div>
+      <div class="parte"><small>Parte dele (${p}% do lucro)</small><b>${brl(lucro * p / 100)}</b><span>lucro = líquido − anúncios</span></div></div></div>`; };
+  // gráficos: por hora (1 dia), por dia (até 90) ou por mês (1 ano)
+  let rot, kv, kc, corte = -1;
+  if (j.dias === 1) { rot = [...Array(24).keys()].map((h) => h + 'h'); kv = (t) => +t.slice(11, 13); if (de === spDia(0)) corte = +j.agora.slice(11, 13); }
+  else if (j.dias <= 90) { rot = []; for (let i = 0; i < j.dias; i++) { const d = new Date(Date.parse(de + 'T12:00:00Z') + i * 864e5).toISOString().slice(0, 10); rot.push(d); } const ix = Object.fromEntries(rot.map((d, i) => [d, i])); kv = (t) => ix[t.slice(0, 10)]; rot = rot.map((d) => d.slice(8, 10) + '/' + d.slice(5, 7)); }
+  else { rot = []; const ini = new Date(de + 'T12:00:00Z'); for (let i = 0; i < 13; i++) { const d = new Date(Date.UTC(ini.getUTCFullYear(), ini.getUTCMonth() + i, 1)).toISOString().slice(0, 7); if (d > ate.slice(0, 7)) break; rot.push(d); } const ix = Object.fromEntries(rot.map((d, i) => [d, i])); kv = (t) => ix[t.slice(0, 7)]; rot = rot.map((d) => ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'][+d.slice(5, 7) - 1]); }
+  const vV = rot.map(() => 0), vN = rot.map(() => 0), vC = rot.map(() => 0);
+  j.vendas.forEach((v) => { const i = kv(v.t); if (i !== undefined) { vV[i] += v.l; vN[i]++; } });
+  j.cadastros.forEach((t) => { const i = kv(t); if (i !== undefined) vC[i]++; });
+  const ult = j.vendas.length ? j.vendas[j.vendas.length - 1].t : null;
+  const P = [['hoje', 'Hoje'], ['ontem', 'Ontem'], ['7d', '7 dias'], ['30d', '30 dias'], ['90d', '90 dias'], ['1a', '1 ano']];
+  const titulo = VG.p === 'dia' ? new Date(VG.dia + 'T12:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : P.find((x) => x[0] === VG.p)[1];
+  $('vg').innerHTML = `<div class="vgTop"><div class="seg vgP">${P.map(([k, r]) => `<button data-p="${k}" class="${VG.p === k ? 'on' : ''}">${r}</button>`).join('')}</div>
+      <label class="vgData${VG.p === 'dia' ? ' on' : ''}">📅<input type="date" id="vgDia" value="${VG.p === 'dia' ? VG.dia : ''}" max="${spDia(0)}"></label>
+      ${ate === spDia(0) ? '<span class="vivo"><i></i>AO VIVO</span>' : ''}</div>
+    <div class="vgK">
+      <div class="vk big"><small>Faturamento líquido · ${esc(titulo)}</small><b class="cnt" data-to="${liq}" data-f="brl">${brl(liq)}</b>${cmp(liq, j.anterior.liquido, brl0)}</div>
+      <div class="vk"><small>Vendas</small><b>${nV}</b>${cmp(nV, j.anterior.vendas, (x) => x)}<span>${nV ? 'ticket ' + brl(liq / nV) : ''}${ult && j.dias === 1 ? ' · última ' + ult.slice(11, 16) : ''}</span></div>
+      <div class="vk"><small>Investido em anúncios</small><b>${brl(gasto)}</b><span>Leo ${brl0((A.leo || {}).gasto || 0)} · Reinaldo ${brl0((A.reinaldo || {}).gasto || 0)}</span></div>
+      <div class="vk ${corR}"><small>ROI geral</small><b>${roi === null ? '—' : (roi >= 0 ? '+' : '') + Math.round(roi * 100) + '%'}</b><span>${roas === null ? 'sem gasto de anúncio' : brl(roas) + ' por R$ 1 investido'}</span></div>
+      <div class="vk ${lucro >= 0 ? 'g' : 'r'}"><small>Lucro após anúncios</small><b>${brl(lucro)}</b><span>Leo ${brl0(lucro * lp / 100)} · Reinaldo ${brl0(lucro * sp / 100)}</span></div>
+    </div>
+    <div class="vgMeio">${socio('leo', 'Leo', lp, 'y')}${socio('reinaldo', 'Reinaldo', sp, 'c')}</div>
+    <div class="vgGr">
+      <div class="glass vgC"><div class="vgCh"><b>💰 Vendas ${j.dias === 1 ? 'por hora' : j.dias <= 90 ? 'por dia' : 'por mês'}</b><small>${nV} venda${nV === 1 ? '' : 's'} · ${brl(liq)}</small></div>${vgBarras(rot, vV, vN.map((n) => n + ' venda' + (n === 1 ? '' : 's')), 'linear-gradient(180deg,#ffd400,#ff9f1a)', brl0, corte)}</div>
+      <div class="glass vgC"><div class="vgCh"><b>🎁 Cadastros no teste grátis</b><small>${nC} no período ${cmp(nC, j.anterior.cadastros, (x) => x)}</small></div>${vgBarras(rot, vC, null, 'linear-gradient(180deg,#5ad1ff,#7b6bff)', (x) => x, corte)}</div>
+    </div>`;
+  $('vg').querySelectorAll('.vgP button').forEach((b) => (b.onclick = () => { VG.p = b.dataset.p; loadVisao(); }));
+  $('vgDia').onchange = (e) => { if (!e.target.value) return; VG.p = 'dia'; VG.dia = e.target.value; loadVisao(); };
+}
+setInterval(() => { if (!document.hidden && $('vPainel') && !$('vPainel').hidden && !$('tGeral').hidden && vgFaixa()[1] === spDia(0)) loadVisao().catch(() => {}); }, 20000);
+
 async function loadGeral() {
+  loadVisao().catch(() => {});
   loadHoje(); vistBadge();
   const j = await getResumo(); if (!j.ok) return;
   renderGeral(j);
