@@ -188,15 +188,31 @@ switch ($a) {
     $busca = trim((string)($_GET['busca'] ?? '')); $st = (string)($_GET['status'] ?? '');
     $pag = max(1, (int)($_GET['pag'] ?? 1)); $per = 50;
     $w = []; $p = [];
-    if ($busca !== '') { $w[] = '(email LIKE ? OR name LIKE ? OR phone LIKE ?)'; array_push($p, "%$busca%", "%$busca%", "%$busca%"); }
+    if ($busca !== '') { $w[] = '(email LIKE ? OR name LIKE ? OR phone LIKE ? OR aparelho LIKE ? OR aparelho_1 LIKE ?)'; array_push($p, "%$busca%", "%$busca%", "%$busca%", "%$busca%", "%$busca%"); }
     if (in_array($st, ['trial', 'active', 'blocked', 'refunded'], true)) { $w[] = 'status = ?'; $p[] = $st; }
     if ($st === 'pago') $w[] = "status = 'active' AND paid_value > 0";
     if ($st === 'cortesia') $w[] = "status = 'active' AND paid_value <= 0";
     $where = $w ? 'WHERE ' . implode(' AND ', $w) : '';
     $q = $db->prepare("SELECT COUNT(*) FROM users $where"); $q->execute($p); $total = (int)$q->fetchColumn();
-    $q = $db->prepare("SELECT id, email, name, phone, status, source, trial_left, videos_used, paid_value, paid_at, expires_at, created_at, last_seen, funnel_step, unsub, (pass_hash IS NOT NULL) AS tem_senha FROM users $where ORDER BY id DESC LIMIT $per OFFSET " . (($pag - 1) * $per));
-    $q->execute($p);
-    json_out(['ok' => true, 'total' => $total, 'pag' => $pag, 'por_pag' => $per, 'items' => $q->fetchAll()]);
+    $q = $db->prepare("SELECT id, email, name, phone, status, source, trial_left, videos_used, paid_value, paid_at, expires_at, created_at, last_seen, funnel_step, unsub, aparelho, aparelho_1, (pass_hash IS NOT NULL) AS tem_senha FROM users $where ORDER BY id DESC LIMIT $per OFFSET " . (($pag - 1) * $per));
+    $q->execute($p); $items = $q->fetchAll();
+    // quem já usou o app antes desta coluna existir: descobre o aparelho pelo diário do app (primeiro e último registro) e guarda
+    $edb = app_events_db(); $up = $db->prepare("UPDATE main.users SET aparelho = ?, aparelho_1 = CASE WHEN aparelho_1 = '' THEN ? ELSE aparelho_1 END WHERE id = ?");
+    $evq = $edb->prepare("SELECT ua, data FROM main.app_events WHERE user_id = ? AND ua <> '' ORDER BY id DESC LIMIT 200");
+    foreach ($items as &$it) {
+      if ($it['aparelho'] !== '') continue;
+      try {
+        $evq->execute([$it['id']]); $ev = $evq->fetchAll(); if (!$ev) continue;
+        $nm = function ($e) { $d = json_decode((string)$e['data'], true) ?: []; return aparelho_nome((string)$e['ua'], (string)($d['modelo'] ?? '')); };
+        $ult = ''; foreach ($ev as $e) { $n = $nm($e); if ($n !== '' && ($ult === '' || !preg_match('/^(Android|iPhone) · /', $n))) { $ult = $n; if (!preg_match('/^(Android|iPhone) · /', $n)) break; } } // prefere o registro que traz o modelo
+        $pri = $nm(end($ev)) ?: $ult;
+        if (preg_match('/^(Android|iPhone) · /', $pri, $g) && !str_starts_with($ult, 'Computador') && ($g[1] === 'iPhone') === str_starts_with($ult, 'iPhone')) $pri = $ult; // mesmo celular, só faltava o modelo
+        if ($ult === '') continue;
+        $up->execute([$ult, $pri, $it['id']]); $it['aparelho'] = $ult; if ($it['aparelho_1'] === '') $it['aparelho_1'] = $pri;
+      } catch (Throwable $e) {}
+    }
+    unset($it);
+    json_out(['ok' => true, 'total' => $total, 'pag' => $pag, 'por_pag' => $per, 'items' => $items]);
   }
 
   case 'aluno-salvar': { // muda status, teste, validade

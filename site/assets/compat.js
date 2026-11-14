@@ -4,7 +4,7 @@
 // Níveis: 'ok' (não mostra nada), 'fraco' (roda no MODO LEVE: mais leve para o celular, mesmo vídeo em 1080p) e
 // 'incompativel' (vermelho, só quando o navegador não tem o básico ou o aparelho é fraco demais de verdade).
 // Desde 14/11 (pedido do Leo): Samsung simples e celular de 3–4 GB não são mais barrados, usam o modo leve.
-// Uso: <script src="/assets/compat.js?v=3" defer></script>. Links com data-compat pedem confirmação antes de seguir.
+// Uso: <script src="/assets/compat.js?v=4" defer></script>. Links com data-compat pedem confirmação antes de seguir.
 (function () {
   if (window.scCompat) return;
   const VERSAO = 2;
@@ -68,12 +68,23 @@
     return { v: VERSAO, nivel, motivos, inApp, score: score || 0, mem, modelo: modelo || '', ios: iosV, mobile, leve: mobile && nivel !== 'ok', t: Date.now() };
   }
 
+  // aparelho para a aba Alunos do painel (pedido do Leo, 14/11): o servidor lê este cookie no cadastro, no login e no app.
+  // Android: o modelo de verdade (SM-A546E, Redmi Note 12…), que o Chrome esconde do user agent. iPhone: o tamanho da tela (dá a família).
+  function guardaAparelho(modelo) {
+    let v = '';
+    if (ios) v = 'iph:' + Math.min(screen.width, screen.height) + 'x' + Math.max(screen.width, screen.height);
+    else if (modelo) v = modelo;
+    v = String(v).replace(/[^\w .+\-()\/:]/g, '').slice(0, 40);
+    if (v) try { document.cookie = 'sc_ap=' + encodeURIComponent(v) + ';path=/;max-age=31536000;SameSite=Lax' + (location.protocol === 'https:' ? ';Secure' : ''); } catch (e) {}
+  }
+  if (ios) guardaAparelho('');
   let info = null;
   try { const c = JSON.parse(store.get('sc-compat') || 'null'); if (c && c.v === VERSAO && Date.now() - c.t < 14 * 864e5) info = c; } catch (e) {}
   const ready = (async () => {
     let modelo = '';
     try { if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) modelo = (await navigator.userAgentData.getHighEntropyValues(['model'])).model || ''; } catch (e) {}
     if (!modelo) { const m = ua.match(/;\s*((?:SM|GT)-[A-Z0-9]+)/i); if (m) modelo = m[1]; }
+    guardaAparelho(modelo);
     await new Promise((r) => (document.readyState === 'complete' ? setTimeout(r, 300) : addEventListener('load', () => setTimeout(r, 300), { once: true })));
     let score = forca();
     if (score < MIN_OK) { await new Promise((r) => setTimeout(r, 1200)); score = Math.max(score, forca()); } // celular ocupado carregando a página: mede de novo

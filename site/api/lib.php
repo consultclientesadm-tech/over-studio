@@ -101,6 +101,9 @@ SQL);
   if (!in_array('aceite_at', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN aceite_at TEXT');
   if (!in_array('aceite_ver', $cols, true)) $db->exec("ALTER TABLE users ADD COLUMN aceite_ver TEXT NOT NULL DEFAULT ''");
   // teste grátis só é gasto quando o vídeo abre no estúdio (2026-11-13): marca o vídeo "em andamento" aqui
+  // aparelho de cada aluno (2026-11-14, pedido do Leo): o primeiro (cadastro/compra) e o último que abriu o app
+  if (!in_array('aparelho', $cols, true)) $db->exec("ALTER TABLE users ADD COLUMN aparelho TEXT NOT NULL DEFAULT ''");
+  if (!in_array('aparelho_1', $cols, true)) $db->exec("ALTER TABLE users ADD COLUMN aparelho_1 TEXT NOT NULL DEFAULT ''");
   if (!in_array('trial_hold', $cols, true)) $db->exec('ALTER TABLE users ADD COLUMN trial_hold INTEGER NOT NULL DEFAULT 0');
   // no teste a pessoa vê e ouve o antes e depois, mas só baixa quem comprou (2026-11-13). Exceção: download liberado de presente (depoimento)
   if (!in_array('baixar_livre', $cols, true)) {
@@ -224,7 +227,7 @@ function current_user(): ?array {
   if (!$u || ($_SESSION['uver'] ?? '') !== substr((string)$u['pass_hash'], -12)) { unset($_SESSION['uid']); return null; } // trocou a senha: derruba sessões antigas
   return $u;
 }
-function login_user(array $u): void { session(); session_regenerate_id(true); $_SESSION['uid'] = (int)$u['id']; $_SESSION['uver'] = substr((string)$u['pass_hash'], -12); }
+function login_user(array $u): void { session(); session_regenerate_id(true); $_SESSION['uid'] = (int)$u['id']; $_SESSION['uver'] = substr((string)$u['pass_hash'], -12); marca_aparelho($u); }
 
 function current_admin(): ?array {
   session();
@@ -333,6 +336,69 @@ function ua_nav(string $ua): string {
   $so = preg_match('/iPhone|iPad/', $ua) ? 'iPhone' : (preg_match('/Android/', $ua) ? 'Android' : (preg_match('/Windows|Mac OS X|Linux|CrOS/', $ua) ? 'Computador' : 'Outro'));
   $b = preg_match('/Instagram/', $ua) ? 'Instagram' : (preg_match('/FBAN|FBAV|FB_IAB/', $ua) ? 'Facebook' : (preg_match('/SamsungBrowser/', $ua) ? 'Samsung Internet' : (preg_match('/EdgA?|Edg\//', $ua) ? 'Edge' : (preg_match('/Firefox|FxiOS/', $ua) ? 'Firefox' : (preg_match('/CriOS|Chrome/', $ua) ? 'Chrome' : (preg_match('/Safari/', $ua) ? 'Safari' : 'outro'))))));
   return "$so · $b";
+}
+
+// ---------- aparelho de cada aluno (aba Alunos do painel) ----------
+// O user agent diz o sistema; a marca/modelo do Android vem do compat.js (cookie sc_ap ou campo "modelo" do diário do app),
+// porque o Chrome esconde o modelo no user agent ("Android 10; K"). iPhone não revela o modelo: vai pelo tamanho da tela.
+function aparelho_marca_modelo(string $m): string {
+  $m = trim(preg_replace('/[^\w .+\-()\/]/u', '', $m) ?? ''); if ($m === '' || strtoupper($m) === 'K') return '';
+  $m = mb_substr(preg_replace('/^SAMSUNG[ -](?=(SM|GT)-)/i', '', $m), 0, 40);
+  if (preg_match('/^(SM|GT)-([A-Z])(\d+)/i', $m, $x)) { // SM-A546E → Galaxy A54
+    $l = strtoupper($x[2]); $n = $x[3];
+    $nome = in_array($l, ['A', 'M', 'F', 'E'], true) ? "Galaxy $l" . substr($n, 0, 2) : ($l === 'S' || $l === 'G' ? 'Galaxy S' : ($l === 'N' ? 'Galaxy Note' : ($l === 'X' || $l === 'T' || $l === 'P' ? 'Galaxy Tab' : 'Galaxy')));
+    return "Samsung $nome ($m)";
+  }
+  $marcas = [
+    'Xiaomi' => '/^(Redmi|POCO|Mi\b|Xiaomi|M\d{4}[A-Z]|2\d{3}[0-9A-Z]{4,}|\d{5}[A-Z0-9]{3,}[A-Z]{1,2}$)/i',
+    'Motorola' => '/^(moto|motorola|XT\d{4})/i', 'LG' => '/^(LM-|LG)/i', 'Asus' => '/^(ASUS|ZenFone|ROG)/i',
+    'Realme' => '/^(RMX|realme)/i', 'OnePlus' => '/^(OnePlus|KB2|LE2|NE2|IN20|HD19|GM19)/i', 'Oppo' => '/^(CPH|OPPO|PD\d)/i', 'Vivo' => '/^(V2\d{3}|vivo)/i',
+    'Google' => '/^Pixel/i', 'Huawei' => '/^(HUAWEI|[A-Z]{3}-(L|LX|AL|TL)\d)/i', 'Nokia' => '/^Nokia/i', 'Infinix' => '/^Infinix/i', 'Tecno' => '/^TECNO/i', 'Positivo' => '/^Positivo/i', 'Multilaser' => '/^(Multilaser|ML-)/i',
+  ];
+  foreach ($marcas as $marca => $re) if (preg_match($re, $m)) return stripos($m, $marca) === 0 ? $m : "$marca $m";
+  return $m;
+}
+function aparelho_iphone(string $tela): string { // "390x844" (tela em pontos) → família do iPhone
+  $t = ['320x568' => 'iPhone SE 1ª/5s', '375x667' => 'iPhone 6/7/8/SE', '414x736' => 'iPhone 6/7/8 Plus', '375x812' => 'iPhone X/XS/11 Pro/12 mini/13 mini',
+    '414x896' => 'iPhone XR/11/XS Max/11 Pro Max', '390x844' => 'iPhone 12/13/14', '428x926' => 'iPhone 12/13 Pro Max/14 Plus', '393x852' => 'iPhone 14 Pro/15/16',
+    '430x932' => 'iPhone 14 Pro Max/15 Plus/15 Pro Max/16 Plus', '402x874' => 'iPhone 16 Pro', '440x956' => 'iPhone 16 Pro Max'];
+  return $t[$tela] ?? '';
+}
+function aparelho_nome(string $ua, string $modelo = ''): string {
+  $ua = (string)$ua; $modelo = trim($modelo);
+  if (preg_match('/iPhone|iPod/', $ua)) {
+    $v = preg_match('/OS (\d+)_/', $ua, $m) ? ' · iOS ' . $m[1] : '';
+    $fam = str_starts_with($modelo, 'iph:') ? aparelho_iphone(substr($modelo, 4)) : '';
+    return ($fam ?: 'iPhone') . $v;
+  }
+  if (preg_match('/iPad/', $ua) || ($modelo !== '' && str_starts_with($modelo, 'iph:') && preg_match('/Macintosh/', $ua))) return 'iPad';
+  if (preg_match('/Android/i', $ua)) {
+    $v = preg_match('/Android (\d+)/', $ua, $m) && !preg_match('/Android 10; K\)/', $ua) ? ' · Android ' . $m[1] : ''; // "Android 10; K" é falso (Chrome esconde)
+    $mod = str_starts_with($modelo, 'iph:') ? '' : $modelo;
+    if ($mod === '' && preg_match('/Android [\d.]+;\s*([^;)]+?)(?:\s+Build\/[^;)]*)?[;)]/', $ua, $x)) $mod = $x[1]; // UA antigo ainda traz o modelo
+    $nome = aparelho_marca_modelo($mod);
+    if ($nome === '' && preg_match('/SamsungBrowser/', $ua)) $nome = 'Samsung';
+    return ($nome ?: 'Android') . ($v ?: ($nome ? '' : ' · modelo oculto'));
+  }
+  if (preg_match('/Windows/', $ua)) return 'Computador · Windows';
+  if (preg_match('/Mac OS X/', $ua)) return 'Computador · Mac';
+  if (preg_match('/CrOS/', $ua)) return 'Computador · Chromebook';
+  if (preg_match('/Linux/', $ua)) return 'Computador · Linux';
+  return '';
+}
+// guarda o aparelho da pessoa: aparelho_1 = o primeiro (cadastro do teste ou criar senha logo após a compra), aparelho = o último que usou
+function marca_aparelho(array $u, string $modelo = ''): void {
+  try {
+    if (empty($u['id'])) return;
+    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? ''); if ($ua === '') return;
+    if ($modelo === '') $modelo = (string)($_COOKIE['sc_ap'] ?? '');
+    $nome = aparelho_nome($ua, mb_substr($modelo, 0, 40)); if ($nome === '') return;
+    $atual = (string)($u['aparelho'] ?? '');
+    // mesmo celular sem o modelo nesta visita (ex.: Android "Android · Android 14"): não troca o nome bom que já estava guardado
+    if ($atual !== '' && $atual !== $nome && preg_match('/^(Android|iPhone) · /', $nome) && (str_ends_with($nome, 'modelo oculto') ? !str_starts_with($atual, 'iPhone') && !str_starts_with($atual, 'Computador') : str_ends_with($atual, strstr($nome, ' · ')))) return;
+    if ($atual === $nome && ($u['aparelho_1'] ?? '') !== '') return;
+    db()->prepare("UPDATE users SET aparelho = ?, aparelho_1 = CASE WHEN aparelho_1 = '' THEN ? ELSE aparelho_1 END WHERE id = ?")->execute([$nome, $nome, (int)$u['id']]);
+  } catch (Throwable $e) {}
 }
 
 // ---------- valores de venda: bruto (preço), taxa da Eduzz e líquido que cai para os sócios ----------
