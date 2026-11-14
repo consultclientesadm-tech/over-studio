@@ -19,7 +19,7 @@ function origem_db(): PDO {
   $cu = array_column($db->query('PRAGMA table_info(users)')->fetchAll(), 'name');
   if (!in_array('origem', $cu, true)) $db->exec("ALTER TABLE users ADD COLUMN origem TEXT NOT NULL DEFAULT ''");
   $cs = array_column($db->query('PRAGMA table_info(sales)')->fetchAll(), 'name');
-  foreach (['or_pagina', 'or_fonte', 'or_campanha', 'or_caminho'] as $c) if (!in_array($c, $cs, true)) $db->exec("ALTER TABLE sales ADD COLUMN $c TEXT NOT NULL DEFAULT ''");
+  foreach (['or_pagina', 'or_fonte', 'or_campanha', 'or_caminho', 'or_primeiro'] as $c) if (!in_array($c, $cs, true)) $db->exec("ALTER TABLE sales ADD COLUMN $c TEXT NOT NULL DEFAULT ''");
   $ok = true; return $db;
 }
 
@@ -55,8 +55,11 @@ function or_da_venda(array $data, ?array $u, ?int $afId): array {
   return ['sem-rastreio', '', '', $afId ? 'afiliado' : 'compra direta'];
 }
 
-function or_marca_venda(int $saleId, array $o): void {
+function or_marca_venda(int $saleId, array $o, array $data = []): void {
   origem_db()->prepare('UPDATE sales SET or_pagina = ?, or_fonte = ?, or_campanha = ?, or_caminho = ? WHERE id = ?')->execute([$o[0], $o[1], $o[2], $o[3], $saleId]);
+  // primeiro clique (trk2 = "p.fonte.campanha"), quando a pessoa entrou antes por outro link
+  $t2 = (string)($data['edz_trk_2'] ?? $data['edz_trk2'] ?? $data['trk2'] ?? $data['tracker2'] ?? '');
+  if (preg_match('/^p\.([^.]*)\.?(.*)$/', $t2, $m)) origem_db()->prepare('UPDATE sales SET or_primeiro = ? WHERE id = ?')->execute([or_limpa($m[1]) . '|' . or_limpa($m[2], 60), $saleId]);
 }
 
 // conta de anúncio de cada gasto lançado (leo, reinaldo...): casa com utm_campaign "leo-ads", "reinaldo-ads"
@@ -115,8 +118,8 @@ function or_anuncios(PDO $db, string $since, string $ate = '9999-12-31 23:59:59'
   if ($tk <= 0) $tk = (float)$db->query("SELECT AVG(liquido) FROM sales WHERE status = 'pago' AND liquido > 0")->fetchColumn();
   foreach ($r as $c => $a) {
     $r[$c]['vendas_link'] = $a['vendas']; $r[$c]['liquido_link'] = $a['liquido'];
-    $cm = (int)($a['compras_meta'] ?? 0);
-    if ($cm > $a['vendas']) { $r[$c]['liquido'] += ($cm - $a['vendas']) * $tk; $r[$c]['vendas'] = $cm; }
+    // cada venda conta UMA vez só, para a conta do link pelo qual a pessoa comprou (Leo, 14/11: não pode duplicar).
+    // O número do Meta fica só como informação (o Meta de cada sócio conta a mesma venda de quem viu os dois anúncios).
   }
   return array_values($r);
 }
@@ -155,18 +158,30 @@ function or_relatorio(int $dias, string $dia = ''): array {
     if ($cam) $add($p, $f, $c, $cam, $r['n']);
   }
   // todas as vendas do período, uma por linha, com data e hora (antes eram só as 15 últimas, sem respeitar o período)
-  $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' AND s.created_at >= ? AND s.created_at <= ? ORDER BY s.created_at DESC, s.id DESC LIMIT 500");
+  $ult = $db->prepare("SELECT s.created_at, s.liquido, s.or_pagina, s.or_fonte, s.or_campanha, s.or_caminho, s.or_primeiro, u.name FROM sales s LEFT JOIN users u ON u.id = s.user_id WHERE s.status = 'pago' AND s.created_at >= ? AND s.created_at <= ? ORDER BY s.created_at DESC, s.id DESC LIMIT 500");
   $ult->execute([$since, $ate]);
   $anun = or_anuncios($db, $since, $ate);
   // de qual conta de anúncio é cada venda (mesma regra do ROI), para a coluna "Conta" da lista
-  $ultimas = array_map(function ($v) use ($mapa, $norm) {
-    [$v['or_fonte'], $v['or_campanha']] = $norm((string)$v['or_fonte'], (string)$v['or_campanha']);
-    $f = (string)$v['or_fonte']; $cp = (string)$v['or_campanha']; $c = '';
+  $contaDe = function (string $f, string $cp) use ($mapa, $norm): string {
+    [$f, $cp] = $norm($f, $cp); $c = '';
     if ($f === 'comentarios-ig') $c = $mapa[$cp] ?? (preg_match('/^(leo|reinaldo)-ads/', $cp, $m) ? $m[1] : '');
     elseif (in_array($f, ['anuncio-meta', 'meta', 'fb', 'facebook-ads', 'meta-ads', 'instagram-ads'], true)) {
       if (preg_match('/^(leo|reinaldo)(-|$)/', $cp, $m)) $c = $m[1]; elseif (isset($mapa[$cp])) $c = $mapa[$cp];
       elseif (strlen($cp) >= 10) foreach ($mapa as $k => $x) if (str_starts_with((string)$k, $cp)) { $c = $x; break; } }
-    $v['conta'] = $c; return $v;
+    return $c;
+  };
+  $ajudou = []; // vendas em que a pessoa clicou primeiro no anúncio de uma conta e comprou depois por outro link
+  $ultimas = array_map(function ($v) use ($norm, $contaDe, &$ajudou) {
+    $v['conta'] = $contaDe((string)$v['or_fonte'], (string)$v['or_campanha']);
+    [$v['or_fonte'], $v['or_campanha']] = $norm((string)$v['or_fonte'], (string)$v['or_campanha']);
+    $v['conta1'] = ''; $v['primeiro'] = '';
+    if ((string)($v['or_primeiro'] ?? '') !== '') { [$f1, $c1] = array_pad(explode('|', (string)$v['or_primeiro'], 2), 2, '');
+      [$f1, $c1] = $norm($f1, $c1); $v['primeiro'] = $f1 . '|' . $c1; $v['conta1'] = $contaDe($f1, $c1);
+      if ($v['conta1'] !== '' && $v['conta1'] !== $v['conta']) $ajudou[$v['conta1']] = ($ajudou[$v['conta1']] ?? 0) + 1; }
+    return $v;
   }, $ult->fetchAll());
+  foreach ($ajudou as $c => $n) { $i = array_search($c, array_column($anun, 'conta'), true);
+    if ($i === false) { $anun[] = ['conta' => $c, 'gasto' => 0.0, 'gasto_auto' => 0.0, 'gasto_manual' => 0.0, 'vendas' => 0, 'liquido' => 0.0, 'vsl' => 0, 'home' => 0, 'vendas_link' => 0]; $i = count($anun) - 1; }
+    $anun[$i]['primeiro_clique'] = $n; }
   return ['ok' => true, 'anuncios' => $anun, 'campanhas_soltas' => array_keys($GLOBALS['or_soltas'] ?? []), 'meta_contas' => meta_contas_lista(), 'dias' => $dias, 'dia' => $dia, 'de' => $since, 'ate' => min($ate, now()), 'linhas' => array_values($rows), 'ultimas' => $ultimas, 'desde_rastreio' => (string)$db->query('SELECT MIN(created_at) FROM visitas')->fetchColumn()];
 }
