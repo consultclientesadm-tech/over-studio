@@ -449,14 +449,14 @@ footer a { color: #888; }
           <div class="sb"><span class="t">9:41</span><span class="ics" aria-hidden="true"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg viewBox="0 0 16 12"><path d="M8 2.2c2.3 0 4.4.9 6 2.4l1.3-1.3A10.3 10.3 0 0 0 8 .3 10.3 10.3 0 0 0 .7 3.3L2 4.6a8.5 8.5 0 0 1 6-2.4Zm0 3.6c1.3 0 2.6.5 3.5 1.4l1.3-1.3A6.8 6.8 0 0 0 8 3.9a6.8 6.8 0 0 0-4.8 2l1.3 1.3c1-.9 2.2-1.4 3.5-1.4Zm0 3.6c-.6 0-1.1.2-1.5.6L8 11.5l1.5-1.5c-.4-.4-.9-.6-1.5-.6Z"/></svg><svg viewBox="0 0 27 12"><rect x=".5" y=".5" width="23" height="11" rx="3.2" fill="none" stroke="#fff" stroke-opacity=".5"/><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="24.6" y="4" width="1.8" height="4" rx=".9" fill-opacity=".5"/></svg></span></div>
           <div class="isl"></div>
           <div class="vw" id="tScr">
-            <img src="/assets/lp/home.webp?v=3" alt="Tela inicial do Studio Cover" class="on">
-            <img data-src="/assets/lp/separando.webp?v=3" alt="IA separando a voz">
-            <img data-src="/assets/lp/afinacao.webp?v=3" alt="Afinação automática">
-            <img data-src="/assets/lp/painel.webp?v=3" alt="Painel de notas em tela cheia">
-            <img data-src="/assets/lp/arrastar.webp?v=3" alt="Arrastar a nota para a linha verde">
-            <img data-src="/assets/lp/mix.webp?v=3" alt="Mix e master">
-            <img data-src="/assets/lp/cor.webp?v=3" alt="Cor de cinema">
-            <img data-src="/assets/lp/pronto.webp?v=3" alt="Vídeo pronto">
+            <img src="/assets/lp/home.webp?v=4" alt="Tela inicial do Studio Cover" class="on">
+            <img data-src="/assets/lp/separando.webp?v=4" alt="IA separando a voz">
+            <img data-src="/assets/lp/afinacao.webp?v=4" alt="Afinação automática">
+            <img data-src="/assets/lp/painel.webp?v=4" alt="Painel de notas em tela cheia">
+            <img data-src="/assets/lp/arrastar.webp?v=4" alt="Arrastar a nota para a linha verde">
+            <img data-src="/assets/lp/mix.webp?v=4" alt="Mix e master">
+            <img data-src="/assets/lp/cor.webp?v=4" alt="Cor de cinema">
+            <img data-src="/assets/lp/pronto.webp?v=4" alt="Vídeo pronto">
             <div class="scan" id="tScan"></div>
           </div>
           <div class="boot" id="tOff">
@@ -494,7 +494,7 @@ footer a { color: #888; }
   <div class="c rv"><span class="chip">Antes × Depois</span><h2 class="h2" style="margin-top:16px"><em>Veja</em> a diferença.</h2>
   <p class="lead">Mesmo vídeo, mesmo celular. Arraste a linha para comparar.</p></div>
   <div class="ad">
-    <div class="cmp rv" id="cmp"><img src="/assets/lp/antes.webp?v=2" alt="Antes" loading="lazy"><img class="dep" src="/assets/lp/depois.webp?v=2" alt="Depois com cor de cinema" loading="lazy"><div class="lin"></div><span class="tag t1">ANTES</span><span class="tag t2">DEPOIS</span></div>
+    <div class="cmp rv" id="cmp"><img src="/assets/lp/antes.webp?v=3" alt="Antes" loading="lazy"><img class="dep" src="/assets/lp/depois.webp?v=3" alt="Depois com cor de cinema" loading="lazy"><div class="lin"></div><span class="tag t1">ANTES</span><span class="tag t2">DEPOIS</span></div>
     <div class="ouvir rv d1">
       <p class="mini">Mesmo vídeo do celular: depois de passar pelo app, com cor de cinema, voz afinada e som mixado.</p>
       <a class="btn full" href="#oferta" data-cta>Quero esse som nos meus covers</a>
@@ -765,7 +765,7 @@ footer a { color: #888; }
     const p = molde.cloneNode(true); p.removeAttribute('id');
     p.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
     p.querySelector('.boot').remove(); p.querySelector('.scan').remove();
-    p.querySelector('.vw').innerHTML = `<img loading="lazy" src="/assets/lp/${n}.webp" alt="${['Painel de notas', 'Filtros de cinema', 'Mix e master'][i]}">`;
+    p.querySelector('.vw').innerHTML = `<img loading="lazy" src="/assets/lp/${n}.webp?v=4" alt="${['Painel de notas', 'Filtros de cinema', 'Mix e master'][i]}">`;
     $('gal').appendChild(p);
   });
 
